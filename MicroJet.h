@@ -52,6 +52,12 @@
 #define gBreadboardOne false 
 //DOES THIS WORK??
 
+// Function Declarations
+int BuildCommand(int Command, unsigned char* JetCommand);
+int GetJetDrv(int port, int Command, unsigned char* Input, int SizeInput);
+void SendJetDrv(int port, int Command, unsigned char* Output, int LengthOutput);
+void SendCommand(int port, int Command, float waitTimeSeconds);
+
 
 class MicroJet {
     // Data structure for microjet operating and status parameters.

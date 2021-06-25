@@ -23,5 +23,8 @@
     <ClInclude Include="MicroJet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MicroJet_Functions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
