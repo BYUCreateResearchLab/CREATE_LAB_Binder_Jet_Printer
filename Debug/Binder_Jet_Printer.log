@@ -1,0 +1,32 @@
+﻿  Jet_Control.cpp
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(19,19): warning C4244: 'argument': conversion from 'float' to 'DWORD', possible loss of data
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(58,16): error C2664: 'HANDLE CreateFileA(LPCSTR,DWORD,DWORD,LPSECURITY_ATTRIBUTES,DWORD,DWORD,HANDLE)': cannot convert argument 1 from 'const wchar_t [9]' to 'LPCSTR'
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(58,27): message : Types pointed to are unrelated; conversion requires reinterpret_cast, C-style cast or function-style cast
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\fileapi.h(81,1): message : see declaration of 'CreateFileA'
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(196,40): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(273,44): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(275,40): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(276,42): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(279,43): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(280,46): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(281,45): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(282,40): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(286,45): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(289,42): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(55,5): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(64,13): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(71,17): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(83,13): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(95,17): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(106,13): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(151,21): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(219,29): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(229,21): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(231,17): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(672,28): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(675,54): warning C4018: '<': signed/unsigned mismatch
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(668,13): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(674,40): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(676,17): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(695,13): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\mckay.christensen\CREATE_LAB_Binder_Jet_Printer\Jet_Control.cpp(722,21): warning C4305: 'argument': truncation from 'double' to 'float'
