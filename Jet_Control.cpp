@@ -4,7 +4,6 @@
 // All rights reserved.
 // Git Push Test
 
-#include "MicroJet.h"
 #include "MicroJet_Functions.h"
 
 int main(int argc, char* argv[])
@@ -30,7 +29,7 @@ int main(int argc, char* argv[])
     sprintf(JetPort, "COM%d", JetDrv + 1);
     // Open communications.
     if (JetDrv != NOCOM) {
-        hCom = CreateFile(L"\\\\.\\COM4", GENERIC_READ | GENERIC_WRITE,
+        hCom = CreateFile("\\\\.\\COM4", GENERIC_READ | GENERIC_WRITE,
             0, NULL, OPEN_EXISTING, 0, NULL); //USING COM4
         if (hCom == INVALID_HANDLE_VALUE) {
             LPVOID lpMsgBuf;
