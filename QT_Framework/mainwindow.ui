@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>773</width>
+    <height>484</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,11 +20,18 @@
       <x>0</x>
       <y>170</y>
       <width>295</width>
-      <height>141</height>
+      <height>151</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="1" column="1">
+     <item row="1" column="1" alignment="Qt::AlignHCenter">
+      <widget class="QToolButton" name="yHome">
+       <property name="text">
+        <string>Y Home</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -37,7 +44,34 @@
        </property>
       </spacer>
      </item>
-     <item row="1" column="2">
+     <item row="0" column="0">
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="0" column="1">
+      <widget class="QPushButton" name="yPositive">
+       <property name="text">
+        <string>^</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QPushButton" name="yNegative">
+       <property name="text">
+        <string>v</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
       <widget class="QPushButton" name="xPositive">
        <property name="text">
         <string>&gt;</string>
@@ -57,67 +91,21 @@
        </property>
       </spacer>
      </item>
-     <item row="2" column="1">
-      <widget class="QPushButton" name="yNegative">
-       <property name="text">
-        <string>v</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="1" column="0">
+     <item row="2" column="0">
       <widget class="QPushButton" name="xNegative">
        <property name="text">
         <string>&lt;</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QPushButton" name="yPositive">
+     <item row="3" column="2" alignment="Qt::AlignHCenter">
+      <widget class="QToolButton" name="xHome">
        <property name="text">
-        <string>^</string>
+        <string>X Home</string>
        </property>
       </widget>
      </item>
     </layout>
-   </widget>
-   <widget class="QToolButton" name="xHome">
-    <property name="geometry">
-     <rect>
-      <x>300</x>
-      <y>230</y>
-      <width>51</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>X Home</string>
-    </property>
-   </widget>
-   <widget class="QToolButton" name="yHome">
-    <property name="geometry">
-     <rect>
-      <x>120</x>
-      <y>140</y>
-      <width>61</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Y Home</string>
-    </property>
    </widget>
    <widget class="QLabel" name="label4Fun">
     <property name="geometry">
@@ -137,7 +125,7 @@
      <rect>
       <x>380</x>
       <y>170</y>
-      <width>21</width>
+      <width>29</width>
       <height>141</height>
      </rect>
     </property>
@@ -182,20 +170,20 @@
      </rect>
     </property>
     <property name="value">
-     <number>10</number>
+     <number>15</number>
     </property>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
       <x>410</x>
-      <y>210</y>
-      <width>111</width>
+      <y>190</y>
+      <width>131</width>
       <height>16</height>
      </rect>
     </property>
     <property name="text">
-     <string>Step Size (Microns)</string>
+     <string>Z Step Size</string>
     </property>
    </widget>
    <widget class="QLabel" name="BedLabel">
@@ -216,15 +204,226 @@
      <rect>
       <x>400</x>
       <y>320</y>
-      <width>42</width>
+      <width>51</width>
       <height>22</height>
      </rect>
     </property>
     <property name="minimum">
      <number>0</number>
     </property>
+    <property name="maximum">
+     <number>300</number>
+    </property>
     <property name="value">
      <number>100</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="xVelocity">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>350</y>
+      <width>42</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>10</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="VelocityLabel">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>330</y>
+      <width>111</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Velocity (mm/s)</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="X_axis">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>350</y>
+      <width>55</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>X Axis</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>330</y>
+      <width>91</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Distance (mm)</string>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="xDistance">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>350</y>
+      <width>42</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>10</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="yVelocity">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>380</y>
+      <width>42</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>10</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Y_axis">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>380</y>
+      <width>55</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Y Axis</string>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="yDistance">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>380</y>
+      <width>42</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>10</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>210</y>
+      <width>55</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>(Microns)</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="activateRoller">
+    <property name="geometry">
+     <rect>
+      <x>530</x>
+      <y>170</y>
+      <width>121</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Activate Roller</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="activateHopper">
+    <property name="geometry">
+     <rect>
+      <x>530</x>
+      <y>210</y>
+      <width>121</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Activate Hopper</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton">
+    <property name="geometry">
+     <rect>
+      <x>530</x>
+      <y>320</y>
+      <width>141</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Spread New Layer(s)</string>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="xVelocity_2">
+    <property name="geometry">
+     <rect>
+      <x>530</x>
+      <y>280</y>
+      <width>42</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>10</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="xDistance_2">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>280</y>
+      <width>42</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>10</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>260</y>
+      <width>101</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Number of Layers</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="VelocityLabel_2">
+    <property name="geometry">
+     <rect>
+      <x>530</x>
+      <y>260</y>
+      <width>111</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Roller Speed (RPM)</string>
     </property>
    </widget>
   </widget>
@@ -233,10 +432,16 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
-     <height>26</height>
+     <width>773</width>
+     <height>25</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuPrinter_Controls">
+    <property name="title">
+     <string>Printer Controls</string>
+    </property>
+   </widget>
+   <addaction name="menuPrinter_Controls"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>

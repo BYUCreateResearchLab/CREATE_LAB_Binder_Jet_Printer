@@ -170,6 +170,7 @@ Makefile: ../QT_Framework/QT_Framework.pro C:/Qt_Source/6.1.1/mingw81_64/mkspecs
 		C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/qt_config.prf \
 		C:/Qt_Source/6.1.1/mingw81_64/mkspecs/win32-g++/qmake.conf \
 		C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/exclusive_builds.prf \
 		C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/toolchain.prf \
 		C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/default_pre.prf \
@@ -199,7 +200,6 @@ Makefile: ../QT_Framework/QT_Framework.pro C:/Qt_Source/6.1.1/mingw81_64/mkspecs
 		C:/Qt_Source/6.1.1/mingw81_64/lib/Qt6Gui.prl \
 		C:/Qt_Source/6.1.1/mingw81_64/lib/Qt6Core.prl \
 		C:/Qt_Source/6.1.1/mingw81_64/lib/Qt6EntryPoint.prl \
-		.qmake.stash \
 		C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/build_pass.prf
 	$(QMAKE) -o Makefile ..\QT_Framework\QT_Framework.pro -spec win32-g++ "CONFIG+=debug" "CONFIG+=qml_debug"
 C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/spec_pre.prf:
@@ -302,6 +302,7 @@ C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/qt_functions.prf:
 C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/qt_config.prf:
 C:/Qt_Source/6.1.1/mingw81_64/mkspecs/win32-g++/qmake.conf:
 C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/spec_post.prf:
+.qmake.stash:
 C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/exclusive_builds.prf:
 C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/toolchain.prf:
 C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/default_pre.prf:
@@ -331,7 +332,6 @@ C:/Qt_Source/6.1.1/mingw81_64/lib/Qt6Widgets.prl:
 C:/Qt_Source/6.1.1/mingw81_64/lib/Qt6Gui.prl:
 C:/Qt_Source/6.1.1/mingw81_64/lib/Qt6Core.prl:
 C:/Qt_Source/6.1.1/mingw81_64/lib/Qt6EntryPoint.prl:
-.qmake.stash:
 C:/Qt_Source/6.1.1/mingw81_64/mkspecs/features/build_pass.prf:
 qmake: FORCE
 	@$(QMAKE) -o Makefile ..\QT_Framework\QT_Framework.pro -spec win32-g++ "CONFIG+=debug" "CONFIG+=qml_debug"

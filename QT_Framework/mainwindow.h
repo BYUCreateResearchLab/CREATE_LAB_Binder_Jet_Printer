@@ -38,9 +38,15 @@ private slots:
 
     void on_zMin_clicked();
 
+    void on_activateRoller_stateChanged(int arg1);
+
+    void on_activateHopper_stateChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     int z_position = 100;
+    int delta_x;
+    int delta_y;
     int delta_z;
 };
 #endif // MAINWINDOW_H

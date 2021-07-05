@@ -13,6 +13,10 @@ SOURCES += \
     mainwindow.cpp
 
 HEADERS += \
+    ../../../../../../Program Files (x86)/Galil/gclib/include/gclib.h \
+    ../../../../../../Program Files (x86)/Galil/gclib/include/gclib_errors.h \
+    ../../../../../../Program Files (x86)/Galil/gclib/include/gclib_record.h \
+    ../../../../../../Program Files (x86)/Galil/gclib/include/gclibo.h \
     mainwindow.h
 
 FORMS += \

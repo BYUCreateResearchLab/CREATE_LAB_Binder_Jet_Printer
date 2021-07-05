@@ -10,6 +10,12 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     ui->bedSpinBox->setMaximum(300);
+    delta_x = 10;
+    delta_y = 10;
+    delta_z = 15;
+    //DOWN THE ROAD -> Update default GUI values
+
+    //Setup Background Image
 }
 
 MainWindow::~MainWindow()
@@ -24,7 +30,6 @@ void MainWindow::on_yPositive_clicked()
     ui->xPositive->setText(">");
     ui->yNegative->setText("v");
     ui->xNegative->setText("<");
-
 }
 
 void MainWindow::on_xPositive_clicked()
@@ -94,5 +99,30 @@ void  MainWindow::on_zMin_clicked()
 {
     z_position = 0;
     ui->bedSpinBox->setValue(z_position);
+}
+
+
+
+void MainWindow::on_activateRoller_stateChanged(int arg1)
+{
+    if(arg1 == 2)
+    {
+        ui->activateRoller->setText("Roller Activated!");
+    }
+    else {
+        ui->activateRoller->setText("Activate Roller");
+    }
+}
+
+
+void MainWindow::on_activateHopper_stateChanged(int arg1)
+{
+    if(arg1 == 2)
+    {
+        ui->activateHopper->setText("Hopper Activated!");
+    }
+    else {
+        ui->activateHopper->setText("Activate Hopper");
+    }
 }
 

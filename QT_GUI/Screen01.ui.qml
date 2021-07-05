@@ -17,9 +17,46 @@ Rectangle {
     }
 
     RoundButton {
-        id: positiveXButton
+        id: positiveXButton1
         x: 226
-        y: 185
+        y: 171
         text: "^"
+    }
+
+    RoundButton {
+        id: roundButton
+        x: 294
+        y: 248
+        text: ">"
+    }
+
+    RoundButton {
+        id: roundButton1
+        x: 226
+        y: 324
+        text: "V"
+    }
+
+    RoundButton {
+        id: roundButton2
+        x: 147
+        y: 248
+        text: "<"
+    }
+
+    Text {
+        id: text1
+        x: 288
+        y: 288
+        text: qsTr("Positive Y")
+        font.pixelSize: 12
+    }
+
+    Text {
+        id: text2
+        x: 219
+        y: 206
+        text: qsTr("Positive X")
+        font.pixelSize: 12
     }
 }
