@@ -3,6 +3,11 @@
 
 #include <QMainWindow>
 
+#include "gclib.h"
+#include "gclibo.h"
+#include "gclib_errors.h"
+#include "gclib_record.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -42,11 +47,14 @@ private slots:
 
     void on_activateHopper_stateChanged(int arg1);
 
+    void on_pushButton_2_clicked();
+
 private:
     Ui::MainWindow *ui;
     int z_position = 100;
     int delta_x;
     int delta_y;
     int delta_z;
+    GCon g = 0; // Handle for connection to Galil Motion Controller
 };
 #endif // MAINWINDOW_H

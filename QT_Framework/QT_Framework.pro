@@ -10,14 +10,18 @@ CONFIG += c++11
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    gclibo.c \
+    arrays.c
 
 HEADERS += \
-    ../../../../../../Program Files (x86)/Galil/gclib/include/gclib.h \
-    ../../../../../../Program Files (x86)/Galil/gclib/include/gclib_errors.h \
-    ../../../../../../Program Files (x86)/Galil/gclib/include/gclib_record.h \
-    ../../../../../../Program Files (x86)/Galil/gclib/include/gclibo.h \
-    mainwindow.h
+    #../../../../../../Program Files (x86)/Galil/gclib/include/gclib.h \
+    #../../../../../../Program Files (x86)/Galil/gclib/include/gclib_errors.h \
+    #../../../../../../Program Files (x86)/Galil/gclib/include/gclib_record.h \
+    #../../../../../../Program Files (x86)/Galil/gclib/include/gclibo.h \
+    mainwindow.h \
+    gclib.h \
+    gclibo.h
 
 FORMS += \
     mainwindow.ui
@@ -26,3 +30,18 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+
+
+
+LIBS +=   -L /usr/linclude -lz # fixes references to 'uncompress' in zlib.h
+
+win32: LIBS += -L$$PWD/./ -lgclib
+
+INCLUDEPATH += $$PWD/.
+DEPENDPATH += $$PWD/.
+
+win32: LIBS += -L$$PWD/./ -lgclibo
+
+INCLUDEPATH += $$PWD/.
+DEPENDPATH += $$PWD/.

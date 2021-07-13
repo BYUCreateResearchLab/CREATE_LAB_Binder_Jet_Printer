@@ -4,6 +4,12 @@
 
 using namespace std;
 
+void e(GReturn rc)
+ {
+   if (rc != G_NO_ERROR)
+     throw rc;
+ }
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -87,12 +93,36 @@ void  MainWindow::on_zUp_clicked()
 {
     z_position = z_position + delta_z;
     ui->bedSpinBox->setValue(z_position);
+
+    e(GCmd(g, "MTC=-2.5"));
+    e(GCmd(g, "MO"));
+    e(GCmd(g, "AGC=0"));
+    e(GCmd(g, "ACC=757760"));
+    e(GCmd(g, "DCC=757760"));
+    e(GCmd(g, "SPC=113664"));
+    e(GCmd(g, "PRC=227328"));
+    e(GCmd(g, "SHC"));
+    e(GCmd(g, "BGC"));
+    e(GMotionComplete(g, "C"));
+    e(GCmd(g, "MO"));
 }
 
 void  MainWindow::on_zDown_clicked()
 {
     z_position = z_position - delta_z;
     ui->bedSpinBox->setValue(z_position);
+
+    e(GCmd(g, "MTC=-2.5"));
+    e(GCmd(g, "MO"));
+    e(GCmd(g, "AGC=0"));
+    e(GCmd(g, "ACC=757760"));
+    e(GCmd(g, "DCC=757760"));
+    e(GCmd(g, "SPC=113664"));
+    e(GCmd(g, "PRC=-227328"));
+    e(GCmd(g, "SHC"));
+    e(GCmd(g, "BGC"));
+    e(GMotionComplete(g, "C"));
+    e(GCmd(g, "MO"));
 }
 
 void  MainWindow::on_zMin_clicked()
@@ -124,5 +154,12 @@ void MainWindow::on_activateHopper_stateChanged(int arg1)
     else {
         ui->activateHopper->setText("Activate Hopper");
     }
+}
+
+
+void MainWindow::on_pushButton_2_clicked()
+{
+    char const *address = "192.168.42.100";
+    e(GOpen(address, &g));
 }
 
