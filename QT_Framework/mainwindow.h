@@ -55,6 +55,12 @@ private:
     int delta_x;
     int delta_y;
     int delta_z;
+    int micronX;
+    int micronY;
+    int micronZ;
+    int mmX;
+    int mmY;
+    int mmZ;
     GCon g = 0; // Handle for connection to Galil Motion Controller
 };
 #endif // MAINWINDOW_H

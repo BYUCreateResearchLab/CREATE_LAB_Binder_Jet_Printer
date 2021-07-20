@@ -70,6 +70,7 @@ public:
     QSpinBox *xDistance_2;
     QLabel *label_4;
     QLabel *VelocityLabel_2;
+    QPushButton *pushButton_2;
     QMenuBar *menubar;
     QMenu *menuPrinter_Controls;
     QStatusBar *statusbar;
@@ -228,10 +229,13 @@ public:
         VelocityLabel_2 = new QLabel(centralwidget);
         VelocityLabel_2->setObjectName(QString::fromUtf8("VelocityLabel_2"));
         VelocityLabel_2->setGeometry(QRect(530, 260, 111, 16));
+        pushButton_2 = new QPushButton(centralwidget);
+        pushButton_2->setObjectName(QString::fromUtf8("pushButton_2"));
+        pushButton_2->setGeometry(QRect(50, 70, 141, 23));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
-        menubar->setGeometry(QRect(0, 0, 773, 25));
+        menubar->setGeometry(QRect(0, 0, 773, 21));
         menuPrinter_Controls = new QMenu(menubar);
         menuPrinter_Controls->setObjectName(QString::fromUtf8("menuPrinter_Controls"));
         MainWindow->setMenuBar(menubar);
@@ -272,6 +276,7 @@ public:
         pushButton->setText(QCoreApplication::translate("MainWindow", "Spread New Layer(s)", nullptr));
         label_4->setText(QCoreApplication::translate("MainWindow", "Number of Layers", nullptr));
         VelocityLabel_2->setText(QCoreApplication::translate("MainWindow", "Roller Speed (RPM)", nullptr));
+        pushButton_2->setText(QCoreApplication::translate("MainWindow", "Connect to Controller", nullptr));
         menuPrinter_Controls->setTitle(QCoreApplication::translate("MainWindow", "Printer Controls", nullptr));
     } // retranslateUi
 
