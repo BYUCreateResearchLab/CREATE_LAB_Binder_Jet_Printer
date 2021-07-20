@@ -61,6 +61,7 @@ private:
     int mmX;
     int mmY;
     int mmZ;
+    char const *address = "192.168.42.100";
     GCon g = 0; // Handle for connection to Galil Motion Controller
 };
 #endif // MAINWINDOW_H
