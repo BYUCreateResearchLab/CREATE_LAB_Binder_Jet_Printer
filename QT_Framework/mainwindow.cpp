@@ -145,18 +145,13 @@ void  MainWindow::on_zUp_clicked()
         *
         */
         int zSteps = delta_z*micronZ;
-        string zPRCString = "PRC=" + to_string(zSteps);
-        e(GCmd(g, "MTC=-2.5"));     //Motor Type of C, STANDARD FOR Z AXIS
-        e(GCmd(g, "MO"));           //Motor Off (AFFECTS ALL MOTORS)
-        e(GCmd(g, "AGC=0"));        //Set Gain of C
-        e(GCmd(g, "ACC=757760"));   //Acceleration of C     757760 steps ~ 1 mm
-        e(GCmd(g, "DCC=757760"));   //Deceleration of C     7578 steps ~ 1 micron
-        e(GCmd(g, "SPC=113664"));   //Speed of C
-        e(GCmd(g, zPRCString.c_str()));   //Position Relative of C //HOW TO SWITCH THIS TO GCSTRING IN?
-        e(GCmd(g, "SHC"));          //"Servo Here", tells the controller to use the current motor position as the command position and to enable servo control at the current position.
-        e(GCmd(g, "BGC"));          //Begin Motion
-        e(GMotionComplete(g, "C")); //Waits until motion is complete?
-        e(GCmd(g, "MO"));           //Motor Off
+        string zPRZString = "PRZ=" + to_string(zSteps);
+        e(GCmd(g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
+        e(GCmd(g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
+        e(GCmd(g, "SPZ=113664"));   //Speed of C
+        e(GCmd(g, zPRZString.c_str()));   //Position Relative of C //HOW TO SWITCH THIS TO GCSTRING IN?
+        e(GCmd(g, "BGZ"));          //Begin Motion
+        e(GMotionComplete(g, "Z")); //Waits until motion is complete?
     }
 
 }
@@ -168,18 +163,13 @@ void  MainWindow::on_zDown_clicked()
         ui->bedSpinBox->setValue(z_position);
 
         int zSteps = delta_z*micronZ;
-        string zPRCString = "PRC=-" + to_string(zSteps);
-        e(GCmd(g, "MTC=-2.5"));
-        e(GCmd(g, "MO"));
-        e(GCmd(g, "AGC=0"));
-        e(GCmd(g, "ACC=757760"));
-        e(GCmd(g, "DCC=757760"));
-        e(GCmd(g, "SPC=113664"));
-        e(GCmd(g,  zPRCString.c_str()));
-        e(GCmd(g, "SHC"));
-        e(GCmd(g, "BGC"));
-        e(GMotionComplete(g, "C"));
-        e(GCmd(g, "MO"));
+        string zPRZString = "PRZ=-" + to_string(zSteps);
+        e(GCmd(g, "ACZ=757760"));
+        e(GCmd(g, "DCZ=757760"));
+        e(GCmd(g, "SPZ=113664"));
+        e(GCmd(g,  zPRZString.c_str()));
+        e(GCmd(g, "BGZ"));
+        e(GMotionComplete(g, "Z"));
     }
 
 
