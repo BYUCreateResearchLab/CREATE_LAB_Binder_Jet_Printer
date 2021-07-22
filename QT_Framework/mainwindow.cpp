@@ -87,7 +87,7 @@ void MainWindow::on_xNegative_clicked()
         e(GCmd(g, "ACX=50000")); // 50 mm/s^2
         e(GCmd(g, "DCX=50000")); // 50 mm/s^2
         e(GCmd(g, "SPX=10000")); // 10 mm/s
-        e(GCmd(g, "PRX=-4000"));  // 4 mm
+        e(GCmd(g, "PRX=-4000")); // 4 mm
         e(GCmd(g, "BGX"));
         e(GMotionComplete(g, "X"));
     }
@@ -101,17 +101,17 @@ void MainWindow::on_xHome_clicked()
 
     if(g){ // If connected to controller
         // Home the X-Axis using the central home sensor index pulse
-        e(GCmd(g, "ACX=200000")); // 200 mm/s^2
-        e(GCmd(g, "DCX=200000")); // 200 mm/s^2
-        e(GCmd(g, "JGX=-15000")); // 15 mm/s jog towards rear limit
-        e(GCmd(g, "BGX")); // Start motion towards rear limit sensor
+        e(GCmd(g, "ACX=200000"));   // 200 mm/s^2
+        e(GCmd(g, "DCX=200000"));   // 200 mm/s^2
+        e(GCmd(g, "JGX=-15000"));   // 15 mm/s jog towards rear limit
+        e(GCmd(g, "BGX"));          // Start motion towards rear limit sensor
         e(GMotionComplete(g, "X")); // Wait until limit is reached
-        e(GCmd(g, "JGX=15000")); // 15 mm/s jog towards home sensor
-        e(GCmd(g, "HVX=500")); // 0.5 mm/s on second move towards home sensor
-        e(GCmd(g, "FIX")); // Find index command for x axis
-        e(GCmd(g, "BGX")); // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
-        e(GMotionComplete(g, "X"));
-        e(GCmd(g, "DPX=75000")); //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
+        e(GCmd(g, "JGX=15000"));    // 15 mm/s jog towards home sensor
+        e(GCmd(g, "HVX=500"));      // 0.5 mm/s on second move towards home sensor
+        e(GCmd(g, "FIX"));          // Find index command for x axis
+        e(GCmd(g, "BGX"));          // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
+        e(GMotionComplete(g, "X")); // Wait until X stage finishes moving
+        e(GCmd(g, "DPX=75000"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
     }
 }
 
@@ -146,12 +146,12 @@ void  MainWindow::on_zUp_clicked()
         */
         int zSteps = delta_z*micronZ;
         string zPRZString = "PRZ=" + to_string(zSteps);
-        e(GCmd(g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
-        e(GCmd(g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
-        e(GCmd(g, "SPZ=113664"));   //Speed of C
+        e(GCmd(g, "ACZ=757760"));         //Acceleration of C     757760 steps ~ 1 mm
+        e(GCmd(g, "DCZ=757760"));         //Deceleration of C     7578 steps ~ 1 micron
+        e(GCmd(g, "SPZ=113664"));         //Speed of C
         e(GCmd(g, zPRZString.c_str()));   //Position Relative of C //HOW TO SWITCH THIS TO GCSTRING IN?
-        e(GCmd(g, "BGZ"));          //Begin Motion
-        e(GMotionComplete(g, "Z")); //Waits until motion is complete?
+        e(GCmd(g, "BGZ"));                //Begin Motion
+        e(GMotionComplete(g, "Z"));       //Waits until motion is complete?
     }
 
 }
@@ -207,18 +207,57 @@ void MainWindow::on_activateHopper_stateChanged(int arg1)
 }
 
 
-void MainWindow::on_pushButton_2_clicked()
+void MainWindow::on_connectController_clicked()
 {
     if(g==0){
-     e(GOpen(address, &g));
-     e(GCmd(g, "SH XYZ")); // Enable X,Y, and Z motors
-     ui->pushButton_2->setText("Disconnect Controller");
+     e(GOpen(address, &g)); // Establish connection with motion controller
+
+     // Controller Configuration
+     e(GCmd(g, "MO")); // Ensure motors are off for setup
+
+     // X Axis
+     e(GCmd(g, "MTX = -1"));    // Set motor type to reversed brushless
+     e(GCmd(g, "CEX = 2"));     // Set Encoder to reversed quadrature
+     e(GCmd(g, "BMX = 40000")); // Set magnetic pitch of lienar motor
+     e(GCmd(g, "AGX = 1"));     // Set amplifier gain
+     e(GCmd(g, "AUX = 9"));     // Set current loop (based on inductance of motor)
+     e(GCmd(g, "TLX = 3"));     // Set constant torque limit to 3V
+     e(GCmd(g, "TKX = 0"));     // Disable peak torque setting for now
+
+     // Y Axis
+     e(GCmd(g, "MTY = 1"));     // Set motor type to standard brushless
+     e(GCmd(g, "CEY = 0"));     // Set Encoder to reversed quadrature
+     e(GCmd(g, "BMY = 2000"));  // Set magnetic pitch of rotary motor
+     e(GCmd(g, "AGY = 1"));     // Set amplifier gain
+     e(GCmd(g, "AUY = 11"));    // Set current loop (based on inductance of motor)
+     e(GCmd(g, "TLY = 6"));     // Set constant torque limit to 6V
+     e(GCmd(g, "TKY = 0"));     // Disable peak torque setting for now
+
+     // Z Axis
+     e(GCmd(g, "MTZ = -2.5"));  // Set motor type to standard brushless
+     e(GCmd(g, "CEZ = 14"));    // Set Encoder to reversed quadrature
+     e(GCmd(g, "AGZ = 0"));     // Set amplifier gain
+     e(GCmd(g, "AUZ = 9"));     // Set current loop (based on inductance of motor)
+     // Note: There might be more settings especially for this axis I might want to add later
+
+     // H Axis (Jetting Axis)
+     e(GCmd(g, "MTH = -2"));    // Set jetting axis to be stepper motor with defualt low
+     e(GCmd(g, "AGH = 0"));     // Set gain to lowest value
+     e(GCmd(g, "LDH = 3"));     // Disable limit sensors for H axis
+     e(GCmd(g, "KSH = .25"));   // Minimize filters on step signals
+     e(GCmd(g, "ITH = 1"));     // Minimize filters on step signals
+
+     e(GCmd(g, "BN"));          // Save (burn) these settings to the controller just to be safe
+
+
+     e(GCmd(g, "SH XYZ"));      // Enable X,Y, and Z motors
+     ui->connectController->setText("Disconnect Controller");
     }
     else{
-        e(GCmd(g, "MO")); // Disable Motors
+        e(GCmd(g, "MO"));       // Disable Motors
         GClose(g);
-        g = 0; // Reset connection handle
-        ui->pushButton_2->setText("Connect to Controller");
+        g = 0;                  // Reset connection handle
+        ui->connectController->setText("Connect to Controller");
     }
 }
 
