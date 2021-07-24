@@ -248,7 +248,7 @@ void MainWindow::on_connect_clicked()
     if(g==0){
      e(GOpen(address, &g));
      e(GCmd(g, "SH XYZ")); // Enable X,Y, and Z motors
-     ui->pushButton_2->setText("Disconnect Controller");
+     ui->connect->setText("Disconnect Controller");
      e(GOpen(address, &g)); // Establish connection with motion controller
 
      // Controller Configuration
@@ -290,13 +290,13 @@ void MainWindow::on_connect_clicked()
 
 
      e(GCmd(g, "SH XYZ"));      // Enable X,Y, and Z motors
-     ui->connectController->setText("Disconnect Controller");
+     ui->connect->setText("Disconnect Controller");
     }
     else{
         e(GCmd(g, "MO"));       // Disable Motors
         GClose(g);
         g = 0;                  // Reset connection handle
-        ui->connectController->setText("Connect to Controller");
+        ui->connect->setText("Connect to Controller");
     }
 }
 

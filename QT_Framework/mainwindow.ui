@@ -426,7 +426,7 @@
      <string>Roller Speed (RPM)</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="connectController">
+   <widget class="QPushButton" name="connect">
     <property name="geometry">
      <rect>
       <x>50</x>
