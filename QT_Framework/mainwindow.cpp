@@ -1,6 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <string>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <iterator>
+#include <sstream>
 
 using namespace std;
 
@@ -9,6 +14,15 @@ void e(GReturn rc)
    if (rc != G_NO_ERROR)
      throw rc;
  }
+
+void split(const std::string &s, char delim, std::vector<std::string> &elems) {
+    std::stringstream ss;
+    ss.str(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -26,8 +40,29 @@ MainWindow::MainWindow(QWidget *parent)
     //mmY = ;
     mmZ = 757760;
     //DOWN THE ROAD -> Update default GUI values
+    string line;
+      ifstream myfile ("PrinterSettings.txt");
+      if (myfile.is_open())
+      {
+
+        while(getline(myfile, line)) {
+            vector<string> row_values;
+
+            split(line, '\t', row_values);
+
+            if(row_values[0] == "settingType")
+            {
+                int x = stoi(row_values[1]);
+            }
+        }
+        myfile.close();
+      }
+
+      else cout << "Unable to open file";//Notify user-> "Unable to open file";
+
 
     //Setup Background Image
+
 }
 
 MainWindow::~MainWindow()
@@ -108,7 +143,7 @@ void MainWindow::on_xHome_clicked()
         e(GMotionComplete(g, "X")); // Wait until limit is reached
         e(GCmd(g, "JGX=15000")); // 15 mm/s jog towards home sensor
         e(GCmd(g, "HVX=500")); // 0.5 mm/s on second move towards home sensor
-        e(GCmd(g, "FIX")); // Find index command for x axis
+        e(GCmd(g, "FIX")); // Find index command for x axis CENTER VALUE
         e(GCmd(g, "BGX")); // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
         e(GMotionComplete(g, "X"));
         e(GCmd(g, "DPX=75000")); //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
@@ -207,12 +242,14 @@ void MainWindow::on_activateHopper_stateChanged(int arg1)
 }
 
 
-void MainWindow::on_pushButton_2_clicked()
+void MainWindow::on_connect_clicked()
 {
+    //TO DO - DISABLE BUTTONS UNTIL TUNED, SEPERATE INITIALIZATION HOMING BUTTONS
     if(g==0){
      e(GOpen(address, &g));
      e(GCmd(g, "SH XYZ")); // Enable X,Y, and Z motors
      ui->pushButton_2->setText("Disconnect Controller");
+     on_xHome_clicked();    //CURRENT PLAN: Directly call the X,Y,Z home functions from here as so.
     }
     else{
         e(GCmd(g, "MO")); // Disable Motors

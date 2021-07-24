@@ -439,6 +439,19 @@
      <string>Connect to Controller</string>
     </property>
    </widget>
+   <widget class="QToolButton" name="zHome">
+    <property name="geometry">
+     <rect>
+      <x>360</x>
+      <y>350</y>
+      <width>61</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Z Home</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -446,7 +459,7 @@
      <x>0</x>
      <y>0</y>
      <width>773</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuPrinter_Controls">
