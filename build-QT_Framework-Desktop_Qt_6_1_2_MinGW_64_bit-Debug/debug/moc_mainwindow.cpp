@@ -23,7 +23,7 @@ QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_MainWindow_t {
     const uint offsetsAndSize[34];
-    char stringdata0[311];
+    char stringdata0[316];
 };
 #define QT_MOC_LITERAL(ofs, len) \
     uint(offsetof(qt_meta_stringdata_MainWindow_t, stringdata0) + ofs), len 
@@ -45,7 +45,7 @@ QT_MOC_LITERAL(192, 16), // "on_zDown_clicked"
 QT_MOC_LITERAL(209, 15), // "on_zMin_clicked"
 QT_MOC_LITERAL(225, 30), // "on_activateRoller_stateChanged"
 QT_MOC_LITERAL(256, 30), // "on_activateHopper_stateChanged"
-QT_MOC_LITERAL(287, 23) // "on_pushButton_2_clicked"
+QT_MOC_LITERAL(287, 28) // "on_connectController_clicked"
 
     },
     "MainWindow\0on_yPositive_clicked\0\0"
@@ -56,7 +56,7 @@ QT_MOC_LITERAL(287, 23) // "on_pushButton_2_clicked"
     "on_zDown_clicked\0on_zMin_clicked\0"
     "on_activateRoller_stateChanged\0"
     "on_activateHopper_stateChanged\0"
-    "on_pushButton_2_clicked"
+    "on_connectController_clicked"
 };
 #undef QT_MOC_LITERAL
 
@@ -127,7 +127,7 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 10: _t->on_zMin_clicked(); break;
         case 11: _t->on_activateRoller_stateChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
         case 12: _t->on_activateHopper_stateChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 13: _t->on_pushButton_2_clicked(); break;
+        case 13: _t->on_connectController_clicked(); break;
         default: ;
         }
     }
