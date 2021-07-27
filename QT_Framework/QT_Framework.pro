@@ -12,7 +12,8 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     gclibo.c \
-    arrays.c
+    arrays.c \
+    programwindow.cpp
 
 HEADERS += \
     #../../../../../../Program Files (x86)/Galil/gclib/include/gclib.h \
@@ -21,10 +22,12 @@ HEADERS += \
     #../../../../../../Program Files (x86)/Galil/gclib/include/gclibo.h \
     mainwindow.h \
     gclib.h \
-    gclibo.h
+    gclibo.h \
+    programwindow.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    programwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -45,3 +48,5 @@ win32: LIBS += -L$$PWD/./ -lgclibo
 
 INCLUDEPATH += $$PWD/.
 DEPENDPATH += $$PWD/.
+
+DISTFILES +=

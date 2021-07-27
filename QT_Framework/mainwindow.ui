@@ -452,6 +452,19 @@
      <string>Z Home</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="OpenProgramWindow">
+    <property name="geometry">
+     <rect>
+      <x>510</x>
+      <y>60</y>
+      <width>171</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>OPEN PROGRAM WINDOW</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

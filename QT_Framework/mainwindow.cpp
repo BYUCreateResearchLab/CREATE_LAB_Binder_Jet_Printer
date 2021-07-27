@@ -288,7 +288,6 @@ void MainWindow::on_connect_clicked()
 
      e(GCmd(g, "BN"));          // Save (burn) these settings to the controller just to be safe
 
-
      e(GCmd(g, "SH XYZ"));      // Enable X,Y, and Z motors
      ui->connect->setText("Disconnect Controller");
     }
@@ -298,5 +297,11 @@ void MainWindow::on_connect_clicked()
         g = 0;                  // Reset connection handle
         ui->connect->setText("Connect to Controller");
     }
+}
+
+void MainWindow::on_OpenProgramWindow_clicked()
+{
+    programWindow P;
+    P.show();
 }
 

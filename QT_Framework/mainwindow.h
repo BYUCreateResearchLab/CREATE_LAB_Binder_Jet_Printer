@@ -7,6 +7,7 @@
 #include "gclibo.h"
 #include "gclib_errors.h"
 #include "gclib_record.h"
+#include "programwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -48,6 +49,8 @@ private slots:
     void on_activateHopper_stateChanged(int arg1);
 
     void on_connect_clicked();
+
+    void on_OpenProgramWindow_clicked();
 
 private:
     Ui::MainWindow *ui;

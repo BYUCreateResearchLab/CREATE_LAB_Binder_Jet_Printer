@@ -72,6 +72,7 @@ public:
     QLabel *VelocityLabel_2;
     QPushButton *connect;
     QToolButton *zHome;
+    QPushButton *OpenProgramWindow;
     QMenuBar *menubar;
     QMenu *menuPrinter_Controls;
     QStatusBar *statusbar;
@@ -236,6 +237,9 @@ public:
         zHome = new QToolButton(centralwidget);
         zHome->setObjectName(QString::fromUtf8("zHome"));
         zHome->setGeometry(QRect(360, 350, 61, 23));
+        OpenProgramWindow = new QPushButton(centralwidget);
+        OpenProgramWindow->setObjectName(QString::fromUtf8("OpenProgramWindow"));
+        OpenProgramWindow->setGeometry(QRect(510, 60, 171, 25));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
@@ -282,6 +286,7 @@ public:
         VelocityLabel_2->setText(QCoreApplication::translate("MainWindow", "Roller Speed (RPM)", nullptr));
         connect->setText(QCoreApplication::translate("MainWindow", "Connect to Controller", nullptr));
         zHome->setText(QCoreApplication::translate("MainWindow", "Z Home", nullptr));
+        OpenProgramWindow->setText(QCoreApplication::translate("MainWindow", "OPEN PROGRAM WINDOW", nullptr));
         menuPrinter_Controls->setTitle(QCoreApplication::translate("MainWindow", "Printer Controls", nullptr));
     } // retranslateUi
 
