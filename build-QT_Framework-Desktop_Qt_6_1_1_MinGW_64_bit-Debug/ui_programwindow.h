@@ -19,16 +19,16 @@ QT_BEGIN_NAMESPACE
 class Ui_programWindow
 {
 public:
-    QPushButton *pushButton;
+    QPushButton *backToMain_Button;
 
     void setupUi(QDialog *programWindow)
     {
         if (programWindow->objectName().isEmpty())
             programWindow->setObjectName(QString::fromUtf8("programWindow"));
         programWindow->resize(556, 395);
-        pushButton = new QPushButton(programWindow);
-        pushButton->setObjectName(QString::fromUtf8("pushButton"));
-        pushButton->setGeometry(QRect(230, 190, 101, 25));
+        backToMain_Button = new QPushButton(programWindow);
+        backToMain_Button->setObjectName(QString::fromUtf8("backToMain_Button"));
+        backToMain_Button->setGeometry(QRect(230, 190, 101, 25));
 
         retranslateUi(programWindow);
 
@@ -38,7 +38,7 @@ public:
     void retranslateUi(QDialog *programWindow)
     {
         programWindow->setWindowTitle(QCoreApplication::translate("programWindow", "Dialog", nullptr));
-        pushButton->setText(QCoreApplication::translate("programWindow", "Back To Main", nullptr));
+        backToMain_Button->setText(QCoreApplication::translate("programWindow", "Back To Main", nullptr));
     } // retranslateUi
 
 };

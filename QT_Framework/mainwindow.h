@@ -7,7 +7,8 @@
 #include "gclibo.h"
 #include "gclib_errors.h"
 #include "gclib_record.h"
-#include "programwindow.h"
+#include <progwindow.h>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -18,7 +19,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QMainWindow *parent = nullptr);
     ~MainWindow();
 
 private slots:
@@ -66,5 +67,6 @@ private:
     int mmZ;
     char const *address = "192.168.42.100";
     GCon g = 0; // Handle for connection to Galil Motion Controller
+    progWindow *sWindow;
 };
 #endif // MAINWINDOW_H

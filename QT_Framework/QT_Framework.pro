@@ -11,23 +11,23 @@ CONFIG += c++11
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
+    progwindow.cpp \
     gclibo.c \
     arrays.c \
-    programwindow.cpp
 
 HEADERS += \
-    #../../../../../../Program Files (x86)/Galil/gclib/include/gclib.h \
-    #../../../../../../Program Files (x86)/Galil/gclib/include/gclib_errors.h \
-    #../../../../../../Program Files (x86)/Galil/gclib/include/gclib_record.h \
-    #../../../../../../Program Files (x86)/Galil/gclib/include/gclibo.h \
+    ../../../../../../Program Files (x86)/Galil/gclib/include/gclib.h \
+    ../../../../../../Program Files (x86)/Galil/gclib/include/gclib_errors.h \
+    ../../../../../../Program Files (x86)/Galil/gclib/include/gclib_record.h \
+    ../../../../../../Program Files (x86)/Galil/gclib/include/gclibo.h \
     mainwindow.h \
+    progwindow.h \
     gclib.h \
     gclibo.h \
-    programwindow.h
 
 FORMS += \
     mainwindow.ui \
-    programwindow.ui
+    progwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -49,4 +49,5 @@ win32: LIBS += -L$$PWD/./ -lgclibo
 INCLUDEPATH += $$PWD/.
 DEPENDPATH += $$PWD/.
 
-DISTFILES +=
+DISTFILES += \
+    PrinterSettings.txt

@@ -24,11 +24,16 @@ void split(const std::string &s, char delim, std::vector<std::string> &elems) {
     }
 }
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QMainWindow *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    //Set up Second Window
+    sWindow = new progWindow();
+    connect(sWindow, &progWindow::firstWindow, this, &MainWindow::show);
+
+    //Initialize Necessary Variables
     ui->bedSpinBox->setMaximum(300);
     delta_x = 10;
     delta_y = 10;
@@ -41,10 +46,10 @@ MainWindow::MainWindow(QWidget *parent)
     mmZ = 757760;
     //DOWN THE ROAD -> Update default GUI values
     string line;
-      ifstream myfile ("PrinterSettings.txt");
-      if (myfile.is_open())
-      {
-
+    ifstream myfile("PrinterSettings.txt");
+    if (myfile.is_open())
+    {
+        int x;
         while(getline(myfile, line)) {
             vector<string> row_values;
 
@@ -52,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent)
 
             if(row_values[0] == "settingType")
             {
-                int x = stoi(row_values[1]);
+                x = stoi(row_values[1]);
             }
         }
         myfile.close();
@@ -69,9 +74,11 @@ MainWindow::~MainWindow()
 {
     // On application close
     delete ui;
+
     if(g){ // if there is an active connection to a controller
         e(GCmd(g, "MO")); // Turn off the motors
         GClose(g);} // Close the connection to the controller
+
 }
 
 
@@ -148,6 +155,7 @@ void MainWindow::on_xHome_clicked()
         e(GMotionComplete(g, "X")); // Wait until X stage finishes moving
         e(GCmd(g, "DPX=75000"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
     }
+
 }
 
 
@@ -171,14 +179,12 @@ void MainWindow::on_zMax_clicked()
 
 void  MainWindow::on_zUp_clicked()
 {
+
     if(g){
         z_position = z_position + delta_z;
         ui->bedSpinBox->setValue(z_position);
         //DMC Commands : https://www.galil.com/download/comref/com4000/index.html#cover.html+DMC4000
-        /*
-        *
-        *
-        */
+
         int zSteps = delta_z*micronZ;
         string zPRZString = "PRZ=" + to_string(zSteps);
         e(GCmd(g, "ACZ=757760"));         //Acceleration of C     757760 steps ~ 1 mm
@@ -193,6 +199,7 @@ void  MainWindow::on_zUp_clicked()
 
 void  MainWindow::on_zDown_clicked()
 {
+
     if(g){
         z_position = z_position - delta_z;
         ui->bedSpinBox->setValue(z_position);
@@ -245,6 +252,7 @@ void MainWindow::on_activateHopper_stateChanged(int arg1)
 void MainWindow::on_connect_clicked()
 {
     //TO DO - DISABLE BUTTONS UNTIL TUNED, SEPERATE INITIALIZATION HOMING BUTTONS
+
     if(g==0){
      e(GOpen(address, &g));
      e(GCmd(g, "SH XYZ")); // Enable X,Y, and Z motors
@@ -297,11 +305,12 @@ void MainWindow::on_connect_clicked()
         g = 0;                  // Reset connection handle
         ui->connect->setText("Connect to Controller");
     }
+
 }
 
 void MainWindow::on_OpenProgramWindow_clicked()
 {
-    programWindow P;
-    P.show();
+    sWindow->show();
+    this->close();
 }
 
