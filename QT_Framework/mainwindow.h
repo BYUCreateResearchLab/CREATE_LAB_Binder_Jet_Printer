@@ -53,6 +53,8 @@ private slots:
 
     void on_OpenProgramWindow_clicked();
 
+    void on_connect_clicked(bool checked);
+
 private:
     Ui::MainWindow *ui;
     int z_position = 100;

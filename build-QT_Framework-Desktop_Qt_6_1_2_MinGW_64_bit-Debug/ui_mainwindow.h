@@ -70,7 +70,9 @@ public:
     QSpinBox *xDistance_2;
     QLabel *label_4;
     QLabel *VelocityLabel_2;
-    QPushButton *connectController;
+    QPushButton *connect;
+    QToolButton *zHome;
+    QPushButton *OpenProgramWindow;
     QMenuBar *menubar;
     QMenu *menuPrinter_Controls;
     QStatusBar *statusbar;
@@ -229,9 +231,15 @@ public:
         VelocityLabel_2 = new QLabel(centralwidget);
         VelocityLabel_2->setObjectName(QString::fromUtf8("VelocityLabel_2"));
         VelocityLabel_2->setGeometry(QRect(530, 260, 111, 16));
-        connectController = new QPushButton(centralwidget);
-        connectController->setObjectName(QString::fromUtf8("connectController"));
-        connectController->setGeometry(QRect(50, 70, 141, 23));
+        connect = new QPushButton(centralwidget);
+        connect->setObjectName(QString::fromUtf8("connect"));
+        connect->setGeometry(QRect(50, 70, 141, 23));
+        zHome = new QToolButton(centralwidget);
+        zHome->setObjectName(QString::fromUtf8("zHome"));
+        zHome->setGeometry(QRect(360, 350, 61, 23));
+        OpenProgramWindow = new QPushButton(centralwidget);
+        OpenProgramWindow->setObjectName(QString::fromUtf8("OpenProgramWindow"));
+        OpenProgramWindow->setGeometry(QRect(510, 60, 171, 25));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
@@ -276,7 +284,9 @@ public:
         pushButton->setText(QCoreApplication::translate("MainWindow", "Spread New Layer(s)", nullptr));
         label_4->setText(QCoreApplication::translate("MainWindow", "Number of Layers", nullptr));
         VelocityLabel_2->setText(QCoreApplication::translate("MainWindow", "Roller Speed (RPM)", nullptr));
-        connectController->setText(QCoreApplication::translate("MainWindow", "Connect to Controller", nullptr));
+        connect->setText(QCoreApplication::translate("MainWindow", "Connect to Controller", nullptr));
+        zHome->setText(QCoreApplication::translate("MainWindow", "Z Home", nullptr));
+        OpenProgramWindow->setText(QCoreApplication::translate("MainWindow", "OPEN PROGRAM WINDOW", nullptr));
         menuPrinter_Controls->setTitle(QCoreApplication::translate("MainWindow", "Printer Controls", nullptr));
     } // retranslateUi
 
