@@ -1,0 +1,11 @@
+debug/main.o
+debug/mainwindow.o
+debug/progwindow.o
+debug/gclibo.o
+debug/arrays.o
+debug/lineprintdata.o
+debug/printobject.o
+debug/svgview.o
+debug/moc_mainwindow.o
+debug/moc_progwindow.o
+debug/moc_svgview.o

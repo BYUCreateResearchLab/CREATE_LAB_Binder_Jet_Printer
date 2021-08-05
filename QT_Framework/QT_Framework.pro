@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui svg svgwidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -14,6 +14,9 @@ SOURCES += \
     progwindow.cpp \
     gclibo.c \
     arrays.c \
+    lineprintdata.cpp \
+    printobject.cpp \
+    svgview.cpp \
 
 HEADERS += \
     ../../../../../../Program Files (x86)/Galil/gclib/include/gclib.h \
@@ -24,6 +27,10 @@ HEADERS += \
     progwindow.h \
     gclib.h \
     gclibo.h \
+    lineprintdata.h \
+    printobject.h \
+    svgview.h \
+    vec2.h \
 
 FORMS += \
     mainwindow.ui \

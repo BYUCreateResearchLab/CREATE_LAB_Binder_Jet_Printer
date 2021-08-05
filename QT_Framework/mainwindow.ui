@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>773</width>
-    <height>484</height>
+    <width>864</width>
+    <height>569</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -426,19 +426,6 @@
      <string>Roller Speed (RPM)</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="connect">
-    <property name="geometry">
-     <rect>
-      <x>50</x>
-      <y>70</y>
-      <width>141</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Connect to Controller</string>
-    </property>
-   </widget>
    <widget class="QToolButton" name="zHome">
     <property name="geometry">
      <rect>
@@ -465,13 +452,26 @@
      <string>OPEN PROGRAM WINDOW</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="connect">
+    <property name="geometry">
+     <rect>
+      <x>74</x>
+      <y>70</y>
+      <width>121</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Connect to Controller</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>773</width>
+     <width>864</width>
      <height>21</height>
     </rect>
    </property>

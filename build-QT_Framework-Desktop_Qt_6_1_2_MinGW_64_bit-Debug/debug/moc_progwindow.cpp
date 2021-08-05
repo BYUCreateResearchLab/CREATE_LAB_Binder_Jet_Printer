@@ -8,6 +8,8 @@
 
 #include <memory>
 #include "../../QT_Framework/progwindow.h"
+#include <QtGui/qtextcursor.h>
+#include <QScreen>
 #include <QtCore/qbytearray.h>
 #include <QtCore/qmetatype.h>
 #if !defined(Q_MOC_OUTPUT_REVISION)
@@ -22,8 +24,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_progWindow_t {
-    const uint offsetsAndSize[8];
-    char stringdata0[45];
+    const uint offsetsAndSize[30];
+    char stringdata0[252];
 };
 #define QT_MOC_LITERAL(ofs, len) \
     uint(offsetof(qt_meta_stringdata_progWindow_t, stringdata0) + ofs), len 
@@ -32,10 +34,27 @@ static const qt_meta_stringdata_progWindow_t qt_meta_stringdata_progWindow = {
 QT_MOC_LITERAL(0, 10), // "progWindow"
 QT_MOC_LITERAL(11, 11), // "firstWindow"
 QT_MOC_LITERAL(23, 0), // ""
-QT_MOC_LITERAL(24, 20) // "on_back2Home_clicked"
+QT_MOC_LITERAL(24, 20), // "on_back2Home_clicked"
+QT_MOC_LITERAL(45, 23), // "on_numSets_valueChanged"
+QT_MOC_LITERAL(69, 4), // "arg1"
+QT_MOC_LITERAL(74, 26), // "on_tableWidget_cellChanged"
+QT_MOC_LITERAL(101, 3), // "row"
+QT_MOC_LITERAL(105, 6), // "column"
+QT_MOC_LITERAL(112, 22), // "on_startX_valueChanged"
+QT_MOC_LITERAL(135, 22), // "on_startY_valueChanged"
+QT_MOC_LITERAL(158, 26), // "on_setSpacing_valueChanged"
+QT_MOC_LITERAL(185, 33), // "on_printPercentSlider_sliderM..."
+QT_MOC_LITERAL(219, 8), // "position"
+QT_MOC_LITERAL(228, 23) // "on_clearConsole_clicked"
 
     },
-    "progWindow\0firstWindow\0\0on_back2Home_clicked"
+    "progWindow\0firstWindow\0\0on_back2Home_clicked\0"
+    "on_numSets_valueChanged\0arg1\0"
+    "on_tableWidget_cellChanged\0row\0column\0"
+    "on_startX_valueChanged\0on_startY_valueChanged\0"
+    "on_setSpacing_valueChanged\0"
+    "on_printPercentSlider_sliderMoved\0"
+    "position\0on_clearConsole_clicked"
 };
 #undef QT_MOC_LITERAL
 
@@ -45,7 +64,7 @@ static const uint qt_meta_data_progWindow[] = {
        9,       // revision
        0,       // classname
        0,    0, // classinfo
-       2,   14, // methods
+       9,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -53,15 +72,29 @@ static const uint qt_meta_data_progWindow[] = {
        1,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    0,   26,    2, 0x06,    0 /* Public */,
+       1,    0,   68,    2, 0x06,    0 /* Public */,
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-       3,    0,   27,    2, 0x08,    1 /* Private */,
+       3,    0,   69,    2, 0x08,    1 /* Private */,
+       4,    1,   70,    2, 0x08,    2 /* Private */,
+       6,    2,   73,    2, 0x08,    4 /* Private */,
+       9,    1,   78,    2, 0x08,    7 /* Private */,
+      10,    1,   81,    2, 0x08,    9 /* Private */,
+      11,    1,   84,    2, 0x08,   11 /* Private */,
+      12,    1,   87,    2, 0x08,   13 /* Private */,
+      14,    0,   90,    2, 0x08,   15 /* Private */,
 
  // signals: parameters
     QMetaType::Void,
 
  // slots: parameters
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::Int,    5,
+    QMetaType::Void, QMetaType::Int, QMetaType::Int,    7,    8,
+    QMetaType::Void, QMetaType::Double,    5,
+    QMetaType::Void, QMetaType::Double,    5,
+    QMetaType::Void, QMetaType::Double,    5,
+    QMetaType::Void, QMetaType::Int,   13,
     QMetaType::Void,
 
        0        // eod
@@ -75,6 +108,13 @@ void progWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         switch (_id) {
         case 0: _t->firstWindow(); break;
         case 1: _t->on_back2Home_clicked(); break;
+        case 2: _t->on_numSets_valueChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 3: _t->on_tableWidget_cellChanged((*reinterpret_cast< int(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
+        case 4: _t->on_startX_valueChanged((*reinterpret_cast< double(*)>(_a[1]))); break;
+        case 5: _t->on_startY_valueChanged((*reinterpret_cast< double(*)>(_a[1]))); break;
+        case 6: _t->on_setSpacing_valueChanged((*reinterpret_cast< double(*)>(_a[1]))); break;
+        case 7: _t->on_printPercentSlider_sliderMoved((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 8: _t->on_clearConsole_clicked(); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -87,7 +127,6 @@ void progWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
             }
         }
     }
-    (void)_a;
 }
 
 const QMetaObject progWindow::staticMetaObject = { {
@@ -98,7 +137,7 @@ const QMetaObject progWindow::staticMetaObject = { {
     nullptr,
 qt_incomplete_metaTypeArray<qt_meta_stringdata_progWindow_t
 , QtPrivate::TypeAndForceComplete<void, std::false_type>
-, QtPrivate::TypeAndForceComplete<void, std::false_type>
+, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<int, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<int, std::false_type>, QtPrivate::TypeAndForceComplete<int, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<double, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<double, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<double, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<int, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>
 
 
 >,
@@ -125,13 +164,13 @@ int progWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 2)
+        if (_id < 9)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 2;
+        _id -= 9;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 2)
+        if (_id < 9)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 2;
+        _id -= 9;
     }
     return _id;
 }

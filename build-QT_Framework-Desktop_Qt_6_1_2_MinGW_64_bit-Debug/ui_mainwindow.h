@@ -70,9 +70,9 @@ public:
     QSpinBox *xDistance_2;
     QLabel *label_4;
     QLabel *VelocityLabel_2;
-    QPushButton *connect;
     QToolButton *zHome;
     QPushButton *OpenProgramWindow;
+    QPushButton *connect;
     QMenuBar *menubar;
     QMenu *menuPrinter_Controls;
     QStatusBar *statusbar;
@@ -81,7 +81,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
-        MainWindow->resize(773, 484);
+        MainWindow->resize(864, 569);
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         gridLayoutWidget = new QWidget(centralwidget);
@@ -231,19 +231,19 @@ public:
         VelocityLabel_2 = new QLabel(centralwidget);
         VelocityLabel_2->setObjectName(QString::fromUtf8("VelocityLabel_2"));
         VelocityLabel_2->setGeometry(QRect(530, 260, 111, 16));
-        connect = new QPushButton(centralwidget);
-        connect->setObjectName(QString::fromUtf8("connect"));
-        connect->setGeometry(QRect(50, 70, 141, 23));
         zHome = new QToolButton(centralwidget);
         zHome->setObjectName(QString::fromUtf8("zHome"));
         zHome->setGeometry(QRect(360, 350, 61, 23));
         OpenProgramWindow = new QPushButton(centralwidget);
         OpenProgramWindow->setObjectName(QString::fromUtf8("OpenProgramWindow"));
         OpenProgramWindow->setGeometry(QRect(510, 60, 171, 25));
+        connect = new QPushButton(centralwidget);
+        connect->setObjectName(QString::fromUtf8("connect"));
+        connect->setGeometry(QRect(74, 70, 121, 23));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
-        menubar->setGeometry(QRect(0, 0, 773, 21));
+        menubar->setGeometry(QRect(0, 0, 864, 21));
         menuPrinter_Controls = new QMenu(menubar);
         menuPrinter_Controls->setObjectName(QString::fromUtf8("menuPrinter_Controls"));
         MainWindow->setMenuBar(menubar);
@@ -284,9 +284,9 @@ public:
         pushButton->setText(QCoreApplication::translate("MainWindow", "Spread New Layer(s)", nullptr));
         label_4->setText(QCoreApplication::translate("MainWindow", "Number of Layers", nullptr));
         VelocityLabel_2->setText(QCoreApplication::translate("MainWindow", "Roller Speed (RPM)", nullptr));
-        connect->setText(QCoreApplication::translate("MainWindow", "Connect to Controller", nullptr));
         zHome->setText(QCoreApplication::translate("MainWindow", "Z Home", nullptr));
         OpenProgramWindow->setText(QCoreApplication::translate("MainWindow", "OPEN PROGRAM WINDOW", nullptr));
+        connect->setText(QCoreApplication::translate("MainWindow", "Connect to Controller", nullptr));
         menuPrinter_Controls->setTitle(QCoreApplication::translate("MainWindow", "Printer Controls", nullptr));
     } // retranslateUi
 

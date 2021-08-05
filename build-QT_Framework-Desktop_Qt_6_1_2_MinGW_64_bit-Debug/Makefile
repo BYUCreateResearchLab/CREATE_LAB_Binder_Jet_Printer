@@ -196,6 +196,8 @@ Makefile: ../QT_Framework/QT_Framework.pro C:/Qt/6.1.2/mingw81_64/mkspecs/win32-
 		C:/Qt/6.1.2/mingw81_64/mkspecs/features/yacc.prf \
 		C:/Qt/6.1.2/mingw81_64/mkspecs/features/lex.prf \
 		../QT_Framework/QT_Framework.pro \
+		C:/Qt/6.1.2/mingw81_64/lib/Qt6SvgWidgets.prl \
+		C:/Qt/6.1.2/mingw81_64/lib/Qt6Svg.prl \
 		C:/Qt/6.1.2/mingw81_64/lib/Qt6Widgets.prl \
 		C:/Qt/6.1.2/mingw81_64/lib/Qt6Gui.prl \
 		C:/Qt/6.1.2/mingw81_64/lib/Qt6Core.prl \
@@ -328,6 +330,8 @@ C:/Qt/6.1.2/mingw81_64/mkspecs/features/exceptions.prf:
 C:/Qt/6.1.2/mingw81_64/mkspecs/features/yacc.prf:
 C:/Qt/6.1.2/mingw81_64/mkspecs/features/lex.prf:
 ../QT_Framework/QT_Framework.pro:
+C:/Qt/6.1.2/mingw81_64/lib/Qt6SvgWidgets.prl:
+C:/Qt/6.1.2/mingw81_64/lib/Qt6Svg.prl:
 C:/Qt/6.1.2/mingw81_64/lib/Qt6Widgets.prl:
 C:/Qt/6.1.2/mingw81_64/lib/Qt6Gui.prl:
 C:/Qt/6.1.2/mingw81_64/lib/Qt6Core.prl:
