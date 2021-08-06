@@ -3,10 +3,26 @@
 
 #include <QMainWindow>
 
+// Use this as well as commenting out the headers and cpp files in the .pro file to avoid loading gclib for UI testing
+//#define AVOIDGCLIB
+
+
+
+#ifdef AVOIDGCLIB
+#include "fakegclib.h"
+#endif
+
+#ifndef AVOIDGCLIB
 #include "gclib.h"
 #include "gclibo.h"
 #include "gclib_errors.h"
 #include "gclib_record.h"
+#endif
+
+
+
+
+
 #include <progwindow.h>
 
 
