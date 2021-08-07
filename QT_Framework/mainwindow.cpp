@@ -254,10 +254,9 @@ void MainWindow::on_connect_clicked()
     //TO DO - DISABLE BUTTONS UNTIL TUNED, SEPERATE INITIALIZATION HOMING BUTTONS
 
     if(g==0){
-     e(GOpen(address, &g));
+     e(GOpen(address, &g)); // Establish connection with motion controller
      e(GCmd(g, "SH XYZ")); // Enable X,Y, and Z motors
      ui->connect->setText("Disconnect Controller");
-     e(GOpen(address, &g)); // Establish connection with motion controller
 
      // Controller Configuration
      e(GCmd(g, "MO")); // Ensure motors are off for setup

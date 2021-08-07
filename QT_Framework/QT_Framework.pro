@@ -10,8 +10,8 @@ CONFIG += c++11
 
 # Comment these out and define AVOIDGCLIB in mainwindow.h to compile on machines that don't play well with gclib
 SOURCES += \
-    gclibo.c \
-    arrays.c \
+    #gclibo.c \
+    #arrays.c \
 
 HEADERS += \
     gclib.h \
@@ -31,10 +31,6 @@ SOURCES += \
     fakegclib.cpp \
 
 HEADERS += \
-    #../../../../../../Program Files (x86)/Galil/gclib/include/gclib.h \
-    #../../../../../../Program Files (x86)/Galil/gclib/include/gclib_errors.h \
-    #../../../../../../Program Files (x86)/Galil/gclib/include/gclib_record.h \
-    #../../../../../../Program Files (x86)/Galil/gclib/include/gclibo.h \
     mainwindow.h \
     progwindow.h \
     lineprintdata.h \
@@ -54,18 +50,12 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 
 
+INCLUDEPATH += $$PWD/.
+DEPENDPATH += $$PWD/.
 
-LIBS +=   -L /usr/linclude -lz # fixes references to 'uncompress' in zlib.h
-
+win32: LIBS +=   -L /usr/linclude -lz # fixes references to 'uncompress' in zlib.h
 win32: LIBS += -L$$PWD/./ -lgclib
-
-INCLUDEPATH += $$PWD/.
-DEPENDPATH += $$PWD/.
-
 win32: LIBS += -L$$PWD/./ -lgclibo
-
-INCLUDEPATH += $$PWD/.
-DEPENDPATH += $$PWD/.
 
 DISTFILES += \
     PrinterSettings.txt
