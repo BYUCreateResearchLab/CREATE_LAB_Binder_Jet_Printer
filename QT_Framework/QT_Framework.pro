@@ -10,8 +10,8 @@ CONFIG += c++11
 
 # Comment these out and define AVOIDGCLIB in mainwindow.h to compile on machines that don't play well with gclib
 SOURCES += \
-    #gclibo.c \
-    #arrays.c \
+    gclibo.c \
+    arrays.c \
 
 HEADERS += \
     gclib.h \

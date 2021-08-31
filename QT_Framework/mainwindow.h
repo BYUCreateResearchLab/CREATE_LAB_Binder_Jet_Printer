@@ -69,6 +69,10 @@ private slots:
 
     void on_OpenProgramWindow_clicked();
 
+    void on_saveDefault_clicked();
+
+    void on_revertDefault_clicked();
+
 private:
     Ui::MainWindow *ui;
     int z_position = 100;

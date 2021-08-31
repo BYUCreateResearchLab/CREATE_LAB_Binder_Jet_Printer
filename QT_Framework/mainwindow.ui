@@ -374,7 +374,7 @@
      <string>Spread New Layer(s)</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="xVelocity_2">
+   <widget class="QSpinBox" name="rollerSpeed">
     <property name="geometry">
      <rect>
       <x>530</x>
@@ -387,7 +387,7 @@
      <number>10</number>
     </property>
    </widget>
-   <widget class="QSpinBox" name="xDistance_2">
+   <widget class="QSpinBox" name="numLayers">
     <property name="geometry">
      <rect>
       <x>650</x>
@@ -463,6 +463,32 @@
     </property>
     <property name="text">
      <string>Connect to Controller</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="saveDefault">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>360</y>
+      <width>131</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>SAVE values as default</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="revertDefault">
+    <property name="geometry">
+     <rect>
+      <x>610</x>
+      <y>360</y>
+      <width>131</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>REVERT values to default</string>
     </property>
    </widget>
   </widget>

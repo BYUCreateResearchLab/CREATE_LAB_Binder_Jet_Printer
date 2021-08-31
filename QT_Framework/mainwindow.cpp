@@ -44,27 +44,8 @@ MainWindow::MainWindow(QMainWindow *parent)
     //mmX = ;
     //mmY = ;
     mmZ = 757760;
-    //DOWN THE ROAD -> Update default GUI values
-    string line;
-    ifstream myfile("PrinterSettings.txt");
-    if (myfile.is_open())
-    {
-        int x;
-        while(getline(myfile, line)) {
-            vector<string> row_values;
-
-            split(line, '\t', row_values);
-
-            if(row_values[0] == "settingType")
-            {
-                x = stoi(row_values[1]);
-            }
-        }
-        myfile.close();
-      }
-
-      else cout << "Unable to open file";//Notify user-> "Unable to open file";
-
+    //Update default GUI values
+    MainWindow::on_revertDefault_clicked();
 
     //Setup Background Image
 
@@ -311,5 +292,66 @@ void MainWindow::on_OpenProgramWindow_clicked()
 {
     sWindow->show();
     this->close();
+}
+
+
+void MainWindow::on_saveDefault_clicked()
+{
+    std::ofstream ofs;
+    ofs.open("C:/Users/ME/Documents/GitHub/CREATE_LAB_Binder_Jet_Printer/PrinterSettings.txt", std::ofstream::out | std::ofstream::trunc);
+    ofs<< "XAxisVelocity\t" << to_string(ui->xVelocity->value()) << "\n";
+    ofs<< "YAxisVelocity\t" << to_string(ui->yVelocity->value()) << "\n";
+    ofs<< "XAxisDistance\t" << to_string(ui->xDistance->value()) << "\n";
+    ofs<< "YAxisDistance\t" << to_string(ui->yDistance->value()) << "\n";
+    ofs<< "ZStepSize\t" << to_string(ui->zStepSize->value()) << "\n";
+    ofs<< "RollerSpeed\t" << to_string(ui->rollerSpeed->value()) << "\n";
+    ofs<< "NumberOfLayers\t" << to_string(ui->numLayers->value()) << "\n";
+    ofs.close();
+}
+
+
+void MainWindow::on_revertDefault_clicked()
+{
+    string line;
+    ifstream myfile("C:/Users/ME/Documents/GitHub/CREATE_LAB_Binder_Jet_Printer/PrinterSettings.txt");
+    if (myfile.is_open())
+    {
+        while(getline(myfile, line)) {
+            vector<string> row_values;
+
+            split(line, '\t', row_values);
+
+            if(row_values[0] == "XAxisVelocity")
+            {
+                ui->xVelocity->setValue(stoi(row_values[1]));
+            }
+            else if(row_values[0] == "YAxisVelocity")
+            {
+                ui->yVelocity->setValue(stoi(row_values[1]));
+            }
+            else if(row_values[0] == "XAxisDistance")
+            {
+                ui->xDistance->setValue(stoi(row_values[1]));
+            }
+            else if(row_values[0] == "YAxisDistance")
+            {
+                ui->yDistance->setValue(stoi(row_values[1]));
+            }
+            else if(row_values[0] == "ZStepSize")
+            {
+                ui->zStepSize->setValue(stoi(row_values[1]));
+            }
+            else if(row_values[0] == "RollerSpeed")
+            {
+                ui->rollerSpeed->setValue(stoi(row_values[1]));
+            }
+            else if(row_values[0] == "NumberOfLayers")
+            {
+                ui->numLayers->setValue(stoi(row_values[1]));
+            }
+        }
+        myfile.close();
+      }
+    else cout << "Unable to open file";//Notify user-> "Unable to open file";
 }
 

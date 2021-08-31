@@ -1,11 +1,12 @@
+release/gclibo.o
+release/arrays.o
 release/main.o
 release/mainwindow.o
 release/progwindow.o
-release/gclibo.o
-release/arrays.o
 release/lineprintdata.o
 release/printobject.o
 release/svgview.o
+release/fakegclib.o
 release/moc_mainwindow.o
 release/moc_progwindow.o
 release/moc_svgview.o

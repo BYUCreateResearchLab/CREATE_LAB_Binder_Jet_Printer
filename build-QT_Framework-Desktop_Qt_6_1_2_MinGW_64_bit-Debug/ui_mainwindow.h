@@ -66,13 +66,15 @@ public:
     QCheckBox *activateRoller;
     QCheckBox *activateHopper;
     QPushButton *pushButton;
-    QSpinBox *xVelocity_2;
-    QSpinBox *xDistance_2;
+    QSpinBox *rollerSpeed;
+    QSpinBox *numLayers;
     QLabel *label_4;
     QLabel *VelocityLabel_2;
     QToolButton *zHome;
     QPushButton *OpenProgramWindow;
     QPushButton *connect;
+    QPushButton *saveDefault;
+    QPushButton *revertDefault;
     QMenuBar *menubar;
     QMenu *menuPrinter_Controls;
     QStatusBar *statusbar;
@@ -217,14 +219,14 @@ public:
         pushButton = new QPushButton(centralwidget);
         pushButton->setObjectName(QString::fromUtf8("pushButton"));
         pushButton->setGeometry(QRect(530, 320, 141, 25));
-        xVelocity_2 = new QSpinBox(centralwidget);
-        xVelocity_2->setObjectName(QString::fromUtf8("xVelocity_2"));
-        xVelocity_2->setGeometry(QRect(530, 280, 42, 22));
-        xVelocity_2->setValue(10);
-        xDistance_2 = new QSpinBox(centralwidget);
-        xDistance_2->setObjectName(QString::fromUtf8("xDistance_2"));
-        xDistance_2->setGeometry(QRect(650, 280, 42, 22));
-        xDistance_2->setValue(10);
+        rollerSpeed = new QSpinBox(centralwidget);
+        rollerSpeed->setObjectName(QString::fromUtf8("rollerSpeed"));
+        rollerSpeed->setGeometry(QRect(530, 280, 42, 22));
+        rollerSpeed->setValue(10);
+        numLayers = new QSpinBox(centralwidget);
+        numLayers->setObjectName(QString::fromUtf8("numLayers"));
+        numLayers->setGeometry(QRect(650, 280, 42, 22));
+        numLayers->setValue(10);
         label_4 = new QLabel(centralwidget);
         label_4->setObjectName(QString::fromUtf8("label_4"));
         label_4->setGeometry(QRect(650, 260, 101, 16));
@@ -240,6 +242,12 @@ public:
         connect = new QPushButton(centralwidget);
         connect->setObjectName(QString::fromUtf8("connect"));
         connect->setGeometry(QRect(74, 70, 121, 23));
+        saveDefault = new QPushButton(centralwidget);
+        saveDefault->setObjectName(QString::fromUtf8("saveDefault"));
+        saveDefault->setGeometry(QRect(470, 360, 131, 25));
+        revertDefault = new QPushButton(centralwidget);
+        revertDefault->setObjectName(QString::fromUtf8("revertDefault"));
+        revertDefault->setGeometry(QRect(610, 360, 131, 25));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
@@ -287,6 +295,8 @@ public:
         zHome->setText(QCoreApplication::translate("MainWindow", "Z Home", nullptr));
         OpenProgramWindow->setText(QCoreApplication::translate("MainWindow", "OPEN PROGRAM WINDOW", nullptr));
         connect->setText(QCoreApplication::translate("MainWindow", "Connect to Controller", nullptr));
+        saveDefault->setText(QCoreApplication::translate("MainWindow", "SAVE values as default", nullptr));
+        revertDefault->setText(QCoreApplication::translate("MainWindow", "REVERT values to default", nullptr));
         menuPrinter_Controls->setTitle(QCoreApplication::translate("MainWindow", "Printer Controls", nullptr));
     } // retranslateUi
 

@@ -1,1 +1,7 @@
-settingType	42
+XAxisVelocity	99
+YAxisVelocity	99
+XAxisDistance	99
+YAxisDistance	99
+ZStepSize	99
+RollerSpeed	99
+NumberOfLayers	99
