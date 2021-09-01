@@ -73,6 +73,8 @@ private slots:
 
     void on_revertDefault_clicked();
 
+    void on_zHome_clicked();
+
 private:
     Ui::MainWindow *ui;
     int z_position = 100;

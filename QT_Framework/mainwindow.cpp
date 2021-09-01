@@ -146,6 +146,12 @@ void MainWindow::on_yHome_clicked()
     //TODO - HOME Y AXIS ONCE THE LIMIT SENSORS ARE INSTALLED
 }
 
+void MainWindow::on_zHome_clicked()
+{
+    ui->label4Fun->setText("Homing In On Y");
+    //TODO - HOME Z AXIS ONCE THE LIMIT SENSORS ARE INSTALLED
+}
+
 
 void MainWindow::on_zStepSize_valueChanged(int arg1)
 {
@@ -360,4 +366,7 @@ void MainWindow::on_revertDefault_clicked()
       }
     else cout << "Unable to open file";//Notify user-> "Unable to open file";
 }
+
+
+
 
