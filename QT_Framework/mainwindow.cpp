@@ -284,6 +284,7 @@ void MainWindow::on_connect_clicked()
      e(GCmd(g, "BN"));          // Save (burn) these settings to the controller just to be safe
 
      e(GCmd(g, "SH XYZ"));      // Enable X,Y, and Z motors
+     e(GCmd(g, "CN= -1"));      // Set correct polarity for all limit switches
 
      //HOME TO X&Y AXIS'
      MainWindow::on_xHome_clicked();
