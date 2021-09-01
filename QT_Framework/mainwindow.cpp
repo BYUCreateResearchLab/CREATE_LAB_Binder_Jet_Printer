@@ -120,7 +120,7 @@ void MainWindow::on_xNegative_clicked()
 
 void MainWindow::on_xHome_clicked()
 {
-    ui->label4Fun->setText("Homing In On X");
+    //ui->label4Fun->setText("Homing In On X");
 
     if(g){ // If connected to controller
         // Home the X-Axis using the central home sensor index pulse
@@ -143,6 +143,7 @@ void MainWindow::on_xHome_clicked()
 void MainWindow::on_yHome_clicked()
 {
     ui->label4Fun->setText("Homing In On Y");
+    //TODO - HOME Y AXIS ONCE THE LIMIT SENSORS ARE INSTALLED
 }
 
 
@@ -277,6 +278,11 @@ void MainWindow::on_connect_clicked()
      e(GCmd(g, "BN"));          // Save (burn) these settings to the controller just to be safe
 
      e(GCmd(g, "SH XYZ"));      // Enable X,Y, and Z motors
+
+     //HOME TO X&Y AXIS'
+     MainWindow::on_xHome_clicked();
+     MainWindow::on_yHome_clicked();
+
      ui->connect->setText("Disconnect Controller");
     }
     else{
