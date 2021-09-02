@@ -148,8 +148,22 @@ void MainWindow::on_yHome_clicked()
 
 void MainWindow::on_zHome_clicked()
 {
-    ui->label4Fun->setText("Homing In On Y");
+    ui->label4Fun->setText("Homing In On Z");
     //TODO - HOME Z AXIS ONCE THE LIMIT SENSORS ARE INSTALLED
+    if(g){ // If connected to controller
+        // Home the Z-Axis using an offset from the top limit sensor
+        e(GCmd(g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
+        e(GCmd(g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
+        e(GCmd(g, "JGZ=-15000"));   // 15 mm/s jog towards rear limit
+        e(GCmd(g, "BGZ"));          // Start motion towards rear limit sensor
+        e(GMotionComplete(g, "Z")); // Wait until limit is reached
+        e(GCmd(g, "JGZ=15000"));    // 15 mm/s jog towards home sensor
+        e(GCmd(g, "HVZ=500"));      // 0.5 mm/s on second move towards home sensor
+        //e(GCmd(g, "FIZ"));          // Find index command for x axis
+        e(GCmd(g, "BGZ"));          // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
+        e(GMotionComplete(g, "Z")); // Wait until X stage finishes moving
+        e(GCmd(g, "DPX=0"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
+    }
 }
 
 
@@ -284,6 +298,7 @@ void MainWindow::on_connect_clicked()
      e(GCmd(g, "BN"));          // Save (burn) these settings to the controller just to be safe
 
      e(GCmd(g, "SH XYZ"));      // Enable X,Y, and Z motors
+     e(GCmd(g, "CN= -1"));      // Set correct polarity for all limit switches
 
      //HOME TO X&Y AXIS'
      MainWindow::on_xHome_clicked();
