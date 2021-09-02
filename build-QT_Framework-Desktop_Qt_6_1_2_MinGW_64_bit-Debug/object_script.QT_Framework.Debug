@@ -1,3 +1,5 @@
+debug/gclibo.o
+debug/arrays.o
 debug/main.o
 debug/mainwindow.o
 debug/progwindow.o

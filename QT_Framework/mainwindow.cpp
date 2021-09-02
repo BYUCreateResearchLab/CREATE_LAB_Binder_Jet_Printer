@@ -121,7 +121,6 @@ void MainWindow::on_xNegative_clicked()
 void MainWindow::on_xHome_clicked()
 {
     //ui->label4Fun->setText("Homing In On X");
-
     if(g){ // If connected to controller
         // Home the X-Axis using the central home sensor index pulse
         e(GCmd(g, "ACX=200000"));   // 200 mm/s^2
@@ -149,20 +148,16 @@ void MainWindow::on_yHome_clicked()
 void MainWindow::on_zHome_clicked()
 {
     ui->label4Fun->setText("Homing In On Z");
-    //TODO - HOME Z AXIS ONCE THE LIMIT SENSORS ARE INSTALLED
     if(g){ // If connected to controller
         // Home the Z-Axis using an offset from the top limit sensor
         e(GCmd(g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
         e(GCmd(g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
-        e(GCmd(g, "JGZ=-15000"));   // 15 mm/s jog towards rear limit
-        e(GCmd(g, "BGZ"));          // Start motion towards rear limit sensor
+        e(GCmd(g, "JGZ=30000"));    // Speed of Z
+        try {
+            e(GCmd(g, "BGZ")); // Start motion towards rear limit sensor
+        } catch(...) {}
         e(GMotionComplete(g, "Z")); // Wait until limit is reached
-        e(GCmd(g, "JGZ=15000"));    // 15 mm/s jog towards home sensor
-        e(GCmd(g, "HVZ=500"));      // 0.5 mm/s on second move towards home sensor
-        //e(GCmd(g, "FIZ"));          // Find index command for x axis
-        e(GCmd(g, "BGZ"));          // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
-        e(GMotionComplete(g, "Z")); // Wait until X stage finishes moving
-        e(GCmd(g, "DPX=0"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
+        e(GCmd(g, "DPZ=0"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
     }
 }
 
@@ -193,7 +188,9 @@ void  MainWindow::on_zUp_clicked()
         e(GCmd(g, "DCZ=757760"));         //Deceleration of C     7578 steps ~ 1 micron
         e(GCmd(g, "SPZ=113664"));         //Speed of C
         e(GCmd(g, zPRZString.c_str()));   //Position Relative of C //HOW TO SWITCH THIS TO GCSTRING IN?
-        e(GCmd(g, "BGZ"));                //Begin Motion
+        try {
+            e(GCmd(g, "BGZ"));            //Begin Motion
+        } catch(...) {}
         e(GMotionComplete(g, "Z"));       //Waits until motion is complete?
     }
 
@@ -212,7 +209,9 @@ void  MainWindow::on_zDown_clicked()
         e(GCmd(g, "DCZ=757760"));
         e(GCmd(g, "SPZ=113664"));
         e(GCmd(g,  zPRZString.c_str()));
-        e(GCmd(g, "BGZ"));
+        try {
+            e(GCmd(g, "BGZ")); // Begin motion
+        } catch(...) {}
         e(GMotionComplete(g, "Z"));
     }
 
@@ -256,9 +255,9 @@ void MainWindow::on_connect_clicked()
     //TO DO - DISABLE BUTTONS UNTIL TUNED, SEPERATE INITIALIZATION HOMING BUTTONS
 
     if(g==0){
+     ui->connect->setText("Homing Axis'...");       //TODO Maybe Threading or something like that? The gui is unresponsive until connect function is finished.
      e(GOpen(address, &g)); // Establish connection with motion controller
      e(GCmd(g, "SH XYZ")); // Enable X,Y, and Z motors
-     ui->connect->setText("Disconnect Controller");
 
      // Controller Configuration
      e(GCmd(g, "MO")); // Ensure motors are off for setup
@@ -303,6 +302,7 @@ void MainWindow::on_connect_clicked()
      //HOME TO X&Y AXIS'
      MainWindow::on_xHome_clicked();
      MainWindow::on_yHome_clicked();
+     MainWindow::on_zHome_clicked();
 
      ui->connect->setText("Disconnect Controller");
     }

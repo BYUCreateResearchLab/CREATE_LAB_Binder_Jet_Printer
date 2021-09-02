@@ -1,3 +1,5 @@
+release/gclibo.o
+release/arrays.o
 release/main.o
 release/mainwindow.o
 release/progwindow.o
