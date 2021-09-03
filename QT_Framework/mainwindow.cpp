@@ -6,6 +6,8 @@
 #include <vector>
 #include <iterator>
 #include <sstream>
+#include <thread>
+
 
 using namespace std;
 
@@ -69,6 +71,19 @@ void MainWindow::on_yPositive_clicked()
     ui->xPositive->setText(">");
     ui->yNegative->setText("v");
     ui->xNegative->setText("<");
+
+    int yVel = 1000*ui->yVelocity->value();
+    int yDis = 1000*ui->yDistance->value();
+    string yVelString = "SPY=" + to_string(yVel);
+    string yDisString = "PRY=-" + to_string(yDis);
+    if(g){
+        e(GCmd(g, "ACY=50000")); // 50 mm/s^2
+        e(GCmd(g, "DCY=50000")); // 50 mm/s^2
+        e(GCmd(g, yVelString.c_str())); // 10 mm/s
+        e(GCmd(g, yDisString.c_str()));  // -10 mm
+        e(GCmd(g, "BGY"));
+        e(GMotionComplete(g, "Y"));
+    }
 }
 
 void MainWindow::on_xPositive_clicked()
@@ -78,11 +93,15 @@ void MainWindow::on_xPositive_clicked()
     ui->yNegative->setText("v");
     ui->xNegative->setText("<");
 
+    int xVel = 1000*ui->xVelocity->value();
+    int xDis = 1000*ui->xDistance->value();
+    string xVelString = "SPX=" + to_string(xVel);
+    string xDisString = "PRX=" + to_string(xDis);
     if(g){
         e(GCmd(g, "ACX=50000")); // 50 mm/s^2
         e(GCmd(g, "DCX=50000")); // 50 mm/s^2
-        e(GCmd(g, "SPX=10000")); // 10 mm/s
-        e(GCmd(g, "PRX=4000"));  // 4 mm
+        e(GCmd(g, xVelString.c_str()));
+        e(GCmd(g, xDisString.c_str()));
         e(GCmd(g, "BGX"));
         e(GMotionComplete(g, "X"));
     }
@@ -96,6 +115,19 @@ void MainWindow::on_yNegative_clicked()
     ui->xPositive->setText(">");
     ui->yNegative->setText("Oh that tickled!");
     ui->xNegative->setText("<");
+
+    int yVel = 1000*ui->yVelocity->value();
+    int yDis = 1000*ui->yDistance->value();
+    string yVelString = "SPY=" + to_string(yVel);
+    string yDisString = "PRY=" + to_string(yDis);
+    if(g){
+        e(GCmd(g, "ACY=50000")); // 50 mm/s^2
+        e(GCmd(g, "DCY=50000")); // 50 mm/s^2
+        e(GCmd(g, yVelString.c_str()));
+        e(GCmd(g, yDisString.c_str()));
+        e(GCmd(g, "BGY"));
+        e(GMotionComplete(g, "Y"));
+    }
 }
 
 
@@ -106,11 +138,15 @@ void MainWindow::on_xNegative_clicked()
     ui->yNegative->setText("v");
     ui->xNegative->setText("Oh that tickled!");
 
+    int xVel = 1000*ui->xVelocity->value();
+    int xDis = 1000*ui->xDistance->value();
+    string xVelString = "SPX=" + to_string(xVel);
+    string xDisString = "PRX=-" + to_string(xDis);
     if(g){
         e(GCmd(g, "ACX=50000")); // 50 mm/s^2
         e(GCmd(g, "DCX=50000")); // 50 mm/s^2
-        e(GCmd(g, "SPX=10000")); // 10 mm/s
-        e(GCmd(g, "PRX=-4000")); // 4 mm
+        e(GCmd(g, xVelString.c_str()));
+        e(GCmd(g, xDisString.c_str()));
         e(GCmd(g, "BGX"));
         e(GMotionComplete(g, "X"));
     }
@@ -145,13 +181,13 @@ void MainWindow::on_yHome_clicked()
     //TODO - HOME Y AXIS ONCE THE LIMIT SENSORS ARE INSTALLED
     e(GCmd(g, "ACY=200000"));   // 200 mm/s^2
     e(GCmd(g, "DCY=200000"));   // 200 mm/s^2
-    e(GCmd(g, "JGY=-15000"));   // 15 mm/s jog towards rear limit
+    e(GCmd(g, "JGY=-25000"));   // 15 mm/s jog towards rear limit
     e(GCmd(g, "BGY"));          // Start motion towards rear limit sensor
     e(GMotionComplete(g, "Y")); // Wait until limit is reached
     e(GCmd(g, "ACY=50000")); // 50 mm/s^2
     e(GCmd(g, "DCY=50000")); // 50 mm/s^2
-    e(GCmd(g, "SPY=10000")); // 10 mm/s
-    e(GCmd(g, "PRY=10000"));  // 4 mm
+    e(GCmd(g, "SPY=25000")); // 25 mm/s
+    e(GCmd(g, "PRY=201500"));  // 201.5 mm
     e(GCmd(g, "BGY"));
     e(GMotionComplete(g, "Y"));
 }
@@ -163,7 +199,7 @@ void MainWindow::on_zHome_clicked()
         // Home the Z-Axis using an offset from the top limit sensor
         e(GCmd(g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
         e(GCmd(g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
-        e(GCmd(g, "JGZ=30000"));    // Speed of Z
+        e(GCmd(g, "JGZ=113664"));    // Speed of Z
         try {
             e(GCmd(g, "BGZ")); // Start motion towards rear limit sensor
         } catch(...) {}
@@ -183,6 +219,14 @@ void MainWindow::on_zMax_clicked()
 {
     z_position = 300;
     ui->bedSpinBox->setValue(z_position);
+
+    e(GCmd(g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
+    e(GCmd(g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
+    e(GCmd(g, "JGZ=113664"));    // Speed of Z
+    try {
+        e(GCmd(g, "BGZ")); // Start motion towards rear limit sensor
+    } catch(...) {}
+    e(GMotionComplete(g, "Z")); // Wait until limit is reached
 }
 
 void  MainWindow::on_zUp_clicked()
@@ -233,6 +277,14 @@ void  MainWindow::on_zMin_clicked()
 {
     z_position = 0;
     ui->bedSpinBox->setValue(z_position);
+
+    e(GCmd(g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
+    e(GCmd(g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
+    e(GCmd(g, "JGZ=-113664"));    // Speed of Z
+    try {
+        e(GCmd(g, "BGZ")); // Start motion towards rear limit sensor
+    } catch(...) {}
+    e(GMotionComplete(g, "Z")); // Wait until limit is reached
 }
 
 
@@ -311,6 +363,9 @@ void MainWindow::on_connect_clicked()
      e(GCmd(g, "CN= -1"));      // Set correct polarity for all limit switches
 
      //HOME TO X&Y AXIS'
+     //TODO - THREADING TO ALLOW EACH AXIS TO CALIBRATE SEPERATELY.
+     //std::thread xThread(&MainWindow::on_xHome_clicked);
+
      MainWindow::on_xHome_clicked();
      MainWindow::on_yHome_clicked();
      MainWindow::on_zHome_clicked();
