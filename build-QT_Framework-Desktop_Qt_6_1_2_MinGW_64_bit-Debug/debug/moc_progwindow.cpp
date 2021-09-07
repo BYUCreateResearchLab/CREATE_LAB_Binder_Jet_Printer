@@ -24,8 +24,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_progWindow_t {
-    const uint offsetsAndSize[30];
-    char stringdata0[252];
+    const uint offsetsAndSize[44];
+    char stringdata0[327];
 };
 #define QT_MOC_LITERAL(ofs, len) \
     uint(offsetof(qt_meta_stringdata_progWindow_t, stringdata0) + ofs), len 
@@ -45,7 +45,14 @@ QT_MOC_LITERAL(135, 22), // "on_startY_valueChanged"
 QT_MOC_LITERAL(158, 26), // "on_setSpacing_valueChanged"
 QT_MOC_LITERAL(185, 33), // "on_printPercentSlider_sliderM..."
 QT_MOC_LITERAL(219, 8), // "position"
-QT_MOC_LITERAL(228, 23) // "on_clearConsole_clicked"
+QT_MOC_LITERAL(228, 23), // "on_clearConsole_clicked"
+QT_MOC_LITERAL(252, 21), // "on_startPrint_clicked"
+QT_MOC_LITERAL(274, 12), // "printLineSet"
+QT_MOC_LITERAL(287, 6), // "setNum"
+QT_MOC_LITERAL(294, 1), // "e"
+QT_MOC_LITERAL(296, 7), // "GReturn"
+QT_MOC_LITERAL(304, 2), // "rc"
+QT_MOC_LITERAL(307, 19) // "connectToController"
 
     },
     "progWindow\0firstWindow\0\0on_back2Home_clicked\0"
@@ -54,7 +61,9 @@ QT_MOC_LITERAL(228, 23) // "on_clearConsole_clicked"
     "on_startX_valueChanged\0on_startY_valueChanged\0"
     "on_setSpacing_valueChanged\0"
     "on_printPercentSlider_sliderMoved\0"
-    "position\0on_clearConsole_clicked"
+    "position\0on_clearConsole_clicked\0"
+    "on_startPrint_clicked\0printLineSet\0"
+    "setNum\0e\0GReturn\0rc\0connectToController"
 };
 #undef QT_MOC_LITERAL
 
@@ -64,7 +73,7 @@ static const uint qt_meta_data_progWindow[] = {
        9,       // revision
        0,       // classname
        0,    0, // classinfo
-       9,   14, // methods
+      13,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -72,17 +81,21 @@ static const uint qt_meta_data_progWindow[] = {
        1,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    0,   68,    2, 0x06,    0 /* Public */,
+       1,    0,   92,    2, 0x06,    0 /* Public */,
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-       3,    0,   69,    2, 0x08,    1 /* Private */,
-       4,    1,   70,    2, 0x08,    2 /* Private */,
-       6,    2,   73,    2, 0x08,    4 /* Private */,
-       9,    1,   78,    2, 0x08,    7 /* Private */,
-      10,    1,   81,    2, 0x08,    9 /* Private */,
-      11,    1,   84,    2, 0x08,   11 /* Private */,
-      12,    1,   87,    2, 0x08,   13 /* Private */,
-      14,    0,   90,    2, 0x08,   15 /* Private */,
+       3,    0,   93,    2, 0x08,    1 /* Private */,
+       4,    1,   94,    2, 0x08,    2 /* Private */,
+       6,    2,   97,    2, 0x08,    4 /* Private */,
+       9,    1,  102,    2, 0x08,    7 /* Private */,
+      10,    1,  105,    2, 0x08,    9 /* Private */,
+      11,    1,  108,    2, 0x08,   11 /* Private */,
+      12,    1,  111,    2, 0x08,   13 /* Private */,
+      14,    0,  114,    2, 0x08,   15 /* Private */,
+      15,    0,  115,    2, 0x08,   16 /* Private */,
+      16,    1,  116,    2, 0x08,   17 /* Private */,
+      18,    1,  119,    2, 0x08,   19 /* Private */,
+      21,    0,  122,    2, 0x08,   21 /* Private */,
 
  // signals: parameters
     QMetaType::Void,
@@ -95,6 +108,10 @@ static const uint qt_meta_data_progWindow[] = {
     QMetaType::Void, QMetaType::Double,    5,
     QMetaType::Void, QMetaType::Double,    5,
     QMetaType::Void, QMetaType::Int,   13,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::Int,   17,
+    QMetaType::Void, 0x80000000 | 19,   20,
     QMetaType::Void,
 
        0        // eod
@@ -115,6 +132,10 @@ void progWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 6: _t->on_setSpacing_valueChanged((*reinterpret_cast< double(*)>(_a[1]))); break;
         case 7: _t->on_printPercentSlider_sliderMoved((*reinterpret_cast< int(*)>(_a[1]))); break;
         case 8: _t->on_clearConsole_clicked(); break;
+        case 9: _t->on_startPrint_clicked(); break;
+        case 10: _t->printLineSet((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 11: _t->e((*reinterpret_cast< GReturn(*)>(_a[1]))); break;
+        case 12: _t->connectToController(); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -137,7 +158,7 @@ const QMetaObject progWindow::staticMetaObject = { {
     nullptr,
 qt_incomplete_metaTypeArray<qt_meta_stringdata_progWindow_t
 , QtPrivate::TypeAndForceComplete<void, std::false_type>
-, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<int, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<int, std::false_type>, QtPrivate::TypeAndForceComplete<int, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<double, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<double, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<double, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<int, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>
+, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<int, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<int, std::false_type>, QtPrivate::TypeAndForceComplete<int, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<double, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<double, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<double, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<int, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<int, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<GReturn, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>
 
 
 >,
@@ -164,13 +185,13 @@ int progWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 9)
+        if (_id < 13)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 9;
+        _id -= 13;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 9)
+        if (_id < 13)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 9;
+        _id -= 13;
     }
     return _id;
 }

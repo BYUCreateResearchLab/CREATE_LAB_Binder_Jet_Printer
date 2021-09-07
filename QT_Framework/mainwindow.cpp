@@ -179,17 +179,19 @@ void MainWindow::on_yHome_clicked()
 {
     ui->label4Fun->setText("Homing In On Y");
     //TODO - HOME Y AXIS ONCE THE LIMIT SENSORS ARE INSTALLED
-    e(GCmd(g, "ACY=200000"));   // 200 mm/s^2
-    e(GCmd(g, "DCY=200000"));   // 200 mm/s^2
-    e(GCmd(g, "JGY=-25000"));   // 15 mm/s jog towards rear limit
-    e(GCmd(g, "BGY"));          // Start motion towards rear limit sensor
-    e(GMotionComplete(g, "Y")); // Wait until limit is reached
-    e(GCmd(g, "ACY=50000")); // 50 mm/s^2
-    e(GCmd(g, "DCY=50000")); // 50 mm/s^2
-    e(GCmd(g, "SPY=25000")); // 25 mm/s
-    e(GCmd(g, "PRY=201500"));  // 201.5 mm
-    e(GCmd(g, "BGY"));
-    e(GMotionComplete(g, "Y"));
+    if(g){
+        e(GCmd(g, "ACY=200000"));   // 200 mm/s^2
+        e(GCmd(g, "DCY=200000"));   // 200 mm/s^2
+        e(GCmd(g, "JGY=-25000"));   // 15 mm/s jog towards rear limit
+        e(GCmd(g, "BGY"));          // Start motion towards rear limit sensor
+        e(GMotionComplete(g, "Y")); // Wait until limit is reached
+        e(GCmd(g, "ACY=50000")); // 50 mm/s^2
+        e(GCmd(g, "DCY=50000")); // 50 mm/s^2
+        e(GCmd(g, "SPY=25000")); // 25 mm/s
+        e(GCmd(g, "PRY=201500"));  // 201.5 mm
+        e(GCmd(g, "BGY"));
+        e(GMotionComplete(g, "Y"));
+    }
 }
 
 void MainWindow::on_zHome_clicked()

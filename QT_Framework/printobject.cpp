@@ -9,7 +9,6 @@ double PrintLine::defaultDropletSpacing = 5;
 double PrintLine::defaultVelocity = 5;
 double PrintLine::defaultAcceleration = 100;
 
-
 PrintLine::PrintLine()
 {
     p1 = vec2d(0,0);

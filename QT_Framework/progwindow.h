@@ -12,6 +12,17 @@
 #include "lineprintdata.h"
 #include "printobject.h"
 
+#ifdef AVOIDGCLIB
+#include "fakegclib.h"
+#endif
+
+#ifndef AVOIDGCLIB
+#include "gclib.h"
+#include "gclibo.h"
+#include "gclib_errors.h"
+#include "gclib_record.h"
+#endif
+
 namespace Ui {
 class progWindow;
 }
@@ -55,6 +66,14 @@ private slots:
 
     void on_clearConsole_clicked();
 
+    void on_startPrint_clicked();
+
+    void printLineSet(int setNum);
+
+    void e(GReturn rc);
+
+    void connectToController();
+
 private:
     Ui::progWindow *ui;
 
@@ -68,6 +87,9 @@ private:
 
     QPen linePen = QPen(Qt::blue, 1.0, Qt::SolidLine, Qt::RoundCap);
     QPen lineTravelPen = QPen(Qt::red, 0.5, Qt::SolidLine, Qt::RoundCap);
+
+    GCon g = 0;
+    char const *address = "192.168.42.100";
 };
 
 #endif // PROGWINDOW_H

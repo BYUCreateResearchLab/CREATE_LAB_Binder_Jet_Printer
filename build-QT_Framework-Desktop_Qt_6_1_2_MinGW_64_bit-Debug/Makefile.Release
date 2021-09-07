@@ -1135,6 +1135,11 @@ release/moc_progwindow.cpp: ../QT_Framework/progwindow.h \
 		C:/Qt/6.1.2/mingw81_64/include/QtCore/QLineF \
 		../QT_Framework/printobject.h \
 		../QT_Framework/vec2.h \
+		../QT_Framework/fakegclib.h \
+		../QT_Framework/gclib.h \
+		../QT_Framework/gclib_record.h \
+		../QT_Framework/gclib_errors.h \
+		../QT_Framework/gclibo.h \
 		release/moc_predefs.h \
 		C:/Qt/6.1.2/mingw81_64/bin/moc.exe
 	C:\Qt\6.1.2\mingw81_64\bin\moc.exe $(DEFINES) --include C:/Users/ME/Documents/GitHub/CREATE_LAB_Binder_Jet_Printer/build-QT_Framework-Desktop_Qt_6_1_2_MinGW_64_bit-Debug/release/moc_predefs.h -IC:/Qt/6.1.2/mingw81_64/mkspecs/win32-g++ -IC:/Users/ME/Documents/GitHub/CREATE_LAB_Binder_Jet_Printer/QT_Framework -IC:/Users/ME/Documents/GitHub/CREATE_LAB_Binder_Jet_Printer/QT_Framework -IC:/Qt/6.1.2/mingw81_64/include -IC:/Qt/6.1.2/mingw81_64/include/QtSvgWidgets -IC:/Qt/6.1.2/mingw81_64/include/QtSvg -IC:/Qt/6.1.2/mingw81_64/include/QtWidgets -IC:/Qt/6.1.2/mingw81_64/include/QtGui -IC:/Qt/6.1.2/mingw81_64/include/QtCore -I. -IC:/Qt/Tools/mingw810_64/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++ -IC:/Qt/Tools/mingw810_64/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/x86_64-w64-mingw32 -IC:/Qt/Tools/mingw810_64/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/backward -IC:/Qt/Tools/mingw810_64/lib/gcc/x86_64-w64-mingw32/8.1.0/include -IC:/Qt/Tools/mingw810_64/lib/gcc/x86_64-w64-mingw32/8.1.0/include-fixed -IC:/Qt/Tools/mingw810_64/x86_64-w64-mingw32/include ..\QT_Framework\progwindow.h -o release\moc_progwindow.cpp
@@ -2945,6 +2950,11 @@ release/progwindow.o: ../QT_Framework/progwindow.cpp ../QT_Framework/progwindow.
 		C:/Qt/6.1.2/mingw81_64/include/QtCore/QLineF \
 		../QT_Framework/printobject.h \
 		../QT_Framework/vec2.h \
+		../QT_Framework/fakegclib.h \
+		../QT_Framework/gclib.h \
+		../QT_Framework/gclib_record.h \
+		../QT_Framework/gclib_errors.h \
+		../QT_Framework/gclibo.h \
 		ui_progwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release\progwindow.o ..\QT_Framework\progwindow.cpp
 
