@@ -235,16 +235,22 @@ void progWindow::printLineSet(int setNum) {
 
     //GO TO XSTART, YSTART, ZMAX
     progWindow::connectToController();
+
+    //GO TO BEGINNING POINT
     if(g) {
+        e(GCmd(g, "DPX=75000"));
+        e(GCmd(g, "DPY=0"));
         string xHomeString = "PAX=" + to_string(75000 - (x_start*1000));
         e(GCmd(g, xHomeString.c_str()));
-        string yHomeString = "PAY=" + to_string(y_start*100);
-        e(GCmd(g, xHomeString.c_str()));
-        e(GCmd(g, "BG"));
+        string yHomeString = "PAY=" + to_string(y_start*1000);
+        e(GCmd(g, yHomeString.c_str()));
+        e(GCmd(g, "BGX"));
+        e(GCmd(g, "BGY"));
         e(GMotionComplete(g, "X")); // Wait until limit is reached
         e(GMotionComplete(g, "Y"));
     }
-    //TODO - BREAKS HERE, AND Y AXIS GOES FURTHER THAN EXPECTED.
+
+    //START LINE PRINTING HERE!
 }
 
 void progWindow::e(GReturn rc)
@@ -300,49 +306,47 @@ void progWindow::connectToController() {
          e(GCmd(g, "SH XYZ"));      // Enable X,Y, and Z motors
          e(GCmd(g, "CN= -1"));      // Set correct polarity for all limit switches
 
-         //MainWindow::on_xHome_clicked();
-         if(g){ // If connected to controller
+         //HOME ALL AXIS'
+         if(g){
              // Home the X-Axis using the central home sensor index pulse
              e(GCmd(g, "ACX=200000"));   // 200 mm/s^2
              e(GCmd(g, "DCX=200000"));   // 200 mm/s^2
              e(GCmd(g, "JGX=-15000"));   // 15 mm/s jog towards rear limit
-             e(GCmd(g, "BGX"));          // Start motion towards rear limit sensor
-             e(GMotionComplete(g, "X")); // Wait until limit is reached
-             e(GCmd(g, "JGX=15000"));    // 15 mm/s jog towards home sensor
-             e(GCmd(g, "HVX=500"));      // 0.5 mm/s on second move towards home sensor
-             e(GCmd(g, "FIX"));          // Find index command for x axis
-             e(GCmd(g, "BGX"));          // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
-             e(GMotionComplete(g, "X")); // Wait until X stage finishes moving
-             e(GCmd(g, "DPX=75000"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
-         }
-
-         //MainWindow::on_yHome_clicked();
-         if(g){
              e(GCmd(g, "ACY=200000"));   // 200 mm/s^2
              e(GCmd(g, "DCY=200000"));   // 200 mm/s^2
              e(GCmd(g, "JGY=-25000"));   // 15 mm/s jog towards rear limit
-             e(GCmd(g, "BGY"));          // Start motion towards rear limit sensor
-             e(GMotionComplete(g, "Y")); // Wait until limit is reached
-             e(GCmd(g, "ACY=50000")); // 50 mm/s^2
-             e(GCmd(g, "DCY=50000")); // 50 mm/s^2
-             e(GCmd(g, "SPY=25000")); // 25 mm/s
-             e(GCmd(g, "PRY=201500"));  // 201.5 mm
-             e(GCmd(g, "BGY"));
-             e(GMotionComplete(g, "Y"));
-             e(GCmd(g, "DPY=0"));
-         }
-
-         //MainWindow::on_zHome_clicked();
-         if(g){ // If connected to controller
-             // Home the Z-Axis using an offset from the top limit sensor
              e(GCmd(g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
              e(GCmd(g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
              e(GCmd(g, "JGZ=113664"));    // Speed of Z
              try {
-                 e(GCmd(g, "BGZ")); // Start motion towards rear limit sensor
+                e(GCmd(g, "BGX"));          // Start motion towards rear limit sensor
+                e(GCmd(g, "BGY"));          // Start motion towards rear limit sensor
+                e(GCmd(g, "BGZ")); // Start motion towards rear limit sensor
+                e(GMotionComplete(g, "X")); // Wait until limit is reached
+                e(GMotionComplete(g, "Y")); // Wait until limit is reached
+                e(GMotionComplete(g, "Z")); // Wait until limit is reached
              } catch(...) {}
+             e(GCmd(g, "JGX=15000"));    // 15 mm/s jog towards home sensor
+             e(GCmd(g, "HVX=500"));      // 0.5 mm/s on second move towards home sensor
+             e(GCmd(g, "FIX"));          // Find index command for x axis
+             e(GCmd(g, "ACY=50000")); // 50 mm/s^2
+             e(GCmd(g, "DCY=50000")); // 50 mm/s^2
+             e(GCmd(g, "SPY=25000")); // 25 mm/s
+             e(GCmd(g, "PRY=201500"));  // 201.5 mm
+             e(GCmd(g, "ACZ=757760"));
+             e(GCmd(g, "DCZ=757760"));
+             e(GCmd(g, "SPZ=113664"));
+             e(GCmd(g, "PRZ=-100000"));//TODO - TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
+             e(GCmd(g, "BGX"));          // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
+             e(GCmd(g, "BGY"));
+             e(GCmd(g, "BGZ"));
+             e(GMotionComplete(g, "X")); // Wait until X stage finishes moving
+             e(GMotionComplete(g, "Y"));
              e(GMotionComplete(g, "Z")); // Wait until limit is reached
+             e(GCmd(g, "DPX=75000"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
+             e(GCmd(g, "DPY=0"));
              e(GCmd(g, "DPZ=0"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
          }
+
 }
 
