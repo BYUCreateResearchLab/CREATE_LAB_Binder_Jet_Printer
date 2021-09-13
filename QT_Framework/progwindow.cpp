@@ -1,5 +1,6 @@
 #include "progwindow.h"
 #include "ui_progwindow.h"
+#include <math.h>
 
 using namespace std;
 
@@ -218,6 +219,10 @@ void progWindow::on_clearConsole_clicked()
 
 void progWindow::on_startPrint_clicked()
 {
+    //GO TO XSTART, YSTART, ZMAX
+    progWindow::connectToController();
+
+    //Print Sets
     for(int i = 0; i < int(table.numRows()); ++i) {
         printLineSet(i);
     }
@@ -227,20 +232,17 @@ void progWindow::printLineSet(int setNum) {
     //Find starting position for line set
     float x_start = table.startX;
     for(int i = 0; i < setNum; ++i) {
-        x_start = x_start + table.data[i].lineLength.value + 5.0; //5.0 BEING THE SPACE BETWEEN LINE SETS
+        x_start = x_start + table.data[i].lineLength.value + table.setSpacing;
     }
     float y_start = table.startY;
 
     //calculate line specifics - TODO: CURRENTLY OVERCONSTRAINED
 
-    //GO TO XSTART, YSTART, ZMAX
-    progWindow::connectToController();
-
     //GO TO BEGINNING POINT
     if(g) {
-        e(GCmd(g, "DPX=75000"));
-        e(GCmd(g, "DPY=0"));
-        string xHomeString = "PAX=" + to_string(75000 - (x_start*1000));
+        //e(GCmd(g, "DPX=75000"));
+        //e(GCmd(g, "DPY=0"));
+        string xHomeString = "PAX=" + to_string(75000 - ((50-x_start)*1000));
         e(GCmd(g, xHomeString.c_str()));
         string yHomeString = "PAY=" + to_string(y_start*1000);
         e(GCmd(g, yHomeString.c_str()));
@@ -251,6 +253,36 @@ void progWindow::printLineSet(int setNum) {
     }
 
     //START LINE PRINTING HERE!
+    if(g) {
+        float curY = y_start;
+        float curX = x_start;
+        for(int i = 0; i < table.data[setNum].numLines.value; ++i)
+        {
+            while(curX < (x_start + (table.data[setNum].lineLength.value)))
+            {
+                //TODO : Once velocity is no longer overconstrained, calculate velocity here!
+                string xString = "PAX=" + to_string(75000 - ((50-curX)*1000));
+                e(GCmd(g, xString.c_str()));
+                e(GCmd(g, "BGX"));
+                e(GMotionComplete(g, "X"));
+
+                //TODO : Jet command here
+
+                //Update X Value
+                curX = curX + (floor(table.data[setNum].dropletSpacing.value/5)); //TODO : Fix here to move smaller increments than 1 mm
+            }
+            string xString = "PAX=" + to_string(75000 - ((50-x_start)*1000));
+            e(GCmd(g, xString.c_str()));
+            e(GCmd(g, "BGX"));
+            e(GMotionComplete(g, "X"));
+            curY = curY + table.data[setNum].lineSpacing.value;
+            string yString = "PAY=" + to_string(curY*1000);
+            e(GCmd(g, yString.c_str()));
+            e(GCmd(g, "BGY"));
+            e(GMotionComplete(g, "Y"));
+            curX = x_start;
+        }
+    }
 }
 
 void progWindow::e(GReturn rc)
