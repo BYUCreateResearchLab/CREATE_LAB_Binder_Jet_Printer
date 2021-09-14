@@ -226,6 +226,16 @@ void progWindow::on_startPrint_clicked()
     for(int i = 0; i < int(table.numRows()); ++i) {
         printLineSet(i);
     }
+
+    //GO TO HOME AFTER PRINT
+    string xHomeString = "PAX=" + to_string(75000 - ((50-table.startX)*1000));
+    e(GCmd(g, xHomeString.c_str()));
+    string yHomeString = "PAY=" + to_string(table.startY*1000);
+    e(GCmd(g, yHomeString.c_str()));
+    e(GCmd(g, "BGX"));
+    e(GCmd(g, "BGY"));
+    e(GMotionComplete(g, "X")); // Wait until limit is reached
+    e(GMotionComplete(g, "Y"));
 }
 
 void progWindow::printLineSet(int setNum) {
@@ -258,27 +268,43 @@ void progWindow::printLineSet(int setNum) {
         float curX = x_start;
         for(int i = 0; i < table.data[setNum].numLines.value; ++i)
         {
+
+            //STEP DROPPING VERSION
+            /*
             while(curX < (x_start + (table.data[setNum].lineLength.value)))
             {
-                //TODO : Once velocity is no longer overconstrained, calculate velocity here!
                 string xString = "PAX=" + to_string(75000 - ((50-curX)*1000));
                 e(GCmd(g, xString.c_str()));
                 e(GCmd(g, "BGX"));
                 e(GMotionComplete(g, "X"));
 
-                //TODO : Jet command here
+                //Jet command here
 
                 //Update X Value
                 curX = curX + (floor(table.data[setNum].dropletSpacing.value/5)); //TODO : Fix here to move smaller increments than 1 mm
             }
-            string xString = "PAX=" + to_string(75000 - ((50-x_start)*1000));
+            */
+
+            //CONTINUOUS MOTION VERSION
+            //Change velocity depending on the table inputs
+            //enable jetting
+            curX = curX + table.data[setNum].lineLength.value;
+            string xString = "PAX=" + to_string(75000 - ((50-curX)*1000));
             e(GCmd(g, xString.c_str()));
             e(GCmd(g, "BGX"));
             e(GMotionComplete(g, "X"));
+            //disable jetting
+
+
+
+            xString = "PAX=" + to_string(75000 - ((50-x_start)*1000));
+            e(GCmd(g, xString.c_str()));
             curY = curY + table.data[setNum].lineSpacing.value;
             string yString = "PAY=" + to_string(curY*1000);
             e(GCmd(g, yString.c_str()));
+            e(GCmd(g, "BGX"));
             e(GCmd(g, "BGY"));
+            e(GMotionComplete(g, "X"));
             e(GMotionComplete(g, "Y"));
             curX = x_start;
         }

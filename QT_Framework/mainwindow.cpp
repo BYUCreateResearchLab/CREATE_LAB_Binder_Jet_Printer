@@ -422,6 +422,7 @@ void MainWindow::on_connect_clicked()
         ui->connect->setText("Connect to Controller");
     }
   }
+
 }
 
 
