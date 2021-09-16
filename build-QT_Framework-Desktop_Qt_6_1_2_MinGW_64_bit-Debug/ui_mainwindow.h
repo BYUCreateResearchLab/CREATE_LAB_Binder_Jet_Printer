@@ -65,7 +65,7 @@ public:
     QLabel *label_3;
     QCheckBox *activateRoller;
     QCheckBox *activateHopper;
-    QPushButton *pushButton;
+    QPushButton *spreadNewLayer;
     QSpinBox *rollerSpeed;
     QSpinBox *numLayers;
     QLabel *label_4;
@@ -216,9 +216,9 @@ public:
         activateHopper = new QCheckBox(centralwidget);
         activateHopper->setObjectName(QString::fromUtf8("activateHopper"));
         activateHopper->setGeometry(QRect(530, 210, 121, 22));
-        pushButton = new QPushButton(centralwidget);
-        pushButton->setObjectName(QString::fromUtf8("pushButton"));
-        pushButton->setGeometry(QRect(530, 320, 141, 25));
+        spreadNewLayer = new QPushButton(centralwidget);
+        spreadNewLayer->setObjectName(QString::fromUtf8("spreadNewLayer"));
+        spreadNewLayer->setGeometry(QRect(530, 320, 141, 25));
         rollerSpeed = new QSpinBox(centralwidget);
         rollerSpeed->setObjectName(QString::fromUtf8("rollerSpeed"));
         rollerSpeed->setGeometry(QRect(530, 280, 42, 22));
@@ -244,10 +244,10 @@ public:
         connect->setGeometry(QRect(74, 70, 121, 23));
         saveDefault = new QPushButton(centralwidget);
         saveDefault->setObjectName(QString::fromUtf8("saveDefault"));
-        saveDefault->setGeometry(QRect(470, 360, 131, 25));
+        saveDefault->setGeometry(QRect(460, 360, 141, 25));
         revertDefault = new QPushButton(centralwidget);
         revertDefault->setObjectName(QString::fromUtf8("revertDefault"));
-        revertDefault->setGeometry(QRect(610, 360, 131, 25));
+        revertDefault->setGeometry(QRect(610, 360, 141, 25));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
@@ -289,7 +289,7 @@ public:
         label_3->setText(QCoreApplication::translate("MainWindow", "(Microns)", nullptr));
         activateRoller->setText(QCoreApplication::translate("MainWindow", "Activate Roller", nullptr));
         activateHopper->setText(QCoreApplication::translate("MainWindow", "Activate Hopper", nullptr));
-        pushButton->setText(QCoreApplication::translate("MainWindow", "Spread New Layer(s)", nullptr));
+        spreadNewLayer->setText(QCoreApplication::translate("MainWindow", "Spread New Layer(s)", nullptr));
         label_4->setText(QCoreApplication::translate("MainWindow", "Number of Layers", nullptr));
         VelocityLabel_2->setText(QCoreApplication::translate("MainWindow", "Roller Speed (RPM)", nullptr));
         zHome->setText(QCoreApplication::translate("MainWindow", "Z Home", nullptr));

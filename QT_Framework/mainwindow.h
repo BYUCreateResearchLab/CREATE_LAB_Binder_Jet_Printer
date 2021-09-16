@@ -75,6 +75,8 @@ private slots:
 
     void on_zHome_clicked();
 
+    void on_spreadNewLayer_clicked();
+
 private:
     Ui::MainWindow *ui;
     int z_position = 100;

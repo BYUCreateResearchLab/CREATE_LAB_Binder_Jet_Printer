@@ -6,26 +6,26 @@ using namespace std;
 
 progWindow::progWindow(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::progWindow)
-{
-    ui->setupUi(this);
 
-    // Internal Table Data Storage Setup
-    table.addRows(1); // add 1 row (set) to start program
+  ui(new Ui::progWindow) {
+        ui->setupUi(this);
 
-    // UI Table Setup
-    ui->tableWidget->clear(); // clear the table
-    updateTable(true, true);
+        // Internal Table Data Storage Setup
+        table.addRows(1); // add 1 row (set) to start program
 
-    // Misc. Setup
-    ui->numSets->setValue(1);
-    ui->startX->setValue(table.startX);
-    ui->startY->setValue(table.startY);
-    ui->setSpacing->setValue(table.setSpacing);
+        // UI Table Setup
+        ui->tableWidget->clear(); // clear the table
+        updateTable(true, true);
 
-    //SVG Viewer setup
-    ui->SVGViewer->setup();
-    updatePreviewWindow();
+        // Misc. Setup
+        ui->numSets->setValue(1);
+        ui->startX->setValue(table.startX);
+        ui->startY->setValue(table.startY);
+        ui->setSpacing->setValue(table.setSpacing);
+
+        //SVG Viewer setup
+        ui->SVGViewer->setup();
+        updatePreviewWindow();
 }
 
 progWindow::~progWindow()
@@ -220,7 +220,9 @@ void progWindow::on_clearConsole_clicked()
 void progWindow::on_startPrint_clicked()
 {
     //GO TO XSTART, YSTART, ZMAX
-    progWindow::connectToController();
+    if(g ==0) {
+        progWindow::connectToController();
+    }
 
     //Print Sets
     for(int i = 0; i < int(table.numRows()); ++i) {
@@ -372,7 +374,7 @@ void progWindow::connectToController() {
              e(GCmd(g, "JGX=-15000"));   // 15 mm/s jog towards rear limit
              e(GCmd(g, "ACY=200000"));   // 200 mm/s^2
              e(GCmd(g, "DCY=200000"));   // 200 mm/s^2
-             e(GCmd(g, "JGY=-25000"));   // 15 mm/s jog towards rear limit
+             e(GCmd(g, "JGY=25000"));   // 15 mm/s jog towards rear limit
              e(GCmd(g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
              e(GCmd(g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
              e(GCmd(g, "JGZ=113664"));    // Speed of Z
@@ -390,7 +392,7 @@ void progWindow::connectToController() {
              e(GCmd(g, "ACY=50000")); // 50 mm/s^2
              e(GCmd(g, "DCY=50000")); // 50 mm/s^2
              e(GCmd(g, "SPY=25000")); // 25 mm/s
-             e(GCmd(g, "PRY=201500"));  // 201.5 mm
+             e(GCmd(g, "PRY=-200000"));  // 201.5 mm
              e(GCmd(g, "ACZ=757760"));
              e(GCmd(g, "DCZ=757760"));
              e(GCmd(g, "SPZ=113664"));

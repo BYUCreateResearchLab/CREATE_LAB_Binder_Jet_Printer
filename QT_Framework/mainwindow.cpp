@@ -49,8 +49,21 @@ MainWindow::MainWindow(QMainWindow *parent)
     //Update default GUI values
     MainWindow::on_revertDefault_clicked();
 
-    //Setup Background Image
-
+    //Disable all buttons that require a controller connection
+    ui->activateHopper->setDisabled(true);
+    ui->activateRoller->setDisabled(true);
+    ui->xHome->setDisabled(true);
+    ui->yHome->setDisabled(true);
+    ui->zHome->setDisabled(true);
+    ui->xPositive->setDisabled(true);
+    ui->yPositive->setDisabled(true);
+    ui->xNegative->setDisabled(true);
+    ui->yNegative->setDisabled(true);
+    ui->zDown->setDisabled(true);
+    ui->zUp->setDisabled(true);
+    ui->zMax->setDisabled(true);
+    ui->zMin->setDisabled(true);
+    ui->spreadNewLayer->setDisabled(true);
 }
 
 MainWindow::~MainWindow()
@@ -182,13 +195,13 @@ void MainWindow::on_yHome_clicked()
     if(g){
         e(GCmd(g, "ACY=200000"));   // 200 mm/s^2
         e(GCmd(g, "DCY=200000"));   // 200 mm/s^2
-        e(GCmd(g, "JGY=-25000"));   // 15 mm/s jog towards rear limit
+        e(GCmd(g, "JGY=25000"));   // 15 mm/s jog towards rear limit
         e(GCmd(g, "BGY"));          // Start motion towards rear limit sensor
         e(GMotionComplete(g, "Y")); // Wait until limit is reached
         e(GCmd(g, "ACY=50000")); // 50 mm/s^2
         e(GCmd(g, "DCY=50000")); // 50 mm/s^2
         e(GCmd(g, "SPY=25000")); // 25 mm/s
-        e(GCmd(g, "PRY=201500"));  // 201.5 mm
+        e(GCmd(g, "PRY=-200000"));  // 201.5 mm
         e(GCmd(g, "BGY"));
         e(GMotionComplete(g, "Y"));
     }
@@ -323,7 +336,6 @@ void MainWindow::on_activateHopper_stateChanged(int arg1)
 
 void MainWindow::on_connect_clicked()
 {
-    //TO DO - DISABLE BUTTONS UNTIL TUNED, SEPERATE INITIALIZATION HOMING BUTTONS
 
     if(g==0){
         //TO DO - DISABLE BUTTONS UNTIL TUNED, SEPERATE INITIALIZATION HOMING BUTTONS
@@ -380,7 +392,7 @@ void MainWindow::on_connect_clicked()
              e(GCmd(g, "JGX=-15000"));   // 15 mm/s jog towards rear limit
              e(GCmd(g, "ACY=200000"));   // 200 mm/s^2
              e(GCmd(g, "DCY=200000"));   // 200 mm/s^2
-             e(GCmd(g, "JGY=-25000"));   // 15 mm/s jog towards rear limit
+             e(GCmd(g, "JGY=25000"));   // 15 mm/s jog towards rear limit
              e(GCmd(g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
              e(GCmd(g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
              e(GCmd(g, "JGZ=113664"));    // Speed of Z
@@ -398,7 +410,7 @@ void MainWindow::on_connect_clicked()
              e(GCmd(g, "ACY=50000")); // 50 mm/s^2
              e(GCmd(g, "DCY=50000")); // 50 mm/s^2
              e(GCmd(g, "SPY=25000")); // 25 mm/s
-             e(GCmd(g, "PRY=201500"));  // 201.5 mm
+             e(GCmd(g, "PRY=-200000"));  // 201.5 mm
              e(GCmd(g, "ACZ=757760"));
              e(GCmd(g, "DCZ=757760"));
              e(GCmd(g, "SPZ=113664"));
@@ -414,15 +426,44 @@ void MainWindow::on_connect_clicked()
              e(GCmd(g, "DPZ=0"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
 
      ui->connect->setText("Disconnect Controller");
+
+     ui->activateHopper->setDisabled(false);
+     ui->activateRoller->setDisabled(false);
+     ui->xHome->setDisabled(false);
+     ui->yHome->setDisabled(false);
+     ui->zHome->setDisabled(false);
+     ui->xPositive->setDisabled(false);
+     ui->yPositive->setDisabled(false);
+     ui->xNegative->setDisabled(false);
+     ui->yNegative->setDisabled(false);
+     ui->zDown->setDisabled(false);
+     ui->zUp->setDisabled(false);
+     ui->zMax->setDisabled(false);
+     ui->zMin->setDisabled(false);
+     ui->spreadNewLayer->setDisabled(false);
+        }
     }
     else{
         e(GCmd(g, "MO"));       // Disable Motors
         GClose(g);
         g = 0;                  // Reset connection handle
         ui->connect->setText("Connect to Controller");
-    }
-  }
 
+        ui->activateHopper->setDisabled(true);
+        ui->activateRoller->setDisabled(true);
+        ui->xHome->setDisabled(true);
+        ui->yHome->setDisabled(true);
+        ui->zHome->setDisabled(true);
+        ui->xPositive->setDisabled(true);
+        ui->yPositive->setDisabled(true);
+        ui->xNegative->setDisabled(true);
+        ui->yNegative->setDisabled(true);
+        ui->zDown->setDisabled(true);
+        ui->zUp->setDisabled(true);
+        ui->zMax->setDisabled(true);
+        ui->zMin->setDisabled(true);
+        ui->spreadNewLayer->setDisabled(true);
+    }
 }
 
 
@@ -495,4 +536,10 @@ void MainWindow::on_revertDefault_clicked()
 
 
 
+
+
+void MainWindow::on_spreadNewLayer_clicked()
+{
+    //Spread Layer Logic!
+}
 
