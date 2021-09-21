@@ -413,6 +413,7 @@ void MainWindow::on_connect_clicked()
              e(GCmd(g, "PRY=-200000"));  // 201.5 mm
              e(GCmd(g, "ACZ=757760"));
              e(GCmd(g, "DCZ=757760"));
+             e(GCmd(g, "SDZ=1515520")); // Sets deceleration when limit switch is touched
              e(GCmd(g, "SPZ=113664"));
              e(GCmd(g, "PRZ=-100000"));//TODO - TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
              e(GCmd(g, "BGX"));          // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
