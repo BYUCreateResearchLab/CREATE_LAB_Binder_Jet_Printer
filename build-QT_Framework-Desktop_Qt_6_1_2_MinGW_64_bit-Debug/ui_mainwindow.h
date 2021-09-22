@@ -63,7 +63,7 @@ public:
     QLabel *Y_axis;
     QSpinBox *yDistance;
     QLabel *label_3;
-    QCheckBox *activateRoller;
+    QCheckBox *activateRoller1;
     QCheckBox *activateHopper;
     QPushButton *spreadNewLayer;
     QSpinBox *rollerSpeed;
@@ -75,6 +75,7 @@ public:
     QPushButton *connect;
     QPushButton *saveDefault;
     QPushButton *revertDefault;
+    QCheckBox *activateRoller2;
     QMenuBar *menubar;
     QMenu *menuPrinter_Controls;
     QStatusBar *statusbar;
@@ -210,9 +211,9 @@ public:
         label_3 = new QLabel(centralwidget);
         label_3->setObjectName(QString::fromUtf8("label_3"));
         label_3->setGeometry(QRect(410, 210, 55, 16));
-        activateRoller = new QCheckBox(centralwidget);
-        activateRoller->setObjectName(QString::fromUtf8("activateRoller"));
-        activateRoller->setGeometry(QRect(530, 170, 121, 22));
+        activateRoller1 = new QCheckBox(centralwidget);
+        activateRoller1->setObjectName(QString::fromUtf8("activateRoller1"));
+        activateRoller1->setGeometry(QRect(530, 170, 121, 22));
         activateHopper = new QCheckBox(centralwidget);
         activateHopper->setObjectName(QString::fromUtf8("activateHopper"));
         activateHopper->setGeometry(QRect(530, 210, 121, 22));
@@ -248,6 +249,9 @@ public:
         revertDefault = new QPushButton(centralwidget);
         revertDefault->setObjectName(QString::fromUtf8("revertDefault"));
         revertDefault->setGeometry(QRect(610, 360, 141, 25));
+        activateRoller2 = new QCheckBox(centralwidget);
+        activateRoller2->setObjectName(QString::fromUtf8("activateRoller2"));
+        activateRoller2->setGeometry(QRect(660, 170, 121, 22));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
@@ -287,7 +291,7 @@ public:
         label_2->setText(QCoreApplication::translate("MainWindow", "Distance (mm)", nullptr));
         Y_axis->setText(QCoreApplication::translate("MainWindow", "Y Axis", nullptr));
         label_3->setText(QCoreApplication::translate("MainWindow", "(Microns)", nullptr));
-        activateRoller->setText(QCoreApplication::translate("MainWindow", "Activate Roller", nullptr));
+        activateRoller1->setText(QCoreApplication::translate("MainWindow", "Activate Roller 1", nullptr));
         activateHopper->setText(QCoreApplication::translate("MainWindow", "Activate Hopper", nullptr));
         spreadNewLayer->setText(QCoreApplication::translate("MainWindow", "Spread New Layer(s)", nullptr));
         label_4->setText(QCoreApplication::translate("MainWindow", "Number of Layers", nullptr));
@@ -297,6 +301,7 @@ public:
         connect->setText(QCoreApplication::translate("MainWindow", "Connect to Controller", nullptr));
         saveDefault->setText(QCoreApplication::translate("MainWindow", "SAVE values as default", nullptr));
         revertDefault->setText(QCoreApplication::translate("MainWindow", "REVERT values to default", nullptr));
+        activateRoller2->setText(QCoreApplication::translate("MainWindow", "Activate Roller 2", nullptr));
         menuPrinter_Controls->setTitle(QCoreApplication::translate("MainWindow", "Printer Controls", nullptr));
     } // retranslateUi
 

@@ -51,7 +51,8 @@ MainWindow::MainWindow(QMainWindow *parent)
 
     //Disable all buttons that require a controller connection
     ui->activateHopper->setDisabled(true);
-    ui->activateRoller->setDisabled(true);
+    ui->activateRoller1->setDisabled(true);
+    ui->activateRoller2->setDisabled(true);
     ui->xHome->setDisabled(true);
     ui->yHome->setDisabled(true);
     ui->zHome->setDisabled(true);
@@ -310,14 +311,25 @@ void  MainWindow::on_zMin_clicked()
 
 
 
-void MainWindow::on_activateRoller_stateChanged(int arg1)
+void MainWindow::on_activateRoller1_stateChanged(int arg1)
 {
     if(arg1 == 2)
     {
-        ui->activateRoller->setText("Roller Activated!");
+        ui->activateRoller1->setText("Roller Activated!");
     }
     else {
-        ui->activateRoller->setText("Activate Roller");
+        ui->activateRoller1->setText("Activate Roller");
+    }
+}
+
+void MainWindow::on_activateRoller2_stateChanged(int arg1)
+{
+    if(arg1 == 2)
+    {
+        ui->activateRoller2->setText("Roller Activated!");
+    }
+    else {
+        ui->activateRoller2->setText("Activate Roller");
     }
 }
 
@@ -429,7 +441,8 @@ void MainWindow::on_connect_clicked()
      ui->connect->setText("Disconnect Controller");
 
      ui->activateHopper->setDisabled(false);
-     ui->activateRoller->setDisabled(false);
+     ui->activateRoller1->setDisabled(false);
+     ui->activateRoller2->setDisabled(false);
      ui->xHome->setDisabled(false);
      ui->yHome->setDisabled(false);
      ui->zHome->setDisabled(false);
@@ -451,7 +464,8 @@ void MainWindow::on_connect_clicked()
         ui->connect->setText("Connect to Controller");
 
         ui->activateHopper->setDisabled(true);
-        ui->activateRoller->setDisabled(true);
+        ui->activateRoller1->setDisabled(true);
+        ui->activateRoller2->setDisabled(true);
         ui->xHome->setDisabled(true);
         ui->yHome->setDisabled(true);
         ui->zHome->setDisabled(true);
@@ -542,5 +556,32 @@ void MainWindow::on_revertDefault_clicked()
 void MainWindow::on_spreadNewLayer_clicked()
 {
     //Spread Layer Logic!
+}
+
+
+void MainWindow::on_activateRoller1_toggled(bool checked)
+{
+    if(checked == 1) {
+        if(g){
+            e(GCmd(g, "SB 18"));
+        }
+    } else {
+        if(g){
+            e(GCmd(g, "CB 18"));
+        }
+    }
+}
+
+void MainWindow::on_activateRoller2_toggled(bool checked)
+{
+    if(checked == 1) {
+        if(g){
+            e(GCmd(g, "SB 21"));
+        }
+    } else {
+        if(g){
+            e(GCmd(g, "CB 21"));
+        }
+    }
 }
 

@@ -335,7 +335,7 @@
      <string>(Microns)</string>
     </property>
    </widget>
-   <widget class="QCheckBox" name="activateRoller">
+   <widget class="QCheckBox" name="activateRoller1">
     <property name="geometry">
      <rect>
       <x>530</x>
@@ -345,7 +345,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Activate Roller</string>
+     <string>Activate Roller 1</string>
     </property>
    </widget>
    <widget class="QCheckBox" name="activateHopper">
@@ -489,6 +489,19 @@
     </property>
     <property name="text">
      <string>REVERT values to default</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="activateRoller2">
+    <property name="geometry">
+     <rect>
+      <x>660</x>
+      <y>170</y>
+      <width>121</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Activate Roller 2</string>
     </property>
    </widget>
   </widget>

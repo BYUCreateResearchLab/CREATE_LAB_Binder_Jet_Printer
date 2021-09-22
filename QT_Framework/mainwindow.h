@@ -61,7 +61,9 @@ private slots:
 
     void on_zMin_clicked();
 
-    void on_activateRoller_stateChanged(int arg1);
+    void on_activateRoller1_stateChanged(int arg1);
+
+    void on_activateRoller2_stateChanged(int arg1);
 
     void on_activateHopper_stateChanged(int arg1);
 
@@ -76,6 +78,10 @@ private slots:
     void on_zHome_clicked();
 
     void on_spreadNewLayer_clicked();
+
+    void on_activateRoller1_toggled(bool checked);
+
+    void on_activateRoller2_toggled(bool checked);
 
 private:
     Ui::MainWindow *ui;
