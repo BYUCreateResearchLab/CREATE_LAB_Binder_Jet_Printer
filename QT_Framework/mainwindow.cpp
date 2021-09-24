@@ -555,7 +555,24 @@ void MainWindow::on_revertDefault_clicked()
 
 void MainWindow::on_spreadNewLayer_clicked()
 {
-    //Spread Layer Logic!
+    //Spread Layers
+    if(g){
+        for(int i = 0; i < ui->numLayers->value(); ++i) {
+            e(GCmd(g, "PRY=-230000")); //tune starting point
+            e(GCmd(g, "BGY"));
+            e(GMotionComplete(g, "Y"));
+
+            e(GCmd(g, "SB 18"));    // Turns on rollers
+            e(GCmd(g, "SB 21"));
+
+            e(GCmd(g, "PRY=-250000")); //tune starting point
+            e(GCmd(g, "BGY"));
+            e(GMotionComplete(g, "Y"));
+
+            e(GCmd(g, "CB 18"));    // Turns on rollers
+            e(GCmd(g, "CB 21"));
+        }
+    }
 }
 
 
