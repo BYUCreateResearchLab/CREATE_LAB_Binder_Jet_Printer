@@ -76,6 +76,7 @@ public:
     QPushButton *saveDefault;
     QPushButton *revertDefault;
     QCheckBox *activateRoller2;
+    QCheckBox *activateJet;
     QMenuBar *menubar;
     QMenu *menuPrinter_Controls;
     QStatusBar *statusbar;
@@ -252,6 +253,9 @@ public:
         activateRoller2 = new QCheckBox(centralwidget);
         activateRoller2->setObjectName(QString::fromUtf8("activateRoller2"));
         activateRoller2->setGeometry(QRect(660, 170, 121, 22));
+        activateJet = new QCheckBox(centralwidget);
+        activateJet->setObjectName(QString::fromUtf8("activateJet"));
+        activateJet->setGeometry(QRect(660, 210, 121, 22));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
@@ -302,6 +306,7 @@ public:
         saveDefault->setText(QCoreApplication::translate("MainWindow", "SAVE values as default", nullptr));
         revertDefault->setText(QCoreApplication::translate("MainWindow", "REVERT values to default", nullptr));
         activateRoller2->setText(QCoreApplication::translate("MainWindow", "Activate Roller 2", nullptr));
+        activateJet->setText(QCoreApplication::translate("MainWindow", "Activate Jet", nullptr));
         menuPrinter_Controls->setTitle(QCoreApplication::translate("MainWindow", "Printer Controls", nullptr));
     } // retranslateUi
 

@@ -83,6 +83,8 @@ private slots:
 
     void on_activateRoller2_toggled(bool checked);
 
+    void on_activateJet_stateChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     int z_position = 100;

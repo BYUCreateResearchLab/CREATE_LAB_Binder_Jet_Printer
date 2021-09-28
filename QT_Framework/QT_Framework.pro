@@ -14,6 +14,7 @@ SOURCES += \
     arrays.c \
 
 HEADERS += \
+    JetServer.h \
     gclib.h \
     gclibo.h \
     gclib_errors.h
