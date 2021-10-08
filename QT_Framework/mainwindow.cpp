@@ -29,24 +29,24 @@ void split(const std::string &s, char delim, std::vector<std::string> &elems) {
 
 int jetter_setup() {
     char JetPort[20] = "" ;
-        DWORD InQueue = 256, OutQueue = 256 ;
-        long OpenError ;
-        DCB useDCB ;
-        int JetDrv = COM4 ;
-        bool success ;
-        char s[80] ;
-        unsigned char Input[80] ;
-        int SizeInput = sizeof(Input) / sizeof(Input[0]) ;
+    DWORD InQueue = 256, OutQueue = 256 ;
+    long OpenError ;
+    DCB useDCB ;
+    int JetDrv = COM9 ;
+    char s[80] ;
+    unsigned char Input[80] ;
+    int SizeInput = sizeof(Input) / sizeof(Input[0]) ;
 
     //	Check command line arguments.
 
     // Open COM port.
     sprintf(JetPort, "COM%d", JetDrv+1) ;
     // Open communications.
+
     if (JetDrv != NOCOM) {
-        hCom = CreateFile(L"\\\\.\\COM4", GENERIC_READ | GENERIC_WRITE,
-                            0, NULL, OPEN_EXISTING, 0, NULL) ; //USING COM4
-        if (hCom == INVALID_HANDLE_VALUE) {
+        hCom = CreateFile(L"\\\\.\\COM9", GENERIC_READ | GENERIC_WRITE,
+                            0, NULL, OPEN_EXISTING, 0, NULL) ; //USING COM9
+        if (hCom == INVALID_HANDLE_VALUE) {//TODO - DOESN'T RECOGNIZE INVALID_HANDLE_VALUE, SAYS NO SUCH VALUE
             LPVOID lpMsgBuf;
             OpenError = GetLastError() ;
             //str: fmtJetCommCallFailedWithError
@@ -218,7 +218,7 @@ int jetter_setup() {
             WriteCmd[SentLength] = '\0' ;
             TestLog(WriteCmd, false) ;
             if (ReadLength != Length && SentLength == ReadLength) {
-                    if (JetDrv != NOCOM) CloseHandle(hCom) ;
+                if (JetDrv != NOCOM) CloseHandle(hCom) ;
                 hCom = noCom ;
                 JetDrv = NOCOM ;
                 return 1 ;

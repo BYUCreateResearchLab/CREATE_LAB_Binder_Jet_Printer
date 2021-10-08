@@ -2458,18 +2458,6 @@ debug/mainwindow.o: ../QT_Framework/mainwindow.cpp ../QT_Framework/mainwindow.h 
 		../QT_Framework/printobject.h \
 		../QT_Framework/vec2.h \
 		ui_mainwindow.h \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QApplication \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QCheckBox \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QGridLayout \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QLabel \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QMenu \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QMenuBar \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QPushButton \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QSpacerItem \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QSpinBox \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QStatusBar \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QToolButton \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QVBoxLayout \
 		../QT_Framework/JetServer.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug\mainwindow.o ..\QT_Framework\mainwindow.cpp
 
@@ -2969,20 +2957,7 @@ debug/progwindow.o: ../QT_Framework/progwindow.cpp ../QT_Framework/progwindow.h 
 		../QT_Framework/gclib_record.h \
 		../QT_Framework/gclib_errors.h \
 		../QT_Framework/gclibo.h \
-		ui_progwindow.h \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QApplication \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QCheckBox \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QDoubleSpinBox \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QHBoxLayout \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QHeaderView \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QLabel \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QPushButton \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QSlider \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QSpinBox \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QTableWidget \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QTextEdit \
-		C:/Qt/6.1.2/mingw81_64/include/QtWidgets/QVBoxLayout \
-		../QT_Framework/svgview.h
+		ui_progwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug\progwindow.o ..\QT_Framework\progwindow.cpp
 
 debug/lineprintdata.o: ../QT_Framework/lineprintdata.cpp ../QT_Framework/lineprintdata.h \

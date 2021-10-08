@@ -21,6 +21,7 @@
 #define COM1 0
 #define COM2 1
 #define COM4 3
+#define COM9 8
 
 // Command indicators
 #define MFJDRV_NOCOMMAND		0x00
@@ -125,7 +126,7 @@ MicroJet::~MicroJet()
 
 
 static const char fmtCommError[] = "%s failed with error %ld.\n" ;
-static HANDLE hCom = INVALID_HANDLE_VALUE, noCom = INVALID_HANDLE_VALUE ;
+HANDLE hCom = INVALID_HANDLE_VALUE, noCom = INVALID_HANDLE_VALUE ;
 
 
 static long  gCheckLong = 0L ;
@@ -140,13 +141,13 @@ static short gDropsHigh = 999, gStrobeHigh = 64, gStrobeDelayLow = -500,
              gStrobeDelayHigh = 2500 ;
 // Screen parameters.
 static int	gTopLine = 2, gTopParams = 7, gRowsParams = 9,
-                gBottomBlock = 19, gMessageLine = 24,
+            gBottomBlock = 19, gMessageLine = 24,
             gPulseTitleCol = 20, gTriggerTitleCol = 50,
             gCommandCol = 11, gStartCol = 33, gAloneCol = 47, gDumpCol = 54,
             gExitCol = 67, gChanBottom = 15 ;
 
 
-#define NOCOM    -1
+int NOCOM = -1;
 
 
 // This is me building my own structure for this function.. Put here to be global
