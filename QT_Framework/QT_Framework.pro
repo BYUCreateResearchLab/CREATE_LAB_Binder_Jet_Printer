@@ -17,7 +17,7 @@ HEADERS += \
     JetServer.h \
     gclib.h \
     gclibo.h \
-    gclib_errors.h
+    gclib_errors.h \
     gclib_record.h
 
 

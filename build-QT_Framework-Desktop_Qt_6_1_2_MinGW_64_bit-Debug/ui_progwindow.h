@@ -93,7 +93,7 @@ public:
 
         layersToSpread = new QSpinBox(progWindow);
         layersToSpread->setObjectName(QString::fromUtf8("layersToSpread"));
-        layersToSpread->setMinimum(1);
+        layersToSpread->setMinimum(0);
 
         horizontalLayout_7->addWidget(layersToSpread);
 

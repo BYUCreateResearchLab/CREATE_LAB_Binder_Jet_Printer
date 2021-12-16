@@ -298,16 +298,18 @@ void progWindow::printLineSet(int setNum) {
                 curX = curX + (floor(table.data[setNum].dropletSpacing.value/5)); //TODO : Fix here to move smaller increments than 1 mm
             }
             */
+            string xPrintSpeedString = "SPX=" + to_string(table.data[setNum].printVelocity.value * 1000.0f);
+            e(GCmd(g, xPrintSpeedString.c_str()));
+            //e(GCmd(g, "SPX=5000"));
 
             //CONTINUOUS MOTION VERSION
             //Change velocity depending on the table inputs
             //enable jetting
             e(GCmd(g, "SH H"));
-            e(GCmd(g, "ACH=20000000"));   // 200 mm/s^2
-            e(GCmd(g, "JGH=1000"));   // 15 mm/s jog towards rear limit
+            e(GCmd(g, "ACH=20000000"));
+            e(GCmd(g, "JGH=1000"));   // 1000 Hz
             e(GCmd(g, "BGH"));
 
-            e(GCmd(g, "SPX=5000"));
 
             curX = curX + table.data[setNum].lineLength.value;
             string xString = "PAX=" + to_string(75000 - ((50-curX)*1000));
@@ -317,6 +319,7 @@ void progWindow::printLineSet(int setNum) {
             //disable jetting
             e(GCmd(g, "STH"));
 
+            e(GCmd(g, "SPX=50000"));
             xString = "PAX=" + to_string(75000 - ((50-x_start)*1000));
             e(GCmd(g, xString.c_str()));
             curY = curY + table.data[setNum].lineSpacing.value;
