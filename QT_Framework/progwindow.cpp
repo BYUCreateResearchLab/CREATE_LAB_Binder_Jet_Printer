@@ -1,8 +1,14 @@
+
 #include "progwindow.h"
 #include "ui_progwindow.h"
+//#include "JetServer.h"
 #include <math.h>
+#include <iostream>
+
 
 using namespace std;
+
+int jetter_setup();
 
 progWindow::progWindow(QWidget *parent) :
     QWidget(parent),
@@ -224,20 +230,24 @@ void progWindow::on_startPrint_clicked()
         progWindow::connectToController();
     }
 
+    spread_x_layers(ui->layersToSpread->value());
+
     //Print Sets
     for(int i = 0; i < int(table.numRows()); ++i) {
         printLineSet(i);
     }
 
+    /*
     //GO TO HOME AFTER PRINT
     string xHomeString = "PAX=" + to_string(75000 - ((50-table.startX)*1000));
     e(GCmd(g, xHomeString.c_str()));
-    string yHomeString = "PAY=" + to_string(table.startY*1000);
+    string yHomeString = "PAY=" + to_string(table.startY*800);
     e(GCmd(g, yHomeString.c_str()));
     e(GCmd(g, "BGX"));
     e(GCmd(g, "BGY"));
     e(GMotionComplete(g, "X")); // Wait until limit is reached
     e(GMotionComplete(g, "Y"));
+    */
 }
 
 void progWindow::printLineSet(int setNum) {
@@ -248,6 +258,8 @@ void progWindow::printLineSet(int setNum) {
     }
     float y_start = table.startY;
 
+    e(GCmd(g, "SPY=25000")); // 31.25 mm/s (Put this here for now, but we will want a setting for y step speed during line printing)
+
     //calculate line specifics - TODO: CURRENTLY OVERCONSTRAINED
 
     //GO TO BEGINNING POINT
@@ -256,7 +268,7 @@ void progWindow::printLineSet(int setNum) {
         //e(GCmd(g, "DPY=0"));
         string xHomeString = "PAX=" + to_string(75000 - ((50-x_start)*1000));
         e(GCmd(g, xHomeString.c_str()));
-        string yHomeString = "PAY=" + to_string(y_start*1000);
+        string yHomeString = "PAY=" + to_string(y_start*800);
         e(GCmd(g, yHomeString.c_str()));
         e(GCmd(g, "BGX"));
         e(GCmd(g, "BGY"));
@@ -290,19 +302,25 @@ void progWindow::printLineSet(int setNum) {
             //CONTINUOUS MOTION VERSION
             //Change velocity depending on the table inputs
             //enable jetting
+            e(GCmd(g, "SH H"));
+            e(GCmd(g, "ACH=20000000"));   // 200 mm/s^2
+            e(GCmd(g, "JGH=1000"));   // 15 mm/s jog towards rear limit
+            e(GCmd(g, "BGH"));
+
+            e(GCmd(g, "SPX=5000"));
+
             curX = curX + table.data[setNum].lineLength.value;
             string xString = "PAX=" + to_string(75000 - ((50-curX)*1000));
             e(GCmd(g, xString.c_str()));
             e(GCmd(g, "BGX"));
             e(GMotionComplete(g, "X"));
             //disable jetting
-
-
+            e(GCmd(g, "STH"));
 
             xString = "PAX=" + to_string(75000 - ((50-x_start)*1000));
             e(GCmd(g, xString.c_str()));
             curY = curY + table.data[setNum].lineSpacing.value;
-            string yString = "PAY=" + to_string(curY*1000);
+            string yString = "PAY=" + to_string(curY*800); // This should be 800 for Y axis
             e(GCmd(g, yString.c_str()));
             e(GCmd(g, "BGX"));
             e(GCmd(g, "BGY"));
@@ -319,94 +337,146 @@ void progWindow::e(GReturn rc)
      throw rc;
  }
 
+void progWindow::spread_x_layers(int num_layers) {//Spread Layers
+    if(g){
+        for(int i = 0; i < num_layers; ++i) {
+            e(GCmd(g, "ACY=200000"));   // 200 mm/s^2
+            e(GCmd(g, "DCY=200000"));   // 200 mm/s^2
+            e(GCmd(g, "JGY=-25000"));   // 15 mm/s jog towards rear limit
+            e(GCmd(g, "BGY"));
+            e(GMotionComplete(g, "Y"));
+
+            //SECTION 1
+            //TURN ON HOPPER
+            e(GCmd(g, "MG{P2} {^85}, {^49}, {^13}{N}"));
+
+            // Slow move Jacob added that acted as a 'wait' for the hopper to fully turn on
+            // look into GSleep(1000); command (I think this does what I want)
+            e(GCmd(g, "SPY=10")); // 50 mm/s
+            e(GCmd(g, "PRY=20")); //tune starting point
+            e(GCmd(g, "BGY"));
+            e(GMotionComplete(g, "Y"));
+
+            e(GCmd(g, "SPY=40000")); // 50 mm/s
+            e(GCmd(g, "PRY=92000")); //tune starting point
+            e(GCmd(g, "BGY"));
+            e(GMotionComplete(g, "Y"));
+
+            //SECTION 2
+            //TURN OFF HOPPER
+            e(GCmd(g, "MG{P2} {^85}, {^48}, {^13}{N}"));
+            e(GCmd(g, "SB 18"));    // Turns on rollers
+            e(GCmd(g, "SB 21"));
+            e(GCmd(g, "SPY=8000"));
+            e(GCmd(g, "PRY=138000")); //tune starting point
+            e(GCmd(g, "BGY"));
+            e(GMotionComplete(g, "Y"));
+
+            e(GCmd(g, "CB 18"));    // Turns off rollers
+            e(GCmd(g, "CB 21"));
+        }
+    }
+}
+
 void progWindow::connectToController() {
-        //TO DO - DISABLE BUTTONS UNTIL TUNED, SEPERATE INITIALIZATION HOMING BUTTONS
+    //TODO Maybe Threading or something like that? The gui is unresponsive until connect function is finished.
+    e(GOpen(address, &g)); // Establish connection with motion controller
+    e(GCmd(g, "SH XYZ")); // Enable X,Y, and Z motors
 
-         //TODO Maybe Threading or something like that? The gui is unresponsive until connect function is finished.
-         e(GOpen(address, &g)); // Establish connection with motion controller
-         e(GCmd(g, "SH XYZ")); // Enable X,Y, and Z motors
+    // Controller Configuration
+    e(GCmd(g, "MO")); // Ensure motors are off for setup
 
-         // Controller Configuration
-         e(GCmd(g, "MO")); // Ensure motors are off for setup
+    // X Axis
+    e(GCmd(g, "MTX = -1"));    // Set motor type to reversed brushless
+    e(GCmd(g, "CEX = 2"));     // Set Encoder to reversed quadrature
+    e(GCmd(g, "BMX = 40000")); // Set magnetic pitch of lienar motor
+    e(GCmd(g, "AGX = 1"));     // Set amplifier gain
+    e(GCmd(g, "AUX = 9"));     // Set current loop (based on inductance of motor)
+    e(GCmd(g, "TLX = 3"));     // Set constant torque limit to 3V
+    e(GCmd(g, "TKX = 0"));     // Disable peak torque setting for now
 
-         // X Axis
-         e(GCmd(g, "MTX = -1"));    // Set motor type to reversed brushless
-         e(GCmd(g, "CEX = 2"));     // Set Encoder to reversed quadrature
-         e(GCmd(g, "BMX = 40000")); // Set magnetic pitch of lienar motor
-         e(GCmd(g, "AGX = 1"));     // Set amplifier gain
-         e(GCmd(g, "AUX = 9"));     // Set current loop (based on inductance of motor)
-         e(GCmd(g, "TLX = 3"));     // Set constant torque limit to 3V
-         e(GCmd(g, "TKX = 0"));     // Disable peak torque setting for now
+    // Y Axis
+    e(GCmd(g, "MTY = 1"));     // Set motor type to standard brushless
+    e(GCmd(g, "CEY = 0"));     // Set Encoder to reversed quadrature??? (or is it?)
+    e(GCmd(g, "BMY = 2000"));  // Set magnetic pitch of rotary motor
+    e(GCmd(g, "AGY = 1"));     // Set amplifier gain
+    e(GCmd(g, "AUY = 11"));    // Set current loop (based on inductance of motor)
+    e(GCmd(g, "TLY = 6"));     // Set constant torque limit to 6V
+    e(GCmd(g, "TKY = 0"));     // Disable peak torque setting for now
 
-         // Y Axis
-         e(GCmd(g, "MTY = 1"));     // Set motor type to standard brushless
-         e(GCmd(g, "CEY = 0"));     // Set Encoder to reversed quadrature
-         e(GCmd(g, "BMY = 2000"));  // Set magnetic pitch of rotary motor
-         e(GCmd(g, "AGY = 1"));     // Set amplifier gain
-         e(GCmd(g, "AUY = 11"));    // Set current loop (based on inductance of motor)
-         e(GCmd(g, "TLY = 6"));     // Set constant torque limit to 6V
-         e(GCmd(g, "TKY = 0"));     // Disable peak torque setting for now
+    // Z Axis
+    e(GCmd(g, "MTZ = -2.5"));  // Set motor type to standard brushless
+    e(GCmd(g, "CEZ = 14"));    // Set Encoder to reversed quadrature
+    e(GCmd(g, "AGZ = 0"));     // Set amplifier gain
+    e(GCmd(g, "AUZ = 9"));     // Set current loop (based on inductance of motor)
+    // Note: There might be more settings especially for this axis I might want to add later
 
-         // Z Axis
-         e(GCmd(g, "MTZ = -2.5"));  // Set motor type to standard brushless
-         e(GCmd(g, "CEZ = 14"));    // Set Encoder to reversed quadrature
-         e(GCmd(g, "AGZ = 0"));     // Set amplifier gain
-         e(GCmd(g, "AUZ = 9"));     // Set current loop (based on inductance of motor)
-         // Note: There might be more settings especially for this axis I might want to add later
+    // H Axis (Jetting Axis)
+    e(GCmd(g, "MTH = -2"));    // Set jetting axis to be stepper motor with defualt low
+    e(GCmd(g, "AGH = 0"));     // Set gain to lowest value
+    e(GCmd(g, "LDH = 3"));     // Disable limit sensors for H axis
+    e(GCmd(g, "KSH = .25"));   // Minimize filters on step signals
+    e(GCmd(g, "ITH = 1"));     // Minimize filters on step signals
 
-         // H Axis (Jetting Axis)
-         e(GCmd(g, "MTH = -2"));    // Set jetting axis to be stepper motor with defualt low
-         e(GCmd(g, "AGH = 0"));     // Set gain to lowest value
-         e(GCmd(g, "LDH = 3"));     // Disable limit sensors for H axis
-         e(GCmd(g, "KSH = .25"));   // Minimize filters on step signals
-         e(GCmd(g, "ITH = 1"));     // Minimize filters on step signals
+    e(GCmd(g, "BN"));          // Save (burn) these settings to the controller just to be safe
 
-         e(GCmd(g, "BN"));          // Save (burn) these settings to the controller just to be safe
+    e(GCmd(g, "SH XYZ"));      // Enable X,Y, and Z motors
+    e(GCmd(g, "CN= -1"));      // Set correct polarity for all limit switches
 
-         e(GCmd(g, "SH XYZ"));      // Enable X,Y, and Z motors
-         e(GCmd(g, "CN= -1"));      // Set correct polarity for all limit switches
-
-         //HOME ALL AXIS'
-         if(g){
-             // Home the X-Axis using the central home sensor index pulse
-             e(GCmd(g, "ACX=200000"));   // 200 mm/s^2
-             e(GCmd(g, "DCX=200000"));   // 200 mm/s^2
-             e(GCmd(g, "JGX=-15000"));   // 15 mm/s jog towards rear limit
-             e(GCmd(g, "ACY=200000"));   // 200 mm/s^2
-             e(GCmd(g, "DCY=200000"));   // 200 mm/s^2
-             e(GCmd(g, "JGY=25000"));   // 15 mm/s jog towards rear limit
-             e(GCmd(g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
-             e(GCmd(g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
-             e(GCmd(g, "JGZ=113664"));    // Speed of Z
-             try {
-                e(GCmd(g, "BGX"));          // Start motion towards rear limit sensor
-                e(GCmd(g, "BGY"));          // Start motion towards rear limit sensor
-                e(GCmd(g, "BGZ")); // Start motion towards rear limit sensor
-                e(GMotionComplete(g, "X")); // Wait until limit is reached
-                e(GMotionComplete(g, "Y")); // Wait until limit is reached
-                e(GMotionComplete(g, "Z")); // Wait until limit is reached
-             } catch(...) {}
-             e(GCmd(g, "JGX=15000"));    // 15 mm/s jog towards home sensor
-             e(GCmd(g, "HVX=500"));      // 0.5 mm/s on second move towards home sensor
-             e(GCmd(g, "FIX"));          // Find index command for x axis
-             e(GCmd(g, "ACY=50000")); // 50 mm/s^2
-             e(GCmd(g, "DCY=50000")); // 50 mm/s^2
-             e(GCmd(g, "SPY=25000")); // 25 mm/s
-             e(GCmd(g, "PRY=-200000"));  // 201.5 mm
-             e(GCmd(g, "ACZ=757760"));
-             e(GCmd(g, "DCZ=757760"));
-             e(GCmd(g, "SPZ=113664"));
-             e(GCmd(g, "PRZ=-100000"));//TODO - TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
-             e(GCmd(g, "BGX"));          // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
-             e(GCmd(g, "BGY"));
-             e(GCmd(g, "BGZ"));
-             e(GMotionComplete(g, "X")); // Wait until X stage finishes moving
-             e(GMotionComplete(g, "Y"));
-             e(GMotionComplete(g, "Z")); // Wait until limit is reached
-             e(GCmd(g, "DPX=75000"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
-             e(GCmd(g, "DPY=0"));
-             e(GCmd(g, "DPZ=0"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
+    //HOME ALL AXIS'
+    if(g){
+        // Home the X-Axis using the central home sensor index pulse
+        e(GCmd(g, "ACX=200000"));   // 200 mm/s^2
+        e(GCmd(g, "DCX=200000"));   // 200 mm/s^2
+        e(GCmd(g, "JGX=-15000"));   // 15 mm/s jog towards rear limit
+        e(GCmd(g, "ACY=200000"));   // 200 mm/s^2
+        e(GCmd(g, "DCY=200000"));   // 200 mm/s^2
+        e(GCmd(g, "JGY=25000"));   // 15 mm/s jog towards rear limit
+        e(GCmd(g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
+        e(GCmd(g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
+        e(GCmd(g, "JGZ=-113664"));    // Speed of Z
+        e(GCmd(g, "FLZ=2147483647")); // Turn off forward limit during homing
+        try {
+           e(GCmd(g, "BGX"));          // Start motion towards rear limit sensor
+           } catch(...) {}
+        try {
+           e(GCmd(g, "BGY"));          // Start motion towards rear limit sensor
+           } catch(...) {}
+        try {
+           e(GCmd(g, "BGZ")); // Start motion towards rear limit sensor
+           } catch(...) {}
+        try {
+           //Temporary place for Jetting setup to save time
+           jetter_setup();
+        } catch(...) {}
+        e(GMotionComplete(g, "X")); // Wait until limit is reached
+        e(GMotionComplete(g, "Y")); // Wait until limit is reached
+        e(GMotionComplete(g, "Z")); // Wait until limit is reached
+        e(GCmd(g, "JGX=15000"));    // 15 mm/s jog towards home sensor
+        e(GCmd(g, "HVX=500"));      // 0.5 mm/s on second move towards home sensor
+        e(GCmd(g, "FIX"));          // Find index command for x axis
+        e(GCmd(g, "ACY=50000")); // 62.5 mm/s^2
+        e(GCmd(g, "DCY=50000")); // 62.5 mm/s^2
+        e(GCmd(g, "SPY=25000")); // 31.25 mm/s
+        e(GCmd(g, "PRY=-160000"));
+        e(GCmd(g, "ACZ=757760"));
+        e(GCmd(g, "DCZ=757760"));
+        e(GCmd(g, "SDZ=1515520")); // Sets deceleration when limit switch is touched
+        e(GCmd(g, "SPZ=113664"));
+        e(GCmd(g, "PRZ=1025000"));//TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
+        e(GCmd(g, "BGX"));          // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
+        e(GCmd(g, "BGY"));
+        e(GCmd(g, "BGZ"));
+        e(GMotionComplete(g, "X")); // Wait until X stage finishes moving
+        e(GMotionComplete(g, "Y"));
+        e(GMotionComplete(g, "Z")); // Wait until limit is reached
+        e(GCmd(g, "PRX=-40000"));   //OFFSET TO ACCOUNT FOR THE SKEWED BINDER JET HEAD LOCATION
+        e(GCmd(g, "BGX"));
+        e(GMotionComplete(g, "X")); // Wait until X stage finishes moving
+        e(GCmd(g, "DPX=75000"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
+        e(GCmd(g, "DPY=0")); //Do we need this?
+        e(GCmd(g, "DPZ=0"));
+        e(GCmd(g, "FLZ=0")); // Set software limit on z so it can't go any higher than current position
          }
 
 }
-

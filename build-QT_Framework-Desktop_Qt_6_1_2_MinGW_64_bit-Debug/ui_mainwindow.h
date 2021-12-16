@@ -85,7 +85,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
-        MainWindow->resize(864, 569);
+        MainWindow->resize(1045, 573);
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         gridLayoutWidget = new QWidget(centralwidget);
@@ -184,6 +184,7 @@ public:
         xVelocity = new QSpinBox(centralwidget);
         xVelocity->setObjectName(QString::fromUtf8("xVelocity"));
         xVelocity->setGeometry(QRect(80, 350, 42, 22));
+        xVelocity->setMaximum(200);
         xVelocity->setValue(10);
         VelocityLabel = new QLabel(centralwidget);
         VelocityLabel->setObjectName(QString::fromUtf8("VelocityLabel"));
@@ -259,7 +260,7 @@ public:
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
-        menubar->setGeometry(QRect(0, 0, 864, 21));
+        menubar->setGeometry(QRect(0, 0, 1045, 21));
         menuPrinter_Controls = new QMenu(menubar);
         menuPrinter_Controls->setObjectName(QString::fromUtf8("menuPrinter_Controls"));
         MainWindow->setMenuBar(menubar);

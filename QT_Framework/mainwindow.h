@@ -24,6 +24,7 @@
 
 
 #include <progwindow.h>
+#include <outputwindow.h>
 
 
 QT_BEGIN_NAMESPACE
@@ -40,49 +41,27 @@ public:
 
 private slots:
     void on_yPositive_clicked();
-
     void on_xPositive_clicked();
-
     void on_yNegative_clicked();
-
     void on_xNegative_clicked();
-
     void on_xHome_clicked();
-
     void on_yHome_clicked();
-
     void on_zStepSize_valueChanged(int arg1);
-
     void on_zMax_clicked();
-
     void on_zUp_clicked();
-
     void on_zDown_clicked();
-
     void on_zMin_clicked();
-
     void on_activateRoller1_stateChanged(int arg1);
-
     void on_activateRoller2_stateChanged(int arg1);
-
     void on_activateHopper_stateChanged(int arg1);
-
     void on_connect_clicked();
-
     void on_OpenProgramWindow_clicked();
-
     void on_saveDefault_clicked();
-
     void on_revertDefault_clicked();
-
     void on_zHome_clicked();
-
     void on_spreadNewLayer_clicked();
-
     void on_activateRoller1_toggled(bool checked);
-
     void on_activateRoller2_toggled(bool checked);
-
     void on_activateJet_stateChanged(int arg1);
 
 private:
@@ -100,5 +79,8 @@ private:
     char const *address = "192.168.42.100";
     GCon g = 0; // Handle for connection to Galil Motion Controller
     progWindow *sWindow;
+    QDockWidget* mDockWidget;
+    OutputWindow* mOutputWindow;
+    void e(GReturn rc);
 };
 #endif // MAINWINDOW_H

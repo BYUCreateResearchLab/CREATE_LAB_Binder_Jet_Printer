@@ -74,6 +74,8 @@ private slots:
 
     void connectToController();
 
+    void spread_x_layers(int num_layers);
+
 private:
     Ui::progWindow *ui;
 
@@ -85,7 +87,7 @@ private:
 
 
 
-    QPen linePen = QPen(Qt::blue, 1.0, Qt::SolidLine, Qt::RoundCap);
+    QPen linePen = QPen(Qt::blue, 0.1, Qt::SolidLine, Qt::RoundCap);
     QPen lineTravelPen = QPen(Qt::red, 0.5, Qt::SolidLine, Qt::RoundCap);
 
     GCon g = 0;

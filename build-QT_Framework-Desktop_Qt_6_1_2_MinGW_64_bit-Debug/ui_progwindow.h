@@ -34,6 +34,8 @@ public:
     QHBoxLayout *horizontalLayout_7;
     QLabel *label_numSets;
     QSpinBox *numSets;
+    QLabel *label;
+    QSpinBox *layersToSpread;
     QLabel *label_StartXY;
     QDoubleSpinBox *startX;
     QDoubleSpinBox *startY;
@@ -83,6 +85,17 @@ public:
         numSets->setValue(1);
 
         horizontalLayout_7->addWidget(numSets);
+
+        label = new QLabel(progWindow);
+        label->setObjectName(QString::fromUtf8("label"));
+
+        horizontalLayout_7->addWidget(label);
+
+        layersToSpread = new QSpinBox(progWindow);
+        layersToSpread->setObjectName(QString::fromUtf8("layersToSpread"));
+        layersToSpread->setMinimum(1);
+
+        horizontalLayout_7->addWidget(layersToSpread);
 
         label_StartXY = new QLabel(progWindow);
         label_StartXY->setObjectName(QString::fromUtf8("label_StartXY"));
@@ -262,6 +275,7 @@ public:
     {
         progWindow->setWindowTitle(QCoreApplication::translate("progWindow", "Form", nullptr));
         label_numSets->setText(QCoreApplication::translate("progWindow", "Number of Sets", nullptr));
+        label->setText(QCoreApplication::translate("progWindow", "Number of Pre-Print Layers to Spread", nullptr));
         label_StartXY->setText(QCoreApplication::translate("progWindow", "Start X, Y (mm)", nullptr));
         label_setSpacing->setText(QCoreApplication::translate("progWindow", "Set Spacing (mm)", nullptr));
         QTableWidgetItem *___qtablewidgetitem = tableWidget->horizontalHeaderItem(0);

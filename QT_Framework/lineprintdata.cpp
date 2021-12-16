@@ -112,7 +112,7 @@ errorType TableData::updateData(QString input){
 
         case float_type: // if data is a float
         {
-            int cellVal = input.toFloat(&ok);
+            float cellVal = input.toFloat(&ok);
             if (!ok){ // if error
                 value = NAN;
                 return errorCannotConvert; // cannot convert error code

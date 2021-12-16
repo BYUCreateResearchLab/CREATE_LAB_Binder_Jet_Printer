@@ -25,6 +25,7 @@ HEADERS += \
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
+    outputwindow.cpp \
     progwindow.cpp \
     lineprintdata.cpp \
     printobject.cpp \
@@ -33,6 +34,7 @@ SOURCES += \
 
 HEADERS += \
     mainwindow.h \
+    outputwindow.h \
     progwindow.h \
     lineprintdata.h \
     printobject.h \
@@ -42,7 +44,8 @@ HEADERS += \
 
 FORMS += \
     mainwindow.ui \
-    progwindow.ui
+    outputwindow.ui \
+    progwindow.ui \
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
