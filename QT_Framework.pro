@@ -8,31 +8,12 @@ CONFIG += c++11
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-# Comment these out and define AVOIDGCLIB in mainwindow.h to compile on machines that don't play well with gclib
-SOURCES += \
-    gclibo.c \
-    arrays.c \
-
 HEADERS += \
     JetServer.h \
     gclib.h \
     gclibo.h \
     gclib_errors.h \
-    gclib_record.h
-
-
-
-SOURCES += \
-    main.cpp \
-    mainwindow.cpp \
-    outputwindow.cpp \
-    progwindow.cpp \
-    lineprintdata.cpp \
-    printobject.cpp \
-    svgview.cpp \
-    fakegclib.cpp \
-
-HEADERS += \
+    gclib_record.h \
     mainwindow.h \
     outputwindow.h \
     progwindow.h \
@@ -40,7 +21,17 @@ HEADERS += \
     printobject.h \
     svgview.h \
     vec2.h \
-    fakegclib.h
+
+SOURCES += \
+    gclibo.c \
+    arrays.c \
+    main.cpp \
+    mainwindow.cpp \
+    outputwindow.cpp \
+    progwindow.cpp \
+    lineprintdata.cpp \
+    printobject.cpp \
+    svgview.cpp \
 
 FORMS += \
     mainwindow.ui \
@@ -51,8 +42,6 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
-
-
 
 INCLUDEPATH += $$PWD/.
 DEPENDPATH += $$PWD/.
