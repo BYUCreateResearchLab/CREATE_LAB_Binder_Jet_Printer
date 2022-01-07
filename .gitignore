@@ -68,6 +68,13 @@ Thumbs.db
 
 # Binaries
 # --------
-*.dll
 *.exe
+
+# Cmake
 CMakeLists.txt.user
+
+# Build Folders
+build/*
+!build/build.xml
+debug/
+release/
