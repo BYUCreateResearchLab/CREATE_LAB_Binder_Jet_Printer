@@ -237,15 +237,16 @@ void progWindow::spread_x_layers(int num_layers)
             e(GMotionComplete(printer->g, "Y"));
 
             // Set hopper intensity
-
+            // set the ultrasonic generator mode to 0 (A) and the intensity to 5 (50%) "M05"
+            e(GCmd(printer->g, "MG{P2} {^77}, {^48}, {^53}, {^13}{N}"));
 
             //SECTION 1
             e(GCmd(printer->g, "MG{P2} {^85}, {^49}, {^13}{N}")); //TURN ON HOPPER
 
             // Slow move Jacob added that acted as a 'wait' for the hopper to fully turn on
             // look into GSleep(1000); command (I think this does what I want)
-            e(GCmd(printer->g, "SPY=10")); // 50 mm/s
-            e(GCmd(printer->g, "PRY=20")); //tune starting point
+            e(GCmd(printer->g, "SPY=10"));
+            e(GCmd(printer->g, "PRY=20"));
             e(GCmd(printer->g, "BGY"));
             e(GMotionComplete(printer->g, "Y"));
 
@@ -285,23 +286,26 @@ void progWindow::on_startPrint_clicked()
         // How to handle if the controller has not been connected?
     }
 
-    //Print Sets
-    for(int i{0}; i < int(table.numRows()); ++i)
+    else
     {
-        printLineSet(i);
-    }
+        //Print Sets
+        for(int i{0}; i < int(table.numRows()); ++i)
+        {
+            printLineSet(i);
+        }
 
-    /*
-    //GO TO HOME AFTER PRINT
-    string xHomeString = "PAX=" + to_string(75000 - ((50-table.startX)*1000));
-    e(GCmd(printer->g, xHomeString.c_str()));
-    string yHomeString = "PAY=" + to_string(table.startY*800);
-    e(GCmd(printer->g, yHomeString.c_str()));
-    e(GCmd(printer->g, "BGX"));
-    e(GCmd(printer->g, "BGY"));
-    e(GMotionComplete(printer->g, "X")); // Wait until limit is reached
-    e(GMotionComplete(printer->g, "Y"));
-    */
+        /*
+        //GO TO HOME AFTER PRINT
+        string xHomeString = "PAX=" + to_string(75000 - ((50-table.startX)*1000));
+        e(GCmd(printer->g, xHomeString.c_str()));
+        string yHomeString = "PAY=" + to_string(table.startY*800);
+        e(GCmd(printer->g, yHomeString.c_str()));
+        e(GCmd(printer->g, "BGX"));
+        e(GCmd(printer->g, "BGY"));
+        e(GMotionComplete(printer->g, "X")); // Wait until limit is reached
+        e(GMotionComplete(printer->g, "Y"));
+        */
+    }
 }
 
 void progWindow::printLineSet(int setNum)

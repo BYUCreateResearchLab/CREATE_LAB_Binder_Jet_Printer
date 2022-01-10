@@ -49,7 +49,6 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
     ui->setupUi(this);
     //Set up Second Window
     sWindow = new progWindow();
-    sWindow->setup(printer);
     sWindow->setWindowState(Qt::WindowMaximized); // set line printing window to be maximized
     connect(sWindow, &progWindow::firstWindow, this, &MainWindow::show);
 
@@ -99,6 +98,7 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
 void MainWindow::setup(Printer *printerPtr)
 {
     printer = printerPtr;
+    sWindow->setup(printer);
 }
 
 MainWindow::~MainWindow()
@@ -534,6 +534,8 @@ void MainWindow::on_connect_clicked()
         ui->zMax->setDisabled(true);
         ui->zMin->setDisabled(true);
         ui->spreadNewLayer->setDisabled(true);
+
+        sWindow->set_connected(false); // Enable print buttons in line printing window
     }
 }
 
