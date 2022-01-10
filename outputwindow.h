@@ -11,7 +11,7 @@ class OutputWindow : public QWidget
 {
     Q_OBJECT
 
- public:
+public:
     explicit OutputWindow(QWidget *parent = 0);
     ~OutputWindow();
 public slots:

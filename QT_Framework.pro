@@ -9,34 +9,36 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 HEADERS += \
-    JetServer.h \
-    gclib.h \
-    gclibo.h \
-    gclib_errors.h \
-    gclib_record.h \
-    mainwindow.h \
-    outputwindow.h \
-    progwindow.h \
-    lineprintdata.h \
-    printobject.h \
-    svgview.h \
-    vec2.h \
+        JetServer.h \
+        gclib.h \
+        gclibo.h \
+        gclib_errors.h \
+        gclib_record.h \
+        mainwindow.h \
+        outputwindow.h \
+    printer.h \
+        progwindow.h \
+        lineprintdata.h \
+        printobject.h \
+        svgview.h \
+        vec2.h \
 
 SOURCES += \
-    gclibo.c \
-    arrays.c \
-    main.cpp \
-    mainwindow.cpp \
-    outputwindow.cpp \
-    progwindow.cpp \
-    lineprintdata.cpp \
-    printobject.cpp \
-    svgview.cpp \
+        gclibo.c \
+        arrays.c \
+        main.cpp \
+        mainwindow.cpp \
+        outputwindow.cpp \
+    printer.cpp \
+        progwindow.cpp \
+        lineprintdata.cpp \
+        printobject.cpp \
+        svgview.cpp \
 
 FORMS += \
-    mainwindow.ui \
-    outputwindow.ui \
-    progwindow.ui \
+        mainwindow.ui \
+        outputwindow.ui \
+        progwindow.ui \
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

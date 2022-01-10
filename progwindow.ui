@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>789</width>
+    <width>799</width>
     <height>731</height>
    </rect>
   </property>
@@ -71,6 +71,13 @@
       <widget class="QSpinBox" name="layersToSpread">
        <property name="minimum">
         <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="levelRecoat">
+       <property name="text">
+        <string>Level Recoat</string>
        </property>
       </widget>
      </item>

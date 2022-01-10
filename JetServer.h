@@ -3,8 +3,6 @@
 #ifndef JETSERVER_H
 #define JETSERVER_H
 
-
-
 #endif // JETSERVER_H
 
 //	Drive electronics interface program (excerpts for reference)
@@ -69,13 +67,10 @@ float max(float a,float b)
 #define MFJDRV_EDITCHANNEL 0x0E
 // I don't think these 3 are the right commands, but I'm not sure it matter for our JetDrive...
 
-
-
 #define gDreamController true
 #define gMultiChannel false
 #define gBreadboardOne false
 //DOES THIS WORK??
-
 
 class MicroJet {
 // Data structure for microjet operating and status parameters.

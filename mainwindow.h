@@ -8,6 +8,7 @@
 #include "gclib_record.h"
 #include <progwindow.h>
 #include <outputwindow.h>
+#include "printer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -20,6 +21,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QMainWindow *parent = nullptr);
     ~MainWindow();
+    void setup(Printer *printerPtr);
 
 private slots:
     void on_yPositive_clicked();
@@ -58,8 +60,7 @@ private:
     int mmX;
     int mmY;
     int mmZ;
-    char const *address = "192.168.42.100";
-    GCon g = 0; // Handle for connection to Galil Motion Controller
+    Printer *printer{nullptr};
     progWindow *sWindow;
     QDockWidget* mDockWidget;
     OutputWindow* mOutputWindow;
