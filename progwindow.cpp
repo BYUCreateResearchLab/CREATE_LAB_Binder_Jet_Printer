@@ -245,10 +245,11 @@ void progWindow::spread_x_layers(int num_layers)
 
             // Slow move Jacob added that acted as a 'wait' for the hopper to fully turn on
             // look into GSleep(1000); command (I think this does what I want)
-            e(GCmd(printer->g, "SPY=10"));
-            e(GCmd(printer->g, "PRY=20"));
-            e(GCmd(printer->g, "BGY"));
-            e(GMotionComplete(printer->g, "Y"));
+            e(GSleep(1000));
+            //e(GCmd(printer->g, "SPY=10"));
+            //e(GCmd(printer->g, "PRY=20"));
+            //e(GCmd(printer->g, "BGY"));
+            //e(GMotionComplete(printer->g, "Y"));
 
             e(GCmd(printer->g, "SPY=40000")); // 50 mm/s
             e(GCmd(printer->g, "PRY=92000")); //tune starting point
