@@ -3,6 +3,8 @@
 //#include "JetServer.h"
 #include <math.h>
 #include <iostream>
+#include "printer.h"
+#include "printhread.h"
 
 using namespace std;
 
@@ -35,9 +37,11 @@ progWindow::~progWindow()
     delete ui;
 }
 
-void progWindow::setup(Printer *printerPtr)
+void progWindow::setup(Printer *printerPtr, PrintThread *printerThread, OutputWindow *outputWindow)
 {
     printer = printerPtr;
+    mPrintThread = printerThread;
+    mOutputWindow = outputWindow;
 }
 
 void progWindow::log(QString message, enum logType messageType = logType::Standard)
@@ -245,7 +249,7 @@ void progWindow::spread_x_layers(int num_layers)
 
             // Slow move Jacob added that acted as a 'wait' for the hopper to fully turn on
             // look into GSleep(1000); command (I think this does what I want)
-            e(GSleep(1000));
+            GSleep(1000);
             //e(GCmd(printer->g, "SPY=10"));
             //e(GCmd(printer->g, "PRY=20"));
             //e(GCmd(printer->g, "BGY"));

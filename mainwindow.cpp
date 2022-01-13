@@ -10,8 +10,9 @@
 #include "JetServer.h"
 #include <QDockWidget>
 #include <thread>
-
-using namespace std;
+#include <printer.h>
+#include <printhread.h>
+#include <commandcodes.h>
 
 // I am working on updating the 'e' command to give us more verbose output on errors rather than just throwing
 // This code is working, but outputs no error on every good command is not verbose about errors. Still working on it...
@@ -95,132 +96,122 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
     mOutputWindow->print_string("I dont know if I want it to still be a docking window, and what info I want sent here vs displayed as a popup...");
 }
 
-void MainWindow::setup(Printer *printerPtr)
+void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
 {
     printer = printerPtr;
-    sWindow->setup(printer);
+    mPrinterThread = printerThread;
+    sWindow->setup(printerPtr, printerThread, mOutputWindow);
+
+    // Connect the string output from the printer thread to the output window widget
+    connect(mPrinterThread, &PrintThread::response, mOutputWindow, &OutputWindow::print_string);
 }
 
 MainWindow::~MainWindow()
 {
     // On application close
     delete ui;
-    if(printer->g){ // if there is an active connection to a controller
+    if(printer->g)
+    { // if there is an active connection to a controller
         e(GCmd(printer->g, "MO")); // Turn off the motors
-        GClose(printer->g);} // Close the connection to the controller
+        GClose(printer->g);
+    } // Close the connection to the controller
 }
 
 
-void MainWindow::on_yPositive_clicked()
-{
-    ui->yPositive->setText("Oh that tickled!");
-    ui->xPositive->setText(">");
-    ui->yNegative->setText("v");
-    ui->xNegative->setText("<");
+void MainWindow::on_yPositive_clicked() // This name is a bit misleading (I need better +/- naming conventions)
+{    
+    if(printer->g)
+    {
+        std::stringstream s;
 
-    int yVel = 1000*ui->yVelocity->value();
-    int yDis = 1000*ui->yDistance->value();
-    string yVelString = "SPY=" + to_string(yVel);
-    string yDisString = "PRY=-" + to_string(yDis);
-    if(printer->g){
-        e(GCmd(printer->g, "ACY=50000")); // 50 mm/s^2
-        e(GCmd(printer->g, "DCY=50000")); // 50 mm/s^2
-        e(GCmd(printer->g, yVelString.c_str())); // 10 mm/s
-        e(GCmd(printer->g, yDisString.c_str()));  // -10 mm
-        e(GCmd(printer->g, "BGY"));
-        e(GMotionComplete(printer->g, "Y"));
+        s << GCmd() << "ACY="  << mm2cnts(100, 'Y')                     << "\n";
+        s << GCmd() << "DCY="  << mm2cnts(100, 'Y')                     << "\n";
+        s << GCmd() << "SPY="  << mm2cnts(ui->yVelocity->value(), 'Y')  << "\n";
+        s << GCmd() << "PRY="  << mm2cnts(-ui->yDistance->value(), 'Y') << "\n";
+        s << GCmd() << "BGY"                                            << "\n";
+        s << GMotionComplete() << "Y"                                   << "\n";
+
+        mPrinterThread->execute_command(s);
     }
 }
 
 void MainWindow::on_xPositive_clicked()
 {
-    ui->yPositive->setText("^");
-    ui->xPositive->setText("Oh that tickled!");
-    ui->yNegative->setText("v");
-    ui->xNegative->setText("<");
+    if(printer->g)
+    {
+        std::stringstream s;
 
-    int xVel = 1000*ui->xVelocity->value();
-    int xDis = 1000*ui->xDistance->value();
-    string xVelString = "SPX=" + to_string(xVel);
-    string xDisString = "PRX=" + to_string(xDis);
-    if(printer->g){
-        e(GCmd(printer->g, "ACX=800000")); // 800 mm/s^2
-        e(GCmd(printer->g, "DCX=800000")); // 800 mm/s^2
-        e(GCmd(printer->g, xVelString.c_str()));
-        e(GCmd(printer->g, xDisString.c_str()));
-        e(GCmd(printer->g, "BGX"));
-        e(GMotionComplete(printer->g, "X"));
+        s << GCmd() << "ACX=800000" << "\n";
+        s << GCmd() << "DCX=800000" << "\n";
+        s << GCmd() << "SPX=" << 1000 * ui->xVelocity->value() << "\n";
+        s << GCmd() << "PRX=" << 1000 * ui->xDistance->value() << "\n";
+        s << GCmd() << "BGX" << "\n";
+        s << GMotionComplete() << "X" << "\n";
+
+        mPrinterThread->execute_command(s);
     }
-
 }
 
 void MainWindow::on_yNegative_clicked()
 {
-    ui->yPositive->setText("^");
-    ui->xPositive->setText(">");
-    ui->yNegative->setText("Oh that tickled!");
-    ui->xNegative->setText("<");
+    if(printer->g)
+    {
+        std::stringstream s;
 
-    int yVel = 1000*ui->yVelocity->value();
-    int yDis = 1000*ui->yDistance->value();
-    string yVelString = "SPY=" + to_string(yVel);
-    string yDisString = "PRY=" + to_string(yDis);
-    if(printer->g){
-        e(GCmd(printer->g, "ACY=50000")); // 50 mm/s^2
-        e(GCmd(printer->g, "DCY=50000")); // 50 mm/s^2
-        e(GCmd(printer->g, yVelString.c_str()));
-        e(GCmd(printer->g, yDisString.c_str()));
-        e(GCmd(printer->g, "BGY"));
-        e(GMotionComplete(printer->g, "Y"));
+        s << GCmd() << "ACY="  << mm2cnts(100, 'Y')                     << "\n";
+        s << GCmd() << "DCY="  << mm2cnts(100, 'Y')                     << "\n";
+        s << GCmd() << "SPY="  << mm2cnts(ui->yVelocity->value(), 'Y')  << "\n";
+        s << GCmd() << "PRY="  << mm2cnts(ui->yDistance->value(), 'Y')  << "\n";
+        s << GCmd() << "BGY"                                            << "\n";
+        s << GMotionComplete() << "Y"                                   << "\n";
+
+        mPrinterThread->execute_command(s);
     }
 }
 
 void MainWindow::on_xNegative_clicked()
 {
-    ui->yPositive->setText("^");
-    ui->xPositive->setText(">");
-    ui->yNegative->setText("v");
-    ui->xNegative->setText("Oh that tickled!");
+    if(printer->g)
+    {
+        std::stringstream s;
 
-    int xVel = 1000*ui->xVelocity->value();
-    int xDis = 1000*ui->xDistance->value();
-    string xVelString = "SPX=" + to_string(xVel);
-    string xDisString = "PRX=-" + to_string(xDis);
-    if(printer->g){
-        e(GCmd(printer->g, "ACX=800000")); // 800 mm/s^2
-        e(GCmd(printer->g, "DCX=800000")); // 800 mm/s^2
-        e(GCmd(printer->g, xVelString.c_str()));
-        e(GCmd(printer->g, xDisString.c_str()));
-        e(GCmd(printer->g, "BGX"));
-        e(GMotionComplete(printer->g, "X"));
+        s << GCmd() << "ACX=800000" << "\n";
+        s << GCmd() << "DCX=800000" << "\n";
+        s << GCmd() << "SPX=" << 1000 * ui->xVelocity->value() << "\n";
+        s << GCmd() << "PRX=" << -1000 * ui->xDistance->value() << "\n";
+        s << GCmd() << "BGX" << "\n";
+        s << GMotionComplete() << "X" << "\n";
+
+        mPrinterThread->execute_command(s);
     }
-
 }
 
 void MainWindow::on_xHome_clicked()
 {
-    //ui->label4Fun->setText("Homing In On X");
-    if(printer->g){ // If connected to controller
-        // Home the X-Axis using the central home sensor index pulse
-        e(GCmd(printer->g, "ACX=800000"));   // 800 mm/s^2
-        e(GCmd(printer->g, "DCX=800000"));   // 800 mm/s^2
-        e(GCmd(printer->g, "JGX=-15000"));   // 15 mm/s jog towards rear limit
-        e(GCmd(printer->g, "BGX"));          // Start motion towards rear limit sensor
-        e(GMotionComplete(printer->g, "X")); // Wait until limit is reached
-        e(GCmd(printer->g, "JGX=15000"));    // 15 mm/s jog towards home sensor
-        e(GCmd(printer->g, "HVX=500"));      // 0.5 mm/s on second move towards home sensor
-        e(GCmd(printer->g, "FIX"));          // Find index command for x axis
-        e(GCmd(printer->g, "BGX"));          // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
-        e(GMotionComplete(printer->g, "X")); // Wait until X stage finishes moving
-        e(GCmd(printer->g, "DPX=75000"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
+    if(printer->g) // If connected to controller
+    {
+        std::stringstream s;
+
+        s << GCmd() << "ACX="  << mm2cnts(800, 'X')                  << "\n";  // x-axis accleration
+        s << GCmd() << "DCX="  << mm2cnts(800, 'X')                  << "\n";  // x-axis deceleration
+        s << GCmd() << "JGX="  << mm2cnts(-15, 'X')                  << "\n";  // x-axis jog velocity
+        s << GCmd() << "BGX"                                         << "\n";  // begin motion in x-axis
+        s << GMotionComplete() << "X"                                << "\n";  // block until complete
+        s << GCmd() << "JGX="  << mm2cnts(15, 'X')                   << "\n";  // x-axis jog velocity
+        s << GCmd() << "HVX="  << mm2cnts(0.5, 'X')                  << "\n";  // 0.5 mm/s on second move towards home sensor
+        s << GCmd() << "FIX"                                         << "\n";  // Find index command for x axis
+        s << GCmd() << "BGX"                                         << "\n";  // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
+        s << GMotionComplete() << "X"                                << "\n";  // Wait until X stage finishes moving
+        s << GCmd() << "DPX="  << mm2cnts(X_STAGE_LEN_MM / 2, 'X')   << "\n";  //Offset position so "0" is the rear limit (home is at center of stage)
+
+        mPrinterThread->execute_command(s);
     }
 }
 
 void MainWindow::on_yHome_clicked()
 {
-    ui->label4Fun->setText("Homing In On Y");
-    //TODO - HOME Y AXIS ONCE THE LIMIT SENSORS ARE INSTALLED
-    if(printer->g){
+    if(printer->g)
+    {
         e(GCmd(printer->g, "ACY=200000"));   // 200 mm/s^2
         e(GCmd(printer->g, "DCY=200000"));   // 200 mm/s^2
         e(GCmd(printer->g, "JGY=25000"));   // 15 mm/s jog towards rear limit
@@ -285,7 +276,7 @@ void  MainWindow::on_zUp_clicked()
         //DMC Commands : https://www.galil.com/download/comref/com4000/index.html#cover.html+DMC4000
 
         int zSteps = delta_z*micronZ;
-        string zPRZString = "PRZ=" + to_string(zSteps);
+        std::string zPRZString = "PRZ=" + std::to_string(zSteps);
         e(GCmd(printer->g, "ACZ=757760"));         //Acceleration of C     757760 steps ~ 1 mm
         e(GCmd(printer->g, "DCZ=757760"));         //Deceleration of C     7578 steps ~ 1 micron
         e(GCmd(printer->g, "SPZ=113664"));         //Speed of C
@@ -307,7 +298,7 @@ void  MainWindow::on_zDown_clicked()
         ui->bedSpinBox->setValue(z_position);
 
         int zSteps = delta_z*micronZ;
-        string zPRZString = "PRZ=-" + to_string(zSteps);
+        std::string zPRZString = "PRZ=-" + std::to_string(zSteps);
         e(GCmd(printer->g, "ACZ=757760"));
         e(GCmd(printer->g, "DCZ=757760"));
         e(GCmd(printer->g, "SPZ=113664"));
@@ -433,84 +424,82 @@ void MainWindow::on_connect_clicked()
 
         e(GCmd(printer->g, "SH XYZ"));      // Enable X,Y, and Z motors
 
-        //HOME ALL AXIS'
-        if(printer->g)
-        {
-            // Home the X-Axis using the central home sensor index pulse
-            e(GCmd(printer->g, "ACX=800000"));   // 800 mm/s^2
-            e(GCmd(printer->g, "DCX=800000"));   // 800 mm/s^2
-            e(GCmd(printer->g, "SDX=800000"));   // 800 mm/s^2 (deceleration when a limit sensor is activated)
-            e(GCmd(printer->g, "JGX=-15000"));   // 15 mm/s jog towards rear limit
-            e(GCmd(printer->g, "ACY=200000"));   // 200 mm/s^2
-            e(GCmd(printer->g, "DCY=200000"));   // 200 mm/s^2
-            e(GCmd(printer->g, "JGY=25000"));   // 15 mm/s jog towards rear limit
-            e(GCmd(printer->g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
-            e(GCmd(printer->g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
-            e(GCmd(printer->g, "JGZ=-113664"));    // Speed of Z
-            e(GCmd(printer->g, "FLZ=2147483647")); // Turn off forward limit during homing
-            try {
-                e(GCmd(printer->g, "BGX"));          // Start motion towards rear limit sensor
-            } catch(...) {}
-            try {
-                e(GCmd(printer->g, "BGY"));          // Start motion towards rear limit sensor
-            } catch(...) {}
-            try {
-                e(GCmd(printer->g, "BGZ")); // Start motion towards rear limit sensor
-            } catch(...) {}
-            try {
-                //Temporary place for Jetting setup to save time
-                jetter_setup();
-            } catch(...) {}
-            e(GMotionComplete(printer->g, "X")); // Wait until limit is reached
-            e(GMotionComplete(printer->g, "Y")); // Wait until limit is reached
-            e(GMotionComplete(printer->g, "Z")); // Wait until limit is reached
-            e(GCmd(printer->g, "JGX=15000"));    // 15 mm/s jog towards home sensor
-            e(GCmd(printer->g, "HVX=500"));      // 0.5 mm/s on second move towards home sensor
-            e(GCmd(printer->g, "FIX"));          // Find index command for x axis
-            e(GCmd(printer->g, "ACY=50000")); // 50 mm/s^2
-            e(GCmd(printer->g, "DCY=50000")); // 50 mm/s^2
-            e(GCmd(printer->g, "SPY=25000")); // 25 mm/s
-            e(GCmd(printer->g, "PRY=-160000"));
-            e(GCmd(printer->g, "ACZ=757760"));
-            e(GCmd(printer->g, "DCZ=757760"));
-            e(GCmd(printer->g, "SDZ=1515520")); // Sets deceleration when limit switch is touched
-            e(GCmd(printer->g, "SPZ=113664"));
-            e(GCmd(printer->g, "PRZ=1025000"));//TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
-            e(GCmd(printer->g, "BGX"));          // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
-            e(GCmd(printer->g, "BGY"));
-            e(GCmd(printer->g, "BGZ"));
-            e(GMotionComplete(printer->g, "X")); // Wait until X stage finishes moving
-            e(GMotionComplete(printer->g, "Y"));
-            e(GMotionComplete(printer->g, "Z")); // Wait until limit is reached
-            e(GCmd(printer->g, "PRX=-40000"));   //OFFSET TO ACCOUNT FOR THE SKEWED BINDER JET HEAD LOCATION
-            e(GCmd(printer->g, "BGX"));
-            e(GMotionComplete(printer->g, "X")); // Wait until X stage finishes moving
-            e(GCmd(printer->g, "DPX=75000"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
-            e(GCmd(printer->g, "DPY=0")); //Do we need this?
-            e(GCmd(printer->g, "DPZ=0"));
-            e(GCmd(printer->g, "FLZ=0")); // Set software limit on z so it can't go any higher than current position
 
-            ui->connect->setText("Disconnect Controller");
-            ui->activateJet->setDisabled(false);
+        // === Home the X-Axis using the central home sensor index pulse ===
 
-            ui->activateHopper->setDisabled(false);
-            ui->activateRoller1->setDisabled(false);
-            ui->activateRoller2->setDisabled(false);
-            ui->xHome->setDisabled(false);
-            ui->yHome->setDisabled(false);
-            ui->zHome->setDisabled(false);
-            ui->xPositive->setDisabled(false);
-            ui->yPositive->setDisabled(false);
-            ui->xNegative->setDisabled(false);
-            ui->yNegative->setDisabled(false);
-            ui->zDown->setDisabled(false);
-            ui->zUp->setDisabled(false);
-            ui->zMax->setDisabled(false);
-            ui->zMin->setDisabled(false);
-            ui->spreadNewLayer->setDisabled(false);
+        e(GCmd(printer->g, "ACX=800000"));   // 800 mm/s^2
+        e(GCmd(printer->g, "DCX=800000"));   // 800 mm/s^2
+        e(GCmd(printer->g, "SDX=800000"));   // 800 mm/s^2 (deceleration when a limit sensor is activated)
+        e(GCmd(printer->g, "JGX=-15000"));   // 15 mm/s jog towards rear limit
+        e(GCmd(printer->g, "ACY=200000"));   // 200 mm/s^2
+        e(GCmd(printer->g, "DCY=200000"));   // 200 mm/s^2
+        e(GCmd(printer->g, "JGY=25000"));   // 15 mm/s jog towards rear limit
+        e(GCmd(printer->g, "ACZ=757760"));   //Acceleration of C     757760 steps ~ 1 mm
+        e(GCmd(printer->g, "DCZ=757760"));   //Deceleration of C     7578 steps ~ 1 micron
+        e(GCmd(printer->g, "JGZ=-113664"));    // Speed of Z
+        e(GCmd(printer->g, "FLZ=2147483647")); // Turn off forward limit during homing
+        try {
+            e(GCmd(printer->g, "BGX"));          // Start motion towards rear limit sensor
+        } catch(...) {}
+        try {
+            e(GCmd(printer->g, "BGY"));          // Start motion towards rear limit sensor
+        } catch(...) {}
+        try {
+            e(GCmd(printer->g, "BGZ")); // Start motion towards rear limit sensor
+        } catch(...) {}
+        try {
+            //Temporary place for Jetting setup to save time
+            jetter_setup();
+        } catch(...) {}
+        e(GMotionComplete(printer->g, "X")); // Wait until limit is reached
+        e(GMotionComplete(printer->g, "Y")); // Wait until limit is reached
+        e(GMotionComplete(printer->g, "Z")); // Wait until limit is reached
+        e(GCmd(printer->g, "JGX=15000"));    // 15 mm/s jog towards home sensor
+        e(GCmd(printer->g, "HVX=500"));      // 0.5 mm/s on second move towards home sensor
+        e(GCmd(printer->g, "FIX"));          // Find index command for x axis
+        e(GCmd(printer->g, "ACY=50000")); // 50 mm/s^2
+        e(GCmd(printer->g, "DCY=50000")); // 50 mm/s^2
+        e(GCmd(printer->g, "SPY=25000")); // 25 mm/s
+        e(GCmd(printer->g, "PRY=-160000"));
+        e(GCmd(printer->g, "ACZ=757760"));
+        e(GCmd(printer->g, "DCZ=757760"));
+        e(GCmd(printer->g, "SDZ=1515520")); // Sets deceleration when limit switch is touched
+        e(GCmd(printer->g, "SPZ=113664"));
+        e(GCmd(printer->g, "PRZ=1025000"));//TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
+        e(GCmd(printer->g, "BGX"));          // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
+        e(GCmd(printer->g, "BGY"));
+        e(GCmd(printer->g, "BGZ"));
+        e(GMotionComplete(printer->g, "X")); // Wait until X stage finishes moving
+        e(GMotionComplete(printer->g, "Y"));
+        e(GMotionComplete(printer->g, "Z")); // Wait until limit is reached
+        e(GCmd(printer->g, "PRX=-40000"));   //OFFSET TO ACCOUNT FOR THE SKEWED BINDER JET HEAD LOCATION
+        e(GCmd(printer->g, "BGX"));
+        e(GMotionComplete(printer->g, "X")); // Wait until X stage finishes moving
+        e(GCmd(printer->g, "DPX=75000"));    //Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
+        e(GCmd(printer->g, "DPY=0")); //Do we need this?
+        e(GCmd(printer->g, "DPZ=0"));
+        e(GCmd(printer->g, "FLZ=0")); // Set software limit on z so it can't go any higher than current position
 
-            sWindow->set_connected(true); // Enable print buttons in line printing window
-        }
+        ui->connect->setText("Disconnect Controller");
+
+        ui->activateJet->setDisabled(false);
+        ui->activateHopper->setDisabled(false);
+        ui->activateRoller1->setDisabled(false);
+        ui->activateRoller2->setDisabled(false);
+        ui->xHome->setDisabled(false);
+        ui->yHome->setDisabled(false);
+        ui->zHome->setDisabled(false);
+        ui->xPositive->setDisabled(false);
+        ui->yPositive->setDisabled(false);
+        ui->xNegative->setDisabled(false);
+        ui->yNegative->setDisabled(false);
+        ui->zDown->setDisabled(false);
+        ui->zUp->setDisabled(false);
+        ui->zMax->setDisabled(false);
+        ui->zMin->setDisabled(false);
+        ui->spreadNewLayer->setDisabled(false);
+
+        sWindow->set_connected(true); // Enable print buttons in line printing window
     }
     else
     {
@@ -549,24 +538,24 @@ void MainWindow::on_saveDefault_clicked()
 {
     std::ofstream ofs;
     ofs.open("C:/Users/ME/Documents/GitHub/CREATE_LAB_Binder_Jet_Printer/PrinterSettings.txt", std::ofstream::out | std::ofstream::trunc);
-    ofs<< "XAxisVelocity\t" << to_string(ui->xVelocity->value()) << "\n";
-    ofs<< "YAxisVelocity\t" << to_string(ui->yVelocity->value()) << "\n";
-    ofs<< "XAxisDistance\t" << to_string(ui->xDistance->value()) << "\n";
-    ofs<< "YAxisDistance\t" << to_string(ui->yDistance->value()) << "\n";
-    ofs<< "ZStepSize\t" << to_string(ui->zStepSize->value()) << "\n";
-    ofs<< "RollerSpeed\t" << to_string(ui->rollerSpeed->value()) << "\n";
-    ofs<< "NumberOfLayers\t" << to_string(ui->numLayers->value()) << "\n";
+    ofs << "XAxisVelocity\t" << std::to_string(ui->xVelocity->value()) << "\n";
+    ofs << "YAxisVelocity\t" << std::to_string(ui->yVelocity->value()) << "\n";
+    ofs << "XAxisDistance\t" << std::to_string(ui->xDistance->value()) << "\n";
+    ofs << "YAxisDistance\t" << std::to_string(ui->yDistance->value()) << "\n";
+    ofs << "ZStepSize\t" << std::to_string(ui->zStepSize->value()) << "\n";
+    ofs << "RollerSpeed\t" << std::to_string(ui->rollerSpeed->value()) << "\n";
+    ofs << "NumberOfLayers\t" << std::to_string(ui->numLayers->value()) << "\n";
     ofs.close();
 }
 
 void MainWindow::on_revertDefault_clicked()
 {
-    string line;
-    ifstream myfile("C:/Users/ME/Documents/GitHub/CREATE_LAB_Binder_Jet_Printer/PrinterSettings.txt");
+    std::string line;
+    std::ifstream myfile("C:/Users/ME/Documents/GitHub/CREATE_LAB_Binder_Jet_Printer/PrinterSettings.txt");
     if (myfile.is_open())
     {
         while(getline(myfile, line)) {
-            vector<string> row_values;
+            std::vector<std::string> row_values;
 
             split(line, '\t', row_values);
 
@@ -601,7 +590,7 @@ void MainWindow::on_revertDefault_clicked()
         }
         myfile.close();
       }
-    else cout << "Unable to open file";//Notify user-> "Unable to open file";
+    else std::cout << "Unable to open file";//Notify user-> "Unable to open file";
 }
 
 void MainWindow::on_spreadNewLayer_clicked()

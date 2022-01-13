@@ -14,7 +14,10 @@
 #include "gclibo.h"
 #include "gclib_errors.h"
 #include "gclib_record.h"
-#include "printer.h"
+
+class Printer;
+class PrintThread;
+class OutputWindow;
 
 namespace Ui {
 class progWindow;
@@ -29,7 +32,7 @@ class progWindow : public QWidget
 public:
     explicit progWindow(QWidget *parent = nullptr);
     ~progWindow();
-    void setup(Printer *printerPtr);
+    void setup(Printer *printerPtr, PrintThread *printerThread, OutputWindow *outputWindow);
 
     void CheckCell(int row, int column);
     //void CheckTable(int row, int column);
@@ -60,7 +63,9 @@ private slots:
 
 private:
     Ui::progWindow *ui;
-    Printer *printer;
+    Printer *printer{nullptr};
+    PrintThread *mPrintThread{nullptr};
+    OutputWindow *mOutputWindow{nullptr};
 
     std::vector<logType> activeLogTypes = {logType::Error, logType::Status, logType::Standard, logType::Debug};
     // Value types for data input columns for printing lines

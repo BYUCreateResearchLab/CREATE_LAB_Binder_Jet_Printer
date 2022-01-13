@@ -16,12 +16,14 @@ HEADERS += \
         gclib_record.h \
         mainwindow.h \
         outputwindow.h \
-    printer.h \
+        printer.h \
         progwindow.h \
         lineprintdata.h \
         printobject.h \
         svgview.h \
         vec2.h \
+        commandcodes.h \
+        printhread.h \
 
 SOURCES += \
         gclibo.c \
@@ -29,11 +31,13 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
         outputwindow.cpp \
-    printer.cpp \
+        printer.cpp \
         progwindow.cpp \
         lineprintdata.cpp \
         printobject.cpp \
         svgview.cpp \
+        commandcodes.cpp \
+        printhread.cpp \
 
 FORMS += \
         mainwindow.ui \

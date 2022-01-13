@@ -8,7 +8,9 @@
 #include "gclib_record.h"
 #include <progwindow.h>
 #include <outputwindow.h>
-#include "printer.h"
+
+class Printer;
+class PrintThread;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -21,7 +23,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QMainWindow *parent = nullptr);
     ~MainWindow();
-    void setup(Printer *printerPtr);
+    void setup(Printer *printerPtr, PrintThread *printerThread);
 
 private slots:
     void on_yPositive_clicked();
@@ -61,6 +63,7 @@ private:
     int mmY;
     int mmZ;
     Printer *printer{nullptr};
+    PrintThread *mPrinterThread{nullptr};
     progWindow *sWindow;
     QDockWidget* mDockWidget;
     OutputWindow* mOutputWindow;
