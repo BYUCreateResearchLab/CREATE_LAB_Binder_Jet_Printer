@@ -4,6 +4,7 @@
 #include "gclibo.h"
 #include "gclib_errors.h"
 #include "gclib_record.h"
+#include "string"
 
 #define X_CNTS_PER_MM 1000
 #define Y_CNTS_PER_MM 800
@@ -13,12 +14,28 @@
 #define Y_STAGE_LEN_MM 500
 #define Z_STAGE_LEN_MM 15
 
+#define PRINT_X_SIZE_MM 100
+#define PRINT_Y_SIZE_MM 100
+
+#define ROLLER_1_BIT 18
+#define ROLLER_2_BIT 21
+
 int mm2cnts(double mm, char axis);
+int um2cnts(double um, char axis);
+
+enum class ParserStatus
+{
+    NoError,
+    CommandTypeNotFound,
+    InvalidCommand
+};
 
 class Printer
 {
 public:
     Printer();
+
+    ParserStatus parse_command(const std::string &commandType, const std::string &commandString);
 
     char const *address = "192.168.42.100"; // IP address of motion controller
     GCon g{0}; // Handle for connection to Galil Motion Controller

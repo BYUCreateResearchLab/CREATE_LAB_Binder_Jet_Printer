@@ -37,8 +37,6 @@ private slots:
     void on_zUp_clicked();
     void on_zDown_clicked();
     void on_zMin_clicked();
-    void on_activateRoller1_stateChanged(int arg1);
-    void on_activateRoller2_stateChanged(int arg1);
     void on_activateHopper_stateChanged(int arg1);
     void on_connect_clicked();
     void on_OpenProgramWindow_clicked();
@@ -52,16 +50,16 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    int z_position = 100;
-    int delta_x;
-    int delta_y;
-    int delta_z;
-    int micronX;
-    int micronY;
-    int micronZ;
-    int mmX;
-    int mmY;
-    int mmZ;
+    int mZPosition{100};
+    int mDeltaX{0};
+    int mDeltaY{0};
+    int mDeltaZ{0};
+    //int micronX{0};
+    //int micronY{0};
+    //int micronZ{0};
+    //int mmX{0};
+    //int mmY{0};
+    //int mmZ{0};
     Printer *printer{nullptr};
     PrintThread *mPrinterThread{nullptr};
     progWindow *sWindow;

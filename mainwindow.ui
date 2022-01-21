@@ -199,25 +199,6 @@
      <string>Bed Level:</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="bedSpinBox">
-    <property name="geometry">
-     <rect>
-      <x>400</x>
-      <y>320</y>
-      <width>51</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="minimum">
-     <number>0</number>
-    </property>
-    <property name="maximum">
-     <number>300</number>
-    </property>
-    <property name="value">
-     <number>100</number>
-    </property>
-   </widget>
    <widget class="QSpinBox" name="xVelocity">
     <property name="geometry">
      <rect>

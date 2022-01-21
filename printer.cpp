@@ -1,4 +1,7 @@
 #include "printer.h"
+#include "commandcodes.h"
+
+#include <QDebug>
 
 int mm2cnts(double mm, char axis)
 {
@@ -13,12 +16,31 @@ int mm2cnts(double mm, char axis)
         case 'Z':
             return mm * Z_CNTS_PER_MM;
             break;
-        default:
-            break;
+    default:
+        return 0;
+        break;
     }
+}
+
+int um2cnts(double um, char axis)
+{
+    return mm2cnts(um * 1000.0, axis);
 }
 
 Printer::Printer()
 {
 
+}
+
+ParserStatus Printer::parse_command(const std::string &commandType, const std::string &commandString)
+{
+    if(commandType == "GCmd")
+    {
+        qDebug() << "Success!";
+    }
+    else if(commandType == "GMotionComplete")
+    {
+        qDebug() << "MotionComplete!";
+    }
+    return ParserStatus::NoError;
 }

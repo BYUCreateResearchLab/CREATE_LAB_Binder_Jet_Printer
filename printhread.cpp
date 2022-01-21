@@ -1,6 +1,8 @@
 #include "printhread.h"
 #include "printer.h"
 
+#include <QDebug>
+
 PrintThread::PrintThread(QObject *parent) : QThread(parent)
 {
 
@@ -40,7 +42,8 @@ void PrintThread::execute_command(std::stringstream &ss)
         // emit response("Testing...\n");
 
         std::string buffer;
-        while(ss >> buffer)
+        //while(ss >> buffer) // spaces split into different objects
+        while(std::getline(ss, buffer)) // Reads whole line (includes spaces)
         {
             //buffer.erase(std::remove(buffer.begin(), buffer.end(), '\n'), buffer.end());
             mQueue.push(buffer);
@@ -82,8 +85,46 @@ void PrintThread::run()
             else
             {
                 // === Code to run on each queue item ===
-                emit response(QString::fromStdString(mQueue.front()));
-                msleep(1500);
+                //emit response(QString::fromStdString(mQueue.front()));
+                //qDebug() << QString::fromStdString(mQueue.front());
+                std::string commandString = mQueue.front();
+                std::string delimeterChar = ",";
+                size_t pos{0};
+                std::string commandType;
+                pos = commandString.find(delimeterChar);
+
+                // I only need this if there is a chance there won't be a comma in an input
+                if(pos != std::string::npos)
+                {
+                    commandType = commandString.substr(0, pos);
+                    commandString.erase(0, pos + delimeterChar.length());
+                }else
+                {
+                    commandType = commandString;
+                    commandString = "";
+                }
+
+                //emit response(QString::fromStdString("The type is: " + commandType));
+                emit response(QString::fromStdString(commandString));
+
+                ParserStatus parserStatus{mPrinter->parse_command(commandType, commandString)};
+
+                switch (parserStatus)
+                {
+                case ParserStatus::NoError:
+
+                    break;
+                case ParserStatus::CommandTypeNotFound:
+
+                    break;
+                case ParserStatus::InvalidCommand:
+
+                    break;
+                default:
+                    break;
+                }
+
+                msleep(150);
 
                 mQueue.pop(); // remove command from the queue
                 if(mQueue.size() == 0)

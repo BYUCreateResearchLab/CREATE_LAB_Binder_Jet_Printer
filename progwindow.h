@@ -43,7 +43,7 @@ public:
     void checkMinMax(int r, int c, float val, float min, float max, bool isInt, bool &ok);
     void e(GReturn rc);
     void spread_x_layers(int num_layers);
-    void printLineSet(int setNum);
+    void generate_line_set_commands(int setNum, std::stringstream &s);
     void set_connected(bool isConnected);
 
 signals:

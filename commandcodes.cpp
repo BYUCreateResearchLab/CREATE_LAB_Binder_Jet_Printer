@@ -14,3 +14,8 @@ std::string JetDrive()
 {
     return "JetDrive,";
 }
+
+std::string GSleep()
+{
+    return "GSleep,";
+}
