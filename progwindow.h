@@ -48,6 +48,7 @@ public:
 
 signals:
     void firstWindow();
+    void printing_from_prog_window();
 
 private slots:
     void on_back2Home_clicked();

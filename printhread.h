@@ -29,6 +29,7 @@ private:
 signals:
     void response(QString s);
     void error(const std::string &text);
+    void ended();
 
 private:
     Printer *mPrinter{nullptr};

@@ -59,35 +59,12 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
     mDeltaX = 10;
     mDeltaY = 10;
     mDeltaZ = 15;
-    //micronX = ;
-    //micronY = ;
-    //micronZ = 7578;
-    //mmX = ;
-    //mmY = ;
-    //mmZ = 757760;
-    //Update default GUI values
     MainWindow::on_revertDefault_clicked();
 
+
     //Disable all buttons that require a controller connection
+    allow_user_input(true);
 
-    ui->activateHopper->setDisabled(true);
-    ui->activateRoller1->setDisabled(true);
-    ui->activateRoller2->setDisabled(true);
-    ui->activateJet->setDisabled(true);
-    ui->xHome->setDisabled(true);
-    ui->yHome->setDisabled(true);
-    ui->zHome->setDisabled(true);
-    ui->xPositive->setDisabled(true);
-    ui->yPositive->setDisabled(true);
-    ui->xNegative->setDisabled(true);
-    ui->yNegative->setDisabled(true);
-    ui->zDown->setDisabled(true);
-    ui->zUp->setDisabled(true);
-    ui->zMax->setDisabled(true);
-    ui->zMin->setDisabled(true);
-    ui->spreadNewLayer->setDisabled(true);
-
-    sWindow->set_connected(false); // Disable print buttons in line printing window
 
     mDockWidget = new QDockWidget("Output Window",this);
     this->addDockWidget(Qt::RightDockWidgetArea, mDockWidget);
@@ -106,6 +83,13 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
 
     // Connect the string output from the printer thread to the output window widget
     connect(mPrinterThread, &PrintThread::response, mOutputWindow, &OutputWindow::print_string);
+    connect(mPrinterThread, &PrintThread::ended, this, &MainWindow::thread_ended);
+    connect(sWindow, &progWindow::printing_from_prog_window, this, &MainWindow::disable_user_input);
+}
+
+void MainWindow::thread_ended()
+{
+    allow_user_input(true);
 }
 
 MainWindow::~MainWindow()
@@ -119,140 +103,149 @@ MainWindow::~MainWindow()
     } // Close the connection to the controller
 }
 
+void MainWindow::allow_user_input(bool allowed)
+{
+    ui->activateHopper->setEnabled(allowed);
+    ui->activateRoller1->setEnabled(allowed);
+    ui->activateRoller2->setEnabled(allowed);
+    ui->activateJet->setEnabled(allowed);
+    ui->xHome->setEnabled(allowed);
+    ui->yHome->setEnabled(allowed);
+    ui->zHome->setEnabled(allowed);
+    ui->xPositive->setEnabled(allowed);
+    ui->yPositive->setEnabled(allowed);
+    ui->xNegative->setEnabled(allowed);
+    ui->yNegative->setEnabled(allowed);
+    ui->zDown->setEnabled(allowed);
+    ui->zUp->setEnabled(allowed);
+    ui->zMax->setEnabled(allowed);
+    ui->zMin->setEnabled(allowed);
+    ui->spreadNewLayer->setEnabled(allowed);
+
+    sWindow->set_connected(allowed); // Disable print buttons in line printing window
+}
+
+void MainWindow::disable_user_input()
+{
+    allow_user_input(false);
+}
 
 void MainWindow::on_yPositive_clicked() // This name is a bit misleading (I need better +/- naming conventions)
 {    
-    //if(printer->g)
-    //{
-        std::stringstream s;
+    std::stringstream s;
 
-        s << GCmd() << "ACY="  << mm2cnts(100, 'Y')                     << "\n";
-        s << GCmd() << "DCY="  << mm2cnts(100, 'Y')                     << "\n";
-        s << GCmd() << "SPY="  << mm2cnts(ui->yVelocity->value(), 'Y')  << "\n";
-        s << GCmd() << "PRY="  << mm2cnts(-ui->yDistance->value(), 'Y') << "\n";
-        s << GCmd() << "BGY"                                            << "\n";
-        s << GMotionComplete() << "Y"                                   << "\n";
+    s << GCmd() << "ACY="  << mm2cnts(100, 'Y')                     << "\n";
+    s << GCmd() << "DCY="  << mm2cnts(100, 'Y')                     << "\n";
+    s << GCmd() << "SPY="  << mm2cnts(ui->yVelocity->value(), 'Y')  << "\n";
+    s << GCmd() << "PRY="  << mm2cnts(-ui->yDistance->value(), 'Y') << "\n";
+    s << GCmd() << "BGY"                                            << "\n";
+    s << GMotionComplete() << "Y"                                   << "\n";
 
-        mPrinterThread->execute_command(s);
-    //}
+    allow_user_input(false);
+    mPrinterThread->execute_command(s);
 }
 
 void MainWindow::on_xPositive_clicked()
 {
-    if(printer->g)
-    {
-        std::stringstream s;
+    std::stringstream s;
 
-        s << GCmd() << "ACX=" << mm2cnts(800, 'X')                    << "\n";
-        s << GCmd() << "DCX=" << mm2cnts(800, 'X')                    << "\n";
-        s << GCmd() << "SPX=" << mm2cnts(ui->xVelocity->value(), 'X') << "\n";
-        s << GCmd() << "PRX=" << mm2cnts(ui->xDistance->value(), 'X') << "\n";
-        s << GCmd() << "BGX"                                          << "\n";
-        s << GMotionComplete() << "X"                                 << "\n";
+    s << GCmd() << "ACX=" << mm2cnts(800, 'X')                    << "\n";
+    s << GCmd() << "DCX=" << mm2cnts(800, 'X')                    << "\n";
+    s << GCmd() << "SPX=" << mm2cnts(ui->xVelocity->value(), 'X') << "\n";
+    s << GCmd() << "PRX=" << mm2cnts(ui->xDistance->value(), 'X') << "\n";
+    s << GCmd() << "BGX"                                          << "\n";
+    s << GMotionComplete() << "X"                                 << "\n";
 
-        mPrinterThread->execute_command(s);
-    }
+    allow_user_input(false);
+    mPrinterThread->execute_command(s);
 }
 
 void MainWindow::on_yNegative_clicked()
 {
-    if(printer->g) // makes no sense
-    {
-        std::stringstream s;
+    std::stringstream s;
 
-        // Gcommands
-        // generating motion controller langauge to send to printer
-        s << GCmd() << "ACY="  << mm2cnts(100, 'Y')                     << "\n"; // set y-axis acceleration
-        s << GCmd() << "DCY="  << mm2cnts(100, 'Y')                     << "\n";
-        s << GCmd() << "SPY="  << mm2cnts(ui->yVelocity->value(), 'Y')  << "\n";
-        s << GCmd() << "PRY="  << mm2cnts(ui->yDistance->value(), 'Y')  << "\n";
-        s << GCmd() << "BGY"                                            << "\n";
-        s << GMotionComplete() << "Y"                                   << "\n";
+    // Gcommands
+    // generating motion controller langauge to send to printer
+    s << GCmd() << "ACY="  << mm2cnts(100, 'Y')                     << "\n"; // set y-axis acceleration
+    s << GCmd() << "DCY="  << mm2cnts(100, 'Y')                     << "\n";
+    s << GCmd() << "SPY="  << mm2cnts(ui->yVelocity->value(), 'Y')  << "\n";
+    s << GCmd() << "PRY="  << mm2cnts(ui->yDistance->value(), 'Y')  << "\n";
+    s << GCmd() << "BGY"                                            << "\n";
+    s << GMotionComplete() << "Y"                                   << "\n";
 
-
-
-
-        // send off to thread to send to printer
-        mPrinterThread->execute_command(s);
-    }
+    // send off to thread to send to printer
+    allow_user_input(false);
+    mPrinterThread->execute_command(s);
 }
 
 void MainWindow::on_xNegative_clicked()
 {
-    if(printer->g)
-    {
-        std::stringstream s;
+    std::stringstream s;
 
-        s << GCmd() << "ACX=" << mm2cnts(800, 'X')                    << "\n";
-        s << GCmd() << "DCX=" << mm2cnts(800, 'X')                    << "\n";
-        s << GCmd() << "SPX=" << mm2cnts(ui->xVelocity->value(), 'X') << "\n";
-        s << GCmd() << "PRX=" << mm2cnts(-ui->xDistance->value(), 'X')<< "\n";
-        s << GCmd() << "BGX"                                          << "\n";
-        s << GMotionComplete() << "X"                                 << "\n";
+    s << GCmd() << "ACX=" << mm2cnts(800, 'X')                    << "\n";
+    s << GCmd() << "DCX=" << mm2cnts(800, 'X')                    << "\n";
+    s << GCmd() << "SPX=" << mm2cnts(ui->xVelocity->value(), 'X') << "\n";
+    s << GCmd() << "PRX=" << mm2cnts(-ui->xDistance->value(), 'X')<< "\n";
+    s << GCmd() << "BGX"                                          << "\n";
+    s << GMotionComplete() << "X"                                 << "\n";
 
-        mPrinterThread->execute_command(s);
-    }
+    allow_user_input(false);
+    mPrinterThread->execute_command(s);
 }
 
 void MainWindow::on_xHome_clicked()
 {
-    if(printer->g) // If connected to controller
-    {
-        std::stringstream s;
+    std::stringstream s;
 
-        // take commands that I do use and put them in documentation for people to know
-        // where to look for appropriate GCode commands
+    // take commands that I do use and put them in documentation for people to know
+    // where to look for appropriate GCode commands
 
-        s << GCmd() << "ACX="  << mm2cnts(800, 'X')                  << "\n";  // x-axis accleration
-        s << GCmd() << "DCX="  << mm2cnts(800, 'X')                  << "\n";  // x-axis deceleration
-        s << GCmd() << "JGX="  << mm2cnts(-15, 'X')                  << "\n";  // x-axis jog velocity
-        s << GCmd() << "BGX"                                         << "\n";  // begin motion in x-axis
-        s << GMotionComplete() << "X"                                << "\n";  // block until complete
-        s << GCmd() << "JGX="  << mm2cnts(15, 'X')                   << "\n";  // x-axis jog velocity
-        s << GCmd() << "HVX="  << mm2cnts(0.5, 'X')                  << "\n";  // 0.5 mm/s on second move towards home sensor
-        s << GCmd() << "FIX"                                         << "\n";  // Find index command for x axis
-        s << GCmd() << "BGX"                                         << "\n";  // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
-        s << GMotionComplete() << "X"                                << "\n";  // Wait until X stage finishes moving
-        s << GCmd() << "DPX="  << mm2cnts(X_STAGE_LEN_MM / 2, 'X')   << "\n";  //Offset position so "0" is the rear limit (home is at center of stage)
+    s << GCmd() << "ACX="  << mm2cnts(800, 'X')                  << "\n";  // x-axis accleration
+    s << GCmd() << "DCX="  << mm2cnts(800, 'X')                  << "\n";  // x-axis deceleration
+    s << GCmd() << "JGX="  << mm2cnts(-15, 'X')                  << "\n";  // x-axis jog velocity
+    s << GCmd() << "BGX"                                         << "\n";  // begin motion in x-axis
+    s << GMotionComplete() << "X"                                << "\n";  // block until complete
+    s << GCmd() << "JGX="  << mm2cnts(15, 'X')                   << "\n";  // x-axis jog velocity
+    s << GCmd() << "HVX="  << mm2cnts(0.5, 'X')                  << "\n";  // 0.5 mm/s on second move towards home sensor
+    s << GCmd() << "FIX"                                         << "\n";  // Find index command for x axis
+    s << GCmd() << "BGX"                                         << "\n";  // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
+    s << GMotionComplete() << "X"                                << "\n";  // Wait until X stage finishes moving
+    s << GCmd() << "DPX="  << mm2cnts(X_STAGE_LEN_MM / 2, 'X')   << "\n";  //Offset position so "0" is the rear limit (home is at center of stage)
 
-        mPrinterThread->execute_command(s);
-    }
+    allow_user_input(false);
+    mPrinterThread->execute_command(s);
 }
 
 void MainWindow::on_yHome_clicked()
 {
-    if(printer->g)
-    {
-        std::stringstream s;
+    std::stringstream s;
 
-        s << GCmd() << "ACY="  << mm2cnts(200, 'Y')  << "\n"; // y-axis acceleration
-        s << GCmd() << "DCY="  << mm2cnts(200, 'Y')  << "\n"; // deceleration
-        s << GCmd() << "JGY="  << mm2cnts(30, 'Y')   << "\n"; // jog speed
-        s << GCmd() << "BGY"                         << "\n"; // begin motion
-        s << GMotionComplete() << "Y"                << "\n"; // wait until complete
-        s << GCmd() << "SPY="  << mm2cnts(25, 'Y')   << "\n"; // print speed
-        s << GCmd() << "PRY="  << mm2cnts(-200, 'Y') << "\n"; // position relative
-        s << GCmd() << "BGY"                         << "\n"; // begin motion
-        s << GMotionComplete() << "Y"                << "\n"; // wait until complete
+    s << GCmd() << "ACY="  << mm2cnts(200, 'Y')  << "\n"; // y-axis acceleration
+    s << GCmd() << "DCY="  << mm2cnts(200, 'Y')  << "\n"; // deceleration
+    s << GCmd() << "JGY="  << mm2cnts(30, 'Y')   << "\n"; // jog speed
+    s << GCmd() << "BGY"                         << "\n"; // begin motion
+    s << GMotionComplete() << "Y"                << "\n"; // wait until complete
+    s << GCmd() << "SPY="  << mm2cnts(25, 'Y')   << "\n"; // print speed
+    s << GCmd() << "PRY="  << mm2cnts(-200, 'Y') << "\n"; // position relative
+    s << GCmd() << "BGY"                         << "\n"; // begin motion
+    s << GMotionComplete() << "Y"                << "\n"; // wait until complete
 
-        mPrinterThread->execute_command(s);
-    }
+    allow_user_input(false);
+    mPrinterThread->execute_command(s);
 }
 
 void MainWindow::on_zHome_clicked()
 {
-    if(printer->g) // If connected to controller
-    {
-        std::stringstream s;
+    std::stringstream s;
 
-        s << GCmd() << "ACZ="  << mm2cnts(10, 'Z')   << "\n";
-        s << GCmd() << "DCZ="  << mm2cnts(10, 'Z')   << "\n";
-        s << GCmd() << "JGZ="  << mm2cnts(-1.5, 'Z') << "\n";
-        s << GCmd() << "BGZ"                         << "\n";
-        s << GMotionComplete() << "Z"                << "\n";
+    s << GCmd() << "ACZ="  << mm2cnts(10, 'Z')   << "\n";
+    s << GCmd() << "DCZ="  << mm2cnts(10, 'Z')   << "\n";
+    s << GCmd() << "JGZ="  << mm2cnts(-1.5, 'Z') << "\n";
+    s << GCmd() << "BGZ"                         << "\n";
+    s << GMotionComplete() << "Z"                << "\n";
 
-        mPrinterThread->execute_command(s);
-    }
+    allow_user_input(false);
+    mPrinterThread->execute_command(s);
 }
 
 void MainWindow::on_zStepSize_valueChanged(int arg1)
@@ -261,94 +254,79 @@ void MainWindow::on_zStepSize_valueChanged(int arg1)
 }
 
 void MainWindow::on_zMax_clicked()
-{
-    if(printer->g)
-    {
-        //mZPosition = 300;
-        //ui->bedSpinBox->setValue(mZPosition);
+{     
+    std::stringstream s;
 
-        std::stringstream s;
+    s << GCmd() << "ACZ="  << mm2cnts(10, 'Z')   << "\n"; // acceleration
+    s << GCmd() << "DCZ="  << mm2cnts(10, 'Z')   << "\n"; // deceleration
+    s << GCmd() << "JGZ="  << mm2cnts(1.5, 'Z')  << "\n"; // jog speed
+    s << GCmd() << "BGZ"                         << "\n"; // begin motion
+    s << GMotionComplete() << "Z"                << "\n"; // wait until complete
 
-        s << GCmd() << "ACZ="  << mm2cnts(10, 'Z')   << "\n"; // acceleration
-        s << GCmd() << "DCZ="  << mm2cnts(10, 'Z')   << "\n"; // deceleration
-        s << GCmd() << "JGZ="  << mm2cnts(1.5, 'Z')  << "\n"; // jog speed
-        s << GCmd() << "BGZ"                         << "\n"; // begin motion
-        s << GMotionComplete() << "Z"                << "\n"; // wait until complete
-
-        mPrinterThread->execute_command(s);
-    }
+    allow_user_input(false);
+    mPrinterThread->execute_command(s);
 }
 
 void  MainWindow::on_zUp_clicked()
 {
-    if(printer->g)
-    {
-        std::stringstream s;
+    std::stringstream s;
 
-        s << GCmd() << "PRZ="  << um2cnts(ui->zStepSize->value(), 'Z') << "\n"; // position relative
-        s << GCmd() << "ACZ="  << mm2cnts(10, 'Z')                     << "\n"; // acceleration
-        s << GCmd() << "DCZ="  << mm2cnts(10, 'Z')                     << "\n"; // deceleration
-        s << GCmd() << "SPZ="  << mm2cnts(1.5, 'Z')                    << "\n"; // speed
-        s << GCmd() << "BGZ"                                           << "\n"; // begin motion
-        s << GMotionComplete() << "Z"                                  << "\n"; // wait until complete
+    s << GCmd() << "PRZ="  << um2cnts(ui->zStepSize->value(), 'Z') << "\n"; // position relative
+    s << GCmd() << "ACZ="  << mm2cnts(10, 'Z')                     << "\n"; // acceleration
+    s << GCmd() << "DCZ="  << mm2cnts(10, 'Z')                     << "\n"; // deceleration
+    s << GCmd() << "SPZ="  << mm2cnts(1.5, 'Z')                    << "\n"; // speed
+    s << GCmd() << "BGZ"                                           << "\n"; // begin motion
+    s << GMotionComplete() << "Z"                                  << "\n"; // wait until complete
 
-        mPrinterThread->execute_command(s);
-    }
+    allow_user_input(false);
+    mPrinterThread->execute_command(s);
 }
 
 void  MainWindow::on_zDown_clicked()
 {
+    std::stringstream s;
 
-    if(printer->g)
-    {
-        std::stringstream s;
+    s << GCmd() << "PRZ="  << um2cnts(-ui->zStepSize->value(), 'Z') << "\n"; // position relative
+    s << GCmd() << "ACZ="  << mm2cnts(10, 'Z')                      << "\n"; // acceleration
+    s << GCmd() << "DCZ="  << mm2cnts(10, 'Z')                      << "\n"; // deceleration
+    s << GCmd() << "SPZ="  << mm2cnts(1.5, 'Z')                     << "\n"; // speed
+    s << GCmd() << "BGZ"                                            << "\n"; // begin motion
+    s << GMotionComplete() << "Z"                                   << "\n"; // wait until complete
 
-        s << GCmd() << "PRZ="  << um2cnts(-ui->zStepSize->value(), 'Z') << "\n"; // position relative
-        s << GCmd() << "ACZ="  << mm2cnts(10, 'Z')                      << "\n"; // acceleration
-        s << GCmd() << "DCZ="  << mm2cnts(10, 'Z')                      << "\n"; // deceleration
-        s << GCmd() << "SPZ="  << mm2cnts(1.5, 'Z')                     << "\n"; // speed
-        s << GCmd() << "BGZ"                                            << "\n"; // begin motion
-        s << GMotionComplete() << "Z"                                   << "\n"; // wait until complete
-
-        mPrinterThread->execute_command(s);
-    }
+    allow_user_input(false);
+    mPrinterThread->execute_command(s);
 }
 
 void  MainWindow::on_zMin_clicked()
 {
-    if(printer->g)
-    {
-        std::stringstream s;
+    std::stringstream s;
 
-        s << GCmd() << "ACZ="  << mm2cnts(10, 'Z')   << "\n"; // acceleration
-        s << GCmd() << "DCZ="  << mm2cnts(10, 'Z')   << "\n"; // deceleration
-        s << GCmd() << "JGZ="  << mm2cnts(-1.5, 'Z') << "\n"; // jog speed
-        s << GCmd() << "BGZ"                         << "\n"; // begin motion
-        s << GMotionComplete() << "Z"                << "\n"; // wait until complete
+    s << GCmd() << "ACZ="  << mm2cnts(10, 'Z')   << "\n"; // acceleration
+    s << GCmd() << "DCZ="  << mm2cnts(10, 'Z')   << "\n"; // deceleration
+    s << GCmd() << "JGZ="  << mm2cnts(-1.5, 'Z') << "\n"; // jog speed
+    s << GCmd() << "BGZ"                         << "\n"; // begin motion
+    s << GMotionComplete() << "Z"                << "\n"; // wait until complete
 
-        mPrinterThread->execute_command(s);
-    }
+    allow_user_input(false);
+    mPrinterThread->execute_command(s);
 }
 
 void MainWindow::on_activateHopper_stateChanged(int arg1)
 {
-    if(printer->g)
+    std::stringstream s;
+
+    if(arg1 == 2)
     {
-        std::stringstream s;
-
-        if(arg1 == 2)
-        {
-            //ACTIVATE ULTRASONIC GENERATOR
-            s << GCmd() << "MG{P2} {^85}, {^49}, {^13}{N}" << "\n";
-        }
-        else
-        {
-            //DISACTIVATE ULTRASONIC GENERATOR
-            s << GCmd() << "MG{P2} {^85}, {^48}, {^13}{N}" << "\n";
-        }
-
-        mPrinterThread->execute_command(s);
+        //ACTIVATE ULTRASONIC GENERATOR
+        s << GCmd() << "MG{P2} {^85}, {^49}, {^13}{N}" << "\n";
     }
+    else
+    {
+        //DISACTIVATE ULTRASONIC GENERATOR
+        s << GCmd() << "MG{P2} {^85}, {^48}, {^13}{N}" << "\n";
+    }
+
+    mPrinterThread->execute_command(s);
 }
 
 void MainWindow::on_connect_clicked()
@@ -481,24 +459,7 @@ void MainWindow::on_connect_clicked()
         // block this part until the other thread is complete?
         ui->connect->setText("Disconnect Controller");
 
-        ui->activateJet->setDisabled(false);
-        ui->activateHopper->setDisabled(false);
-        ui->activateRoller1->setDisabled(false);
-        ui->activateRoller2->setDisabled(false);
-        ui->xHome->setDisabled(false);
-        ui->yHome->setDisabled(false);
-        ui->zHome->setDisabled(false);
-        ui->xPositive->setDisabled(false);
-        ui->yPositive->setDisabled(false);
-        ui->xNegative->setDisabled(false);
-        ui->yNegative->setDisabled(false);
-        ui->zDown->setDisabled(false);
-        ui->zUp->setDisabled(false);
-        ui->zMax->setDisabled(false);
-        ui->zMin->setDisabled(false);
-        ui->spreadNewLayer->setDisabled(false);
-
-        sWindow->set_connected(true); // Enable print buttons in line printing window
+        allow_user_input(true);
     }
     else
     {
@@ -507,24 +468,8 @@ void MainWindow::on_connect_clicked()
         printer->g = 0;                  // Reset connection handle
 
         ui->connect->setText("Connect to Controller");
-        ui->activateJet->setDisabled(true);
-        ui->activateHopper->setDisabled(true);
-        ui->activateRoller1->setDisabled(true);
-        ui->activateRoller2->setDisabled(true);
-        ui->xHome->setDisabled(true);
-        ui->yHome->setDisabled(true);
-        ui->zHome->setDisabled(true);
-        ui->xPositive->setDisabled(true);
-        ui->yPositive->setDisabled(true);
-        ui->xNegative->setDisabled(true);
-        ui->yNegative->setDisabled(true);
-        ui->zDown->setDisabled(true);
-        ui->zUp->setDisabled(true);
-        ui->zMax->setDisabled(true);
-        ui->zMin->setDisabled(true);
-        ui->spreadNewLayer->setDisabled(true);
 
-        sWindow->set_connected(false); // Enable print buttons in line printing window
+        allow_user_input(false);
     }
 }
 
@@ -589,105 +534,92 @@ void MainWindow::on_revertDefault_clicked()
             }
         }
         myfile.close();
-      }
+    }
     else std::cout << "Unable to open file";//Notify user-> "Unable to open file";
 }
 
 void MainWindow::on_spreadNewLayer_clicked()
 {
-    //Spread Layers
-    if(printer->g)
+    for(int i = 0; i < ui->numLayers->value(); ++i)
     {
-        for(int i = 0; i < ui->numLayers->value(); ++i)
-        {
-            e(GCmd(printer->g, "ACY=200000"));   // 200 mm/s^2
-            e(GCmd(printer->g, "DCY=200000"));   // 200 mm/s^2
-            e(GCmd(printer->g, "JGY=-25000"));   // 15 mm/s jog towards rear limit
-            e(GCmd(printer->g, "BGY"));
-            e(GMotionComplete(printer->g, "Y"));
+        e(GCmd(printer->g, "ACY=200000"));   // 200 mm/s^2
+        e(GCmd(printer->g, "DCY=200000"));   // 200 mm/s^2
+        e(GCmd(printer->g, "JGY=-25000"));   // 15 mm/s jog towards rear limit
+        e(GCmd(printer->g, "BGY"));
+        e(GMotionComplete(printer->g, "Y"));
 
-            //SECTION 1
-            //TURN ON HOPPER
-            e(GCmd(printer->g, "MG{P2} {^85}, {^49}, {^13}{N}"));
-            e(GCmd(printer->g, "PRY=115000")); //tune starting point
-            e(GCmd(printer->g, "BGY"));
-            e(GMotionComplete(printer->g, "Y"));
+        //SECTION 1
+        //TURN ON HOPPER
+        e(GCmd(printer->g, "MG{P2} {^85}, {^49}, {^13}{N}"));
+        e(GCmd(printer->g, "PRY=115000")); //tune starting point
+        e(GCmd(printer->g, "BGY"));
+        e(GMotionComplete(printer->g, "Y"));
 
-            //SECTION 2
-            //TURN OFF HOPPER
-            e(GCmd(printer->g, "MG{P2} {^85}, {^48}, {^13}{N}"));
-            e(GCmd(printer->g, "SB 18"));    // Turns on rollers
-            e(GCmd(printer->g, "SB 21"));
-            e(GCmd(printer->g, "PRY=115000")); //tune starting point
-            e(GCmd(printer->g, "BGY"));
-            e(GMotionComplete(printer->g, "Y"));
+        //SECTION 2
+        //TURN OFF HOPPER
+        e(GCmd(printer->g, "MG{P2} {^85}, {^48}, {^13}{N}"));
+        e(GCmd(printer->g, "SB 18"));    // Turns on rollers
+        e(GCmd(printer->g, "SB 21"));
+        e(GCmd(printer->g, "PRY=115000")); //tune starting point
+        e(GCmd(printer->g, "BGY"));
+        e(GMotionComplete(printer->g, "Y"));
 
-            e(GCmd(printer->g, "CB 18"));    // Turns off rollers
-            e(GCmd(printer->g, "CB 21"));
-        }
+        e(GCmd(printer->g, "CB 18"));    // Turns off rollers
+        e(GCmd(printer->g, "CB 21"));
     }
 }
 
 
 void MainWindow::on_activateRoller1_toggled(bool checked)
 {
-    if(printer->g)
+    std::stringstream s;
+
+    if(checked == 1)
     {
-        std::stringstream s;
-
-        if(checked == 1)
-        {
-            s << GCmd() << "SB 18" << "\n";
-        }
-        else
-        {
-            s << GCmd() << "CB 18" << "\n";
-        }
-
-        mPrinterThread->execute_command(s);
+        s << GCmd() << "SB 18" << "\n";
     }
+    else
+    {
+        s << GCmd() << "CB 18" << "\n";
+    }
+
+    mPrinterThread->execute_command(s);
 }
 
 void MainWindow::on_activateRoller2_toggled(bool checked)
 {
-    if(printer->g)
+    std::stringstream s;
+
+    if(checked == 1)
     {
-        std::stringstream s;
-
-        if(checked == 1)
-        {
-            s << GCmd() << "SB 21" << "\n";
-        }
-        else
-        {
-            s << GCmd() << "CB 21" << "\n";
-        }
-
-        mPrinterThread->execute_command(s);
+        s << GCmd() << "SB 21" << "\n";
     }
+    else
+    {
+        s << GCmd() << "CB 21" << "\n";
+    }
+
+    mPrinterThread->execute_command(s);
 }
 
 
 void MainWindow::on_activateJet_stateChanged(int arg1)
 {
-    if(printer->g)
+    std::stringstream s;
+
+    if(arg1 == 2)
     {
-        std::stringstream s;
-
-        if(arg1 == 2)
-        {
-            s << GCmd() << "SH H"         << "\n"; // enable jetting axis
-            s << GCmd() << "ACH=20000000" << "\n"; // set acceleration really high
-            s << GCmd() << "JGH=" << 1000 << "\n"; // jetting frequency
-            s << GCmd() << "BGH"          << "\n"; // begin jetting
-        }
-        else
-        {
-            s << GCmd() << "STH" << "\n"; // stop jetting axis
-        }
-
-        mPrinterThread->execute_command(s);
+        s << GCmd() << "SH H"         << "\n"; // enable jetting axis
+        s << GCmd() << "ACH=20000000" << "\n"; // set acceleration really high
+        s << GCmd() << "JGH=" << 1000 << "\n"; // jetting frequency
+        s << GCmd() << "BGH"          << "\n"; // begin jetting
     }
+    else
+    {
+        s << GCmd() << "STH" << "\n"; // stop jetting axis
+    }
+
+    mPrinterThread->execute_command(s);
 }
 
 

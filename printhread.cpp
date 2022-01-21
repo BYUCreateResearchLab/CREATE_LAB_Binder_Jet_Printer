@@ -105,36 +105,44 @@ void PrintThread::run()
                 }
 
                 //emit response(QString::fromStdString("The type is: " + commandType));
-                emit response(QString::fromStdString(commandString));
+                //emit response(QString::fromStdString(commandString));
 
                 ParserStatus parserStatus{mPrinter->parse_command(commandType, commandString)};
 
                 switch (parserStatus)
                 {
                 case ParserStatus::NoError:
+                    emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
+
+                    msleep(150);
+
+                    mQueue.pop(); // remove command from the queue
+                    if(mQueue.size() == 0)
+                    {
+                        // code to run when the queue completes normally
+                        emit response("Finished Queue\n");
+                    }
 
                     break;
                 case ParserStatus::CommandTypeNotFound:
+                    emit response(QString::fromStdString("Command Not Found!: \"") + QString::fromStdString(commandType) + QString::fromStdString("\"\nStopping Print..."));
+                    stop();
 
                     break;
                 case ParserStatus::InvalidCommand:
+                    emit response("Invalid Command!\nStopping Print...");
+                    stop();
 
                     break;
                 default:
                     break;
                 }
 
-                msleep(150);
 
-                mQueue.pop(); // remove command from the queue
-                if(mQueue.size() == 0)
-                {
-                    // code to run when the queue completes normally
-                    emit response("Finished Queue\n");
-                }
             }
         }
 
+        emit ended();
         mMutex.lock();
         mCond.wait(&mMutex); // wait until thread is woken again by transaction call
         // Once the thread is woken again

@@ -274,7 +274,8 @@ void progWindow::spread_x_layers(int num_layers)
 
 void progWindow::on_levelRecoat_clicked()
 {
-   spread_x_layers(ui->layersToSpread->value());
+    emit printing_from_prog_window();
+    spread_x_layers(ui->layersToSpread->value());
 }
 
 void progWindow::on_startPrint_clicked()
@@ -285,6 +286,7 @@ void progWindow::on_startPrint_clicked()
         generate_line_set_commands(i, s); // Generate sets
     }
 
+    emit printing_from_prog_window();
     mPrintThread->execute_command(s);
 }
 

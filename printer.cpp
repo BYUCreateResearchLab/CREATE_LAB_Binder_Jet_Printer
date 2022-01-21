@@ -36,11 +36,23 @@ ParserStatus Printer::parse_command(const std::string &commandType, const std::s
 {
     if(commandType == "GCmd")
     {
-        qDebug() << "Success!";
+        qDebug() << QString::fromStdString(commandString);
     }
     else if(commandType == "GMotionComplete")
     {
-        qDebug() << "MotionComplete!";
+        qDebug() << QString::fromStdString(commandString);
+    }
+    else if(commandType == "GSleep")
+    {
+
+    }
+    else if(commandType == "JetDrive")
+    {
+
+    }
+    else
+    {
+        return ParserStatus::CommandTypeNotFound;
     }
     return ParserStatus::NoError;
 }

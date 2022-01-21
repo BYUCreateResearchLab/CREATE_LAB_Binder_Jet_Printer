@@ -47,6 +47,9 @@ private slots:
     void on_activateRoller1_toggled(bool checked);
     void on_activateRoller2_toggled(bool checked);
     void on_activateJet_stateChanged(int arg1);
+    void allow_user_input(bool allowed);
+    void thread_ended();
+    void disable_user_input();
 
 private:
     Ui::MainWindow *ui;
