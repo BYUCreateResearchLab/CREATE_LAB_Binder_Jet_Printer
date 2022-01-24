@@ -16,29 +16,8 @@
 #include "printhread.h"
 #include "commandcodes.h"
 
-// I am working on updating the 'e' command to give us more verbose output on errors rather than just throwing
-// This code is working, but outputs no error on every good command is not verbose about errors. Still working on it...
-
-void MainWindow::e(GReturn rc)
+void split(const std::string &s, char delim, std::vector<std::string> &elems)
 {
-    char buf[G_SMALL_BUFFER];
-    GError(rc, buf, G_SMALL_BUFFER); //Get Error Information
-    //std::cout << buf << '\n';
-    if (printer->g)
-    {
-        GSize size = sizeof(buf);
-        GUtility(printer->g, G_UTIL_ERROR_CONTEXT, buf, &size);
-
-        if ((rc == G_BAD_RESPONSE_QUESTION_MARK)
-                && (GCommand(printer->g, "TC1", buf, G_SMALL_BUFFER, 0) == G_NO_ERROR))
-        {
-            //std::cout << buf << '\n'; //Error code from controller
-            mOutputWindow->print_string(buf);
-        }
-    }
-}
-
-void split(const std::string &s, char delim, std::vector<std::string> &elems) {
     std::stringstream ss;
     ss.str(s);
     std::string item;
@@ -70,9 +49,7 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
     this->addDockWidget(Qt::RightDockWidgetArea, mDockWidget);
     mOutputWindow = new OutputWindow(this);
     mDockWidget->setWidget(mOutputWindow);
-    mOutputWindow->print_string("Starting Program");
-    mOutputWindow->print_string("This is where I want to display messages to the user about what the printer is doing");
-    mOutputWindow->print_string("I dont know if I want it to still be a docking window, and what info I want sent here vs displayed as a popup...");
+    mOutputWindow->print_string("Starting Program...");
 }
 
 void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
@@ -85,6 +62,7 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
     connect(mPrinterThread, &PrintThread::response, mOutputWindow, &OutputWindow::print_string);
     connect(mPrinterThread, &PrintThread::ended, this, &MainWindow::thread_ended);
     connect(sWindow, &progWindow::printing_from_prog_window, this, &MainWindow::disable_user_input);
+    connect(mPrinterThread, &PrintThread::connected_to_controller, this, &MainWindow::connected_to_motion_controller);
 }
 
 void MainWindow::thread_ended()
@@ -98,9 +76,14 @@ MainWindow::~MainWindow()
     delete ui;
     if(printer->g)
     { // if there is an active connection to a controller
-        e(GCmd(printer->g, "MO")); // Turn off the motors
+        GCmd(printer->g, "MO"); // Turn off the motors
         GClose(printer->g);
     } // Close the connection to the controller
+}
+
+void MainWindow::connected_to_motion_controller()
+{
+    ui->connect->setText("Disconnect Controller");
 }
 
 void MainWindow::allow_user_input(bool allowed)
@@ -337,12 +320,9 @@ void MainWindow::on_connect_clicked()
 
         std::stringstream s;
 
-        //TODO Maybe Threading or something like that? The gui is unresponsive until connect function is finished.
+        s << "GOpen"                     << "\n";   // Establish connection with motion controller
 
-        //e(GOpen(printer->address, &printer->g)); // Establish connection with motion controller
-        s << "GOpen" << "\n"; // WHERE DO I WANT TO HANDLE THIS? // Establish connection with motion controller
-
-        s << GCmd() << "SH XYZ"          << "\n";   // enable X, Y, and Z motors
+        //s << GCmd() << "SH XYZ"          << "\n";   // enable X, Y, and Z motors
 
         // Controller Configuration
         s << GCmd() << "MO"              << "\n";   // Ensure motors are off for setup
@@ -454,18 +434,14 @@ void MainWindow::on_connect_clicked()
         s << GCmd() << "DPZ=0"                         << "\n";
         s << GCmd() << "FLZ=0"                         << "\n"; // Set software limit on z so it can't go any higher than current position
 
+        allow_user_input(false);
         mPrinterThread->execute_command(s);
-
-        // block this part until the other thread is complete?
-        ui->connect->setText("Disconnect Controller");
-
-        allow_user_input(true);
     }
     else
     {
-        e(GCmd(printer->g, "MO"));       // Disable Motors
-        GClose(printer->g);
-        printer->g = 0;                  // Reset connection handle
+        GCmd(printer->g, "MO");       // Disable Motors
+        GClose(printer->g);           // close connection to the motion controller
+        printer->g = 0;               // Reset connection handle
 
         ui->connect->setText("Connect to Controller");
 
@@ -542,30 +518,30 @@ void MainWindow::on_spreadNewLayer_clicked()
 {
     for(int i = 0; i < ui->numLayers->value(); ++i)
     {
-        e(GCmd(printer->g, "ACY=200000"));   // 200 mm/s^2
-        e(GCmd(printer->g, "DCY=200000"));   // 200 mm/s^2
-        e(GCmd(printer->g, "JGY=-25000"));   // 15 mm/s jog towards rear limit
-        e(GCmd(printer->g, "BGY"));
-        e(GMotionComplete(printer->g, "Y"));
+        GCmd(printer->g, "ACY=200000");   // 200 mm/s^2
+        GCmd(printer->g, "DCY=200000");   // 200 mm/s^2
+        GCmd(printer->g, "JGY=-25000");   // 15 mm/s jog towards rear limit
+        GCmd(printer->g, "BGY");
+        GMotionComplete(printer->g, "Y");
 
         //SECTION 1
         //TURN ON HOPPER
-        e(GCmd(printer->g, "MG{P2} {^85}, {^49}, {^13}{N}"));
-        e(GCmd(printer->g, "PRY=115000")); //tune starting point
-        e(GCmd(printer->g, "BGY"));
-        e(GMotionComplete(printer->g, "Y"));
+        GCmd(printer->g, "MG{P2} {^85}, {^49}, {^13}{N}");
+        GCmd(printer->g, "PRY=115000"); //tune starting point
+        GCmd(printer->g, "BGY");
+        GMotionComplete(printer->g, "Y");
 
         //SECTION 2
         //TURN OFF HOPPER
-        e(GCmd(printer->g, "MG{P2} {^85}, {^48}, {^13}{N}"));
-        e(GCmd(printer->g, "SB 18"));    // Turns on rollers
-        e(GCmd(printer->g, "SB 21"));
-        e(GCmd(printer->g, "PRY=115000")); //tune starting point
-        e(GCmd(printer->g, "BGY"));
-        e(GMotionComplete(printer->g, "Y"));
+        GCmd(printer->g, "MG{P2} {^85}, {^48}, {^13}{N}");
+        GCmd(printer->g, "SB 18");    // Turns on rollers
+        GCmd(printer->g, "SB 21");
+        GCmd(printer->g, "PRY=115000"); //tune starting point
+        GCmd(printer->g, "BGY");
+        GMotionComplete(printer->g, "Y");
 
-        e(GCmd(printer->g, "CB 18"));    // Turns off rollers
-        e(GCmd(printer->g, "CB 21"));
+        GCmd(printer->g, "CB 18");    // Turns off rollers
+        GCmd(printer->g, "CB 21");
     }
 }
 

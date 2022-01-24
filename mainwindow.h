@@ -50,6 +50,7 @@ private slots:
     void allow_user_input(bool allowed);
     void thread_ended();
     void disable_user_input();
+    void connected_to_motion_controller();
 
 private:
     Ui::MainWindow *ui;

@@ -8,6 +8,11 @@
 #include <sstream>
 #include <string>
 
+#include "gclib.h"
+#include "gclibo.h"
+#include "gclib_errors.h"
+#include "gclib_record.h"
+
 class Printer;
 
 class PrintThread : public QThread
@@ -25,11 +30,13 @@ public:
 private:
     void run() override;
     void clear_queue();
+    GReturn e(GReturn rc);
 
 signals:
     void response(QString s);
     void error(const std::string &text);
     void ended();
+    void connected_to_controller();
 
 private:
     Printer *mPrinter{nullptr};

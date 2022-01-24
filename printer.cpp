@@ -32,6 +32,7 @@ Printer::Printer()
 
 }
 
+/*
 ParserStatus Printer::parse_command(const std::string &commandType, const std::string &commandString)
 {
     if(commandType == "GCmd")
@@ -56,3 +57,4 @@ ParserStatus Printer::parse_command(const std::string &commandType, const std::s
     }
     return ParserStatus::NoError;
 }
+*/

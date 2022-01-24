@@ -72,7 +72,8 @@ void PrintThread::clear_queue()
 
 void PrintThread::run()
 {
-    while (!mQuit) {
+    while (!mQuit)
+    {
 
         while(mQueue.size() > 0)
         {
@@ -80,20 +81,26 @@ void PrintThread::run()
             {
                 clear_queue();
                 // Code to run on stop
-                emit response("Print Stopped\n");
+                emit response("Stream to Motion Controller Stopped");
+                if(mPrinter->g)
+                {
+                    GCmd(mPrinter->g, "ST"); // stop motors
+                    emit response("GCmd: ST");
+                }
             }
             else
             {
                 // === Code to run on each queue item ===
+
                 //emit response(QString::fromStdString(mQueue.front()));
                 //qDebug() << QString::fromStdString(mQueue.front());
+                // split string into command type and command string
                 std::string commandString = mQueue.front();
                 std::string delimeterChar = ",";
                 size_t pos{0};
                 std::string commandType;
                 pos = commandString.find(delimeterChar);
 
-                // I only need this if there is a chance there won't be a comma in an input
                 if(pos != std::string::npos)
                 {
                     commandType = commandString.substr(0, pos);
@@ -104,39 +111,72 @@ void PrintThread::run()
                     commandString = "";
                 }
 
-                //emit response(QString::fromStdString("The type is: " + commandType));
-                //emit response(QString::fromStdString(commandString));
 
-                ParserStatus parserStatus{mPrinter->parse_command(commandType, commandString)};
-
-                switch (parserStatus)
+                if(commandType == "GCmd")
                 {
-                case ParserStatus::NoError:
-                    emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
-
-                    msleep(150);
-
-                    mQueue.pop(); // remove command from the queue
-                    if(mQueue.size() == 0)
+                    //qDebug() << QString::fromStdString(commandString);
+                    if(mPrinter->g)
                     {
-                        // code to run when the queue completes normally
-                        emit response("Finished Queue\n");
+                        e(GCmd(mPrinter->g, commandString.c_str()));
+                    }else
+                    {
+                        //emit response("ERROR: not connected to controller!");
                     }
+                    emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
+                }
+                else if(commandType == "GMotionComplete")
+                {
+                    //qDebug() << QString::fromStdString(commandString);
+                    if(mPrinter->g)
+                    {
+                        e(GMotionComplete(mPrinter->g, commandString.c_str()));
+                    }else
+                    {
+                        //emit response("ERROR: not connected to controller!");
+                    }
+                    emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
+                }
+                else if(commandType == "GSleep")
+                {
+                    if(mPrinter->g)
+                    {
+                        GSleep(std::stoi(commandString));
+                    }else
+                    {
+                        //emit response("ERROR: not connected to controller!");
+                    }
+                }
+                else if(commandType == "JetDrive")
+                {
 
-                    break;
-                case ParserStatus::CommandTypeNotFound:
+                }
+                else if(commandType == "GOpen")
+                {
+                    if(e(GOpen(mPrinter->address, &mPrinter->g)) != G_NO_ERROR)
+                    {
+                        stop();
+                    }
+                    else
+                    {
+                        emit connected_to_controller();
+                    }
+                }
+                else
+                {
                     emit response(QString::fromStdString("Command Not Found!: \"") + QString::fromStdString(commandType) + QString::fromStdString("\"\nStopping Print..."));
                     stop();
-
-                    break;
-                case ParserStatus::InvalidCommand:
-                    emit response("Invalid Command!\nStopping Print...");
-                    stop();
-
-                    break;
-                default:
-                    break;
                 }
+
+
+
+                //msleep(150);
+                mQueue.pop(); // remove command from the queue
+                if(mQueue.size() == 0)
+                {
+                    // code to run when the queue completes normally
+                    emit response("Finished Queue");
+                }
+
 
 
             }
@@ -149,4 +189,25 @@ void PrintThread::run()
         mRunning = true;
         mMutex.unlock();
     }
+}
+
+GReturn PrintThread::e(GReturn rc)
+{
+    char buf[G_SMALL_BUFFER];
+    GError(rc, buf, G_SMALL_BUFFER); //Get Error Information
+    //std::cout << buf << '\n';
+    emit response(buf);
+    if (mPrinter->g)
+    {
+        GSize size = sizeof(buf);
+        GUtility(mPrinter->g, G_UTIL_ERROR_CONTEXT, buf, &size);
+        emit response(buf);
+
+        if ((rc == G_BAD_RESPONSE_QUESTION_MARK) && (GCommand(mPrinter->g, "TC1", buf, G_SMALL_BUFFER, 0) == G_NO_ERROR))
+        {
+            //std::cout << buf << '\n'; //Error code from controller
+            emit response(buf);
+        }
+    }
+    return rc;
 }

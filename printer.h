@@ -35,7 +35,7 @@ class Printer
 public:
     Printer();
 
-    ParserStatus parse_command(const std::string &commandType, const std::string &commandString);
+    //ParserStatus parse_command(const std::string &commandType, const std::string &commandString);
 
     char const *address = "192.168.42.100"; // IP address of motion controller
     GCon g{0}; // Handle for connection to Galil Motion Controller
