@@ -24,37 +24,10 @@ int mm2cnts(double mm, char axis)
 
 int um2cnts(double um, char axis)
 {
-    return mm2cnts(um * 1000.0, axis);
+    return mm2cnts(um / 1000.0, axis);
 }
 
 Printer::Printer()
 {
 
 }
-
-/*
-ParserStatus Printer::parse_command(const std::string &commandType, const std::string &commandString)
-{
-    if(commandType == "GCmd")
-    {
-        qDebug() << QString::fromStdString(commandString);
-    }
-    else if(commandType == "GMotionComplete")
-    {
-        qDebug() << QString::fromStdString(commandString);
-    }
-    else if(commandType == "GSleep")
-    {
-
-    }
-    else if(commandType == "JetDrive")
-    {
-
-    }
-    else
-    {
-        return ParserStatus::CommandTypeNotFound;
-    }
-    return ParserStatus::NoError;
-}
-*/

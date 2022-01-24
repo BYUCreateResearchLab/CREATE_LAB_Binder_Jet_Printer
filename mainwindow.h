@@ -52,6 +52,8 @@ private slots:
     void disable_user_input();
     void connected_to_motion_controller();
 
+    void on_removeBuildBox_clicked();
+
 private:
     Ui::MainWindow *ui;
     int mZPosition{100};

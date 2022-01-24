@@ -64,7 +64,7 @@ private slots:
 
 private:
     Ui::progWindow *ui;
-    Printer *printer{nullptr};
+    Printer *mPrinter{nullptr};
     PrintThread *mPrintThread{nullptr};
     OutputWindow *mOutputWindow{nullptr};
 

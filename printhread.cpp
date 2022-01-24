@@ -115,6 +115,7 @@ void PrintThread::run()
                 if(commandType == "GCmd")
                 {
                     //qDebug() << QString::fromStdString(commandString);
+                    emit response(QString::fromStdString(commandString));
                     if(mPrinter->g)
                     {
                         e(GCmd(mPrinter->g, commandString.c_str()));
@@ -122,11 +123,11 @@ void PrintThread::run()
                     {
                         //emit response("ERROR: not connected to controller!");
                     }
-                    emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
                 }
                 else if(commandType == "GMotionComplete")
                 {
                     //qDebug() << QString::fromStdString(commandString);
+                    emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
                     if(mPrinter->g)
                     {
                         e(GMotionComplete(mPrinter->g, commandString.c_str()));
@@ -134,10 +135,10 @@ void PrintThread::run()
                     {
                         //emit response("ERROR: not connected to controller!");
                     }
-                    emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
                 }
                 else if(commandType == "GSleep")
                 {
+                    emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
                     if(mPrinter->g)
                     {
                         GSleep(std::stoi(commandString));
@@ -174,7 +175,7 @@ void PrintThread::run()
                 if(mQueue.size() == 0)
                 {
                     // code to run when the queue completes normally
-                    emit response("Finished Queue");
+                    emit response("Finished Queue\n");
                 }
 
 
@@ -195,13 +196,14 @@ GReturn PrintThread::e(GReturn rc)
 {
     char buf[G_SMALL_BUFFER];
     GError(rc, buf, G_SMALL_BUFFER); //Get Error Information
-    //std::cout << buf << '\n';
-    emit response(buf);
     if (mPrinter->g)
     {
         GSize size = sizeof(buf);
         GUtility(mPrinter->g, G_UTIL_ERROR_CONTEXT, buf, &size);
-        emit response(buf);
+        if(buf[0])
+        {
+            emit response(buf);
+        }
 
         if ((rc == G_BAD_RESPONSE_QUESTION_MARK) && (GCommand(mPrinter->g, "TC1", buf, G_SMALL_BUFFER, 0) == G_NO_ERROR))
         {

@@ -4,6 +4,7 @@
 #include <math.h>
 #include <iostream>
 #include <sstream>
+#include <QMessageBox>
 
 #include "printer.h"
 #include "printhread.h"
@@ -42,7 +43,7 @@ progWindow::~progWindow()
 
 void progWindow::setup(Printer *printerPtr, PrintThread *printerThread, OutputWindow *outputWindow)
 {
-    printer = printerPtr;
+    mPrinter = printerPtr;
     mPrintThread = printerThread;
     mOutputWindow = outputWindow;
 }
@@ -235,7 +236,7 @@ void progWindow::on_clearConsole_clicked()
 
 void progWindow::spread_x_layers(int num_layers)
 {
-    if(printer->g)
+    if(mPrinter->g)
     {
         std::stringstream s;
         for(int i{0}; i < num_layers; ++i)
@@ -281,6 +282,10 @@ void progWindow::on_levelRecoat_clicked()
 void progWindow::on_startPrint_clicked()
 {
     std::stringstream s;
+    s << GCmd() << "ACX=" << mm2cnts(200, 'X') << "\n";
+    s << GCmd() << "DCX=" << mm2cnts(200, 'X') << "\n";
+    s << GCmd() << "ACY=" << mm2cnts(200, 'Y') << "\n";
+    s << GCmd() << "DCY=" << mm2cnts(200, 'Y') << "\n";
     for(int i{0}; i < int(table.numRows()); ++i)
     {
         generate_line_set_commands(i, s); // Generate sets
@@ -288,6 +293,21 @@ void progWindow::on_startPrint_clicked()
 
     emit printing_from_prog_window();
     mPrintThread->execute_command(s);
+
+    QMessageBox msgBox;
+    msgBox.setText("The print is running.");
+    msgBox.setInformativeText("Click cancel to stop the print");
+    msgBox.setStandardButtons(QMessageBox::Cancel);
+    msgBox.setDefaultButton(QMessageBox::Cancel);
+    int ret = msgBox.exec();
+    switch (ret) {
+    case QMessageBox::Cancel:
+        mPrintThread->stop();
+        GCmd(mPrinter->g, "ST");
+        break;
+    default:
+        break;
+    }
 }
 
 void progWindow::generate_line_set_commands(int setNum, std::stringstream &s)
@@ -300,7 +320,8 @@ void progWindow::generate_line_set_commands(int setNum, std::stringstream &s)
     }
     float y_start{table.startY};
 
-    s << GCmd() << "SPY=" << mm2cnts(30, 'Y') << "\n"; // set y-axis speed
+    s << GCmd() << "SPY=" << mm2cnts(40, 'Y') << "\n"; // set y-axis speed
+    s << GCmd() << "SPX=" << mm2cnts(50, 'X') << "\n"; // set x-axis speed
 
     //calculate line specifics - TODO: CURRENTLY OVERCONSTRAINED
 

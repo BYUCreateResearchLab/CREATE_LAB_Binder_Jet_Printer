@@ -42,7 +42,7 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
 
 
     //Disable all buttons that require a controller connection
-    allow_user_input(true);
+    allow_user_input(false);
 
 
     mDockWidget = new QDockWidget("Output Window",this);
@@ -104,6 +104,7 @@ void MainWindow::allow_user_input(bool allowed)
     ui->zMax->setEnabled(allowed);
     ui->zMin->setEnabled(allowed);
     ui->spreadNewLayer->setEnabled(allowed);
+    ui->removeBuildBox->setEnabled(allowed);
 
     sWindow->set_connected(allowed); // Disable print buttons in line printing window
 }
@@ -380,40 +381,38 @@ void MainWindow::on_connect_clicked()
         s << GCmd() << "ACX=" << mm2cnts(800, 'X')     << "\n";   //
         s << GCmd() << "DCX=" << mm2cnts(800, 'X')     << "\n";   //
         s << GCmd() << "SDX=" << mm2cnts(800, 'X')     << "\n";   //
-        s << GCmd() << "JGX=" << mm2cnts(-15, 'X')     << "\n";   // jog towards rear limit
+        s << GCmd() << "JGX=" << mm2cnts(-25, 'X')     << "\n";   // jog towards rear limit
 
-        s << GCmd() << "ACY=" << mm2cnts(200, 'Y')     << "\n";   //
-        s << GCmd() << "DCY=" << mm2cnts(200, 'Y')     << "\n";   //
-        s << GCmd() << "JGY=" << mm2cnts(20, 'Y')      << "\n";   // jog towards front limit
+        s << GCmd() << "ACY=" << mm2cnts(400, 'Y')     << "\n";   //
+        s << GCmd() << "DCY=" << mm2cnts(400, 'Y')     << "\n";   //
+        s << GCmd() << "SDY=" << mm2cnts(600, 'Y')     << "\n";   // deceleration when y limit is touched
+        s << GCmd() << "JGY=" << mm2cnts(25, 'Y')      << "\n";   // jog towards front limit
 
-        s << GCmd() << "ACZ=" << mm2cnts(10, 'Z')      << "\n";   //Acceleration of C     757760 steps ~ 1 mm
-        s << GCmd() << "DCZ=" << mm2cnts(10, 'Z')      << "\n";   //Deceleration of C     7578 steps ~ 1 micron
-        s << GCmd() << "JGZ=" << mm2cnts(-1.5, 'Z')    << "\n";   // Speed of Z
+        s << GCmd() << "ACZ=" << mm2cnts(20, 'Z')      << "\n";   // Acceleration of C     757760 steps ~ 1 mm
+        s << GCmd() << "DCZ=" << mm2cnts(20, 'Z')      << "\n";   // Deceleration of C     7578 steps ~ 1 micron
+        s << GCmd() << "SDZ=" << mm2cnts(40, 'Z')      << "\n";   // Sets deceleration when limit switch is touched
+        s << GCmd() << "JGZ=" << mm2cnts(-2, 'Z')      << "\n";   // Speed of Z (MAX SPEED OF 5mm/s!)
         s << GCmd() << "FLZ=2147483647"                << "\n";   // Turn off forward software limit during homing
 
         s << GCmd() << "BGX"                           << "\n";
         s << GCmd() << "BGY"                           << "\n";
         s << GCmd() << "BGZ"                           << "\n";
 
-        jetter_setup();
-
         s << GMotionComplete() << "X"                  << "\n";
         s << GMotionComplete() << "Y"                  << "\n";
         s << GMotionComplete() << "Z"                  << "\n";
 
-        s << GCmd() << "JGX="  << mm2cnts(15, 'X')     << "\n"; // 15 mm/s jog towards home sensor
+        s << GSleep() << 1000 << "\n";
+
+        s << GCmd() << "JGX="  << mm2cnts(30, 'X')     << "\n"; // jog towards home sensor
         s << GCmd() << "HVX="  << mm2cnts(0.5, 'X')    << "\n"; // 0.5 mm/s on second move towards home sensor
         s << GCmd() << "FIX"                           << "\n"; // Find index command for x axis
 
-        s << GCmd() << "ACY=" << mm2cnts(100, 'Y')     << "\n"; // 50 mm/s^2
-        s << GCmd() << "DCY=" << mm2cnts(100, 'Y')     << "\n"; // 50 mm/s^2
-        s << GCmd() << "SPY=" << mm2cnts(25, 'Y')      << "\n"; // 25 mm/s
-        s << GCmd() << "PRY=" << mm2cnts(-160, 'Y')    << "\n"; // move the y-axis for setting the 'home' position
+        s << GCmd() << "SPY=" << mm2cnts(40, 'Y')      << "\n"; // 25 mm/s
+        s << GCmd() << "PRY=" << mm2cnts(-200, 'Y')    << "\n"; // move the y-axis for setting the 'home' position
 
-        s << GCmd() << "ACZ=" << mm2cnts(10, 'Z')      << "\n";
-        s << GCmd() << "DCZ=" << mm2cnts(10, 'Z')      << "\n";
-        s << GCmd() << "SDZ=" << mm2cnts(20, 'Z')      << "\n"; // Sets deceleration when limit switch is touched
-        s << GCmd() << "SPZ=" << mm2cnts(1.5, 'Z')     << "\n";
+        s << GCmd() << "ACZ=" << mm2cnts(10, 'Z')      << "\n"; // slower acceleration for going back up
+        s << GCmd() << "SPZ=" << mm2cnts(2, 'Z')       << "\n";
         s << GCmd() << "PRZ=" << mm2cnts(13.5322, 'Z') << "\n"; // TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
 
         s << GCmd() << "BGX"                           << "\n"; // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
@@ -424,7 +423,7 @@ void MainWindow::on_connect_clicked()
         s << GMotionComplete() << "Y"                  << "\n";
         s << GMotionComplete() << "Z"                  << "\n";
 
-        s << GCmd() << "SPX=" << mm2cnts(30, 'X')      << "\n"; // set x-speed
+        s << GCmd() << "SPX=" << mm2cnts(50, 'X')      << "\n"; // set x-speed
         s << GCmd() << "PRX=" << mm2cnts(-40, 'X')     << "\n"; // OFFSET TO ACCOUNT FOR THE OFF-CENTER BINDER JET HEAD LOCATION
         s << GCmd() << "BGX"                           << "\n";
         s << GMotionComplete() << "X"                  << "\n"; // Wait until X stage finishes moving
@@ -436,6 +435,7 @@ void MainWindow::on_connect_clicked()
 
         allow_user_input(false);
         mPrinterThread->execute_command(s);
+        jetter_setup();
     }
     else
     {
@@ -598,5 +598,30 @@ void MainWindow::on_activateJet_stateChanged(int arg1)
     mPrinterThread->execute_command(s);
 }
 
+void MainWindow::on_removeBuildBox_clicked()
+{
+    std::stringstream s;
+    s << GCmd() << "ACY=" << mm2cnts(500, 'Y')     << "\n";   //
+    s << GCmd() << "DCY=" << mm2cnts(500, 'Y')     << "\n";   //
+    s << GCmd() << "JGY=" << mm2cnts(30, 'Y')      << "\n";   // jog towards front limit
 
+    s << GCmd() << "ACZ=" << mm2cnts(20, 'Z')      << "\n";   // Acceleration of Z
+    s << GCmd() << "DCZ=" << mm2cnts(20, 'Z')      << "\n";   // Deceleration of Z
+    s << GCmd() << "JGZ=" << mm2cnts(-2, 'Z')      << "\n";   // Speed of Z (MAX SPEED OF 5mm/s!)
+
+    s << GCmd() << "BGY"                           << "\n";
+    s << GCmd() << "BGZ"                           << "\n";
+    s << GMotionComplete() << "Y"                  << "\n";
+    s << GMotionComplete() << "Z"                  << "\n";
+
+    s << GSleep() << 500                           << "\n";
+    s << GCmd() << "PRZ=" << mm2cnts(2, 'Z')       << "\n";
+    s << GCmd() << "SPZ=" << mm2cnts(1, 'Z')       << "\n";
+
+    s << GCmd() << "BGZ"                           << "\n";
+    s << GMotionComplete() << "Z"                  << "\n";
+
+    allow_user_input(false);
+    mPrinterThread->execute_command(s);
+}
 
