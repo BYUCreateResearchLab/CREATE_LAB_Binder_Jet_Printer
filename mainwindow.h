@@ -6,8 +6,9 @@
 #include "gclibo.h"
 #include "gclib_errors.h"
 #include "gclib_record.h"
-#include <progwindow.h>
-#include <outputwindow.h>
+#include "progwindow.h"
+#include "outputwindow.h"
+#include "powdersetupwidget.h"
 
 class Printer;
 class PrintThread;
@@ -42,7 +43,6 @@ private slots:
     void on_OpenProgramWindow_clicked();
     void on_saveDefault_clicked();
     void on_revertDefault_clicked();
-    void on_zHome_clicked();
     void on_spreadNewLayer_clicked();
     void on_activateRoller1_toggled(bool checked);
     void on_activateRoller2_toggled(bool checked);
@@ -54,23 +54,21 @@ private slots:
 
     void on_removeBuildBox_clicked();
 
+    void on_actionShow_Hide_Console_triggered();
+
 private:
     Ui::MainWindow *ui;
     int mZPosition{100};
     int mDeltaX{0};
     int mDeltaY{0};
     int mDeltaZ{0};
-    //int micronX{0};
-    //int micronY{0};
-    //int micronZ{0};
-    //int mmX{0};
-    //int mmY{0};
-    //int mmZ{0};
+
     Printer *printer{nullptr};
     PrintThread *mPrinterThread{nullptr};
-    progWindow *sWindow;
-    QDockWidget* mDockWidget;
-    OutputWindow* mOutputWindow;
+    progWindow *sWindow{nullptr};
+    QDockWidget *mDockWidget{nullptr};
+    OutputWindow *mOutputWindow{nullptr};
+    PowderSetupWidget *mPowderSetupWidget{nullptr};
     void e(GReturn rc);
 };
 #endif // MAINWINDOW_H

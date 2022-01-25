@@ -16,6 +16,7 @@ HEADERS += \
         gclib_record.h \
         mainwindow.h \
         outputwindow.h \
+        powdersetupwidget.h \
         printer.h \
         progwindow.h \
         lineprintdata.h \
@@ -31,6 +32,7 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
         outputwindow.cpp \
+        powdersetupwidget.cpp \
         printer.cpp \
         progwindow.cpp \
         lineprintdata.cpp \
@@ -42,6 +44,7 @@ SOURCES += \
 FORMS += \
         mainwindow.ui \
         outputwindow.ui \
+        powdersetupwidget.ui \
         progwindow.ui \
 
 # Default rules for deployment.

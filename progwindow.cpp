@@ -303,7 +303,10 @@ void progWindow::on_startPrint_clicked()
     switch (ret) {
     case QMessageBox::Cancel:
         mPrintThread->stop();
-        GCmd(mPrinter->g, "ST");
+        if(mPrinter->g)
+        {
+            GCmd(mPrinter->g, "ST");
+        }
         break;
     default:
         break;

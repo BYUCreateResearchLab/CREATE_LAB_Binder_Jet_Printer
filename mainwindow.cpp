@@ -44,6 +44,8 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
     //Disable all buttons that require a controller connection
     allow_user_input(false);
 
+    mPowderSetupWidget = new PowderSetupWidget();
+    ui->tabWidget->addTab(mPowderSetupWidget, "Powder Setup");
 
     mDockWidget = new QDockWidget("Output Window",this);
     this->addDockWidget(Qt::RightDockWidgetArea, mDockWidget);
@@ -94,7 +96,6 @@ void MainWindow::allow_user_input(bool allowed)
     ui->activateJet->setEnabled(allowed);
     ui->xHome->setEnabled(allowed);
     ui->yHome->setEnabled(allowed);
-    ui->zHome->setEnabled(allowed);
     ui->xPositive->setEnabled(allowed);
     ui->yPositive->setEnabled(allowed);
     ui->xNegative->setEnabled(allowed);
@@ -213,20 +214,6 @@ void MainWindow::on_yHome_clicked()
     s << GCmd() << "PRY="  << mm2cnts(-200, 'Y') << "\n"; // position relative
     s << GCmd() << "BGY"                         << "\n"; // begin motion
     s << GMotionComplete() << "Y"                << "\n"; // wait until complete
-
-    allow_user_input(false);
-    mPrinterThread->execute_command(s);
-}
-
-void MainWindow::on_zHome_clicked()
-{
-    std::stringstream s;
-
-    s << GCmd() << "ACZ="  << mm2cnts(10, 'Z')   << "\n";
-    s << GCmd() << "DCZ="  << mm2cnts(10, 'Z')   << "\n";
-    s << GCmd() << "JGZ="  << mm2cnts(-1.5, 'Z') << "\n";
-    s << GCmd() << "BGZ"                         << "\n";
-    s << GMotionComplete() << "Z"                << "\n";
 
     allow_user_input(false);
     mPrinterThread->execute_command(s);
@@ -623,5 +610,17 @@ void MainWindow::on_removeBuildBox_clicked()
 
     allow_user_input(false);
     mPrinterThread->execute_command(s);
+}
+
+
+void MainWindow::on_actionShow_Hide_Console_triggered()
+{
+    if(mDockWidget->isVisible())
+    {
+        mDockWidget->hide();
+    }else
+    {
+        mDockWidget->show();
+    }
 }
 
