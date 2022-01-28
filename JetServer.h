@@ -51,13 +51,14 @@
 
 #define MFJDRV_DUMPLENGTH		29
 
-//Check to make sure the max is correct
 float max(float a,float b)
 {
-    if((a) > (b)) {
+    if((a) > (b))
+    {
         return a;
     }
-    else {
+    else
+    {
         return b;
     }
 }
@@ -65,14 +66,15 @@ float max(float a,float b)
 #define MFJDRV_MULTITRIGGER 0x0D
 #define MFJDRV_EXTERNENABLE 0x0C
 #define MFJDRV_EDITCHANNEL 0x0E
-// I don't think these 3 are the right commands, but I'm not sure it matter for our JetDrive...
+// I don't think these 3 are the right commands, but I'm not sure it matters for our JetDrive...
 
 #define gDreamController true
 #define gMultiChannel false
 #define gBreadboardOne false
 //DOES THIS WORK??
 
-class MicroJet {
+class MicroJet
+{
 // Data structure for microjet operating and status parameters.
 //
 // H.-J.Trost - 010103   Use only a default constructor.

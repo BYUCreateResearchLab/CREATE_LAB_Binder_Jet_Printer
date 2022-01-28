@@ -17,6 +17,9 @@ public:
 public slots:
     void print_string(QString s);
 
+private slots:
+    void clear_text();
+
 private:
     Ui::OutputWindow *ui;
 };

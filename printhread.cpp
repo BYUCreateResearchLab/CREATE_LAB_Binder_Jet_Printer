@@ -153,8 +153,10 @@ void PrintThread::run()
                 }
                 else if(commandType == "GOpen")
                 {
+                    emit response(QString::fromStdString("Attempting to connect to ") + QString::fromStdString(mPrinter->address));
                     if(e(GOpen(mPrinter->address, &mPrinter->g)) != G_NO_ERROR)
                     {
+                        emit response("Could not connect to motion controller!");
                         stop();
                     }
                     else

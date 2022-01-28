@@ -24,6 +24,7 @@ public:
     ~PrintThread();
     void setup(Printer *printer);
 
+public slots:
     void execute_command(std::stringstream &ss);
     void stop();
 

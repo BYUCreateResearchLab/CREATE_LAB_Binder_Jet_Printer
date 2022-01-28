@@ -10,10 +10,6 @@
 
 #include "lineprintdata.h"
 #include "printobject.h"
-#include "gclib.h"
-#include "gclibo.h"
-#include "gclib_errors.h"
-#include "gclib_record.h"
 
 class Printer;
 class PrintThread;
@@ -32,7 +28,7 @@ class progWindow : public QWidget
 public:
     explicit progWindow(QWidget *parent = nullptr);
     ~progWindow();
-    void setup(Printer *printerPtr, PrintThread *printerThread, OutputWindow *outputWindow);
+    void setup(Printer *printerPtr, PrintThread *printerThread);
 
     void CheckCell(int row, int column);
     //void CheckTable(int row, int column);
@@ -41,17 +37,15 @@ public:
     void log(QString message, enum logType messageType);
     void updatePreviewWindow();
     void checkMinMax(int r, int c, float val, float min, float max, bool isInt, bool &ok);
-    void e(GReturn rc);
-    void spread_x_layers(int num_layers);
     void generate_line_set_commands(int setNum, std::stringstream &s);
     void set_connected(bool isConnected);
 
 signals:
     void firstWindow();
     void printing_from_prog_window();
+    void generate_printing_message_box(const std::string &message);
 
 private slots:
-    void on_back2Home_clicked();
     void on_numSets_valueChanged(int arg1);
     void on_tableWidget_cellChanged(int row, int column);
     void on_startX_valueChanged(double arg1);
@@ -60,13 +54,11 @@ private slots:
     void on_printPercentSlider_sliderMoved(int position);
     void on_clearConsole_clicked();
     void on_startPrint_clicked();
-    void on_levelRecoat_clicked();
 
 private:
     Ui::progWindow *ui;
     Printer *mPrinter{nullptr};
     PrintThread *mPrintThread{nullptr};
-    OutputWindow *mOutputWindow{nullptr};
 
     std::vector<logType> activeLogTypes = {logType::Error, logType::Status, logType::Standard, logType::Debug};
     // Value types for data input columns for printing lines

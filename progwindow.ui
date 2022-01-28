@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>799</width>
+    <width>885</width>
     <height>731</height>
    </rect>
   </property>
@@ -57,27 +57,6 @@
        </property>
        <property name="value">
         <number>1</number>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Number of Pre-Print Layers to Spread</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSpinBox" name="layersToSpread">
-       <property name="minimum">
-        <number>0</number>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="levelRecoat">
-       <property name="text">
-        <string>Level Recoat</string>
        </property>
       </widget>
      </item>
@@ -239,7 +218,7 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_5">
+    <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="8,5,1">
      <item>
       <widget class="QTextEdit" name="consoleOutput">
        <property name="sizePolicy">
@@ -261,21 +240,21 @@
        <item>
         <widget class="SvgView" name="SVGViewer">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="minimumSize">
           <size>
-           <width>500</width>
-           <height>500</height>
+           <width>400</width>
+           <height>400</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>500</width>
-           <height>500</height>
+           <width>400</width>
+           <height>400</height>
           </size>
          </property>
          <property name="mouseTracking">
@@ -332,13 +311,6 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_8">
-     <item>
-      <widget class="QPushButton" name="back2Home">
-       <property name="text">
-        <string>Back to Main</string>
-       </property>
-      </widget>
-     </item>
      <item>
       <widget class="QPushButton" name="clearConsole">
        <property name="text">

@@ -2,13 +2,10 @@
 #include "ui_progwindow.h"
 
 #include <math.h>
-#include <iostream>
 #include <sstream>
-#include <QMessageBox>
 
 #include "printer.h"
 #include "printhread.h"
-#include "commandcodes.h"
 
 using namespace std;
 
@@ -41,11 +38,10 @@ progWindow::~progWindow()
     delete ui;
 }
 
-void progWindow::setup(Printer *printerPtr, PrintThread *printerThread, OutputWindow *outputWindow)
+void progWindow::setup(Printer *printerPtr, PrintThread *printerThread)
 {
     mPrinter = printerPtr;
     mPrintThread = printerThread;
-    mOutputWindow = outputWindow;
 }
 
 void progWindow::log(QString message, enum logType messageType = logType::Standard)
@@ -164,13 +160,6 @@ void progWindow::updateTable(bool updateVerticalHeaders = false, bool updateHori
  *                                SLOTS                                   *
  **************************************************************************/
 
-
-void progWindow::on_back2Home_clicked()
-{
-    this->close();
-    emit firstWindow();
-}
-
 void progWindow::on_numSets_valueChanged(int rowCount)
 {
     int prevRowCount = table.data.size(); // get previous row count
@@ -234,58 +223,13 @@ void progWindow::on_clearConsole_clicked()
     ui->consoleOutput->clear();
 }
 
-void progWindow::spread_x_layers(int num_layers)
-{
-    if(mPrinter->g)
-    {
-        std::stringstream s;
-        for(int i{0}; i < num_layers; ++i)
-        {
-            s << GCmd() << "ACY=" << mm2cnts(200, 'Y')            << "\n";
-            s << GCmd() << "DCY=" << mm2cnts(200, 'Y')            << "\n";
-            s << GCmd() << "JGY=" << mm2cnts(-30, 'Y')            << "\n"; // jog y to back
-            s << GCmd() << "BGY"                                  << "\n";
-            s << GMotionComplete() << "Y"                         << "\n";
-
-            // Set hopper intensity
-            // set the ultrasonic generator mode to 0 (A) and the intensity to 5 (50%) "M05"
-            s << GCmd() << "MG{P2} {^77}, {^48}, {^53}, {^13}{N}" << "\n"; // Set intensity
-            s << GCmd() << "MG{P2} {^85}, {^49}, {^13}{N}"        << "\n"; // turn off hopper
-            s << GSleep() << 1000                                 << "\n"; // wait 1000 ms
-            s << GCmd() << "SPY="  << mm2cnts(50, 'Y')            << "\n"; // hopper traversal speed
-            s << GCmd() << "PRY="  << mm2cnts(115, 'Y')           << "\n"; // move y axis under hopper a specified distance
-            s << GCmd() << "BGY"                                  << "\n"; // begin motion
-            s << GMotionComplete() << "Y"                         << "\n"; // pause until motion complete
-
-            s << GCmd() << "MG{P2} {^85}, {^48}, {^13}{N}"        << "\n"; // turn off hopper
-            s << GCmd() << "SB "   << ROLLER_1_BIT                << "\n"; // turn on roller 1
-            s << GCmd() << "SB "   << ROLLER_2_BIT                << "\n"; // turn on roller 2
-            s << GCmd() << "SPY="  << mm2cnts(10, 'Y')            << "\n";
-            s << GCmd() << "PRY="  << mm2cnts(172.5, 'Y')         << "\n"; // Distance to move under roller (CONSIDER CHANGING TO ABSOLUTE POSITION IN THE FUTURE)
-            s << GCmd() << "BGY"                                  << "\n";
-            s << GMotionComplete() << "Y"                         << "\n";
-
-            s << GCmd() << "CB " << ROLLER_1_BIT                  << "\n";  // turn off roller 1
-            s << GCmd() << "CB " << ROLLER_2_BIT                  << "\n";  // turn off roller 2
-        }
-
-        mPrintThread->execute_command(s); // roll all layers
-    }
-}
-
-void progWindow::on_levelRecoat_clicked()
-{
-    emit printing_from_prog_window();
-    spread_x_layers(ui->layersToSpread->value());
-}
-
 void progWindow::on_startPrint_clicked()
 {
     std::stringstream s;
-    s << GCmd() << "ACX=" << mm2cnts(200, 'X') << "\n";
-    s << GCmd() << "DCX=" << mm2cnts(200, 'X') << "\n";
-    s << GCmd() << "ACY=" << mm2cnts(200, 'Y') << "\n";
-    s << GCmd() << "DCY=" << mm2cnts(200, 'Y') << "\n";
+    s << CMD::detail::GCmd() << "ACX=" << CMD::detail::mm2cnts_OLD(200, 'X') << "\n";
+    s << CMD::detail::GCmd() << "DCX=" << CMD::detail::mm2cnts_OLD(200, 'X') << "\n";
+    s << CMD::detail::GCmd() << "ACY=" << CMD::detail::mm2cnts_OLD(200, 'Y') << "\n";
+    s << CMD::detail::GCmd() << "DCY=" << CMD::detail::mm2cnts_OLD(200, 'Y') << "\n";
     for(int i{0}; i < int(table.numRows()); ++i)
     {
         generate_line_set_commands(i, s); // Generate sets
@@ -293,24 +237,7 @@ void progWindow::on_startPrint_clicked()
 
     emit printing_from_prog_window();
     mPrintThread->execute_command(s);
-
-    QMessageBox msgBox;
-    msgBox.setText("The print is running.");
-    msgBox.setInformativeText("Click cancel to stop the print");
-    msgBox.setStandardButtons(QMessageBox::Cancel);
-    msgBox.setDefaultButton(QMessageBox::Cancel);
-    int ret = msgBox.exec();
-    switch (ret) {
-    case QMessageBox::Cancel:
-        mPrintThread->stop();
-        if(mPrinter->g)
-        {
-            GCmd(mPrinter->g, "ST");
-        }
-        break;
-    default:
-        break;
-    }
+    emit generate_printing_message_box("Print is running.");
 }
 
 void progWindow::generate_line_set_commands(int setNum, std::stringstream &s)
@@ -323,8 +250,8 @@ void progWindow::generate_line_set_commands(int setNum, std::stringstream &s)
     }
     float y_start{table.startY};
 
-    s << GCmd() << "SPY=" << mm2cnts(40, 'Y') << "\n"; // set y-axis speed
-    s << GCmd() << "SPX=" << mm2cnts(50, 'X') << "\n"; // set x-axis speed
+    s << CMD::detail::GCmd() << "SPY=" << CMD::detail::mm2cnts_OLD(40, 'Y') << "\n"; // set y-axis speed
+    s << CMD::detail::GCmd() << "SPX=" << CMD::detail::mm2cnts_OLD(50, 'X') << "\n"; // set x-axis speed
 
     //calculate line specifics - TODO: CURRENTLY OVERCONSTRAINED
 
@@ -340,65 +267,56 @@ void progWindow::generate_line_set_commands(int setNum, std::stringstream &s)
 
     // the 50 is half the build plate size in the x-direction and the 75000 is the center position...
 
-    s << GCmd() << "PAX="  << 75000 - ((50-x_start) * 1000)           << "\n";
-    s << GCmd() << "PAY="  << y_start * 800                           << "\n";
-    s << GCmd() << "BGX"                                              << "\n";
-    s << GCmd() << "BGY"                                              << "\n";
-    s << GMotionComplete() << "X"                                     << "\n";
-    s << GMotionComplete() << "Y"                                     << "\n";
+    s << CMD::detail::GCmd() << "PAX="  << 75000 - ((50-x_start) * 1000)           << "\n";
+    s << CMD::detail::GCmd() << "PAY="  << y_start * 800                           << "\n";
+    s << CMD::detail::GCmd() << "BGX"                                              << "\n";
+    s << CMD::detail::GCmd() << "BGY"                                              << "\n";
+    s << CMD::detail::GMotionComplete() << "X"                                     << "\n";
+    s << CMD::detail::GMotionComplete() << "Y"                                     << "\n";
 
     // START LINE PRINTING HERE!
     float curY = y_start;
     float curX = x_start;
     for(int i{0}; i < table.data[setNum].numLines.value; ++i)
     {
-        s << GCmd() << "SPX=" << mm2cnts(table.data[setNum].printVelocity.value, 'X') << "\n"; // set x-axis print speed
+        s << CMD::detail::GCmd() << "SPX=" << CMD::detail::mm2cnts_OLD(table.data[setNum].printVelocity.value, 'X') << "\n"; // set x-axis print speed
 
         // configure jetting
-        s << GCmd() << "SH H"                                         << "\n"; // enable jetting axis
-        s << GCmd() << "ACH=20000000"                                 << "\n"; // set super high acceleration for jetting axis
-        s << GCmd() << "JGH=" << table.data[setNum].jettingFreq.value << "\n"; // set jetting frequency
+        s << CMD::detail::GCmd() << "SH H"                                         << "\n"; // enable jetting axis
+        s << CMD::detail::GCmd() << "ACH=20000000"                                 << "\n"; // set super high acceleration for jetting axis
+        s << CMD::detail::GCmd() << "JGH=" << table.data[setNum].jettingFreq.value << "\n"; // set jetting frequency
 
         curX = curX + table.data[setNum].lineLength.value;
 
-        s << GCmd() << "PAX="  << 75000 - ((50-curX) * 1000)          << "\n";
-        s << GCmd() << "BGX"                                          << "\n"; // begin x-axis move
-        s << GCmd() << "BGH"                                          << "\n"; // begin jetting
-        s << GMotionComplete() << "X"                                 << "\n"; // wait until x-axis is done
-        s << GCmd() << "STH"                                          << "\n"; // disable jetting
+        s << CMD::detail::GCmd() << "PAX="  << 75000 - ((50-curX) * 1000)          << "\n";
+        s << CMD::detail::GCmd() << "BGX"                                          << "\n"; // begin x-axis move
+        s << CMD::detail::GCmd() << "BGH"                                          << "\n"; // begin jetting
+        s << CMD::detail::GMotionComplete() << "X"                                 << "\n"; // wait until x-axis is done
+        s << CMD::detail::GCmd() << "STH"                                          << "\n"; // disable jetting
 
-        s << GCmd() << "SPX=" << mm2cnts(50, 'X')                     << "\n"; // set x-axis move speed to 50 mm/s (change this to be user-settable in the future)
-        s << GCmd() << "PAX=" << 75000 - ((50-x_start) * 1000)        << "\n"; // PA to move x-axis to start of next line
+        s << CMD::detail::GCmd() << "SPX=" << CMD::detail::mm2cnts_OLD(50, 'X')                     << "\n"; // set x-axis move speed to 50 mm/s (change this to be user-settable in the future)
+        s << CMD::detail::GCmd() << "PAX=" << 75000 - ((50-x_start) * 1000)        << "\n"; // PA to move x-axis to start of next line
 
         curY += table.data[setNum].lineSpacing.value;
-        s << GCmd() << "PAY=" << mm2cnts(curY, 'Y')                   << "\n"; // PA to move y-axis to start of next line
+        s << CMD::detail::GCmd() << "PAY=" << CMD::detail::mm2cnts_OLD(curY, 'Y')                   << "\n"; // PA to move y-axis to start of next line
 
-        s << GCmd() << "BGX"                                          << "\n"; // move x-axis to start of next line
-        s << GCmd() << "BGY"                                          << "\n"; // move y-axis to start of next line
-        s << GMotionComplete() << "X"                                 << "\n";
-        s << GMotionComplete() << "Y"                                 << "\n"; // wait until both moves are complete
+        s << CMD::detail::GCmd() << "BGX"                                          << "\n"; // move x-axis to start of next line
+        s << CMD::detail::GCmd() << "BGY"                                          << "\n"; // move y-axis to start of next line
+        s << CMD::detail::GMotionComplete() << "X"                                 << "\n";
+        s << CMD::detail::GMotionComplete() << "Y"                                 << "\n"; // wait until both moves are complete
 
         curX = x_start;
     }
-}
-
-// WORK ON UPDATING THIS TO OUTPUT TO OUTPUT WINDOW
-void progWindow::e(GReturn rc)
-{
-    if (rc != G_NO_ERROR)
-        throw rc;
 }
 
 void progWindow::set_connected(bool isConnected)
 {
     if(isConnected)
     {
-        ui->levelRecoat->setEnabled(true);
         ui->startPrint->setEnabled(true);
     }
     else
     {
-        ui->levelRecoat->setDisabled(true);
         ui->startPrint->setDisabled(true);
     }
 }

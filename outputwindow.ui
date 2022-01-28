@@ -24,6 +24,13 @@
      </property>
     </widget>
    </item>
+   <item row="1" column="0">
+    <widget class="QPushButton" name="clearText">
+     <property name="text">
+      <string>Clear Output Window</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>

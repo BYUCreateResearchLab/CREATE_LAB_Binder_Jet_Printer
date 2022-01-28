@@ -1,9 +1,65 @@
 #include "printer.h"
-#include "commandcodes.h"
 
-#include <QDebug>
+#include <sstream>
 
-int mm2cnts(double mm, char axis)
+using namespace CMD::detail;
+
+Printer::Printer()
+{
+
+}
+
+std::string CMD::detail::axis_string(Axis axis)
+{
+    switch (axis)
+    {
+    case Axis::X:
+        return "X";
+        break;
+    case Axis::Y:
+        return "Y";
+        break;
+    case Axis::Z:
+        return "Z";
+        break;
+    case Axis::Jet:
+        return "H";
+        break;
+    default:
+        return "AXIS STRING ERROR";
+        break;
+    }
+    return "OTHER AXIS STRING ERROR";
+}
+
+int CMD::detail::mm2cnts(double mm, Axis axis)
+{
+    switch (axis)
+    {
+    case Axis::X:
+        return mm * X_CNTS_PER_MM;
+        break;
+    case Axis::Y:
+        return mm * Y_CNTS_PER_MM;
+        break;
+    case Axis::Z:
+        return mm * Z_CNTS_PER_MM;
+        break;
+    case Axis::Jet:
+        return 0;
+        break;
+    default:
+        return 0;
+        break;
+    }
+}
+
+int CMD::detail::um2cnts(double um, Axis axis)
+{
+    return mm2cnts(um / 1000.0, axis);
+}
+
+int CMD::detail::mm2cnts_OLD(double mm, char axis)
 {
     switch(axis)
     {
@@ -22,12 +78,210 @@ int mm2cnts(double mm, char axis)
     }
 }
 
-int um2cnts(double um, char axis)
+int CMD::detail::um2cnts_OLD(double um, char axis)
 {
-    return mm2cnts(um / 1000.0, axis);
+    return mm2cnts_OLD(um / 1000.0, axis);
 }
 
-Printer::Printer()
+std::string CMD::detail::GCmd()
 {
+    return "GCmd,";
+}
 
+std::string CMD::detail::GMotionComplete()
+{
+    return "GMotionComplete,";
+}
+
+std::string CMD::detail::JetDrive()
+{
+    return "JetDrive,";
+}
+
+std::string CMD::detail::GSleep()
+{
+    return "GSleep,";
+}
+
+// The Acceleration command (AC) sets the linear acceleration
+// of the motors for independent moves, such as PR, PA, and JG moves.
+// The parameters will be rounded down to the nearest factor of 1024
+// and have units of counts per second squared.
+std::string CMD::set_accleration(Axis axis, double speed_mm_s2)
+{
+    return create_gcmd("AC", axis, mm2cnts(speed_mm_s2, axis));
+}
+
+// The Deceleration command (DC) sets the linear deceleration
+// of the motors for independent moves such as PR, PA, and JG moves.
+// The parameters will be rounded down to the nearest factor of 1024
+// and have units of counts per second squared.
+std::string CMD::set_deceleration(Axis axis, double speed_mm_s2)
+{
+    return create_gcmd("DC", axis, mm2cnts(speed_mm_s2, axis));
+}
+
+// The SP command sets the slew speed of any or all axes
+// for independent moves.
+std::string CMD::set_speed(Axis axis, double speed_mm_s)
+{
+    return create_gcmd("SP", axis, mm2cnts(speed_mm_s, axis));
+}
+
+std::string CMD::set_jog(Axis axis, double speed_mm_s)
+{
+    return create_gcmd("JG", axis, mm2cnts(speed_mm_s, axis));
+}
+
+std::string CMD::set_homing_velocity(Axis axis, double velocity_mm_s)
+{
+   return create_gcmd("HV", axis, mm2cnts(velocity_mm_s, axis));
+}
+
+std::string CMD::position_relative(Axis axis, double relativePosition_mm)
+{
+    return create_gcmd("PR", axis, mm2cnts(relativePosition_mm, axis));
+}
+
+std::string CMD::define_position(Axis axis, double position_mm)
+{
+   return create_gcmd("DP", axis, mm2cnts(position_mm, axis));
+}
+
+std::string CMD::begin_motion(Axis axis)
+{
+    return GCmd() + "BG" + detail::axis_string(axis) + "\n";
+}
+
+std::string CMD::motion_complete(Axis axis)
+{
+    return GMotionComplete() + axis_string(axis) + "\n";
+}
+
+std::string CMD::sleep(int milliseconds)
+{
+    return GSleep() + std::to_string(milliseconds) + "\n";
+}
+
+std::string CMD::find_index(Axis axis)
+{
+    return GCmd() + "FI" + detail::axis_string(axis) + "\n";
+}
+
+std::string CMD::enable_roller1()
+{
+    return GCmd() + "SB " + std::to_string(ROLLER_1_BIT) + "\n";
+}
+
+std::string CMD::disable_roller1()
+{
+    return GCmd() + "CB " + std::to_string(ROLLER_1_BIT) + "\n";
+}
+
+std::string CMD::enable_roller2()
+{
+    return GCmd() + "SB " + std::to_string(ROLLER_2_BIT) + "\n";
+}
+
+std::string CMD::disable_roller2()
+{
+    return GCmd() + "CB " + std::to_string(ROLLER_2_BIT) + "\n";
+}
+
+std::string CMD::set_hopper_mode_and_intensity(int mode, int intensity)
+{
+    // modes A-H (int mode is index 0-7)
+    // intensity 100%-30% (int intensity is index 0-7)
+    // "MG{P2} {^77}, {^48}, {^53}, {^13}{N}" is the correct command for "M05" or Mode: 'A' and Intensity: 50%
+    return GCmd() + "MG{P2} "
+                  + to_ASCII_code('M')
+                  + to_ASCII_code('0' + mode) // converts int to char and then gets backs a string of the ASCII code to send as a command to the generator
+                  + to_ASCII_code('0' + intensity)
+                  + "{^13}{N}" + "\n";
+}
+
+std::string CMD::enable_hopper()
+{
+    // 'U1' sent to the generator over serial port 2. 49 is the ASCII code for '1'
+    return GCmd() + "MG{P2} {^85}, {^49}, {^13}{N}" + "\n";
+}
+
+std::string CMD::disable_hopper()
+{
+    // 'U0' sent to the generator over serial port 2. 49 is the ASCII code for '1'
+    return GCmd() + "MG{P2} {^85}, {^48}, {^13}{N}" + "\n";
+}
+
+std::string CMD::spread_layer(const RecoatSettings &settings)
+{
+    std::stringstream s;
+    Axis y{Axis::Y};
+    double zAxisOffsetUnderRoller{0.5};
+
+    // move z-axis down when going back to get more powder
+    s << CMD::set_accleration(Axis::Z, 10);
+    s << CMD::set_deceleration(Axis::Z, 10);
+    s << CMD::set_speed(Axis::Z, 2);
+    s << CMD::position_relative(Axis::Z, -zAxisOffsetUnderRoller);
+    s << CMD::begin_motion(Axis::Z);
+    s << CMD::motion_complete(Axis::Z);
+
+    // jog y-axis to back
+    s << CMD::set_accleration(y, 200);
+    s << CMD::set_deceleration(y, 200);
+    s << CMD::set_jog(y, -40);
+    s << CMD::begin_motion(y);
+    s << CMD::motion_complete(y);
+
+    // move z-axis back up
+    if(settings.isLevelRecoat)
+    {
+        s << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller);
+    }
+    else
+    {
+        s << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller - (settings.layerHeight_microns / 1000.0));
+    }
+    s << CMD::begin_motion(Axis::Z);
+    s << CMD::motion_complete(Axis::Z);
+
+    // turn on hopper
+    s << CMD::set_hopper_mode_and_intensity(settings.ultrasonicMode, settings.ultrasonicIntensityLevel);
+    s << CMD::enable_hopper();
+
+    // wait
+    s << CMD::sleep(1000);
+
+    // move y-axis forward
+    s << CMD::set_speed(y, settings.recoatSpeed_mm_s);
+    s << CMD::position_relative(y, 115);
+    s << CMD::begin_motion(y);
+    s << CMD::motion_complete(y);
+
+    // turn off hopper and enable rollers
+    s << CMD::disable_hopper();
+    s << CMD::enable_roller1();
+    s << CMD::enable_roller2();
+
+    // move y-axis forward under roller
+    s << CMD::set_speed(y, settings.rollerTraverseSpeed_mm_s);
+    s << CMD::position_relative(y, 172.5);
+    s << CMD::begin_motion(y);
+    s << CMD::motion_complete(y);
+
+    // turn off rollers
+    s << CMD::disable_roller1();
+    s << CMD::disable_roller2();
+
+    return s.str();
+}
+
+std::string CMD::detail::to_ASCII_code(char charToConvert)
+{
+    return "{^" + std::to_string(int(charToConvert)) + "}, ";
+}
+
+std::string CMD::detail::create_gcmd(const std::string &command, Axis axis, int quantity)
+{
+    return GCmd() + command + axis_string(axis) + "=" + std::to_string(quantity) + "\n";
 }

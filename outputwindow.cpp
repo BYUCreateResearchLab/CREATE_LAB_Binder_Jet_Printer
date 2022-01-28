@@ -10,9 +10,15 @@ OutputWindow::OutputWindow(QWidget *parent) : QWidget(parent), ui(new Ui::Output
 {
     ui->setupUi(this);
     ui->mOutputText->setReadOnly(true);
+    connect(ui->clearText, &QPushButton::clicked, this, &OutputWindow::clear_text);
 }
 
 OutputWindow::~OutputWindow()
 {
     delete ui;
+}
+
+void OutputWindow::clear_text()
+{
+    ui->mOutputText->clear();
 }

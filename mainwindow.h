@@ -27,10 +27,12 @@ public:
     void setup(Printer *printerPtr, PrintThread *printerThread);
 
 private slots:
+    // change these over to be jogs that go while the button is pushed and stop when it is released
     void on_yPositive_clicked();
     void on_xPositive_clicked();
     void on_yNegative_clicked();
     void on_xNegative_clicked();
+
     void on_xHome_clicked();
     void on_yHome_clicked();
     void on_zStepSize_valueChanged(int arg1);
@@ -40,10 +42,8 @@ private slots:
     void on_zMin_clicked();
     void on_activateHopper_stateChanged(int arg1);
     void on_connect_clicked();
-    void on_OpenProgramWindow_clicked();
     void on_saveDefault_clicked();
     void on_revertDefault_clicked();
-    void on_spreadNewLayer_clicked();
     void on_activateRoller1_toggled(bool checked);
     void on_activateRoller2_toggled(bool checked);
     void on_activateJet_stateChanged(int arg1);
@@ -53,9 +53,8 @@ private slots:
     void connected_to_motion_controller();
 
     void on_removeBuildBox_clicked();
-
     void on_actionShow_Hide_Console_triggered();
-
+    void generate_printing_message_box(const std::string &message);
 private:
     Ui::MainWindow *ui;
     int mZPosition{100};
@@ -63,9 +62,9 @@ private:
     int mDeltaY{0};
     int mDeltaZ{0};
 
-    Printer *printer{nullptr};
-    PrintThread *mPrinterThread{nullptr};
-    progWindow *sWindow{nullptr};
+    Printer *mPrinter{nullptr};
+    PrintThread *mPrintThread{nullptr};
+    progWindow *mLinePrintingWidget{nullptr};
     QDockWidget *mDockWidget{nullptr};
     OutputWindow *mOutputWindow{nullptr};
     PowderSetupWidget *mPowderSetupWidget{nullptr};
