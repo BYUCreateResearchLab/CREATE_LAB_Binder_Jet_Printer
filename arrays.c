@@ -12,6 +12,8 @@
 #include <stdio.h> //fopen
 #include <math.h> //log()
 
+//#define G_OMIT_GSETUPDDOWNLOADFILE
+
 #ifndef G_OMIT_GSETUPDDOWNLOADFILE
 #include <zlib.h> //GSetupDownloadFile(), https://www.zlib.net/
 #endif

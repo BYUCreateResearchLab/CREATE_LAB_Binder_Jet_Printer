@@ -3,6 +3,8 @@
 
 #include <math.h>
 #include <sstream>
+#include <chrono>
+#include <QDebug>
 
 #include "printer.h"
 #include "printhread.h"
@@ -11,9 +13,10 @@ using namespace std;
 
 int jetter_setup();
 
-progWindow::progWindow(QWidget *parent) : QWidget(parent), ui(new Ui::progWindow)
+progWindow::progWindow(QWidget *parent) : PrinterWidget(parent), ui(new Ui::progWindow)
 {
     ui->setupUi(this);
+    setAccessibleName("Line Printing Widget");
 
     // Internal Table Data Storage Setup
     table.addRows(1); // add 1 row (set) to start program
@@ -226,16 +229,24 @@ void progWindow::on_clearConsole_clicked()
 void progWindow::on_startPrint_clicked()
 {
     std::stringstream s;
-    s << CMD::detail::GCmd() << "ACX=" << CMD::detail::mm2cnts_OLD(200, 'X') << "\n";
-    s << CMD::detail::GCmd() << "DCX=" << CMD::detail::mm2cnts_OLD(200, 'X') << "\n";
-    s << CMD::detail::GCmd() << "ACY=" << CMD::detail::mm2cnts_OLD(200, 'Y') << "\n";
-    s << CMD::detail::GCmd() << "DCY=" << CMD::detail::mm2cnts_OLD(200, 'Y') << "\n";
+
+    auto t1{std::chrono::high_resolution_clock::now()};
+
+    s << CMD::set_accleration(Axis::X, 200);
+    s << CMD::set_deceleration(Axis::X, 200);
+    s << CMD::set_accleration(Axis::Y, 200);
+    s << CMD::set_deceleration(Axis::Y, 200);
     for(int i{0}; i < int(table.numRows()); ++i)
     {
         generate_line_set_commands(i, s); // Generate sets
     }
 
-    emit printing_from_prog_window();
+    auto t2{std::chrono::high_resolution_clock::now()};
+    auto timeSpan = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+    qDebug() << "This took:" << QString::number(timeSpan) << " milliseconds";
+
+    emit disable_user_input();
     mPrintThread->execute_command(s);
     emit generate_printing_message_box("Print is running.");
 }
@@ -250,8 +261,8 @@ void progWindow::generate_line_set_commands(int setNum, std::stringstream &s)
     }
     float y_start{table.startY};
 
-    s << CMD::detail::GCmd() << "SPY=" << CMD::detail::mm2cnts_OLD(40, 'Y') << "\n"; // set y-axis speed
-    s << CMD::detail::GCmd() << "SPX=" << CMD::detail::mm2cnts_OLD(50, 'X') << "\n"; // set x-axis speed
+    s << CMD::set_speed(Axis::Y, 40);
+    s << CMD::set_speed(Axis::X, 50);
 
     //calculate line specifics - TODO: CURRENTLY OVERCONSTRAINED
 
@@ -267,51 +278,51 @@ void progWindow::generate_line_set_commands(int setNum, std::stringstream &s)
 
     // the 50 is half the build plate size in the x-direction and the 75000 is the center position...
 
-    s << CMD::detail::GCmd() << "PAX="  << 75000 - ((50-x_start) * 1000)           << "\n";
-    s << CMD::detail::GCmd() << "PAY="  << y_start * 800                           << "\n";
-    s << CMD::detail::GCmd() << "BGX"                                              << "\n";
-    s << CMD::detail::GCmd() << "BGY"                                              << "\n";
-    s << CMD::detail::GMotionComplete() << "X"                                     << "\n";
-    s << CMD::detail::GMotionComplete() << "Y"                                     << "\n";
+    s << CMD::position_absolute(Axis::X, 75 - (50 - x_start));
+    s << CMD::position_absolute(Axis::Y, y_start);
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::begin_motion(Axis::Y);
+    s << CMD::motion_complete(Axis::X);
+    s << CMD::motion_complete(Axis::Y);
 
     // START LINE PRINTING HERE!
     float curY = y_start;
     float curX = x_start;
     for(int i{0}; i < table.data[setNum].numLines.value; ++i)
     {
-        s << CMD::detail::GCmd() << "SPX=" << CMD::detail::mm2cnts_OLD(table.data[setNum].printVelocity.value, 'X') << "\n"; // set x-axis print speed
+        s << CMD::set_speed(Axis::X, table.data[setNum].printVelocity.value);
 
         // configure jetting
-        s << CMD::detail::GCmd() << "SH H"                                         << "\n"; // enable jetting axis
-        s << CMD::detail::GCmd() << "ACH=20000000"                                 << "\n"; // set super high acceleration for jetting axis
-        s << CMD::detail::GCmd() << "JGH=" << table.data[setNum].jettingFreq.value << "\n"; // set jetting frequency
+        s << CMD::servo_here(Axis::Jet);
+        s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
+        s << CMD::set_jog(Axis::Jet, 1000);             // jetting frequency in hz
 
         curX = curX + table.data[setNum].lineLength.value;
 
-        s << CMD::detail::GCmd() << "PAX="  << 75000 - ((50-curX) * 1000)          << "\n";
-        s << CMD::detail::GCmd() << "BGX"                                          << "\n"; // begin x-axis move
-        s << CMD::detail::GCmd() << "BGH"                                          << "\n"; // begin jetting
-        s << CMD::detail::GMotionComplete() << "X"                                 << "\n"; // wait until x-axis is done
-        s << CMD::detail::GCmd() << "STH"                                          << "\n"; // disable jetting
+        s << CMD::position_absolute(Axis::X, 75 - (50 - curX));
+        s << CMD::begin_motion(Axis::X);
+        s << CMD::begin_motion(Axis::Jet);
+        s << CMD::motion_complete(Axis::X);
+        s << CMD::stop_motion(Axis::Jet);
 
-        s << CMD::detail::GCmd() << "SPX=" << CMD::detail::mm2cnts_OLD(50, 'X')                     << "\n"; // set x-axis move speed to 50 mm/s (change this to be user-settable in the future)
-        s << CMD::detail::GCmd() << "PAX=" << 75000 - ((50-x_start) * 1000)        << "\n"; // PA to move x-axis to start of next line
+        s << CMD::set_speed(Axis::X, 50);                          // set x-axis move speed to 50 mm/s (change this to be user-settable in the future)
+        s << CMD::position_absolute(Axis::X, 75 - (50 - x_start)); // PA to move x-axis to start of next line
 
         curY += table.data[setNum].lineSpacing.value;
-        s << CMD::detail::GCmd() << "PAY=" << CMD::detail::mm2cnts_OLD(curY, 'Y')                   << "\n"; // PA to move y-axis to start of next line
+        s << CMD::position_absolute(Axis::Y, curY);
 
-        s << CMD::detail::GCmd() << "BGX"                                          << "\n"; // move x-axis to start of next line
-        s << CMD::detail::GCmd() << "BGY"                                          << "\n"; // move y-axis to start of next line
-        s << CMD::detail::GMotionComplete() << "X"                                 << "\n";
-        s << CMD::detail::GMotionComplete() << "Y"                                 << "\n"; // wait until both moves are complete
+        s << CMD::begin_motion(Axis::X);
+        s << CMD::begin_motion(Axis::Y);
+        s << CMD::motion_complete(Axis::X);
+        s << CMD::motion_complete(Axis::Y);
 
         curX = x_start;
     }
 }
 
-void progWindow::set_connected(bool isConnected)
+void progWindow::allow_widget_input(bool allowed)
 {
-    if(isConnected)
+    if(allowed)
     {
         ui->startPrint->setEnabled(true);
     }

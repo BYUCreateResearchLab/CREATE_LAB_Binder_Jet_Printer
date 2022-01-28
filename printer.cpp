@@ -14,22 +14,22 @@ std::string CMD::detail::axis_string(Axis axis)
     switch (axis)
     {
     case Axis::X:
-        return "X";
+        return {"X"};
         break;
     case Axis::Y:
-        return "Y";
+        return {"Y"};
         break;
     case Axis::Z:
-        return "Z";
+        return {"Z"};
         break;
     case Axis::Jet:
-        return "H";
+        return {"H"};
         break;
     default:
-        return "AXIS STRING ERROR";
+        return {"AXIS STRING ERROR"};
         break;
     }
-    return "OTHER AXIS STRING ERROR";
+    return {"OTHER AXIS STRING ERROR"};
 }
 
 int CMD::detail::mm2cnts(double mm, Axis axis)
@@ -46,7 +46,7 @@ int CMD::detail::mm2cnts(double mm, Axis axis)
         return mm * Z_CNTS_PER_MM;
         break;
     case Axis::Jet:
-        return 0;
+        return mm;
         break;
     default:
         return 0;
@@ -59,48 +59,24 @@ int CMD::detail::um2cnts(double um, Axis axis)
     return mm2cnts(um / 1000.0, axis);
 }
 
-int CMD::detail::mm2cnts_OLD(double mm, char axis)
-{
-    switch(axis)
-    {
-        case 'X':
-            return mm * X_CNTS_PER_MM;
-            break;
-        case 'Y':
-            return mm * Y_CNTS_PER_MM;
-            break;
-        case 'Z':
-            return mm * Z_CNTS_PER_MM;
-            break;
-    default:
-        return 0;
-        break;
-    }
-}
-
-int CMD::detail::um2cnts_OLD(double um, char axis)
-{
-    return mm2cnts_OLD(um / 1000.0, axis);
-}
-
 std::string CMD::detail::GCmd()
 {
-    return "GCmd,";
+    return {"GCmd,"};
 }
 
 std::string CMD::detail::GMotionComplete()
 {
-    return "GMotionComplete,";
+    return {"GMotionComplete,"};
 }
 
 std::string CMD::detail::JetDrive()
 {
-    return "JetDrive,";
+    return {"JetDrive,"};
 }
 
 std::string CMD::detail::GSleep()
 {
-    return "GSleep,";
+    return {"GSleep,"};
 }
 
 // The Acceleration command (AC) sets the linear acceleration
@@ -118,74 +94,101 @@ std::string CMD::set_accleration(Axis axis, double speed_mm_s2)
 // and have units of counts per second squared.
 std::string CMD::set_deceleration(Axis axis, double speed_mm_s2)
 {
-    return create_gcmd("DC", axis, mm2cnts(speed_mm_s2, axis));
+    return {create_gcmd("DC", axis, mm2cnts(speed_mm_s2, axis))};
+}
+
+// The Limit Switch Deceleration command (SD) sets the linear deceleration rate
+// of the motors when a limit switch has been reached.
+std::string CMD::set_limit_switch_deceleration(Axis axis, double speed_mm_s2)
+{
+    return {create_gcmd("SD", axis, mm2cnts(speed_mm_s2, axis))};
 }
 
 // The SP command sets the slew speed of any or all axes
 // for independent moves.
 std::string CMD::set_speed(Axis axis, double speed_mm_s)
 {
-    return create_gcmd("SP", axis, mm2cnts(speed_mm_s, axis));
+    return {create_gcmd("SP", axis, mm2cnts(speed_mm_s, axis))};
 }
 
 std::string CMD::set_jog(Axis axis, double speed_mm_s)
 {
-    return create_gcmd("JG", axis, mm2cnts(speed_mm_s, axis));
+    return {create_gcmd("JG", axis, mm2cnts(speed_mm_s, axis))};
 }
 
 std::string CMD::set_homing_velocity(Axis axis, double velocity_mm_s)
 {
-   return create_gcmd("HV", axis, mm2cnts(velocity_mm_s, axis));
+   return {create_gcmd("HV", axis, mm2cnts(velocity_mm_s, axis))};
+}
+
+std::string CMD::set_forward_software_limit(Axis axis, double position_mm)
+{
+    return {create_gcmd("FL", axis, mm2cnts(position_mm, axis))};
 }
 
 std::string CMD::position_relative(Axis axis, double relativePosition_mm)
 {
-    return create_gcmd("PR", axis, mm2cnts(relativePosition_mm, axis));
+    return {create_gcmd("PR", axis, mm2cnts(relativePosition_mm, axis))};
+}
+
+std::string CMD::position_absolute(Axis axis, double absolutePosition_mm)
+{
+    return {create_gcmd("PA", axis, mm2cnts(absolutePosition_mm, axis))};
 }
 
 std::string CMD::define_position(Axis axis, double position_mm)
 {
-   return create_gcmd("DP", axis, mm2cnts(position_mm, axis));
+   return {create_gcmd("DP", axis, mm2cnts(position_mm, axis))};
 }
 
 std::string CMD::begin_motion(Axis axis)
 {
-    return GCmd() + "BG" + detail::axis_string(axis) + "\n";
+    return {GCmd() + "BG" + detail::axis_string(axis) + "\n"};
 }
 
 std::string CMD::motion_complete(Axis axis)
 {
-    return GMotionComplete() + axis_string(axis) + "\n";
+    return {GMotionComplete() + axis_string(axis) + "\n"};
 }
 
 std::string CMD::sleep(int milliseconds)
 {
-    return GSleep() + std::to_string(milliseconds) + "\n";
+    return {GSleep() + std::to_string(milliseconds) + "\n"};
 }
 
 std::string CMD::find_index(Axis axis)
 {
-    return GCmd() + "FI" + detail::axis_string(axis) + "\n";
+    return {GCmd() + "FI" + detail::axis_string(axis) + "\n"};
+}
+
+std::string CMD::servo_here(Axis axis)
+{
+    return {GCmd() + "SH" + detail::axis_string(axis) + "\n"};
+}
+
+std::string CMD::stop_motion(Axis axis)
+{
+    return {GCmd() + "ST" + detail::axis_string(axis) + "\n"};
 }
 
 std::string CMD::enable_roller1()
 {
-    return GCmd() + "SB " + std::to_string(ROLLER_1_BIT) + "\n";
+    return {GCmd() + "SB " + std::to_string(ROLLER_1_BIT) + "\n"};
 }
 
 std::string CMD::disable_roller1()
 {
-    return GCmd() + "CB " + std::to_string(ROLLER_1_BIT) + "\n";
+    return {GCmd() + "CB " + std::to_string(ROLLER_1_BIT) + "\n"};
 }
 
 std::string CMD::enable_roller2()
 {
-    return GCmd() + "SB " + std::to_string(ROLLER_2_BIT) + "\n";
+    return {GCmd() + "SB " + std::to_string(ROLLER_2_BIT) + "\n"};
 }
 
 std::string CMD::disable_roller2()
 {
-    return GCmd() + "CB " + std::to_string(ROLLER_2_BIT) + "\n";
+    return {GCmd() + "CB " + std::to_string(ROLLER_2_BIT) + "\n"};
 }
 
 std::string CMD::set_hopper_mode_and_intensity(int mode, int intensity)
@@ -210,6 +213,11 @@ std::string CMD::disable_hopper()
 {
     // 'U0' sent to the generator over serial port 2. 49 is the ASCII code for '1'
     return GCmd() + "MG{P2} {^85}, {^48}, {^13}{N}" + "\n";
+}
+
+std::string CMD::disable_forward_software_limit(Axis axis)
+{
+    return {create_gcmd("FL", axis, 2147483647)};
 }
 
 std::string CMD::spread_layer(const RecoatSettings &settings)
@@ -283,5 +291,13 @@ std::string CMD::detail::to_ASCII_code(char charToConvert)
 
 std::string CMD::detail::create_gcmd(const std::string &command, Axis axis, int quantity)
 {
-    return GCmd() + command + axis_string(axis) + "=" + std::to_string(quantity) + "\n";
+    std::string result;
+    result += GCmd();
+    result += command;
+    result += axis_string(axis);
+    result += "=";
+    result += std::to_string(quantity);
+    result += "\n";
+    return result;
+    // return GCmd() + command + axis_string(axis) + "=" + std::to_string(quantity) + "\n";
 }

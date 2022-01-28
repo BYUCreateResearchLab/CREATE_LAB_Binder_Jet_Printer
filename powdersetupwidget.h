@@ -4,11 +4,13 @@
 #include <QWidget>
 #include <sstream>
 
+#include "printerwidget.h"
+
 namespace Ui {
 class PowderSetupWidget;
 }
 
-class PowderSetupWidget : public QWidget
+class PowderSetupWidget : public PrinterWidget
 {
     Q_OBJECT
 
@@ -16,12 +18,7 @@ public:
     explicit PowderSetupWidget(QWidget *parent = nullptr);
     ~PowderSetupWidget();
 
-public slots:
-    void allow_user_input(bool allowed);
-
-signals:
-    void execute_command(std::stringstream &s);
-    void generate_printing_message_box(const std::string &message);
+    void allow_widget_input(bool allowed) override;
 
 private slots:
     void level_recoat_clicked();

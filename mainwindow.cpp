@@ -12,10 +12,13 @@
 #include <thread>
 #include <QMessageBox>
 
+#include <QDebug>
+
 #include "JetServer.h"
 #include "printer.h"
 #include "printhread.h"
 #include "commandcodes.h"
+#include "printerwidget.h"
 
 void split(const std::string &s, char delim, std::vector<std::string> &elems)
 {
@@ -32,8 +35,6 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
     ui->setupUi(this);
     //Set up Second Window
     mLinePrintingWidget = new progWindow();
-    mLinePrintingWidget->setWindowState(Qt::WindowMaximized); // set line printing window to be maximized
-    connect(mLinePrintingWidget, &progWindow::firstWindow, this, &MainWindow::show);
 
     //Initialize Necessary Variables
     mDeltaX = 10;
@@ -65,12 +66,23 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
     // Connect the string output from the printer thread to the output window widget
     connect(mPrintThread, &PrintThread::response, mOutputWindow, &OutputWindow::print_string);
     connect(mPrintThread, &PrintThread::ended, this, &MainWindow::thread_ended);
-    connect(mLinePrintingWidget, &progWindow::printing_from_prog_window, this, &MainWindow::disable_user_input);
     connect(mPrintThread, &PrintThread::connected_to_controller, this, &MainWindow::connected_to_motion_controller);
-    connect(mPowderSetupWidget, &PowderSetupWidget::execute_command, mPrintThread, &PrintThread::execute_command); // connect "execute_command" signal on powder window to execute on thread
-    connect(mPowderSetupWidget, &PowderSetupWidget::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
-    connect(mLinePrintingWidget, &progWindow::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
 
+    // connect signals for each of the printer widgets
+    QList<PrinterWidget *> printerWidgets = this->findChildren<PrinterWidget *> ();
+    for(int i{0}; i < printerWidgets.count(); ++i)
+    {
+        qDebug() << "signals from " << printerWidgets[i]->accessibleName() << " connected";
+
+       connect(printerWidgets[i], &PrinterWidget::execute_command, mPrintThread, &PrintThread::execute_command); // connect "execute_command" signal on powder window to execute on thread
+       connect(printerWidgets[i], &PrinterWidget::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
+    }
+
+    // old connecting technique
+    //connect(mPowderSetupWidget, &PowderSetupWidget::execute_command, mPrintThread, &PrintThread::execute_command); // connect "execute_command" signal on powder window to execute on thread
+    //connect(mPowderSetupWidget, &PowderSetupWidget::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
+    //connect(mLinePrintingWidget, &progWindow::printing_from_prog_window, this, &MainWindow::disable_user_input);
+    //connect(mLinePrintingWidget, &progWindow::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
 }
 
 void MainWindow::thread_ended()
@@ -112,8 +124,15 @@ void MainWindow::allow_user_input(bool allowed)
     ui->zMin->setEnabled(allowed);
     ui->removeBuildBox->setEnabled(allowed);
 
-    mLinePrintingWidget->set_connected(allowed); // Disable print buttons in line printing window
-    mPowderSetupWidget->allow_user_input(allowed);
+    //mLinePrintingWidget->allow_widget_input(allowed); // Disable print buttons in line printing window
+    //mPowderSetupWidget->allow_widget_input(allowed);
+
+    // set if user can input on all printer widgets
+    QList<PrinterWidget *> printerWidgets = this->findChildren<PrinterWidget *> ();
+    for(int i{0}; i < printerWidgets.count(); ++i)
+    {
+        printerWidgets[i]->allow_widget_input(allowed);
+    }
 }
 
 void MainWindow::disable_user_input()
@@ -379,60 +398,60 @@ void MainWindow::on_connect_clicked()
 
         // === Home the X-Axis using the central home sensor index pulse ===
 
-        s << CMD::detail::GCmd() << "ACX=" << CMD::detail::mm2cnts_OLD(800, 'X')     << "\n";   //
-        s << CMD::detail::GCmd() << "DCX=" << CMD::detail::mm2cnts_OLD(800, 'X')     << "\n";   //
-        s << CMD::detail::GCmd() << "SDX=" << CMD::detail::mm2cnts_OLD(800, 'X')     << "\n";   //
-        s << CMD::detail::GCmd() << "JGX=" << CMD::detail::mm2cnts_OLD(-25, 'X')     << "\n";   // jog towards rear limit
+        s << CMD::set_accleration(Axis::X, 800);
+        s << CMD::set_deceleration(Axis::X, 800);
+        s << CMD::set_limit_switch_deceleration(Axis::X, 800);
+        s << CMD::set_jog(Axis::X, -25); // jog towards rear limit
 
-        s << CMD::detail::GCmd() << "ACY=" << CMD::detail::mm2cnts_OLD(400, 'Y')     << "\n";   //
-        s << CMD::detail::GCmd() << "DCY=" << CMD::detail::mm2cnts_OLD(400, 'Y')     << "\n";   //
-        s << CMD::detail::GCmd() << "SDY=" << CMD::detail::mm2cnts_OLD(600, 'Y')     << "\n";   // deceleration when y limit is touched
-        s << CMD::detail::GCmd() << "JGY=" << CMD::detail::mm2cnts_OLD(25, 'Y')      << "\n";   // jog towards front limit
+        s << CMD::set_accleration(Axis::Y, 400);
+        s << CMD::set_deceleration(Axis::Y, 400);
+        s << CMD::set_limit_switch_deceleration(Axis::Y, 600);
+        s << CMD::set_jog(Axis::Y, 25); // jog towards front limit
 
-        s << CMD::detail::GCmd() << "ACZ=" << CMD::detail::mm2cnts_OLD(20, 'Z')      << "\n";   // Acceleration of C     757760 steps ~ 1 mm
-        s << CMD::detail::GCmd() << "DCZ=" << CMD::detail::mm2cnts_OLD(20, 'Z')      << "\n";   // Deceleration of C     7578 steps ~ 1 micron
-        s << CMD::detail::GCmd() << "SDZ=" << CMD::detail::mm2cnts_OLD(40, 'Z')      << "\n";   // Sets deceleration when limit switch is touched
-        s << CMD::detail::GCmd() << "JGZ=" << CMD::detail::mm2cnts_OLD(-2, 'Z')      << "\n";   // Speed of Z (MAX SPEED OF 5mm/s!)
-        s << CMD::detail::GCmd() << "FLZ=2147483647"                                 << "\n";   // Turn off forward software limit during homing
+        s << CMD::set_accleration(Axis::Z, 20);
+        s << CMD::set_deceleration(Axis::Z, 20);
+        s << CMD::set_limit_switch_deceleration(Axis::Z, 40);
+        s << CMD::set_jog(Axis::Z, -2);                       // jog to bottom (MAX SPEED of 5mm/s!)
+        s << CMD::disable_forward_software_limit(Axis::Z);    // turn off top software limit
 
-        s << CMD::detail::GCmd() << "BGX"                                            << "\n";
-        s << CMD::detail::GCmd() << "BGY"                                            << "\n";
-        s << CMD::detail::GCmd() << "BGZ"                                            << "\n";
+        s << CMD::begin_motion(Axis::X);
+        s << CMD::begin_motion(Axis::Y);
+        s << CMD::begin_motion(Axis::Z);
 
-        s << CMD::detail::GMotionComplete() << "X"                                   << "\n";
-        s << CMD::detail::GMotionComplete() << "Y"                                   << "\n";
-        s << CMD::detail::GMotionComplete() << "Z"                                   << "\n";
+        s << CMD::motion_complete(Axis::X);
+        s << CMD::motion_complete(Axis::Y);
+        s << CMD::motion_complete(Axis::Z);
 
-        s << CMD::detail::GSleep() << 1000                                           << "\n";
+        s << CMD::sleep(1000);
 
-        s << CMD::detail::GCmd() << "JGX="  << CMD::detail::mm2cnts_OLD(30, 'X')     << "\n"; // jog towards home sensor
-        s << CMD::detail::GCmd() << "HVX="  << CMD::detail::mm2cnts_OLD(0.5, 'X')    << "\n"; // 0.5 mm/s on second move towards home sensor
-        s << CMD::detail::GCmd() << "FIX"                           << "\n"; // Find index command for x axis
+        s << CMD::set_jog(Axis::X, 30);
+        s << CMD::set_homing_velocity(Axis::X, 0.5);
+        s << CMD::find_index(Axis::X);
 
-        s << CMD::detail::GCmd() << "SPY=" << CMD::detail::mm2cnts_OLD(40, 'Y')      << "\n"; // 25 mm/s
-        s << CMD::detail::GCmd() << "PRY=" << CMD::detail::mm2cnts_OLD(-200, 'Y')    << "\n"; // move the y-axis for setting the 'home' position
+        s << CMD::set_speed(Axis::Y, 40);
+        s << CMD::position_relative(Axis::Y, -200);
 
-        s << CMD::detail::GCmd() << "ACZ=" << CMD::detail::mm2cnts_OLD(10, 'Z')      << "\n"; // slower acceleration for going back up
-        s << CMD::detail::GCmd() << "SPZ=" << CMD::detail::mm2cnts_OLD(2, 'Z')       << "\n";
-        s << CMD::detail::GCmd() << "PRZ=" << CMD::detail::mm2cnts_OLD(13.5322, 'Z') << "\n"; // TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
+        s << CMD::set_accleration(Axis::Z, 10);        // slower acceleration for going back up
+        s << CMD::set_speed(Axis::Z, 2);
+        s << CMD::position_relative(Axis::Z, 13.5322); // TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
 
-        s << CMD::detail::GCmd() << "BGX"                                            << "\n"; // Begin motion on X-axis for homing (this will automatically set position to 0 when complete)
-        s << CMD::detail::GCmd() << "BGY"                                            << "\n";
-        s << CMD::detail::GCmd() << "BGZ"                                            << "\n";
+        s << CMD::begin_motion(Axis::X);
+        s << CMD::begin_motion(Axis::Y);
+        s << CMD::begin_motion(Axis::Z);
 
-        s << CMD::detail::GMotionComplete() << "X"                                   << "\n";
-        s << CMD::detail::GMotionComplete() << "Y"                                   << "\n";
-        s << CMD::detail::GMotionComplete() << "Z"                                   << "\n";
+        s << CMD::motion_complete(Axis::X);
+        s << CMD::motion_complete(Axis::Y);
+        s << CMD::motion_complete(Axis::Z);
 
-        s << CMD::detail::GCmd() << "SPX=" << CMD::detail::mm2cnts_OLD(50, 'X')      << "\n"; // set x-speed
-        s << CMD::detail::GCmd() << "PRX=" << CMD::detail::mm2cnts_OLD(-40, 'X')     << "\n"; // OFFSET TO ACCOUNT FOR THE OFF-CENTER BINDER JET HEAD LOCATION
-        s << CMD::detail::GCmd() << "BGX"                                            << "\n";
-        s << CMD::detail::GMotionComplete() << "X"                                   << "\n"; // Wait until X stage finishes moving
+        s << CMD::set_speed(Axis::X, 50);
+        s << CMD::position_relative(Axis::X, -40);
+        s << CMD::begin_motion(Axis::X);
+        s << CMD::motion_complete(Axis::X);
 
-        s << CMD::detail::GCmd() << "DPX=75000"                                      << "\n"; // Offset position so "0" is the rear limit (home is at center of stage, or 75,000 encoder counts)
-        s << CMD::detail::GCmd() << "DPY=0"                                          << "\n"; // sets the current position as 0 Do we need this?
-        s << CMD::detail::GCmd() << "DPZ=0"                                          << "\n";
-        s << CMD::detail::GCmd() << "FLZ=0"                                          << "\n"; // Set software limit on z so it can't go any higher than current position
+        s << CMD::define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
+        s << CMD::define_position(Axis::Y, 0);
+        s << CMD::define_position(Axis::Z, 0);
+        s << CMD::set_forward_software_limit(Axis::Z, 0); // set software limit to current position
 
         allow_user_input(false);
         mPrintThread->execute_command(s);
@@ -565,25 +584,34 @@ void MainWindow::on_activateJet_stateChanged(int arg1)
 void MainWindow::on_removeBuildBox_clicked()
 {
     std::stringstream s;
-    s << CMD::detail::GCmd() << "ACY=" << CMD::detail::mm2cnts_OLD(500, 'Y')     << "\n";   //
-    s << CMD::detail::GCmd() << "DCY=" << CMD::detail::mm2cnts_OLD(500, 'Y')     << "\n";   //
-    s << CMD::detail::GCmd() << "JGY=" << CMD::detail::mm2cnts_OLD(30, 'Y')      << "\n";   // jog towards front limit
 
-    s << CMD::detail::GCmd() << "ACZ=" << CMD::detail::mm2cnts_OLD(20, 'Z')      << "\n";   // Acceleration of Z
-    s << CMD::detail::GCmd() << "DCZ=" << CMD::detail::mm2cnts_OLD(20, 'Z')      << "\n";   // Deceleration of Z
-    s << CMD::detail::GCmd() << "JGZ=" << CMD::detail::mm2cnts_OLD(-2, 'Z')      << "\n";   // Speed of Z (MAX SPEED OF 5mm/s!)
+    int yAxisAcceleration{50};
+    int yAxisJogVelocity{30};
+    int zAxisAcceleration{20};
+    int zAxisJogVelocity{-2};
+    int sleepTimeMilliseconds{500};
+    double zAxisOffsetFromLowerLimit{2};
+    int zAxisOffsetMoveSpeed{1};
 
-    s << CMD::detail::GCmd() << "BGY"                                            << "\n";
-    s << CMD::detail::GCmd() << "BGZ"                                            << "\n";
-    s << CMD::detail::GMotionComplete() << "Y"                                   << "\n";
-    s << CMD::detail::GMotionComplete() << "Z"                                   << "\n";
+    s << CMD::set_accleration(Axis::Y, yAxisAcceleration);
+    s << CMD::set_deceleration(Axis::Y, yAxisAcceleration);
+    s << CMD::set_jog(Axis::Y, yAxisJogVelocity); // jog to front
 
-    s << CMD::detail::GSleep() << 500                                            << "\n";
-    s << CMD::detail::GCmd() << "PRZ=" << CMD::detail::mm2cnts_OLD(2, 'Z')       << "\n";
-    s << CMD::detail::GCmd() << "SPZ=" << CMD::detail::mm2cnts_OLD(1, 'Z')       << "\n";
+    s << CMD::set_accleration(Axis::Z, zAxisAcceleration);
+    s << CMD::set_deceleration(Axis::Z, zAxisAcceleration);
+    s << CMD::set_jog(Axis::Z, zAxisJogVelocity); // jog to bottom
 
-    s << CMD::detail::GCmd() << "BGZ"                                            << "\n";
-    s << CMD::detail::GMotionComplete() << "Z"                                   << "\n";
+    s << CMD::begin_motion(Axis::Y);
+    s << CMD::begin_motion(Axis::Z);
+    s << CMD::motion_complete(Axis::Y);
+    s << CMD::motion_complete(Axis::Z);
+
+    s << CMD::sleep(sleepTimeMilliseconds);
+    s << CMD::position_relative(Axis::Z, zAxisOffsetFromLowerLimit);
+    s << CMD::set_speed(Axis::Z, zAxisOffsetMoveSpeed);
+
+    s << CMD::begin_motion(Axis::Z);
+    s << CMD::motion_complete(Axis::Z);
 
     allow_user_input(false);
     mPrintThread->execute_command(s);

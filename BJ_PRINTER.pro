@@ -1,4 +1,4 @@
-QT       += core gui svg svgwidgets
+QT       += core gui svg widgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -18,6 +18,7 @@ HEADERS += \
         outputwindow.h \
         powdersetupwidget.h \
         printer.h \
+    printerwidget.h \
         progwindow.h \
         lineprintdata.h \
         printobject.h \
@@ -34,6 +35,7 @@ SOURCES += \
         outputwindow.cpp \
         powdersetupwidget.cpp \
         printer.cpp \
+    printerwidget.cpp \
         progwindow.cpp \
         lineprintdata.cpp \
         printobject.cpp \

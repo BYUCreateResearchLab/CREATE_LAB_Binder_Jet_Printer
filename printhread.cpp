@@ -114,7 +114,6 @@ void PrintThread::run()
 
                 if(commandType == "GCmd")
                 {
-                    //qDebug() << QString::fromStdString(commandString);
                     emit response(QString::fromStdString(commandString));
                     if(mPrinter->g)
                     {
@@ -126,7 +125,6 @@ void PrintThread::run()
                 }
                 else if(commandType == "GMotionComplete")
                 {
-                    //qDebug() << QString::fromStdString(commandString);
                     emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
                     if(mPrinter->g)
                     {

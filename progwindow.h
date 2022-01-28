@@ -10,6 +10,7 @@
 
 #include "lineprintdata.h"
 #include "printobject.h"
+#include "printerwidget.h"
 
 class Printer;
 class PrintThread;
@@ -19,7 +20,7 @@ namespace Ui {
 class progWindow;
 }
 
-class progWindow : public QWidget
+class progWindow : public PrinterWidget
 {
     Q_OBJECT
 
@@ -38,12 +39,8 @@ public:
     void updatePreviewWindow();
     void checkMinMax(int r, int c, float val, float min, float max, bool isInt, bool &ok);
     void generate_line_set_commands(int setNum, std::stringstream &s);
-    void set_connected(bool isConnected);
 
-signals:
-    void firstWindow();
-    void printing_from_prog_window();
-    void generate_printing_message_box(const std::string &message);
+    void allow_widget_input(bool allowed) override;
 
 private slots:
     void on_numSets_valueChanged(int arg1);

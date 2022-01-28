@@ -7,11 +7,13 @@
 
 #include <QMessageBox>
 
-PowderSetupWidget::PowderSetupWidget(QWidget *parent) : QWidget(parent), ui(new Ui::PowderSetupWidget)
+PowderSetupWidget::PowderSetupWidget(QWidget *parent) : PrinterWidget(parent), ui(new Ui::PowderSetupWidget)
 {
     ui->setupUi(this);
     connect(ui->levelRecoat, &QPushButton::clicked, this, &PowderSetupWidget::level_recoat_clicked);
     connect(ui->normalRecoat, &QPushButton::clicked, this, &PowderSetupWidget::normal_recoat_clicked);
+
+    setAccessibleName("Powder Setup Widget");
 
     // Set combo box defaults
     ui->ultrasonicIntensityComboBox->setCurrentIndex(2); // 80%
@@ -67,7 +69,7 @@ void PowderSetupWidget::normal_recoat_clicked()
     emit generate_printing_message_box("Normal recoat is in progress.");
 }
 
-void PowderSetupWidget::allow_user_input(bool allowed)
+void PowderSetupWidget::allow_widget_input(bool allowed)
 {
     ui->recoaterSettingsFrame->setEnabled(allowed);
 }
