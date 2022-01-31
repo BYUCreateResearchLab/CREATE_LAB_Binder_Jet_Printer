@@ -1,5 +1,5 @@
-#include "progwindow.h"
-#include "ui_progwindow.h"
+#include "lineprintwidget.h"
+#include "ui_lineprintwidget.h"
 
 #include <math.h>
 #include <sstream>
@@ -13,7 +13,7 @@ using namespace std;
 
 int jetter_setup();
 
-progWindow::progWindow(QWidget *parent) : PrinterWidget(parent), ui(new Ui::progWindow)
+LinePrintWidget::LinePrintWidget(QWidget *parent) : PrinterWidget(parent), ui(new Ui::LinePrintWidget)
 {
     ui->setupUi(this);
     setAccessibleName("Line Printing Widget");
@@ -36,18 +36,12 @@ progWindow::progWindow(QWidget *parent) : PrinterWidget(parent), ui(new Ui::prog
     updatePreviewWindow();
 }
 
-progWindow::~progWindow()
+LinePrintWidget::~LinePrintWidget()
 {
     delete ui;
 }
 
-void progWindow::setup(Printer *printerPtr, PrintThread *printerThread)
-{
-    mPrinter = printerPtr;
-    mPrintThread = printerThread;
-}
-
-void progWindow::log(QString message, enum logType messageType = logType::Standard)
+void LinePrintWidget::log(QString message, enum logType messageType = logType::Standard)
 {
     // If current message type is an active log type
     if(std::find(activeLogTypes.begin(), activeLogTypes.end(), messageType) != activeLogTypes.end())
@@ -56,7 +50,7 @@ void progWindow::log(QString message, enum logType messageType = logType::Standa
     }
 }
 
-void progWindow::updatePreviewWindow()
+void LinePrintWidget::updatePreviewWindow()
 {
     std::vector<QLineF> lines = table.qLines(); // vector of lines to add to window
     ui->SVGViewer->scene()->clear(); // clear the window
@@ -66,7 +60,7 @@ void progWindow::updatePreviewWindow()
     }
 }
 
-void progWindow::CheckCell(int row, int column)
+void LinePrintWidget::CheckCell(int row, int column)
 {
     QString cellText = ui->tableWidget->item(row, column)->text();
 
@@ -106,7 +100,7 @@ void progWindow::CheckCell(int row, int column)
 }
 
 
-void progWindow::updateCell(int row, int column)
+void LinePrintWidget::updateCell(int row, int column)
 {
     // add new widget item to empty cells and change text for existing cells
     QTableWidgetItem* item = ui->tableWidget->item(row,column);
@@ -120,7 +114,7 @@ void progWindow::updateCell(int row, int column)
     }
 }
 
-void progWindow::updateTable(bool updateVerticalHeaders = false, bool updateHorizontalHeaders = false)
+void LinePrintWidget::updateTable(bool updateVerticalHeaders = false, bool updateHorizontalHeaders = false)
 {
     // Set Table Size
     ui->tableWidget->setRowCount(table.data.size());
@@ -163,7 +157,7 @@ void progWindow::updateTable(bool updateVerticalHeaders = false, bool updateHori
  *                                SLOTS                                   *
  **************************************************************************/
 
-void progWindow::on_numSets_valueChanged(int rowCount)
+void LinePrintWidget::on_numSets_valueChanged(int rowCount)
 {
     int prevRowCount = table.data.size(); // get previous row count
     // set new row count
@@ -181,32 +175,32 @@ void progWindow::on_numSets_valueChanged(int rowCount)
     }
 }
 
-void progWindow::on_tableWidget_cellChanged(int row, int column)
+void LinePrintWidget::on_tableWidget_cellChanged(int row, int column)
 {
     CheckCell(row, column); // Check the cell that was changed
     updatePreviewWindow();
     ui->consoleOutput->ensureCursorVisible(); // Scroll to new content on console
 }
 
-void progWindow::on_startX_valueChanged(double arg1)
+void LinePrintWidget::on_startX_valueChanged(double arg1)
 {
     table.startX = arg1;
     updatePreviewWindow();
 }
 
-void progWindow::on_startY_valueChanged(double arg1)
+void LinePrintWidget::on_startY_valueChanged(double arg1)
 {
     table.startY = arg1;
     updatePreviewWindow();
 }
 
-void progWindow::on_setSpacing_valueChanged(double arg1)
+void LinePrintWidget::on_setSpacing_valueChanged(double arg1)
 {
     table.setSpacing = arg1;
     updatePreviewWindow();
 }
 
-void progWindow::on_printPercentSlider_sliderMoved(int position)
+void LinePrintWidget::on_printPercentSlider_sliderMoved(int position)
 {
     double percent = (double)position / (double)ui->printPercentSlider->maximum();
 
@@ -221,12 +215,12 @@ void progWindow::on_printPercentSlider_sliderMoved(int position)
     }
 }
 
-void progWindow::on_clearConsole_clicked()
+void LinePrintWidget::on_clearConsole_clicked()
 {
     ui->consoleOutput->clear();
 }
 
-void progWindow::on_startPrint_clicked()
+void LinePrintWidget::on_startPrint_clicked()
 {
     std::stringstream s;
 
@@ -247,11 +241,11 @@ void progWindow::on_startPrint_clicked()
     qDebug() << "This took:" << QString::number(timeSpan) << " milliseconds";
 
     emit disable_user_input();
-    mPrintThread->execute_command(s);
+    emit execute_command(s);
     emit generate_printing_message_box("Print is running.");
 }
 
-void progWindow::generate_line_set_commands(int setNum, std::stringstream &s)
+void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &s)
 {
     //Find starting position for line set
     float x_start{table.startX};
@@ -320,7 +314,7 @@ void progWindow::generate_line_set_commands(int setNum, std::stringstream &s)
     }
 }
 
-void progWindow::allow_widget_input(bool allowed)
+void LinePrintWidget::allow_widget_input(bool allowed)
 {
     if(allowed)
     {

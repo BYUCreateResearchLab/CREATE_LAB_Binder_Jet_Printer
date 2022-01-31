@@ -2,16 +2,13 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "gclib.h"
-#include "gclibo.h"
-#include "gclib_errors.h"
-#include "gclib_record.h"
-#include "progwindow.h"
-#include "outputwindow.h"
-#include "powdersetupwidget.h"
 
 class Printer;
 class PrintThread;
+class LinePrintWidget;
+class OutputWindow;
+class PowderSetupWidget;
+class JettingWidget;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -35,7 +32,6 @@ private slots:
 
     void on_xHome_clicked();
     void on_yHome_clicked();
-    void on_zStepSize_valueChanged(int arg1);
     void on_zMax_clicked();
     void on_zUp_clicked();
     void on_zDown_clicked();
@@ -49,25 +45,23 @@ private slots:
     void on_activateJet_stateChanged(int arg1);
     void allow_user_input(bool allowed);
     void thread_ended();
-    void disable_user_input();
     void connected_to_motion_controller();
 
     void on_removeBuildBox_clicked();
     void on_actionShow_Hide_Console_triggered();
     void generate_printing_message_box(const std::string &message);
+
+    void start_jetting();
+    void stop_jetting();
 private:
     Ui::MainWindow *ui;
-    int mZPosition{100};
-    int mDeltaX{0};
-    int mDeltaY{0};
-    int mDeltaZ{0};
 
     Printer *mPrinter{nullptr};
     PrintThread *mPrintThread{nullptr};
-    progWindow *mLinePrintingWidget{nullptr};
+    LinePrintWidget *mLinePrintingWidget{nullptr};
     QDockWidget *mDockWidget{nullptr};
     OutputWindow *mOutputWindow{nullptr};
     PowderSetupWidget *mPowderSetupWidget{nullptr};
-    void e(GReturn rc);
+    JettingWidget *mJettingWidget{nullptr};
 };
 #endif // MAINWINDOW_H

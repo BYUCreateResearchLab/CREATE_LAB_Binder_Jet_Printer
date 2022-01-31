@@ -10,17 +10,24 @@
 #include <thread>
 #include <QDockWidget>
 #include <thread>
-#include <QMessageBox>
 
+#include <QMessageBox>
 #include <QDebug>
 
+#include "gclib.h"
+#include "gclibo.h"
+#include "gclib_errors.h"
+#include "gclib_record.h"
 #include "JetServer.h"
 #include "printer.h"
 #include "printhread.h"
-#include "commandcodes.h"
 #include "printerwidget.h"
+#include "lineprintwidget.h"
+#include "outputwindow.h"
+#include "powdersetupwidget.h"
+#include "jettingwidget.h"
 
-void split(const std::string &s, char delim, std::vector<std::string> &elems)
+inline void split(const std::string &s, char delim, std::vector<std::string> &elems)
 {
     std::stringstream ss;
     ss.str(s);
@@ -33,23 +40,23 @@ void split(const std::string &s, char delim, std::vector<std::string> &elems)
 MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    //Set up Second Window
-    mLinePrintingWidget = new progWindow();
 
-    //Initialize Necessary Variables
-    mDeltaX = 10;
-    mDeltaY = 10;
-    mDeltaZ = 15;
-    MainWindow::on_revertDefault_clicked();
+    // revert values to defaults from file (this isn't working right now)
+    on_revertDefault_clicked();
 
+    // set up widgets
+    mLinePrintingWidget = new LinePrintWidget();
     mPowderSetupWidget = new PowderSetupWidget();
+    mJettingWidget = new JettingWidget();
     ui->tabWidget->addTab(mPowderSetupWidget, "Powder Setup");
     ui->tabWidget->addTab(mLinePrintingWidget, "Line Printing");
+    ui->tabWidget->addTab(mJettingWidget, "Jetting");
 
     mDockWidget = new QDockWidget("Output Window",this);
     this->addDockWidget(Qt::RightDockWidgetArea, mDockWidget);
     mOutputWindow = new OutputWindow(this);
     mDockWidget->setWidget(mOutputWindow);
+
     mOutputWindow->print_string("Starting Program...");
     mOutputWindow->print_string("Program Started");
 
@@ -61,7 +68,6 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
 {
     mPrinter = printerPtr;
     mPrintThread = printerThread;
-    mLinePrintingWidget->setup(printerPtr, printerThread);
 
     // Connect the string output from the printer thread to the output window widget
     connect(mPrintThread, &PrintThread::response, mOutputWindow, &OutputWindow::print_string);
@@ -78,11 +84,9 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
        connect(printerWidgets[i], &PrinterWidget::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
     }
 
-    // old connecting technique
-    //connect(mPowderSetupWidget, &PowderSetupWidget::execute_command, mPrintThread, &PrintThread::execute_command); // connect "execute_command" signal on powder window to execute on thread
-    //connect(mPowderSetupWidget, &PowderSetupWidget::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
-    //connect(mLinePrintingWidget, &progWindow::printing_from_prog_window, this, &MainWindow::disable_user_input);
-    //connect(mLinePrintingWidget, &progWindow::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
+    connect(mJettingWidget, &JettingWidget::start_jetting, this, &MainWindow::start_jetting);
+    connect(mJettingWidget, &JettingWidget::stop_jetting, this, &MainWindow::stop_jetting);
+
 }
 
 void MainWindow::thread_ended()
@@ -124,20 +128,12 @@ void MainWindow::allow_user_input(bool allowed)
     ui->zMin->setEnabled(allowed);
     ui->removeBuildBox->setEnabled(allowed);
 
-    //mLinePrintingWidget->allow_widget_input(allowed); // Disable print buttons in line printing window
-    //mPowderSetupWidget->allow_widget_input(allowed);
-
     // set if user can input on all printer widgets
     QList<PrinterWidget *> printerWidgets = this->findChildren<PrinterWidget *> ();
     for(int i{0}; i < printerWidgets.count(); ++i)
     {
         printerWidgets[i]->allow_widget_input(allowed);
     }
-}
-
-void MainWindow::disable_user_input()
-{
-    allow_user_input(false);
 }
 
 void MainWindow::on_yPositive_clicked() // This name is a bit misleading (I need better +/- naming conventions)
@@ -246,11 +242,6 @@ void MainWindow::on_yHome_clicked()
     mPrintThread->execute_command(s);
 }
 
-void MainWindow::on_zStepSize_valueChanged(int arg1)
-{
-    mDeltaZ = arg1;
-}
-
 void MainWindow::on_zMax_clicked()
 {     
     std::stringstream s;
@@ -336,14 +327,7 @@ void MainWindow::on_connect_clicked()
     {
         std::stringstream s;
 
-        // just some ideas...
-        //CMD::add_initial_setup_to_stream(s);
-        //CMD::spread_layer(s, settings);
-        //CMD::print_lines(s, settingsForLinePrintsHere);
-
         s << "GOpen"                     << "\n";   // Establish connection with motion controller
-
-        //s << GCmd() << "SH XYZ"          << "\n";   // enable X, Y, and Z motors
 
         // Controller Configuration
         s << CMD::detail::GCmd() << "MO"              << "\n";   // Ensure motors are off for setup
@@ -478,8 +462,6 @@ void MainWindow::on_saveDefault_clicked()
     ofs << "XAxisDistance\t" << std::to_string(ui->xDistance->value())  << "\n";
     ofs << "YAxisDistance\t" << std::to_string(ui->yDistance->value())  << "\n";
     ofs << "ZStepSize\t" << std::to_string(ui->zStepSize->value())      << "\n";
-    ofs << "RollerSpeed\t" << std::to_string(ui->rollerSpeed->value())  << "\n";
-    ofs << "NumberOfLayers\t" << std::to_string(ui->numLayers->value()) << "\n";
     ofs.close();
 }
 
@@ -514,18 +496,10 @@ void MainWindow::on_revertDefault_clicked()
             {
                 ui->zStepSize->setValue(stoi(row_values[1]));
             }
-            else if(row_values[0] == "RollerSpeed")
-            {
-                ui->rollerSpeed->setValue(stoi(row_values[1]));
-            }
-            else if(row_values[0] == "NumberOfLayers")
-            {
-                ui->numLayers->setValue(stoi(row_values[1]));
-            }
         }
         myfile.close();
     }
-    else std::cout << "Unable to open file";//Notify user-> "Unable to open file";
+    else std::cout << "Unable to open settings file\n";//Notify user-> "Unable to open file";
 }
 
 
@@ -535,11 +509,11 @@ void MainWindow::on_activateRoller1_toggled(bool checked)
 
     if(checked == 1)
     {
-        s << CMD::detail::GCmd() << "SB 18" << "\n";
+        s << CMD::enable_roller1();
     }
     else
     {
-        s << CMD::detail::GCmd() << "CB 18" << "\n";
+        s << CMD::disable_roller1();
     }
 
     mPrintThread->execute_command(s);
@@ -551,11 +525,11 @@ void MainWindow::on_activateRoller2_toggled(bool checked)
 
     if(checked == 1)
     {
-        s << CMD::detail::GCmd() << "SB 21" << "\n";
+        s << CMD::enable_roller2();
     }
     else
     {
-        s << CMD::detail::GCmd() << "CB 21" << "\n";
+        s << CMD::disable_roller2();
     }
 
     mPrintThread->execute_command(s);
@@ -567,15 +541,16 @@ void MainWindow::on_activateJet_stateChanged(int arg1)
     std::stringstream s;
 
     if(arg1 == 2)
-    {
-        s << CMD::detail::GCmd() << "SH H"         << "\n"; // enable jetting axis
-        s << CMD::detail::GCmd() << "ACH=20000000" << "\n"; // set acceleration really high
-        s << CMD::detail::GCmd() << "JGH=" << 1000 << "\n"; // jetting frequency
-        s << CMD::detail::GCmd() << "BGH"          << "\n"; // begin jetting
+    {        
+        s << CMD::servo_here(Axis::Jet);
+        s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
+        s << CMD::set_jog(Axis::Jet, 1000);             // set to jet at 1000hz
+        // ADD OTHER JETTING SETTINGS HERE
+        s << CMD::begin_motion(Axis::Jet);
     }
     else
     {
-        s << CMD::detail::GCmd() << "STH" << "\n"; // stop jetting axis
+        s << CMD::stop_motion(Axis::Jet);
     }
 
     mPrintThread->execute_command(s);
@@ -654,5 +629,31 @@ void MainWindow::generate_printing_message_box(const std::string &message)
     default:
         break;
     }
+}
+
+void MainWindow::start_jetting()
+{
+    int port{9};
+    gjets1.fFrequency = 1000L;
+    SendCommand(port, MFJDRV_FREQUENCY,0.1);
+
+    gjets1.fMode = 1;
+    SendCommand(port, MFJDRV_CONTMODE, 0.1);
+
+    gjets1.fSource = 0;               // set internal trigger
+    SendCommand(port, MFJDRV_SOURCE, 0.1); // set trigger source
+
+    // Start Jetting
+    SendCommand(port, MFJDRV_SOFTTRIGGER, .1); // This command turns on continuous jetting if the trigger source is set to internal
+}
+
+void MainWindow::stop_jetting()
+{
+    int port{9};
+    gjets1.fMode = 0;
+    SendCommand(port, MFJDRV_CONTMODE, .1); // This command sets trigger mode to single (also, turns off continuous jetting from the soft trigger)
+
+    gjets1.fSource = 1;               // set external trigger
+    SendCommand(port, MFJDRV_SOURCE, 0.1); // set trigger source
 }
 

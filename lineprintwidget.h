@@ -1,35 +1,28 @@
-#ifndef PROGWINDOW_H
-#define PROGWINDOW_H
+#ifndef LINEPRINTWIDGET_H
+#define LINEPRINTWIDGET_H
 
 #include <QWidget>
-// #include <QMainWindow>
 #include <QtSvg>
 #include <QGraphicsView>
 #include <QSvgWidget>
 #include <QGraphicsSvgItem>
 
 #include "lineprintdata.h"
-#include "printobject.h"
 #include "printerwidget.h"
 
-class Printer;
-class PrintThread;
-class OutputWindow;
-
 namespace Ui {
-class progWindow;
+class LinePrintWidget;
 }
 
-class progWindow : public PrinterWidget
+class LinePrintWidget : public PrinterWidget
 {
     Q_OBJECT
 
     enum logType {Error, Debug, Status, Standard};
 
 public:
-    explicit progWindow(QWidget *parent = nullptr);
-    ~progWindow();
-    void setup(Printer *printerPtr, PrintThread *printerThread);
+    explicit LinePrintWidget(QWidget *parent = nullptr);
+    ~LinePrintWidget();
 
     void CheckCell(int row, int column);
     //void CheckTable(int row, int column);
@@ -53,9 +46,7 @@ private slots:
     void on_startPrint_clicked();
 
 private:
-    Ui::progWindow *ui;
-    Printer *mPrinter{nullptr};
-    PrintThread *mPrintThread{nullptr};
+    Ui::LinePrintWidget *ui;
 
     std::vector<logType> activeLogTypes = {logType::Error, logType::Status, logType::Standard, logType::Debug};
     // Value types for data input columns for printing lines
@@ -64,9 +55,6 @@ private:
 
     QPen linePen = QPen(Qt::blue, 0.1, Qt::SolidLine, Qt::RoundCap);
     QPen lineTravelPen = QPen(Qt::red, 0.5, Qt::SolidLine, Qt::RoundCap);
-
-    //GCon g{0}; // NEED TO GET THIS FROM A CENTRAL SOURCE
-    //char const *address = "192.168.42.100";
 };
 
-#endif // PROGWINDOW_H
+#endif // LINEPRINTWIDGET_H

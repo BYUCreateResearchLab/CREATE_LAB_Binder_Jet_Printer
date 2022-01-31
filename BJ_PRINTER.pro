@@ -15,40 +15,41 @@ HEADERS += \
         gclibo.h \
         gclib_errors.h \
         gclib_record.h \
+    jettingwidget.h \
+    lineprintwidget.h \
         mainwindow.h \
         outputwindow.h \
         powdersetupwidget.h \
         printer.h \
     printerwidget.h \
-        progwindow.h \
         lineprintdata.h \
         printobject.h \
         svgview.h \
         vec2.h \
-        commandcodes.h \
         printhread.h \
 
 SOURCES += \
         gclibo.c \
         arrays.c \
+    jettingwidget.cpp \
+    lineprintwidget.cpp \
         main.cpp \
         mainwindow.cpp \
         outputwindow.cpp \
         powdersetupwidget.cpp \
         printer.cpp \
     printerwidget.cpp \
-        progwindow.cpp \
         lineprintdata.cpp \
         printobject.cpp \
         svgview.cpp \
-        commandcodes.cpp \
         printhread.cpp \
 
 FORMS += \
+    jettingwidget.ui \
+    lineprintwidget.ui \
         mainwindow.ui \
         outputwindow.ui \
         powdersetupwidget.ui \
-        progwindow.ui \
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
