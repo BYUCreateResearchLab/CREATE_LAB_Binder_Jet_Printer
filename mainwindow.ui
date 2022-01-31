@@ -66,6 +66,28 @@
         </item>
         <item row="5" column="1">
          <layout class="QGridLayout" name="gridLayout_5">
+          <item row="1" column="2">
+           <widget class="QSpinBox" name="xVelocity">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="maximum">
+             <number>200</number>
+            </property>
+            <property name="value">
+             <number>30</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="X_axis">
+            <property name="text">
+             <string>X Axis</string>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="2">
            <widget class="QSpinBox" name="yVelocity">
             <property name="font">
@@ -78,62 +100,12 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="3">
-           <widget class="QSpinBox" name="xDistance">
-            <property name="font">
-             <font>
-              <pointsize>12</pointsize>
-             </font>
-            </property>
-            <property name="value">
-             <number>15</number>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="3">
-           <widget class="QSpinBox" name="yDistance">
-            <property name="font">
-             <font>
-              <pointsize>12</pointsize>
-             </font>
-            </property>
-            <property name="value">
-             <number>30</number>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="4" rowspan="3">
-           <spacer name="horizontalSpacer_6">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="X_axis">
+          <item row="2" column="1">
+           <widget class="QLabel" name="Y_axis">
             <property name="text">
-             <string>X Axis</string>
+             <string>Y Axis</string>
             </property>
            </widget>
-          </item>
-          <item row="0" column="0" rowspan="3">
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
           </item>
           <item row="0" column="2" alignment="Qt::AlignHCenter">
            <widget class="QLabel" name="VelocityLabel">
@@ -152,38 +124,31 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="Y_axis">
-            <property name="text">
-             <string>Y Axis</string>
+          <item row="0" column="0" rowspan="3">
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
-           </widget>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
-          <item row="1" column="2">
-           <widget class="QSpinBox" name="xVelocity">
-            <property name="font">
-             <font>
-              <pointsize>12</pointsize>
-             </font>
+          <item row="0" column="3" rowspan="3">
+           <spacer name="horizontalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
-            <property name="maximum">
-             <number>200</number>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
             </property>
-            <property name="value">
-             <number>30</number>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3" alignment="Qt::AlignHCenter">
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>Distance
-(mm)</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -211,6 +176,7 @@
             <property name="font">
              <font>
               <pointsize>12</pointsize>
+              <weight>75</weight>
               <bold>true</bold>
              </font>
             </property>
@@ -343,6 +309,7 @@
               <property name="font">
                <font>
                 <pointsize>18</pointsize>
+                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
@@ -356,6 +323,7 @@
               <property name="font">
                <font>
                 <pointsize>18</pointsize>
+                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
@@ -403,6 +371,7 @@
             <property name="font">
              <font>
               <pointsize>12</pointsize>
+              <weight>75</weight>
               <bold>true</bold>
              </font>
             </property>
@@ -526,6 +495,7 @@ Home</string>
              <font>
               <family>Yu Gothic UI</family>
               <pointsize>20</pointsize>
+              <weight>75</weight>
               <bold>true</bold>
               <kerning>true</kerning>
              </font>
@@ -559,6 +529,7 @@ Home</string>
              <font>
               <family>Yu Gothic UI</family>
               <pointsize>20</pointsize>
+              <weight>75</weight>
               <italic>false</italic>
               <bold>true</bold>
               <kerning>true</kerning>
@@ -590,6 +561,7 @@ Home</string>
              <font>
               <family>Yu Gothic UI</family>
               <pointsize>20</pointsize>
+              <weight>75</weight>
               <bold>true</bold>
              </font>
             </property>
@@ -623,6 +595,7 @@ Home</string>
              <font>
               <family>Yu Gothic UI</family>
               <pointsize>20</pointsize>
+              <weight>75</weight>
               <bold>true</bold>
              </font>
             </property>
@@ -636,6 +609,7 @@ Home</string>
             <property name="font">
              <font>
               <pointsize>12</pointsize>
+              <weight>75</weight>
               <bold>true</bold>
              </font>
             </property>

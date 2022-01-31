@@ -25,10 +25,12 @@ public:
 
 private slots:
     // change these over to be jogs that go while the button is pushed and stop when it is released
-    void on_yPositive_clicked();
-    void on_xPositive_clicked();
-    void on_yNegative_clicked();
-    void on_xNegative_clicked();
+    void on_yPositive_pressed();
+    void on_xPositive_pressed();
+    void on_yNegative_pressed();
+    void on_xNegative_pressed();
+
+    void jog_released();
 
     void on_xHome_clicked();
     void on_yHome_clicked();

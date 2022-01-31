@@ -254,11 +254,15 @@ std::string CMD::spread_layer(const RecoatSettings &settings)
     s << CMD::motion_complete(Axis::Z);
 
     // turn on hopper
+
+    // DISABLING FOR TESTING!!! REMOVE THIS HERE
+    /*
     s << CMD::set_hopper_mode_and_intensity(settings.ultrasonicMode, settings.ultrasonicIntensityLevel);
     s << CMD::enable_hopper();
+    */
 
     // wait
-    s << CMD::sleep(1000);
+    s << CMD::sleep(settings.waitAfterHopperOn_millisecs);
 
     // move y-axis forward
     s << CMD::set_speed(y, settings.recoatSpeed_mm_s);
@@ -268,12 +272,19 @@ std::string CMD::spread_layer(const RecoatSettings &settings)
 
     // turn off hopper and enable rollers
     s << CMD::disable_hopper();
+
+    // move up to roller
+    s << CMD::set_speed(y, 20);
+    s << CMD::position_relative(y, 32.5); // move up to roller
+    s << CMD::begin_motion(y);
+    s << CMD::motion_complete(y);
+
     s << CMD::enable_roller1();
     s << CMD::enable_roller2();
 
     // move y-axis forward under roller
     s << CMD::set_speed(y, settings.rollerTraverseSpeed_mm_s);
-    s << CMD::position_relative(y, 172.5);
+    s << CMD::position_relative(y, 140);
     s << CMD::begin_motion(y);
     s << CMD::motion_complete(y);
 

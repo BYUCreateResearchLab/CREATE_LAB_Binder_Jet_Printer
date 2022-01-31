@@ -950,10 +950,10 @@ int jetter_setup()
     // gJets[gCJ]->fSource = 1;               // set external trigger
     // SendCommand(port, MFJDRV_SOURCE, 0.1); // set trigger source
 
-    if (JetDrv != NOCOM && hCom != noCom)
-    {
-        CloseHandle(hCom);
-    }
+    //if (JetDrv != NOCOM && hCom != noCom)
+    //{
+    //    CloseHandle(hCom);
+    //}
     return 0;
 }
 // A section showing how a dump response is picked apart and compared to the expected values.

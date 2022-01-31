@@ -84,6 +84,12 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
        connect(printerWidgets[i], &PrinterWidget::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
     }
 
+    // connect jog buttons
+    connect(ui->xPositive, &QAbstractButton::released, this, &MainWindow::jog_released);
+    connect(ui->xNegative, &QAbstractButton::released, this, &MainWindow::jog_released);
+    connect(ui->yPositive, &QAbstractButton::released, this, &MainWindow::jog_released);
+    connect(ui->yNegative, &QAbstractButton::released, this, &MainWindow::jog_released);
+
     connect(mJettingWidget, &JettingWidget::start_jetting, this, &MainWindow::start_jetting);
     connect(mJettingWidget, &JettingWidget::stop_jetting, this, &MainWindow::stop_jetting);
 
@@ -136,67 +142,68 @@ void MainWindow::allow_user_input(bool allowed)
     }
 }
 
-void MainWindow::on_yPositive_clicked() // This name is a bit misleading (I need better +/- naming conventions)
+void MainWindow::on_yPositive_pressed() // This name is a bit misleading (I need better +/- naming conventions)
 {    
     std::stringstream s;
 
-    s << CMD::set_accleration(Axis::Y, 100);
-    s << CMD::set_deceleration(Axis::Y, 100);
-    s << CMD::set_speed(Axis::Y, ui->yVelocity->value());
-    s << CMD::position_relative(Axis::Y, -ui->yDistance->value());
+    s << CMD::set_accleration(Axis::Y, 300);
+    s << CMD::set_deceleration(Axis::Y, 300);
+    s << CMD::set_jog(Axis::Y, -ui->yVelocity->value());
     s << CMD::begin_motion(Axis::Y);
-    s << CMD::motion_complete(Axis::Y);
 
-    allow_user_input(false);
     mPrintThread->execute_command(s);
 }
 
-void MainWindow::on_xPositive_clicked()
+void MainWindow::on_xPositive_pressed()
 {
     std::stringstream s;
     Axis x{Axis::X};
 
     s << CMD::set_accleration(x, 800);
     s << CMD::set_deceleration(x, 800);
-    s << CMD::set_speed(x, ui->xVelocity->value());
-    s << CMD::position_relative(x, ui->xDistance->value());
+    s << CMD::set_jog(x, ui->xVelocity->value());
     s << CMD::begin_motion(x);
-    s << CMD::motion_complete(x);
 
-    allow_user_input(false);
     mPrintThread->execute_command(s);
 }
 
-void MainWindow::on_yNegative_clicked()
+void MainWindow::jog_released()
+{
+    std::stringstream s;
+    s << CMD::stop_motion(Axis::X);
+    s << CMD::stop_motion(Axis::Y);
+    s << CMD::stop_motion(Axis::Z);
+    s << CMD::motion_complete(Axis::X);
+    s << CMD::motion_complete(Axis::Y);
+    s << CMD::motion_complete(Axis::Z);
+
+    mPrintThread->execute_command(s);
+}
+
+void MainWindow::on_yNegative_pressed()
 {
     std::stringstream s;
     Axis y{Axis::Y};
 
-    s << CMD::set_accleration(y, 100);
-    s << CMD::set_deceleration(y, 100);
-    s << CMD::set_speed(y, ui->yVelocity->value());
-    s << CMD::position_relative(y, ui->yDistance->value());
+    s << CMD::set_accleration(y, 300);
+    s << CMD::set_deceleration(y, 300);
+    s << CMD::set_jog(y, ui->yVelocity->value());
     s << CMD::begin_motion(y);
-    s << CMD::motion_complete(y);
 
     // send off to thread to send to printer
-    allow_user_input(false);
     mPrintThread->execute_command(s);
 }
 
-void MainWindow::on_xNegative_clicked()
+void MainWindow::on_xNegative_pressed()
 {
     std::stringstream s;
     Axis x{Axis::X};
 
     s << CMD::set_accleration(x, 800);
     s << CMD::set_deceleration(x, 800);
-    s << CMD::set_speed(x, ui->xVelocity->value());
-    s << CMD::position_relative(x, -ui->xDistance->value());
+    s << CMD::set_jog(x, -ui->xVelocity->value());
     s << CMD::begin_motion(x);
-    s << CMD::motion_complete(x);
 
-    allow_user_input(false);
     mPrintThread->execute_command(s);
 }
 
@@ -208,15 +215,10 @@ void MainWindow::on_xHome_clicked()
     Axis x{Axis::X};
     s << CMD::set_accleration(x, 800);
     s << CMD::set_deceleration(x, 800);
-    s << CMD::set_jog(x, -15);
+    s << CMD::position_absolute(x, 0);
+    s << CMD::set_speed(x, ui->xVelocity->value());
     s << CMD::begin_motion(x);
     s << CMD::motion_complete(x);
-    s << CMD::set_jog(x, 15);
-    s << CMD::set_homing_velocity(x, 0.5);
-    s << CMD::find_index(x);
-    s << CMD::begin_motion(x);
-    s << CMD::motion_complete(x);
-    s << CMD::define_position(x, X_STAGE_LEN_MM / 2.0); //Offset position so "0" is the rear limit (home is at center of stage)
 
     allow_user_input(false);
     mPrintThread->execute_command(s);
@@ -226,15 +228,11 @@ void MainWindow::on_yHome_clicked()
 {
     std::stringstream s;
     Axis y{Axis::Y};
-    double yHomePosition{-200};
 
     s << CMD::set_accleration(y, 200);
     s << CMD::set_deceleration(y, 200);
-    s << CMD::set_jog(y, 30);
-    s << CMD::begin_motion(y);
-    s << CMD::motion_complete(y);
-    s << CMD::set_speed(y, 25);
-    s << CMD::position_relative(y, yHomePosition);
+    s << CMD::position_absolute(y, 0);
+    s << CMD::set_speed(y, ui->yVelocity->value());
     s << CMD::begin_motion(y);
     s << CMD::motion_complete(y);
 
@@ -459,8 +457,6 @@ void MainWindow::on_saveDefault_clicked()
     ofs.open("C:/Users/ME/Documents/GitHub/CREATE_LAB_Binder_Jet_Printer/PrinterSettings.txt", std::ofstream::out | std::ofstream::trunc);
     ofs << "XAxisVelocity\t" << std::to_string(ui->xVelocity->value())  << "\n";
     ofs << "YAxisVelocity\t" << std::to_string(ui->yVelocity->value())  << "\n";
-    ofs << "XAxisDistance\t" << std::to_string(ui->xDistance->value())  << "\n";
-    ofs << "YAxisDistance\t" << std::to_string(ui->yDistance->value())  << "\n";
     ofs << "ZStepSize\t" << std::to_string(ui->zStepSize->value())      << "\n";
     ofs.close();
 }
@@ -483,14 +479,6 @@ void MainWindow::on_revertDefault_clicked()
             else if(row_values[0] == "YAxisVelocity")
             {
                 ui->yVelocity->setValue(stoi(row_values[1]));
-            }
-            else if(row_values[0] == "XAxisDistance")
-            {
-                ui->xDistance->setValue(stoi(row_values[1]));
-            }
-            else if(row_values[0] == "YAxisDistance")
-            {
-                ui->yDistance->setValue(stoi(row_values[1]));
             }
             else if(row_values[0] == "ZStepSize")
             {
@@ -635,7 +623,7 @@ void MainWindow::start_jetting()
 {
     int port{9};
     gjets1.fFrequency = 1000L;
-    SendCommand(port, MFJDRV_FREQUENCY,0.1);
+    SendCommand(port, MFJDRV_FREQUENCY, 0.1);
 
     gjets1.fMode = 1;
     SendCommand(port, MFJDRV_CONTMODE, 0.1);

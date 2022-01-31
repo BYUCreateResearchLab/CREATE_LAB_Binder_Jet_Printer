@@ -205,7 +205,7 @@ GReturn PrintThread::e(GReturn rc)
             emit response(buf);
         }
 
-        if ((rc == G_BAD_RESPONSE_QUESTION_MARK) && (GCommand(mPrinter->g, "TC1", buf, G_SMALL_BUFFER, 0) == G_NO_ERROR))
+        if ((rc == G_BAD_RESPONSE_QUESTION_MARK) && (GCmdT(mPrinter->g, "TC1", buf, G_SMALL_BUFFER, 0) == G_NO_ERROR))
         {
             //std::cout << buf << '\n'; //Error code from controller
             emit response(buf);

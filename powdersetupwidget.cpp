@@ -37,6 +37,7 @@ void PowderSetupWidget::level_recoat_clicked()
     levelRecoat.ultrasonicIntensityLevel = ui->ultrasonicIntensityComboBox->currentIndex();
     levelRecoat.ultrasonicMode = ui->ultrasonicModeComboBox->currentIndex();
     levelRecoat.layerHeight_microns = ui->layerHeightSpinBox->value();
+    levelRecoat.waitAfterHopperOn_millisecs = ui->hopperDwellTimeMsSpinBox->value();
 
     for(int i{0}; i < numLayers; ++i)
     {
@@ -59,6 +60,7 @@ void PowderSetupWidget::normal_recoat_clicked()
     layerRecoat.ultrasonicIntensityLevel = ui->ultrasonicIntensityComboBox->currentIndex();
     layerRecoat.ultrasonicMode = ui->ultrasonicModeComboBox->currentIndex();
     layerRecoat.layerHeight_microns = ui->layerHeightSpinBox->value();
+    layerRecoat.waitAfterHopperOn_millisecs = ui->hopperDwellTimeMsSpinBox->value();
 
     for(int i{0}; i < numLayers; ++i)
     {
