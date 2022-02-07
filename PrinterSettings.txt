@@ -1,7 +1,0 @@
-XAxisVelocity	30
-YAxisVelocity	30
-XAxisDistance	15
-YAxisDistance	30
-ZStepSize	30
-RollerSpeed	10
-NumberOfLayers	10
