@@ -28,6 +28,7 @@
 
 #include "jettingwidget.h"
 #include "highspeedlinewidget.h"
+#include "dropletobservationwidget.h"
 
 inline void split(const std::string &s, char delim, std::vector<std::string> &elems)
 {
@@ -51,10 +52,12 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
     mPowderSetupWidget = new PowderSetupWidget();
     mJettingWidget = new JettingWidget();
     mHighSpeedLineWidget = new HighSpeedLineWidget();
+    mDropletObservationWidget = new DropletObservationWidget();
     ui->tabWidget->addTab(mPowderSetupWidget, "Powder Setup");
     ui->tabWidget->addTab(mLinePrintingWidget, "Line Printing");
     ui->tabWidget->addTab(mJettingWidget, "Jetting");
     ui->tabWidget->addTab(mHighSpeedLineWidget, "High-Speed Line Printing");
+    ui->tabWidget->addTab(mDropletObservationWidget, "Droplet Observation");
 
     mDockWidget = new QDockWidget("Output Window",this);
     this->addDockWidget(Qt::RightDockWidgetArea, mDockWidget);

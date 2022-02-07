@@ -49,6 +49,7 @@ set(HEADERS
     src/widgets/powdersetupwidget.h
     src/widgets/jettingwidget.h
     src/widgets/highspeedlinewidget.h
+    src/widgets/dropletobservationwidget.h
 )
 
 set(SOURCES
@@ -66,6 +67,7 @@ set(SOURCES
     src/widgets/jettingwidget.cpp
     src/widgets/lineprintwidget.cpp
     src/widgets/powdersetupwidget.cpp
+    src/widgets/dropletobservationwidget.cpp
 )
 
 set(FORMS
@@ -76,6 +78,7 @@ set(FORMS
     src/ui/lineprintwidget.ui
     src/ui/outputwindow.ui
     src/ui/powdersetupwidget.ui
+    src/ui/dropletobservationwidget.ui
 )
 
 set(RESOURCES
@@ -83,11 +86,13 @@ set(RESOURCES
     bjprinter.rc
 )
 
-source_group("Forms" REGULAR_EXPRESSION ".*\.ui")
-source_group("Printer Widgets/Source" REGULAR_EXPRESSION "widget.*\.cpp")
-source_group("Printer Widgets/Header" REGULAR_EXPRESSION "widget.*\.h")
-source_group("Printer Widgets/Forms" REGULAR_EXPRESSION "widget.*\.ui")
-source_group("Resources" REGULAR_EXPRESSION "^.*\.(rc|qrc)$")
+source_group("00 - Source Files" REGULAR_EXPRESSION "^.*\.(cpp)$")
+source_group("01 - Header Files" REGULAR_EXPRESSION "^.*\.(h|hpp)$")
+source_group("04 - Forms" REGULAR_EXPRESSION ".*\.ui")
+source_group("03 - Printer Widgets/2 - Source" REGULAR_EXPRESSION "widget.*\.cpp")
+source_group("03 - Printer Widgets/1 - Header" REGULAR_EXPRESSION "widget.*\.h")
+source_group("03 - Printer Widgets/3 - Forms" REGULAR_EXPRESSION "widget.*\.ui")
+source_group("05 - Resources" REGULAR_EXPRESSION "^.*\.(rc|qrc)$")
 
 set(EXE_NAME ${PROJECT_NAME})
 

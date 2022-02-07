@@ -11,6 +11,7 @@ class PowderSetupWidget;
 
 class JettingWidget;
 class HighSpeedLineWidget;
+class DropletObservationWidget;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -70,6 +71,7 @@ private:
     // Non-core modules
     JettingWidget *mJettingWidget{nullptr};
     HighSpeedLineWidget *mHighSpeedLineWidget{nullptr};
+    DropletObservationWidget *mDropletObservationWidget{nullptr};
 
 };
 #endif // MAINWINDOW_H
