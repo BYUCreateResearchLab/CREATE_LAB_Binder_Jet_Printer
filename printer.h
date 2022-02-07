@@ -75,6 +75,9 @@ std::string set_homing_velocity(Axis axis, double velocity_mm_s);
 std::string set_forward_software_limit(Axis axis, double position_mm);
 std::string position_relative(Axis axis, double relativePosition_mm);
 std::string position_absolute(Axis axis, double absolutePosition_mm);
+std::string add_pvt_data_to_buffer(Axis axis, double relativePosition_mm, double velocity_mm, int time_counts);
+std::string exit_pvt_mode(Axis axis);
+std::string begin_pvt_motion(Axis axis);
 std::string define_position(Axis axis, double position_mm);
 std::string begin_motion(Axis axis);
 std::string motion_complete(Axis axis);
@@ -82,6 +85,12 @@ std::string sleep(int milliseconds);
 std::string find_index(Axis axis);
 std::string servo_here(Axis axis);
 std::string stop_motion(Axis axis);
+std::string set_reference_time();
+std::string at_time_samples(int samples);
+std::string at_time_milliseconds(int milliseconds);
+
+std::string set_bit(int bit);
+std::string clear_bit(int bit);
 
 std::string enable_roller1();
 std::string disable_roller1();

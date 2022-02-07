@@ -15,6 +15,7 @@ HEADERS += \
         gclibo.h \
         gclib_errors.h \
         gclib_record.h \
+    highspeedlinewidget.h \
     jettingwidget.h \
     lineprintwidget.h \
         mainwindow.h \
@@ -31,6 +32,7 @@ HEADERS += \
 SOURCES += \
         gclibo.c \
         arrays.c \
+    highspeedlinewidget.cpp \
     jettingwidget.cpp \
     lineprintwidget.cpp \
         main.cpp \
@@ -45,6 +47,7 @@ SOURCES += \
         printhread.cpp \
 
 FORMS += \
+    highspeedlinewidget.ui \
     jettingwidget.ui \
     lineprintwidget.ui \
         mainwindow.ui \

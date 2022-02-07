@@ -1,9 +1,5 @@
-#pragma once
-
 #ifndef JETSERVER_H
 #define JETSERVER_H
-
-#endif // JETSERVER_H
 
 //	Drive electronics interface program (excerpts for reference)
 //
@@ -53,21 +49,9 @@
 
 #define MFJDRV_DUMPLENGTH		29
 
-float max(float a,float b)
-{
-    if((a) > (b))
-    {
-        return a;
-    }
-    else
-    {
-        return b;
-    }
-}
-
-#define MFJDRV_MULTITRIGGER 0x0D
-#define MFJDRV_EXTERNENABLE 0x0C
-#define MFJDRV_EDITCHANNEL 0x0E
+#define MFJDRV_MULTITRIGGER     0x0D
+#define MFJDRV_EXTERNENABLE     0x0C
+#define MFJDRV_EDITCHANNEL      0x0E
 // I don't think these 3 are the right commands, but I'm not sure it matters for our JetDrive...
 
 #define gDreamController true
@@ -75,13 +59,15 @@ float max(float a,float b)
 #define gBreadboardOne false
 //DOES THIS WORK??
 
+float max(float a,float b)
+{
+    if (a > b) return a;
+    else       return b;
+}
+
 class MicroJet
 {
     // Data structure for microjet operating and status parameters.
-    //
-    // H.-J.Trost - 010103   Use only a default constructor.
-    // H.-J.Trost - 000703
-    //
 public:
     MicroJet();
     ~MicroJet();
@@ -96,59 +82,78 @@ private:
 
 short MicroJet::fgNJets = 0;
 
-// fmode is to set continuous jetting mode (1 to enable continuous jetting, 0 to disable)
-// fSource is for setting the trigger source (1 for external TTL trigger, 0 for internal trigger)
-// fFrequency is for setting the jetting frequency (in Hz?)
-
 MicroJet::MicroJet() :
-        fTRise(3.0), fTDwell(20.0), fTFall(4.0), fTEcho(40.0), fTFinal(3.0),
-      fTDelay(0.0), fFrequency(1000L),
-      fUIdle(0), fUDwell(60), fUEcho(-60), fUGain(225),
-      fMode(0), fSource(1), fDrops(1), fStrobeDelay(0), fStrobeDiv(1),
-        fStrobeEnable(1), fDebugSwitch(0), fDebugValue(0), fChannelGroup(0),
-      fContIsStarted(0), fChannelOn(0)
+    fTRise(3.0),
+    fTDwell(20.0),
+    fTFall(4.0),
+    fTEcho(40.0),
+    fTFinal(3.0),
+    fTDelay(0.0),
+    fFrequency(1000L),// fFrequency is for setting the jetting frequency (in Hz?)
+    fUIdle(0),
+    fUDwell(25),      // Dwell Voltage
+    fUEcho(-25),      // Echo Voltage
+    fUGain(225),
+    fMode(0),         // fmode is to set continuous jetting mode (1 to enable continuous jetting, 0 to disable)
+    fSource(1),       // fSource is for setting the trigger source (1 for external TTL trigger, 0 for internal trigger)
+    fDrops(1),
+    fStrobeDelay(0),
+    fStrobeDiv(1),
+    fStrobeEnable(1),
+    fDebugSwitch(0),
+    fDebugValue(0),
+    fChannelGroup(0),
+    fContIsStarted(0),
+    fChannelOn(0)
 {
-// Default constructor.
-//
-// H.-J. Trost - 010103   last mod.
-// H.-J. Trost - 000703
-//
     fgNJets++;
 }
 
 
 MicroJet::~MicroJet()
 {
-// Destructor.
-//
-// H.-J. Trost - 000703   last mod.
-// H.-J. Trost - 000703
-//
     fgNJets--;
 }
-
 
 static const char fmtCommError[] = "%s failed with error %ld.\n";
 HANDLE hCom = INVALID_HANDLE_VALUE, noCom = INVALID_HANDLE_VALUE;
 
-
 static long  gCheckLong = 0L;
-static int   gFirmVersion = 0, gNumContMode = 0;
+static int   gFirmVersion = 0;
+//static int   gNumContMode = 0;
 static short gExternEnable = 0;
-static bool  gDumpRange = false, gMultiTrigMode = false, gVs6Kludge = false;
+//static bool  gDumpRange = false;
+//static bool  gMultiTrigMode = false;
+static bool  gVs6Kludge = false;
+
 // Parameter limits.
 static double gRateLimit = 30.0;
-static long  gTimeLow = 1L, gTimeHigh = 8191L,
-                 gVoltLow = -500L, gVoltHigh = 500L, gFreqHigh = 20000L;
-static short gDropsHigh = 999, gStrobeHigh = 64, gStrobeDelayLow = -500,
-             gStrobeDelayHigh = 2500;
-// Screen parameters.
-static int	gTopLine = 2, gTopParams = 7, gRowsParams = 9,
-            gBottomBlock = 19, gMessageLine = 24,
-            gPulseTitleCol = 20, gTriggerTitleCol = 50,
-            gCommandCol = 11, gStartCol = 33, gAloneCol = 47, gDumpCol = 54,
-            gExitCol = 67, gChanBottom = 15;
+/*
+static long  gTimeLow = 1L;
+static long  gTimeHigh = 8191L;
+static long  gVoltLow = -500L;
+static long  gVoltHigh = 500L;
+static long  gFreqHigh = 20000L;
+static short gDropsHigh = 999;
+static short gStrobeHigh = 64;
+static short gStrobeDelayLow = -500;
+static short gStrobeDelayHigh = 2500;
 
+// Screen parameters.
+static int	 gTopLine = 2;
+static int   gTopParams = 7;
+static int   gRowsParams = 9;
+static int   gBottomBlock = 19;
+static int   gMessageLine = 24;
+static int   gPulseTitleCol = 20;
+static int   gTriggerTitleCol = 50;
+static int   gCommandCol = 11;
+static int   gStartCol = 33;
+static int   gAloneCol = 47;
+static int   gDumpCol = 54;
+static int   gExitCol = 67;
+static int   gChanBottom = 15;
+*/
 
 int NOCOM = -1;
 
@@ -168,8 +173,7 @@ void WaitSeconds(float seconds)
 
 void TestLog(const char* outputstring, bool status)
 {
-    //std::cout << outputstring << std::endl;
-    qDebug() << outputstring;
+    qDebug() << outputstring << " " << status;
 }
 
 
@@ -183,7 +187,7 @@ int BuildCommand(int Command, unsigned char *JetCommand)
 //
     long LongFreq;
     int CommandLength, i, IntTime;
-    char CommandText[255];
+    //char CommandText[255];
 
     CommandLength = 3;
     JetCommand[0] = 'S';
@@ -216,8 +220,7 @@ int BuildCommand(int Command, unsigned char *JetCommand)
         // WAS : if (gDreamController || gJets[gCJ]->fDrops > 255)
         if (gDreamController || gJets[gCJ]->fDrops > 255)
         {
-            JetCommand[3] = (unsigned char)((gJets[gCJ]->fDrops >> 8) &
-                                            0x00FF);
+            JetCommand[3] = (unsigned char)((gJets[gCJ]->fDrops >> 8) & 0x00FF);
             JetCommand[4] = (unsigned char)(gJets[gCJ]->fDrops & 0x00FF);
             CommandLength = 5;
         }
@@ -445,8 +448,7 @@ int BuildCommand(int Command, unsigned char *JetCommand)
 
     case MFJDRV_STROBEDELAY :	// new with DREAM design
         JetCommand[3] = 0x01;	// Keep potentiometer on at all times.
-        JetCommand[4] = (unsigned char)((gJets[gCJ]->fStrobeDelay >> 8) &
-                                        0x00FF);
+        JetCommand[4] = (unsigned char)((gJets[gCJ]->fStrobeDelay >> 8) & 0x00FF);
         JetCommand[5] = (unsigned char)(gJets[gCJ]->fStrobeDelay & 0x00FF);
         CommandLength = 6;
 #ifdef MFDRV_DEBUG
@@ -532,7 +534,7 @@ int GetJetDrv(int port, int Command, unsigned char *Input, int SizeInput)
     int ReturnLength{};
     int status{};
     bool failed{};
-    unsigned char CheckSum;
+    //unsigned char CheckSum;
     char ReturnText[255];
 
    failed = true;
@@ -559,9 +561,7 @@ int GetJetDrv(int port, int Command, unsigned char *Input, int SizeInput)
        gCheckLong = 0L;
        Input[0] = '\0';
        l = sprintf(ReturnText, "Input: ");
-       for (i=1, ReadDone=FALSE; (!ReadDone) &&
-            Input[0]!=MFJDRV_ACK &&
-            Input[0]!=MFJDRV_NAK; i++)
+       for (i=1, ReadDone=FALSE; (!ReadDone) && Input[0]!=MFJDRV_ACK && Input[0]!=MFJDRV_NAK; i++)
        {
            WaitSeconds(0.1);
            ReadDone = ReadFile(hCom, Input, (DWORD)bytes, &ReceivedLength, NULL);
@@ -575,7 +575,8 @@ int GetJetDrv(int port, int Command, unsigned char *Input, int SizeInput)
            }
        }
        TestLog(ReturnText, false);
-       if (ReadDone) {
+       if (ReadDone)
+       {
            if (ReceivedLength < (DWORD)bytes)
                status = -1;
            else if (Input[0] == MFJDRV_ACK)
@@ -597,7 +598,7 @@ int GetJetDrv(int port, int Command, unsigned char *Input, int SizeInput)
            sprintf(ReturnText, "Version is reported as %d.\n", Input[bytes-1]);
            TestLog(ReturnText, false);
        }
-       CheckSum = (unsigned char)(gCheckLong & 0xFF);
+       //CheckSum = (unsigned char)(gCheckLong & 0xFF);
        failed = false;
 
    }
@@ -607,8 +608,6 @@ WrapUp:
     // Return length of response we've built.
     return ReturnLength;
 }
-
-
 
 void SendJetDrv(int port, int Command, unsigned char *Output, int LengthOutput)
 {
@@ -633,7 +632,6 @@ void SendJetDrv(int port, int Command, unsigned char *Output, int LengthOutput)
     }
 }
 
-
 void SendCommand(int port, int Command, float waitTimeSeconds)
 {
     unsigned char jetcommands[128];
@@ -655,8 +653,8 @@ int jetter_setup()
     DCB useDCB;
     int JetDrv = COM9;
     char s[80];
-    unsigned char Input[80];
-    int SizeInput = sizeof(Input) / sizeof(Input[0]);
+    // unsigned char Input[80];
+    // int SizeInput = sizeof(Input) / sizeof(Input[0]);
 
     //	Check command line arguments.
 
@@ -907,9 +905,9 @@ int jetter_setup()
     // Initialize the pulser.
     // CUSTOM CODE
     // See command reference documentation for correct structure for sending commands to the JetDrive
-    unsigned char jetcommands[128];
-    unsigned char jetdriveinput[128];
-    unsigned int commandlength = 0;
+    // unsigned char jetcommands[128];
+    // unsigned char jetdriveinput[128];
+    // unsigned int commandlength = 0;
     unsigned int port = JetDrv + 1;
 
 
@@ -927,28 +925,6 @@ int jetter_setup()
     SendCommand(port, MFJDRV_STROBEENABLE, .1); // 9.) Strobe Enable
     SendCommand(port, MFJDRV_STROBEDELAY, .1);  // 10.) Strobe Delay
     SendCommand(port, MFJDRV_SOURCE, .1);       // 11.) Trigger Source
-
-    // gJets[gCJ]->fFrequency = 1000L;
-    // SendCommand(port, MFJDRV_FREQUENCY,0.1);
-
-
-    // gJets[gCJ]->fMode = 1;
-    // SendCommand(port, MFJDRV_CONTMODE, 0.1);
-
-    // gJets[gcJ]->fSource = 0;               // set internal trigger
-    // SendCommand(port, MFJDRV_SOURCE, 0.1); // set trigger source
-    // Start Jetting
-
-    // SendCommand(port, MFJDRV_SOFTTRIGGER, .1); // This command turns on continuous jetting if the trigger source is set to internal
-
-    // gJets[gCJ]->fMode = 0;
-    // WaitSeconds(5);
-
-    // gJets[gCJ]->fMode = 0;
-    // SendCommand(port, MFJDRV_CONTMODE, .1); // This command sets trigger mode to single (also, turns off continuous jetting from the soft trigger)
-
-    // gJets[gCJ]->fSource = 1;               // set external trigger
-    // SendCommand(port, MFJDRV_SOURCE, 0.1); // set trigger source
 
     //if (JetDrv != NOCOM && hCom != noCom)
     //{
@@ -971,126 +947,130 @@ int jetter_setup()
 // Check on dump return.
 
 /*
-   if (Command == MFJDRV_DUMPINPUT && ReturnLength >= MFJDRV_DUMPLENGTH) {
-      double AddForInt;
-      AddForInt = gDreamController ? 0.0001 : 0.5001;
-      DumpBits   = 0L;
-      gDumpJets[gCJ]->fUIdle  =  (double)((Input[ 2] << 8) | Input[ 3]);
-      DumpBits   |= fabs(gJets[gCJ]->fUIdle - gDumpJets[gCJ]->fUIdle) > 0.001 ?
-                                0x00000001L : 0L;
-      // Note: Times come back in full 盜, not 0.1 盜 units.
-      gDumpJets[gCJ]->fTRise  = (double)((Input[ 4] << 8) | Input[ 5]);
-      DumpBits   |= fabs(gJets[gCJ]->fTRise - gDumpJets[gCJ]->fTRise -
-                             AddForInt) > 0.51 ?
-                                                                            0x00000002L : 0L;
-      gDumpJets[gCJ]->fUDwell =  (double)((Input[ 6] << 8) | Input[ 7]);
-      DumpBits   |= fabs(gJets[gCJ]->fUDwell - gDumpJets[gCJ]->fUDwell)
-                                                  > 0.001 ? 0x00000004L : 0L;
-      gDumpJets[gCJ]->fTDwell = (double)((Input[ 8] << 8) | Input[ 9]);
-      DumpBits   |= fabs(gJets[gCJ]->fTDwell - gDumpJets[gCJ]->fTDwell -
-                             AddForInt) > 0.51 ?
-                                                                            0x00000008L : 0L;
-      gDumpJets[gCJ]->fTFall  = (double)((Input[10] << 8) | Input[11]);
-      DumpBits   |= fabs(gJets[gCJ]->fTFall - gDumpJets[gCJ]->fTFall -
-                             AddForInt) > 0.51 ?
-                                                                            0x00000010L : 0L;
-      gDumpJets[gCJ]->fUEcho  =  (double)((Input[12] << 8) | Input[13]);
-      DumpBits   |= fabs(gJets[gCJ]->fUEcho - gDumpJets[gCJ]->fUEcho) > 0.001 ?
-                                                                            0x00000020L : 0L;
-      gDumpJets[gCJ]->fTEcho  = (double)((Input[14] << 8) | Input[15]);
-      DumpBits   |= fabs(gJets[gCJ]->fTEcho - gDumpJets[gCJ]->fTEcho -
-                             AddForInt) > 0.51 ?
-                                                                            0x00000040L : 0L;
-      gDumpJets[gCJ]->fTFinal = (double)((Input[16] << 8) | Input[17]);
-      DumpBits   |= fabs(gJets[gCJ]->fTFinal - gDumpJets[gCJ]->fTFinal -
-                             AddForInt) > 0.51 ?
-                                                                            0x00000080L : 0L;
-      gDumpJets[gCJ]->fDrops  =  (short)((Input[18] << 8) | Input[19]);
-      DumpBits   |= gJets[gCJ]->fDrops != gDumpJets[gCJ]->fDrops ?
-                                                                            0x00000100L : 0L;
-      gDumpJets[gCJ]->fStrobeDiv = (short)Input[20];
-      DumpBits   |= gJets[gCJ]->fStrobeDiv != gDumpJets[gCJ]->fStrobeDiv ?
-                                                                            0x00000200L : 0L;
-      Interval   = gJets[gCJ]->fFrequency != 0L ?
-                            (long)(1.0E6 / (double)gJets[gCJ]->fFrequency +
-                                 AddForInt) : 0L;
-      PRIFrequency = Interval != 0L ?
-                            (long)(1.0E6 / (double)Interval + AddForInt) : 0L;
+void testing(int Command, int ReturnLength)
+{
+    if (Command == MFJDRV_DUMPINPUT && ReturnLength >= MFJDRV_DUMPLENGTH)
+    {
+        double AddForInt;
+        AddForInt = gDreamController ? 0.0001 : 0.5001;
+        DumpBits   = 0L;
+        gDumpJets[gCJ]->fUIdle  =  (double)((Input[ 2] << 8) | Input[ 3]);
+        DumpBits   |= fabs(gJets[gCJ]->fUIdle - gDumpJets[gCJ]->fUIdle) > 0.001 ?
+                    0x00000001L : 0L;
+        // Note: Times come back in full 盜, not 0.1 盜 units.
+        gDumpJets[gCJ]->fTRise  = (double)((Input[ 4] << 8) | Input[ 5]);
+        DumpBits   |= fabs(gJets[gCJ]->fTRise - gDumpJets[gCJ]->fTRise -
+                           AddForInt) > 0.51 ?
+                    0x00000002L : 0L;
+        gDumpJets[gCJ]->fUDwell =  (double)((Input[ 6] << 8) | Input[ 7]);
+        DumpBits   |= fabs(gJets[gCJ]->fUDwell - gDumpJets[gCJ]->fUDwell)
+                > 0.001 ? 0x00000004L : 0L;
+        gDumpJets[gCJ]->fTDwell = (double)((Input[ 8] << 8) | Input[ 9]);
+        DumpBits   |= fabs(gJets[gCJ]->fTDwell - gDumpJets[gCJ]->fTDwell -
+                           AddForInt) > 0.51 ?
+                    0x00000008L : 0L;
+        gDumpJets[gCJ]->fTFall  = (double)((Input[10] << 8) | Input[11]);
+        DumpBits   |= fabs(gJets[gCJ]->fTFall - gDumpJets[gCJ]->fTFall -
+                           AddForInt) > 0.51 ?
+                    0x00000010L : 0L;
+        gDumpJets[gCJ]->fUEcho  =  (double)((Input[12] << 8) | Input[13]);
+        DumpBits   |= fabs(gJets[gCJ]->fUEcho - gDumpJets[gCJ]->fUEcho) > 0.001 ?
+                    0x00000020L : 0L;
+        gDumpJets[gCJ]->fTEcho  = (double)((Input[14] << 8) | Input[15]);
+        DumpBits   |= fabs(gJets[gCJ]->fTEcho - gDumpJets[gCJ]->fTEcho -
+                           AddForInt) > 0.51 ?
+                    0x00000040L : 0L;
+        gDumpJets[gCJ]->fTFinal = (double)((Input[16] << 8) | Input[17]);
+        DumpBits   |= fabs(gJets[gCJ]->fTFinal - gDumpJets[gCJ]->fTFinal -
+                           AddForInt) > 0.51 ?
+                    0x00000080L : 0L;
+        gDumpJets[gCJ]->fDrops  =  (short)((Input[18] << 8) | Input[19]);
+        DumpBits   |= gJets[gCJ]->fDrops != gDumpJets[gCJ]->fDrops ?
+                    0x00000100L : 0L;
+        gDumpJets[gCJ]->fStrobeDiv = (short)Input[20];
+        DumpBits   |= gJets[gCJ]->fStrobeDiv != gDumpJets[gCJ]->fStrobeDiv ?
+                    0x00000200L : 0L;
+        Interval   = gJets[gCJ]->fFrequency != 0L ?
+                    (long)(1.0E6 / (double)gJets[gCJ]->fFrequency +
+                           AddForInt) : 0L;
+        PRIFrequency = Interval != 0L ?
+                    (long)(1.0E6 / (double)Interval + AddForInt) : 0L;
         DumpInterval = (long)(((long)Input[21] << 16) |
-                                 ((long)Input[22] << 8) | (long)Input[23]);
+                ((long)Input[22] << 8) | (long)Input[23]);
         gDumpJets[gCJ]->fFrequency = DumpInterval != 0 ?
-                            (long)(1.0E6 / (double)DumpInterval + AddForInt) : 0L;
+                    (long)(1.0E6 / (double)DumpInterval + AddForInt) : 0L;
         DumpBits   |= Interval != DumpInterval ?         		0x00000400L : 0L;
-      gDumpJets[gCJ]->fStrobeDelay = (short)((Input[24] << 8) | Input[25]);
-      DumpBits   |= gJets[gCJ]->fStrobeDelay != gDumpJets[gCJ]->fStrobeDelay ?
-                                                                            0x00000800L : 0L;
+        gDumpJets[gCJ]->fStrobeDelay = (short)((Input[24] << 8) | Input[25]);
+        DumpBits   |= gJets[gCJ]->fStrobeDelay != gDumpJets[gCJ]->fStrobeDelay ?
+                    0x00000800L : 0L;
         DumpStatus =  (int)Input[26];
-      gDumpJets[gCJ]->fContIsStarted = (DumpStatus & 0x0001) != 0;
-      DumpBits   |= gJets[gCJ]->fContIsStarted != gDumpJets[gCJ]->fContIsStarted ?
-                                                                            0x00001000L : 0L;
-      gDumpJets[gCJ]->fMode   =  (short)((DumpStatus & 0x0002) ? 1 : 0);
-      DumpBits   |= gJets[gCJ]->fMode != gDumpJets[gCJ]->fMode ?
-                                                                            0x00002000L : 0L;
-      gDumpJets[gCJ]->fSource =  (short)((DumpStatus & 0x0004) ? 1 : 0);
-      DumpBits   |= gJets[gCJ]->fSource != gDumpJets[gCJ]->fSource ?
-                                                                            0x00004000L : 0L;
-      gDumpJets[gCJ]->fStrobeEnable = (short)((DumpStatus & 0x0008) ? 1 : 0);
-      DumpBits   |= gJets[gCJ]->fStrobeEnable != gDumpJets[gCJ]->fStrobeEnable ?
-                                                                            0x00008000L : 0L;
-      DumpFirmVersion = (int)Input[27];
-      DumpBits   |= gFirmVersion != DumpFirmVersion ?   		0x00010000L : 0L;
+        gDumpJets[gCJ]->fContIsStarted = (DumpStatus & 0x0001) != 0;
+        DumpBits   |= gJets[gCJ]->fContIsStarted != gDumpJets[gCJ]->fContIsStarted ?
+                    0x00001000L : 0L;
+        gDumpJets[gCJ]->fMode   =  (short)((DumpStatus & 0x0002) ? 1 : 0);
+        DumpBits   |= gJets[gCJ]->fMode != gDumpJets[gCJ]->fMode ?
+                    0x00002000L : 0L;
+        gDumpJets[gCJ]->fSource =  (short)((DumpStatus & 0x0004) ? 1 : 0);
+        DumpBits   |= gJets[gCJ]->fSource != gDumpJets[gCJ]->fSource ?
+                    0x00004000L : 0L;
+        gDumpJets[gCJ]->fStrobeEnable = (short)((DumpStatus & 0x0008) ? 1 : 0);
+        DumpBits   |= gJets[gCJ]->fStrobeEnable != gDumpJets[gCJ]->fStrobeEnable ?
+                    0x00008000L : 0L;
+        DumpFirmVersion = (int)Input[27];
+        DumpBits   |= gFirmVersion != DumpFirmVersion ?   		0x00010000L : 0L;
         // Report the locally composed flags always.
-      sprintf(ReturnText, "Dump flags word: %08lXh, changed by %08lXh.",
-              DumpBits, DumpBits ^ OldDumpBits);
-      TestLog(ReturnText, true);
-      OldDumpBits = DumpBits;
+        sprintf(ReturnText, "Dump flags word: %08lXh, changed by %08lXh.",
+                DumpBits, DumpBits ^ OldDumpBits);
+        TestLog(ReturnText, true);
+        OldDumpBits = DumpBits;
 #ifdef MFDRV_DEBUG
         TestLog("Parameter pairs are expected first and found second:", false);
-      sprintf(ReturnText,
-              "Voltages: idle %.1lf %.1lf, dwell %.1lf %.1lf, echo %.1lf %.1lf",
-              gJets[gCJ]->fUIdle, gDumpJets[gCJ]->fUIdle,
-              gJets[gCJ]->fUDwell, gDumpJets[gCJ]->fUDwell,
-              gJets[gCJ]->fUEcho, gDumpJets[gCJ]->fUEcho);
-      TestLog(ReturnText, false);
-      sprintf(ReturnText,
-      "Times: rise %7.1lf %7.1lf, dwell %7.1lf %7.1lf, fall %7.1lf %7.1lf",
-                  gJets[gCJ]->fTRise, gDumpJets[gCJ]->fTRise,
-              gJets[gCJ]->fTDwell, gDumpJets[gCJ]->fTDwell,
-              gJets[gCJ]->fTFall, gDumpJets[gCJ]->fTFall);
-        TestLog(ReturnText, false);
-      sprintf(ReturnText, "       echo %7.1lf %7.1lf, final %7.1lf %7.1lf",
-              gJets[gCJ]->fTEcho, gDumpJets[gCJ]->fTEcho,
-              gJets[gCJ]->fTFinal, gDumpJets[gCJ]->fTFinal);
-        TestLog(ReturnText, false);
-      sprintf(ReturnText, "Drops: %d %d",
-              gJets[gCJ]->fDrops, gDumpJets[gCJ]->fDrops);
-      TestLog(ReturnText, false);
-      sprintf(ReturnText, "Strobe divider: %d %d",
-              gJets[gCJ]->fStrobeDiv, gDumpJets[gCJ]->fStrobeDiv);
-      TestLog(ReturnText, false);
         sprintf(ReturnText,
-              "Frequency: %ld %ld, PRI'd frequency %ld, interval %ld %ld",
-                  gJets[gCJ]->fFrequency, gDumpJets[gCJ]->fFrequency,
-              PRIFrequency, Interval, DumpInterval);
+                "Voltages: idle %.1lf %.1lf, dwell %.1lf %.1lf, echo %.1lf %.1lf",
+                gJets[gCJ]->fUIdle, gDumpJets[gCJ]->fUIdle,
+                gJets[gCJ]->fUDwell, gDumpJets[gCJ]->fUDwell,
+                gJets[gCJ]->fUEcho, gDumpJets[gCJ]->fUEcho);
+        TestLog(ReturnText, false);
+        sprintf(ReturnText,
+                "Times: rise %7.1lf %7.1lf, dwell %7.1lf %7.1lf, fall %7.1lf %7.1lf",
+                gJets[gCJ]->fTRise, gDumpJets[gCJ]->fTRise,
+                gJets[gCJ]->fTDwell, gDumpJets[gCJ]->fTDwell,
+                gJets[gCJ]->fTFall, gDumpJets[gCJ]->fTFall);
+        TestLog(ReturnText, false);
+        sprintf(ReturnText, "       echo %7.1lf %7.1lf, final %7.1lf %7.1lf",
+                gJets[gCJ]->fTEcho, gDumpJets[gCJ]->fTEcho,
+                gJets[gCJ]->fTFinal, gDumpJets[gCJ]->fTFinal);
+        TestLog(ReturnText, false);
+        sprintf(ReturnText, "Drops: %d %d",
+                gJets[gCJ]->fDrops, gDumpJets[gCJ]->fDrops);
+        TestLog(ReturnText, false);
+        sprintf(ReturnText, "Strobe divider: %d %d",
+                gJets[gCJ]->fStrobeDiv, gDumpJets[gCJ]->fStrobeDiv);
+        TestLog(ReturnText, false);
+        sprintf(ReturnText,
+                "Frequency: %ld %ld, PRI'd frequency %ld, interval %ld %ld",
+                gJets[gCJ]->fFrequency, gDumpJets[gCJ]->fFrequency,
+                PRIFrequency, Interval, DumpInterval);
         TestLog(ReturnText, false);
         sprintf(ReturnText, "Jetting: %s %s",
-                              gJets[gCJ]->fContIsStarted ? "on" : "off",
-                          gDumpJets[gCJ]->fContIsStarted ? "on" : "off");
-      TestLog(ReturnText, false);
-      sprintf(ReturnText, "Mode: %d %d",
-              gJets[gCJ]->fMode, gDumpJets[gCJ]->fMode);
-      TestLog(ReturnText, false);
-      sprintf(ReturnText, "Source: %d %d",
-              gJets[gCJ]->fSource, gDumpJets[gCJ]->fSource);
-      TestLog(ReturnText, false);
-      sprintf(ReturnText, "Strobe enable: %d %d",
-              gJets[gCJ]->fStrobeEnable, gDumpJets[gCJ]->fStrobeEnable);
-      TestLog(ReturnText, false);
-      sprintf(ReturnText, "Firmware version: %d %d",
-              gFirmVersion, DumpFirmVersion);
-      TestLog(ReturnText, false);
+                gJets[gCJ]->fContIsStarted ? "on" : "off",
+                gDumpJets[gCJ]->fContIsStarted ? "on" : "off");
+        TestLog(ReturnText, false);
+        sprintf(ReturnText, "Mode: %d %d",
+                gJets[gCJ]->fMode, gDumpJets[gCJ]->fMode);
+        TestLog(ReturnText, false);
+        sprintf(ReturnText, "Source: %d %d",
+                gJets[gCJ]->fSource, gDumpJets[gCJ]->fSource);
+        TestLog(ReturnText, false);
+        sprintf(ReturnText, "Strobe enable: %d %d",
+                gJets[gCJ]->fStrobeEnable, gDumpJets[gCJ]->fStrobeEnable);
+        TestLog(ReturnText, false);
+        sprintf(ReturnText, "Firmware version: %d %d",
+                gFirmVersion, DumpFirmVersion);
+        TestLog(ReturnText, false);
 #endif
-   }
+    }
+}
+*/
 
-
-   */
+#endif // JETSERVER_H

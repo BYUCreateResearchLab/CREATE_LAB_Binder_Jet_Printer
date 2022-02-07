@@ -8,7 +8,9 @@ class PrintThread;
 class LinePrintWidget;
 class OutputWindow;
 class PowderSetupWidget;
+
 class JettingWidget;
+class HighSpeedLineWidget;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -64,6 +66,10 @@ private:
     QDockWidget *mDockWidget{nullptr};
     OutputWindow *mOutputWindow{nullptr};
     PowderSetupWidget *mPowderSetupWidget{nullptr};
+
+    // Non-core modules
     JettingWidget *mJettingWidget{nullptr};
+    HighSpeedLineWidget *mHighSpeedLineWidget{nullptr};
+
 };
 #endif // MAINWINDOW_H

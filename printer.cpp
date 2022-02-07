@@ -136,6 +136,38 @@ std::string CMD::position_absolute(Axis axis, double absolutePosition_mm)
     return {create_gcmd("PA", axis, mm2cnts(absolutePosition_mm, axis))};
 }
 
+std::string CMD::add_pvt_data_to_buffer(Axis axis, double relativePosition_mm, double velocity_mm, int time_counts)
+{
+    std::string result;
+    result += GCmd();
+    result += "PV";
+    result += axis_string(axis);
+    result += "=";
+    result += std::to_string(mm2cnts(relativePosition_mm, axis));
+    result += ",";
+    result += std::to_string(mm2cnts(velocity_mm, axis));
+    result += ",";
+    result += std::to_string(time_counts);
+    result += "\n";
+    return result;
+}
+
+std::string CMD::exit_pvt_mode(Axis axis)
+{
+    std::string result;
+    result += GCmd();
+    result += "PV";
+    result += axis_string(axis);
+    result += "=0,0,0";
+    result += "\n";
+    return result;
+}
+
+std::string CMD::begin_pvt_motion(Axis axis)
+{
+    return {GCmd() + "BT" + detail::axis_string(axis) + "\n"};
+}
+
 std::string CMD::define_position(Axis axis, double position_mm)
 {
    return {create_gcmd("DP", axis, mm2cnts(position_mm, axis))};
@@ -171,8 +203,45 @@ std::string CMD::stop_motion(Axis axis)
     return {GCmd() + "ST" + detail::axis_string(axis) + "\n"};
 }
 
+std::string CMD::set_reference_time()
+{
+    return {GCmd() + "AT 0" + "\n"};
+}
+
+std::string CMD::at_time_samples(int samples)
+{
+    std::string result;
+    result += GCmd();
+    result += "AT ";
+    result += std::to_string(samples);
+    result += ",1";
+    result += "\n";
+    return result;
+}
+
+std::string CMD::at_time_milliseconds(int milliseconds)
+{
+    std::string result;
+    result += GCmd();
+    result += "AT ";
+    result += std::to_string(milliseconds);
+    result += "\n";
+    return result;
+}
+
+std::string CMD::set_bit(int bit)
+{
+    return {GCmd() + "SB " + std::to_string(bit) + "\n"};
+}
+
+std::string CMD::clear_bit(int bit)
+{
+    return {GCmd() + "CB " + std::to_string(bit) + "\n"};
+}
+
 std::string CMD::enable_roller1()
 {
+    // update this to just use the set_bit command
     return {GCmd() + "SB " + std::to_string(ROLLER_1_BIT) + "\n"};
 }
 
@@ -250,16 +319,13 @@ std::string CMD::spread_layer(const RecoatSettings &settings)
     {
         s << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller - (settings.layerHeight_microns / 1000.0));
     }
+    // set hopper settings here
+    s << CMD::set_hopper_mode_and_intensity(settings.ultrasonicMode, settings.ultrasonicIntensityLevel);
     s << CMD::begin_motion(Axis::Z);
     s << CMD::motion_complete(Axis::Z);
 
     // turn on hopper
-
-    // DISABLING FOR TESTING!!! REMOVE THIS HERE
-    /*
-    s << CMD::set_hopper_mode_and_intensity(settings.ultrasonicMode, settings.ultrasonicIntensityLevel);
     s << CMD::enable_hopper();
-    */
 
     // wait
     s << CMD::sleep(settings.waitAfterHopperOn_millisecs);
