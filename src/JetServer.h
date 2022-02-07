@@ -658,7 +658,7 @@ int jetter_setup()
 
     if (JetDrv != NOCOM)
     {
-        hCom = CreateFile(L"\\\\.\\COM9", GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL); //USING COM9
+        hCom = CreateFile(JetPort, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL); //USING COM9
         if (hCom == NULL) //TODO - DOESN'T RECOGNIZE INVALID_HANDLE_VALUE, SAYS NO SUCH VALUE
         {
             LPVOID lpMsgBuf;
