@@ -5,6 +5,8 @@
 #include "printerwidget.h"
 #include <QMdiArea>
 
+class HIDS;
+
 namespace Ui {
 class DropletObservationWidget;
 }
@@ -20,9 +22,11 @@ public:
 
 private slots:
     void connect_to_camera();
+    void set_settings();
 
 private:
     Ui::DropletObservationWidget *ui;
+    HIDS *mCamera{nullptr};
 };
 
 #endif // DROPLETOBSERVATIONWIDGET_H

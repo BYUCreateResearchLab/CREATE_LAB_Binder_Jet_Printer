@@ -11,6 +11,7 @@ DropletObservationWidget::DropletObservationWidget(QWidget *parent) : PrinterWid
 {
     ui->setupUi(this);
     connect(ui->connect, &QPushButton::clicked, this, &DropletObservationWidget::connect_to_camera);
+    connect(ui->setSettings, &QPushButton::clicked, this, &DropletObservationWidget::set_settings);
 }
 
 DropletObservationWidget::~DropletObservationWidget()
@@ -77,6 +78,7 @@ void DropletObservationWidget::connect_to_camera()
                 if (live)
                 {
                     subWindow->camera()->captureVideo(false);
+                    mCamera = subWindow->camera->handle();
                 }
 
                 if (numCams == 1)
@@ -93,7 +95,7 @@ void DropletObservationWidget::connect_to_camera()
             auto infoList = cameraList.cameraInfo();
             for (auto& camInfo : infoList)
             {
-                bool live = false;
+                bool live = true;
                 auto* subWindow = new SubWindow(camInfo);
                 auto mdiCount = ui->mdiArea->subWindowList().size();
                 int numCams = 1;
@@ -117,6 +119,13 @@ void DropletObservationWidget::connect_to_camera()
     }
 
 
+}
+
+void DropletObservationWidget::set_settings()
+{
+    int newFPS{0};
+    is_SetFrameRate(mCamera, 13.0, &newFPS);
+    qDebug() << QString("The framerate was set as %1").arg(newFPS);
 }
 
 
