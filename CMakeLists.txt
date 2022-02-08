@@ -86,6 +86,26 @@ set(RESOURCES
     bjprinter.rc
 )
 
+set(CAMERA_SOURCES
+    src/camera/camera.cpp
+    src/camera/camera.h
+    src/camera/display.cpp
+    src/camera/display.h
+    src/camera/eventthread.cpp
+    src/camera/eventthread.h
+    src/camera/graphicsscene.cpp
+    src/camera/graphicsscene.h
+    src/camera/graphicsview.cpp
+    src/camera/graphicsview.h
+    src/camera/property_class.h
+    src/camera/queyeimage.cpp
+    src/camera/queyeimage.h
+    src/camera/subwindow.cpp
+    src/camera/subwindow.h
+    src/camera/utils.cpp
+    src/camera/utils.h
+)
+
 source_group("00 - Source Files" REGULAR_EXPRESSION "^.*\.(cpp)$")
 source_group("01 - Header Files" REGULAR_EXPRESSION "^.*\.(h|hpp)$")
 source_group("04 - Forms" REGULAR_EXPRESSION ".*\.ui")
@@ -107,6 +127,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${SOURCES}
         ${FORMS}
         ${RESOURCES}
+        ${CAMERA_SOURCES}
     )
 else()
     add_executable(${EXE_NAME} ${GUI_TYPE}
@@ -114,6 +135,7 @@ else()
         ${SOURCES}
         ${FORMS}
         ${RESOURCES}
+        ${CAMERA_SOURCES}
     )
 endif()
 
@@ -143,6 +165,7 @@ target_include_directories(${EXE_NAME} PUBLIC
     src
     src/widgets
     src/ui
+    src/camera
     )
 
 set_target_properties(${EXE_NAME} PROPERTIES

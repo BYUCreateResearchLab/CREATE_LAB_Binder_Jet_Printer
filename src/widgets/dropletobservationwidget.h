@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "printerwidget.h"
+#include <QMdiArea>
 
 namespace Ui {
 class DropletObservationWidget;
