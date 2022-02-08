@@ -78,7 +78,7 @@ void DropletObservationWidget::connect_to_camera()
                 if (live)
                 {
                     subWindow->camera()->captureVideo(false);
-                    mCamera = subWindow->camera->handle();
+                    mCamera = subWindow->camera()->handle();
                 }
 
                 if (numCams == 1)
@@ -123,7 +123,7 @@ void DropletObservationWidget::connect_to_camera()
 
 void DropletObservationWidget::set_settings()
 {
-    int newFPS{0};
+    double newFPS{0};
     is_SetFrameRate(mCamera, 13.0, &newFPS);
     qDebug() << QString("The framerate was set as %1").arg(newFPS);
 }

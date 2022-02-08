@@ -4,8 +4,7 @@
 #include <QWidget>
 #include "printerwidget.h"
 #include <QMdiArea>
-
-class HIDS;
+#include <ueye.h>
 
 namespace Ui {
 class DropletObservationWidget;
@@ -26,7 +25,7 @@ private slots:
 
 private:
     Ui::DropletObservationWidget *ui;
-    HIDS *mCamera{nullptr};
+    HIDS mCamera{0};
 };
 
 #endif // DROPLETOBSERVATIONWIDGET_H
