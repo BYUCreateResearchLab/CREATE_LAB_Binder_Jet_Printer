@@ -65,7 +65,7 @@ void DropletObservationWidget::connect_to_camera()
         for (auto& camInfo : infoList)
         {
 
-            bool live = false;
+            bool live = true;
             auto* subWindow = new SubWindow(camInfo);
             auto mdiCount = ui->mdiArea->subWindowList().size();
             int numCams = 1;
