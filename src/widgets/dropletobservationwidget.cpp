@@ -2,40 +2,7 @@
 #include "ui_dropletobservationwidget.h"
 
 #include "ueye.h"
-
-#include "camera.h"
-#include "display.h"
-#include <QDialog>
-#include <QMainWindow>
-#include <QtGlobal>
-#include <QPushButton>
-#include <QCheckBox>
-#include <QLabel>
-#include <QFileDialog>
-#include <QMessageBox>
-#include <QImage>
-#include <QPixmap>
-#include <QString>
-#include <QColor>
-#include <QPainter>
-#include <QRadioButton>
-#include <QGroupBox>
-#include <QSize>
-#include <QPoint>
-#include <QLayout>
-#include <QThread>
-#include <QMutex>
-#include <QUrl>
-#include <QCloseEvent>
-#include <QTimerEvent>
-#include <QWidget>
-#include <QProgressBar>
-#include <QTimer>
-#include <QTime>
-#include <QTranslator>
-#include <QActionGroup>
-#include <QMenu>
-#include <QStatusBar>
+#include "subwindow.h"
 
 #include <QDebug>
 
@@ -87,7 +54,7 @@ void DropletObservationWidget::connect_to_camera()
        */
         }
     }
-    /*
+
     // get the commandline start ID
     auto camList = GetCameraList();
     auto info = camList[0];

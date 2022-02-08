@@ -15,6 +15,10 @@ using Set = std::function<int(const QVariant&)>;
 using Range = std::function<int(QVariant&,QVariant&,QVariant&)>;
 };
 
+// THIS IS GREAT... haha. comes from windef.h or something. Probably from the jetserver snippet.
+#define NOMINMAX
+#undef max
+#undef min
 
 class Property : public QObject
 {
