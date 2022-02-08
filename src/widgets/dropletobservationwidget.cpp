@@ -123,8 +123,13 @@ void DropletObservationWidget::connect_to_camera()
 
 void DropletObservationWidget::set_settings()
 {
+    double fps{2};
+    double exposure_milliseconds{500};
     double newFPS{0};
+    // set framerate
     is_SetFrameRate(mCamera, 13.0, &newFPS);
+    // set exposure
+    is_Exposure(mCamera, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure_milliseconds, sizeof(exposure_milliseconds));
     qDebug() << QString("The framerate was set as %1").arg(newFPS);
 }
 
