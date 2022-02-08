@@ -104,15 +104,17 @@ set(CAMERA_SOURCES
     src/camera/subwindow.h
     src/camera/utils.cpp
     src/camera/utils.h
+    src/camera/cameralist.cpp
+    src/camera/cameralist.h
 )
 
-source_group("00 - Source Files" REGULAR_EXPRESSION "^.*\.(cpp)$")
-source_group("01 - Header Files" REGULAR_EXPRESSION "^.*\.(h|hpp)$")
-source_group("04 - Forms" REGULAR_EXPRESSION ".*\.ui")
-source_group("03 - Printer Widgets/2 - Source" REGULAR_EXPRESSION "widget.*\.cpp")
-source_group("03 - Printer Widgets/1 - Header" REGULAR_EXPRESSION "widget.*\.h")
-source_group("03 - Printer Widgets/3 - Forms" REGULAR_EXPRESSION "widget.*\.ui")
-source_group("05 - Resources" REGULAR_EXPRESSION "^.*\.(rc|qrc)$")
+source_group("1 - Header Files" REGULAR_EXPRESSION "^.*\.(h|hpp)$")
+source_group("2 - Source Files" REGULAR_EXPRESSION "^.*\.(cpp)$")
+source_group("3 - UI Forms" REGULAR_EXPRESSION ".*\.ui")
+source_group("2 - Source Files/Printer Widgets" REGULAR_EXPRESSION "widget.*\.cpp")
+source_group("1 - Header Files/Printer Widgets" REGULAR_EXPRESSION "widget.*\.h")
+source_group("3 - UI Forms/Printer Widgets" REGULAR_EXPRESSION "widget.*\.ui")
+source_group("4 - Resources" REGULAR_EXPRESSION "^.*\.(rc|qrc)$")
 
 set(EXE_NAME ${PROJECT_NAME})
 

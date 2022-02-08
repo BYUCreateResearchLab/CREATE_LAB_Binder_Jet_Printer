@@ -44,21 +44,21 @@ public:
     // Methods
 
     // Getters
-    vec2d getP1(){return p1;};
-    vec2d getP2(){return p2;};
-    double getVelocity(){return velocity;};
-    double getAcceleration(){return acceleration;};
-    double getDeceleration(){return deceleration;};
-    double getDropletSpacing(){return dropletSpacing;};
+    vec2d getP1(){return p1;}
+    vec2d getP2(){return p2;}
+    double getVelocity(){return velocity;}
+    double getAcceleration(){return acceleration;}
+    double getDeceleration(){return deceleration;}
+    double getDropletSpacing(){return dropletSpacing;}
     double getJettingFrequency();
 
     // Setters
-    void setP1(vec2d arg1){p1 = arg1;};
-    void setP2(vec2d arg1){p2 = arg1;};
-    void setVelocity(double arg1){velocity = arg1;};
-    void setAcceleration(double arg1){acceleration = arg1;};
-    void setDeceleration(double arg1){deceleration = arg1;};
-    void setDropletSpacing(double arg1){dropletSpacing = arg1;};
+    void setP1(vec2d arg1){p1 = arg1;}
+    void setP2(vec2d arg1){p2 = arg1;}
+    void setVelocity(double arg1){velocity = arg1;}
+    void setAcceleration(double arg1){acceleration = arg1;}
+    void setDeceleration(double arg1){deceleration = arg1;}
+    void setDropletSpacing(double arg1){dropletSpacing = arg1;}
     void setJettingFrequency(double freq);
 
     double length();

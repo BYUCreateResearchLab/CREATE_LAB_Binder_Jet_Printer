@@ -3,6 +3,7 @@
 
 #include "ueye.h"
 #include "subwindow.h"
+#include "cameralist.h"
 
 #include <QDebug>
 
@@ -24,12 +25,13 @@ void DropletObservationWidget::allow_widget_input(bool allowed)
 
 void DropletObservationWidget::connect_to_camera()
 {
-    int numCameras{-1}; 
-    is_GetNumberOfCameras(&numCameras); // get the number of connected cameras
+    //int numCameras{-1};
+    //is_GetNumberOfCameras(&numCameras); // get the number of connected cameras
     //UEYE_CAMERA_LIST cameraList;
     //cameraList.dwCount = numCameras; // tell the list how many cameras are connected
-    qDebug() << QString("There are %1 cameras currently connected").arg(numCameras);
+    //qDebug() << QString("There are %1 cameras currently connected").arg(numCameras);
 
+    /*
     HIDS hCam = 0; //Open the first available camera
     int nRet = is_InitCamera(&hCam, NULL);
 
@@ -41,59 +43,80 @@ void DropletObservationWidget::connect_to_camera()
             //Calculate time needed for updating the starter firmware
             int nTime;
             is_GetDuration (hCam, IS_SE_STARTER_FW_UPLOAD, &nTime);
-            /*
        e.g. have progress bar displayed in separate thread
-      */
 
             //Upload new starter firmware during initialization
             hCam = hCam | IS_ALLOW_STARTER_FW_UPLOAD;
             nRet = is_InitCamera(&hCam, NULL);
 
-            /*
         end progress bar
-       */
         }
-    }
-
-    // get the commandline start ID
-    auto camList = GetCameraList();
-    auto info = camList[0];
-    bool live{true};
-
-
-    auto *subWindow = new SubWindow(info);
-    auto mdiCount = ui->mdiArea->subWindowList().size();
-    int numCams = 1;
-
-    // huge lambda expression to run when the cameraOpenFinished signal is sent
-    connect(subWindow, &SubWindow::cameraOpenFinished, this, [this, live, subWindow, numCams, mdiCount]() {
-        bool maximized = true;
-
-        ui->mdiArea->addSubWindow(subWindow);
-
-        if (live)
-        {
-            subWindow->camera()->captureVideo(false);
-        }
-
-        if (numCams == 1)
-        {
-            subWindow->showMaximized();
-        }
-        else if(mdiCount == 0 || maximized)
-        {
-            subWindow->showMaximized();
-        }
-
-    });
-
-    /*
-    if (actionProperties->isChecked())
-    {
-        connect(m_pPropertiesDlg, &Properties::markHotpixel, subWindow, &SubWindow::setMarkHotpixel);
-        connect(m_pPropertiesDlg, &Properties::focusAOIChanged, subWindow, &SubWindow::setFocusAOI);
     }
     */
+
+    CameraList cameraList;
+
+    if(cameraList.isSingleCamOpenable())
+    {
+        cameraList.selectAll();
+        cameraList.accept();
+
+        auto infoList = cameraList.cameraInfo();
+        for (auto& camInfo : infoList)
+        {
+
+            bool live = false;
+            auto* subWindow = new SubWindow(camInfo);
+            auto mdiCount = ui->mdiArea->subWindowList().size();
+            int numCams = 1;
+
+            connect(subWindow, &SubWindow::cameraOpenFinished, this, [this, live, subWindow, numCams, mdiCount]() {
+
+                ui->mdiArea->addSubWindow(subWindow);
+
+                if (live)
+                {
+                    subWindow->camera()->captureVideo(false);
+                }
+
+                if (numCams == 1)
+                {
+                    subWindow->showMaximized();
+                }
+            });
+        }
+    }
+    else
+    {
+        if (cameraList.exec() == QDialog::Accepted)
+        {
+            auto infoList = cameraList.cameraInfo();
+            for (auto& camInfo : infoList)
+            {
+                bool live = false;
+                auto* subWindow = new SubWindow(camInfo);
+                auto mdiCount = ui->mdiArea->subWindowList().size();
+                int numCams = 1;
+
+                connect(subWindow, &SubWindow::cameraOpenFinished, this, [this, live, subWindow, numCams, mdiCount]() {
+
+                    ui->mdiArea->addSubWindow(subWindow);
+
+                    if (live)
+                    {
+                        subWindow->camera()->captureVideo(false);
+                    }
+
+                    if (numCams == 1)
+                    {
+                        subWindow->showMaximized();
+                    }
+                });
+            }
+        }
+    }
+
+
 }
 
 
