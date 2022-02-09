@@ -6,6 +6,8 @@
 #include <QMdiArea>
 #include <ueye.h>
 
+class Camera;
+
 namespace Ui {
 class DropletObservationWidget;
 }
@@ -22,10 +24,12 @@ public:
 private slots:
     void connect_to_camera();
     void set_settings();
+    void capture_video();
 
 private:
     Ui::DropletObservationWidget *ui;
-    HIDS mCamera{0};
+    HIDS mCameraHandle{0};
+    Camera *mCamera{nullptr};
 };
 
 #endif // DROPLETOBSERVATIONWIDGET_H

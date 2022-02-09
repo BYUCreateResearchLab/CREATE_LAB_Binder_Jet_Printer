@@ -2,6 +2,7 @@
 #include "ui_dropletobservationwidget.h"
 
 #include "ueye.h"
+#include "ueye_tools.h"
 #include "subwindow.h"
 #include "cameralist.h"
 
@@ -12,6 +13,7 @@ DropletObservationWidget::DropletObservationWidget(QWidget *parent) : PrinterWid
     ui->setupUi(this);
     connect(ui->connect, &QPushButton::clicked, this, &DropletObservationWidget::connect_to_camera);
     connect(ui->setSettings, &QPushButton::clicked, this, &DropletObservationWidget::set_settings);
+    connect(ui->takeVideo, &QPushButton::clicked, this, &DropletObservationWidget::capture_video);
 }
 
 DropletObservationWidget::~DropletObservationWidget()
@@ -78,7 +80,8 @@ void DropletObservationWidget::connect_to_camera()
                 if (live)
                 {
                     subWindow->camera()->captureVideo(false);
-                    mCamera = subWindow->camera()->handle();
+                    mCameraHandle = subWindow->camera()->handle();
+                    mCamera = subWindow->camera().get();
                 }
 
                 if (numCams == 1)
@@ -124,13 +127,55 @@ void DropletObservationWidget::connect_to_camera()
 void DropletObservationWidget::set_settings()
 {
     double fps{2};
-    double exposure_milliseconds{500};
+    double exposure_milliseconds{0}; // 0 sets the max possible exposure
     double newFPS{0};
+    double newExposure{-1.0};
     // set framerate
-    is_SetFrameRate(mCamera, 13.0, &newFPS);
+    is_SetFrameRate(mCameraHandle, fps, &newFPS);
     // set exposure
-    is_Exposure(mCamera, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure_milliseconds, sizeof(exposure_milliseconds));
-    qDebug() << QString("The framerate was set as %1").arg(newFPS);
+    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure_milliseconds, sizeof(exposure_milliseconds));
+    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE, &newExposure, sizeof(newExposure));
+    qDebug() << QString("The framerate was set as %1 FPS").arg(newFPS);
+    qDebug() << QString("The exposure was set as %1 milliseconds").arg(newExposure);
+
+
+}
+
+void DropletObservationWidget::capture_video()
+{
+    int aviID{0};
+    isavi_InitAVI(&aviID, mCameraHandle);
+
+    int colorMode{is_SetColorMode(mCameraHandle, IS_GET_COLOR_MODE)};
+    SENSORINFO sensorInfo{};
+
+    is_GetSensorInfo (mCameraHandle, &sensorInfo);
+
+    int sensorWidth = sensorInfo.nMaxWidth;
+    int sensorHeight = sensorInfo.nMaxHeight;
+
+    int posX{0};
+    int posY{0};
+    int lineOffset{0};
+
+    isavi_SetImageSize(aviID, colorMode, sensorWidth, sensorHeight, posX, posY, lineOffset);
+
+    int imageQuality{95}; // 1 is the lowest, 100 is the highest
+    isavi_SetImageQuality (aviID, imageQuality);
+
+    const char* fileName = {"C:\\Users\\ME\\Desktop\\testVid.avi"};
+
+    isavi_OpenAVI(aviID, fileName);
+
+    int videoFrameRate{10};
+
+    isavi_SetFrameRate(aviID, videoFrameRate); // this does not need to be the same as the camera frame rate
+    isavi_StartAVI(aviID);
+    isavi_AddFrame(aviID, mCamera->m_Images[4].pBuf);
+
+    isavi_StopAVI(aviID);
+    isavi_CloseAVI(aviID);
+    isavi_ExitAVI(aviID);
 }
 
 

@@ -304,9 +304,9 @@ std::string CMD::spread_layer(const RecoatSettings &settings)
     s << CMD::motion_complete(Axis::Z);
 
     // jog y-axis to back
-    s << CMD::set_accleration(y, 200);
-    s << CMD::set_deceleration(y, 200);
-    s << CMD::set_jog(y, -40);
+    s << CMD::set_accleration(y, 400);
+    s << CMD::set_deceleration(y, 400);
+    s << CMD::set_jog(y, -50);
     s << CMD::begin_motion(y);
     s << CMD::motion_complete(y);
 
@@ -332,25 +332,25 @@ std::string CMD::spread_layer(const RecoatSettings &settings)
 
     // move y-axis forward
     s << CMD::set_speed(y, settings.recoatSpeed_mm_s);
-    s << CMD::position_relative(y, 115);
+    s << CMD::position_relative(y, 120);
     s << CMD::begin_motion(y);
     s << CMD::motion_complete(y);
 
     // turn off hopper and enable rollers
     s << CMD::disable_hopper();
 
-    // move up to roller
-    s << CMD::set_speed(y, 20);
-    s << CMD::position_relative(y, 32.5); // move up to roller
-    s << CMD::begin_motion(y);
-    s << CMD::motion_complete(y);
+    // move up to roller (NOT NEEDED WITH CURRENT ROLLER PLACEMENT)
+    //s << CMD::set_speed(y, 20);
+    //s << CMD::position_relative(y, 32.5); // move up to roller
+    //s << CMD::begin_motion(y);
+    //s << CMD::motion_complete(y);
 
     s << CMD::enable_roller1();
     s << CMD::enable_roller2();
 
     // move y-axis forward under roller
     s << CMD::set_speed(y, settings.rollerTraverseSpeed_mm_s);
-    s << CMD::position_relative(y, 140);
+    s << CMD::position_relative(y, 135);
     s << CMD::begin_motion(y);
     s << CMD::motion_complete(y);
 

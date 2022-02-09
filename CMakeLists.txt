@@ -160,6 +160,7 @@ target_link_libraries(${EXE_NAME} PUBLIC
     gclib
     gclibo
     ueye_api${PLATFORM_SUFFIX}
+    ueye_tools${PLATFORM_SUFFIX}
     )
 
 target_include_directories(${EXE_NAME} PUBLIC
