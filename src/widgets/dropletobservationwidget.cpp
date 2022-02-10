@@ -126,9 +126,9 @@ void DropletObservationWidget::connect_to_camera()
 
 void DropletObservationWidget::set_settings()
 {
-    double fps{2};
+    double fps{10};
     double exposure_milliseconds{0}; // 0 sets the max possible exposure
-    double newFPS{0};
+    double newFPS{-1.0};
     double newExposure{-1.0};
     // set framerate
     is_SetFrameRate(mCameraHandle, fps, &newFPS);
@@ -143,8 +143,7 @@ void DropletObservationWidget::set_settings()
 
 void DropletObservationWidget::capture_video()
 {
-    int aviID{0};
-    isavi_InitAVI(&aviID, mCameraHandle);
+    isavi_InitAVI(&mAviID, mCameraHandle);
 
     int colorMode{is_SetColorMode(mCameraHandle, IS_GET_COLOR_MODE)};
     SENSORINFO sensorInfo{};
@@ -158,24 +157,54 @@ void DropletObservationWidget::capture_video()
     int posY{0};
     int lineOffset{0};
 
-    isavi_SetImageSize(aviID, colorMode, sensorWidth, sensorHeight, posX, posY, lineOffset);
+    isavi_SetImageSize(mAviID, colorMode, sensorWidth, sensorHeight, posX, posY, lineOffset);
 
     int imageQuality{95}; // 1 is the lowest, 100 is the highest
-    isavi_SetImageQuality (aviID, imageQuality);
+    isavi_SetImageQuality (mAviID, imageQuality);
 
-    const char* fileName = {"C:\\Users\\ME\\Desktop\\testVid.avi"};
+    std::string fileNameString{getenv("USERPROFILE")};
+    fileNameString += "/Desktop/testVid.avi";
+    const char* fileName = fileNameString.c_str();
 
-    isavi_OpenAVI(aviID, fileName);
+    isavi_OpenAVI(mAviID, fileName);
 
     int videoFrameRate{10};
 
-    isavi_SetFrameRate(aviID, videoFrameRate); // this does not need to be the same as the camera frame rate
-    isavi_StartAVI(aviID);
-    isavi_AddFrame(aviID, mCamera->m_Images[4].pBuf);
+    isavi_SetFrameRate(mAviID, videoFrameRate); // this does not need to be the same as the camera frame rate
+    isavi_StartAVI(mAviID);
 
-    isavi_StopAVI(aviID);
-    isavi_CloseAVI(aviID);
-    isavi_ExitAVI(aviID);
+
+    //isavi_AddFrame(mAviID, mCamera->m_Images[4].pBuf);
+    // connect to the camera signal such that when a new frame is added, the frame is sent to isavi_AddFrame();
+
+    // once the desired number of frames have been captured, break the link and stop the video
+
+    // NOT THIS ONE...
+    //connect(this, SELECT<>::OVERLOAD_OF(&Camera::frameReceived), this, &Camera::processCurrentImageInMemory, Qt::DirectConnection);
+    // THIS ONE?
+
+    // when a frame is added to the camera, add it to the avi file
+    connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived), this, &DropletObservationWidget::add_frame_to_avi, Qt::DirectConnection);
+
+}
+
+void DropletObservationWidget::add_frame_to_avi(ImageBufferPtr buffer)
+{
+    isavi_AddFrame(mAviID, reinterpret_cast<char*>(buffer->data()));
+    mNumCapturedFrames++;
+    if (mNumCapturedFrames == mNumFramesToCapture)
+    {
+        // don't add any more frames
+        disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived), this, &DropletObservationWidget::add_frame_to_avi);
+        stop_avi_capture();
+    }
+}
+
+void DropletObservationWidget::stop_avi_capture()
+{
+    isavi_StopAVI(mAviID);
+    isavi_CloseAVI(mAviID);
+    isavi_ExitAVI(mAviID);
 }
 
 
