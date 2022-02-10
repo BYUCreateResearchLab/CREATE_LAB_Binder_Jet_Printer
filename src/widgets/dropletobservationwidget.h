@@ -22,6 +22,9 @@ public:
     ~DropletObservationWidget();
     void allow_widget_input(bool allowed) override;
 
+signals:
+    void video_capture_complete();
+
 private slots:
     void connect_to_camera();
     void set_settings();

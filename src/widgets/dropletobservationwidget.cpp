@@ -14,6 +14,7 @@ DropletObservationWidget::DropletObservationWidget(QWidget *parent) : PrinterWid
     connect(ui->connect, &QPushButton::clicked, this, &DropletObservationWidget::connect_to_camera);
     connect(ui->setSettings, &QPushButton::clicked, this, &DropletObservationWidget::set_settings);
     connect(ui->takeVideo, &QPushButton::clicked, this, &DropletObservationWidget::capture_video);
+    connect(this, &DropletObservationWidget::video_capture_complete, this, &DropletObservationWidget::stop_avi_capture);
 }
 
 DropletObservationWidget::~DropletObservationWidget()
@@ -23,7 +24,9 @@ DropletObservationWidget::~DropletObservationWidget()
 
 void DropletObservationWidget::allow_widget_input(bool allowed)
 {
-
+    ui->takeVideo->setEnabled(allowed);
+    ui->connect->setEnabled(allowed);
+    ui->setSettings->setEnabled(allowed);
 }
 
 void DropletObservationWidget::connect_to_camera()
@@ -185,7 +188,7 @@ void DropletObservationWidget::capture_video()
 
     // when a frame is added to the camera, add it to the avi file
     connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived), this, &DropletObservationWidget::add_frame_to_avi, Qt::DirectConnection);
-
+    allow_widget_input(false);
 }
 
 void DropletObservationWidget::add_frame_to_avi(ImageBufferPtr buffer)
@@ -196,15 +199,21 @@ void DropletObservationWidget::add_frame_to_avi(ImageBufferPtr buffer)
     {
         // don't add any more frames
         disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived), this, &DropletObservationWidget::add_frame_to_avi);
-        stop_avi_capture();
+        emit video_capture_complete();
+        unsigned long nLostFrames{777};
+        isavi_GetnLostFrames(mAviID, &nLostFrames);
+        qDebug() << nLostFrames << " frames were dropped during video capture";
     }
 }
 
 void DropletObservationWidget::stop_avi_capture()
 {
+    mNumCapturedFrames = 0;
     isavi_StopAVI(mAviID);
     isavi_CloseAVI(mAviID);
     isavi_ExitAVI(mAviID);
+    this->allow_widget_input(true);
+
 }
 
 
