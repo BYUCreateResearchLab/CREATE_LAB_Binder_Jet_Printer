@@ -39,10 +39,19 @@ void PowderSetupWidget::level_recoat_clicked()
     levelRecoat.layerHeight_microns = ui->layerHeightSpinBox->value();
     levelRecoat.waitAfterHopperOn_millisecs = ui->hopperDwellTimeMsSpinBox->value();
 
+    s << CMD::display_message("starting level recoat...");
     for(int i{0}; i < numLayers; ++i)
     {
+        std::string message{"spreading layer "};
+        message += std::to_string(i+1);
+        message += " of ";
+        message += std::to_string(numLayers);
+        message += "...";
+        s << CMD::display_message(message);
         s << CMD::spread_layer(levelRecoat);
     }
+    s << CMD::display_message("powder spreading complete");
+    s << CMD::display_message("");
 
     emit execute_command(s);
     emit generate_printing_message_box("Level recoat is in progress.");
@@ -62,10 +71,19 @@ void PowderSetupWidget::normal_recoat_clicked()
     layerRecoat.layerHeight_microns = ui->layerHeightSpinBox->value();
     layerRecoat.waitAfterHopperOn_millisecs = ui->hopperDwellTimeMsSpinBox->value();
 
+    s << CMD::display_message("starting normal recoat...");
     for(int i{0}; i < numLayers; ++i)
     {
+        std::string message{"spreading layer "};
+        message += std::to_string(i+1);
+        message += " of ";
+        message += std::to_string(numLayers);
+        message += "...";
+        s << CMD::display_message(message);
         s << CMD::spread_layer(layerRecoat);
     }
+    s << CMD::display_message("powder spreading complete");
+    s << CMD::display_message("");
 
     emit execute_command(s);
     emit generate_printing_message_box("Normal recoat is in progress.");

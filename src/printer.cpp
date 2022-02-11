@@ -79,6 +79,11 @@ std::string CMD::detail::GSleep()
     return {"GSleep,"};
 }
 
+std::string CMD::detail::Message()
+{
+    return {"Message,"};
+}
+
 // The Acceleration command (AC) sets the linear acceleration
 // of the motors for independent moves, such as PR, PA, and JG moves.
 // The parameters will be rounded down to the nearest factor of 1024
@@ -287,6 +292,13 @@ std::string CMD::disable_hopper()
 std::string CMD::disable_forward_software_limit(Axis axis)
 {
     return {create_gcmd("FL", axis, 2147483647)};
+}
+
+// this command does not support newlines or commas right now...
+// either will cause the print to fail...
+std::string CMD::display_message(const std::string &message)
+{
+    return {Message() + message + "\n"};
 }
 
 std::string CMD::spread_layer(const RecoatSettings &settings)

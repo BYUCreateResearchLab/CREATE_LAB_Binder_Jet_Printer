@@ -12,6 +12,7 @@
 #include <thread>
 
 #include <QMessageBox>
+#include <QProgressDialog>
 #include <QDebug>
 
 #include "gclib.h"
@@ -601,6 +602,11 @@ void MainWindow::on_actionShow_Hide_Console_triggered()
 
 void MainWindow::generate_printing_message_box(const std::string &message)
 {
+    // This could be a way to do this in the future...
+    //QProgressDialog *progressDialog = new QProgressDialog(this);
+    //progressDialog->setLabelText("testing");
+    //progressDialog->open();
+
     QMessageBox msgBox;
     msgBox.setText(QString::fromStdString(message));
     msgBox.setInformativeText("Click cancel to stop");
@@ -630,16 +636,16 @@ void MainWindow::start_jetting()
 {
     int port{9};
     gjets1.fFrequency = 1000L;
-    SendCommand(port, MFJDRV_FREQUENCY, 0.1);
+    SendCommand(port, MFJDRV_FREQUENCY, 0.1f);
 
     gjets1.fMode = 1;
-    SendCommand(port, MFJDRV_CONTMODE, 0.1);
+    SendCommand(port, MFJDRV_CONTMODE, 0.1f);
 
     gjets1.fSource = 0;               // set internal trigger
-    SendCommand(port, MFJDRV_SOURCE, 0.1); // set trigger source
+    SendCommand(port, MFJDRV_SOURCE, 0.1f); // set trigger source
 
     // Start Jetting
-    SendCommand(port, MFJDRV_SOFTTRIGGER, .1); // This command turns on continuous jetting if the trigger source is set to internal
+    SendCommand(port, MFJDRV_SOFTTRIGGER, .1f); // This command turns on continuous jetting if the trigger source is set to internal
 }
 
 void MainWindow::stop_jetting()

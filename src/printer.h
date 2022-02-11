@@ -103,6 +103,8 @@ std::string disable_hopper();
 
 std::string disable_forward_software_limit(Axis axis);
 
+std::string display_message(const std::string &message);
+
 namespace detail
 {
 std::string axis_string(Axis axis);
@@ -117,6 +119,7 @@ std::string GCmd();
 std::string GMotionComplete();
 std::string JetDrive();
 std::string GSleep();
+std::string Message();
 }
 
 }

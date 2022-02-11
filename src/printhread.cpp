@@ -114,7 +114,7 @@ void PrintThread::run()
 
                 if(commandType == "GCmd")
                 {
-                    emit response(QString::fromStdString(commandString));
+                    //emit response(QString::fromStdString(commandString));
                     if(mPrinter->g)
                     {
                         e(GCmd(mPrinter->g, commandString.c_str()));
@@ -125,7 +125,7 @@ void PrintThread::run()
                 }
                 else if(commandType == "GMotionComplete")
                 {
-                    emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
+                    //emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
                     if(mPrinter->g)
                     {
                         e(GMotionComplete(mPrinter->g, commandString.c_str()));
@@ -136,7 +136,7 @@ void PrintThread::run()
                 }
                 else if(commandType == "GSleep")
                 {
-                    emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
+                    //emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
                     if(mPrinter->g)
                     {
                         GSleep(std::stoi(commandString));
@@ -162,6 +162,10 @@ void PrintThread::run()
                         emit connected_to_controller();
                     }
                 }
+                else if (commandType == "Message")
+                {
+                    emit response(QString::fromStdString(commandString));
+                }
                 else
                 {
                     emit response(QString::fromStdString("Command Not Found!: \"") + QString::fromStdString(commandType) + QString::fromStdString("\"\nStopping Print..."));
@@ -175,7 +179,7 @@ void PrintThread::run()
                 if(mQueue.size() == 0)
                 {
                     // code to run when the queue completes normally
-                    emit response("Finished Queue\n");
+                    //emit response("Finished Queue\n");
                 }
 
 
