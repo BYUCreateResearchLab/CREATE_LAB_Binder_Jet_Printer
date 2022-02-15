@@ -48,6 +48,7 @@ set(HEADERS
     src/widgets/printerwidget.h
     src/widgets/powdersetupwidget.h
     src/widgets/jettingwidget.h
+    src/widgets/lineprintwidget.h
     src/widgets/highspeedlinewidget.h
     src/widgets/dropletobservationwidget.h
 )

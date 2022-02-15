@@ -5,6 +5,7 @@
 #include "ueye_tools.h"
 #include "subwindow.h"
 #include "cameralist.h"
+#include "printer.h"
 
 #include <QDebug>
 
@@ -16,6 +17,7 @@ DropletObservationWidget::DropletObservationWidget(QWidget *parent) : PrinterWid
     connect(ui->connectButton, &QPushButton::clicked, this, &DropletObservationWidget::connect_to_camera);
     connect(ui->takeVideoButton, &QPushButton::clicked, this, &DropletObservationWidget::capture_video);
     connect(this, &DropletObservationWidget::video_capture_complete, this, &DropletObservationWidget::stop_avi_capture);
+    connect(ui->moveToCameraButton, &QPushButton::clicked, this, &DropletObservationWidget::move_to_jetting_window);
 }
 
 DropletObservationWidget::~DropletObservationWidget()
@@ -32,44 +34,50 @@ void DropletObservationWidget::allow_widget_input(bool allowed)
 
 void DropletObservationWidget::connect_to_camera()
 {
-
-    CameraList cameraList;
-
-    if(cameraList.isSingleCamOpenable())
+    if(mCameraIsConnected)
     {
-        cameraList.selectAll();
-        cameraList.accept();
+        ui->mdiArea->activeSubWindow()->close();
+    }
+    else
+    {
+        CameraList cameraList;
 
-        auto infoList = cameraList.cameraInfo();
-        for (auto &camInfo : infoList)
+        if(cameraList.isSingleCamOpenable())
         {
-            bool live = true;
-            auto *subWindow = new SubWindow(camInfo);
-            int numCams = 1;
+            cameraList.selectAll();
+            cameraList.accept();
 
-            connect(subWindow, &SubWindow::cameraOpenFinished, this, [this, live, subWindow, numCams]() {
+            auto infoList = cameraList.cameraInfo();
+            for (auto &camInfo : infoList)
+            {
+                bool live = true;
+                auto *subWindow = new SubWindow(camInfo);
+                int numCams = 1;
 
-                ui->mdiArea->addSubWindow(subWindow);
+                connect(subWindow, &SubWindow::cameraOpenFinished, this, [this, live, subWindow, numCams]() {
 
-                if (live)
-                {
-                    subWindow->camera()->captureVideo(false);
-                    mCameraHandle = subWindow->camera()->handle();
-                    mCamera = subWindow->camera().get();
-                }
+                    ui->mdiArea->addSubWindow(subWindow);
 
-                if (numCams == 1)
-                {
-                    subWindow->showMaximized();
-                }
+                    if (live)
+                    {
+                        subWindow->camera()->captureVideo(false);
+                        mCameraHandle = subWindow->camera()->handle();
+                        mCamera = subWindow->camera().get();
+                    }
 
-                this->set_settings();
-                this->ui->takeVideoButton->setEnabled(true);
-                ui->connectButton->setText("Disconnect Camera");
-                mCameraIsConnected = true;
+                    if (numCams == 1)
+                    {
+                        subWindow->showMaximized();
+                    }
 
-                connect(subWindow, &QWidget::destroyed, this, &DropletObservationWidget::camera_closed);
-            });
+                    this->set_settings();
+                    this->ui->takeVideoButton->setEnabled(true);
+                    ui->connectButton->setText("Disconnect Camera");
+                    mCameraIsConnected = true;
+
+                    connect(subWindow, &QWidget::destroyed, this, &DropletObservationWidget::camera_closed);
+                });
+            }
         }
     }
 }
@@ -77,6 +85,8 @@ void DropletObservationWidget::connect_to_camera()
 void DropletObservationWidget::camera_closed()
 {
     ui->connectButton->setText("Connect Camera");
+    ui->takeVideoButton->setEnabled(false);
+    ui->SaveVideoButton->setEnabled(false);
     mCameraIsConnected = false;
     mVideoHasBeenTaken = false;
 }
@@ -171,4 +181,17 @@ void DropletObservationWidget::stop_avi_capture()
     this->ui->SaveVideoButton->setEnabled(true);
 }
 
+void DropletObservationWidget::move_to_jetting_window()
+{
+    std::stringstream s;
+    s << CMD::set_jog(Axis::X, 50);
+    s << CMD::set_accleration(Axis::X, 800);
+    s << CMD::set_deceleration(Axis::X, 800);
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::display_message("Moving to jetting window");
+    s << CMD::motion_complete(Axis::X);
+
+    emit execute_command(s);
+    emit disable_user_input();
+}
 

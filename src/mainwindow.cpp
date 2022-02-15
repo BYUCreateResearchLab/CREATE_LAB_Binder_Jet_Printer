@@ -94,6 +94,7 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
 
        connect(printerWidgets[i], &PrinterWidget::execute_command, mPrintThread, &PrintThread::execute_command); // connect "execute_command" signal on powder window to execute on thread
        connect(printerWidgets[i], &PrinterWidget::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
+       connect(printerWidgets[i], &PrinterWidget::disable_user_input, this, [this]() {this->allow_user_input(false);});
     }
 
     // connect jog buttons

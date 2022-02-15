@@ -32,6 +32,7 @@ private slots:
     void add_frame_to_avi(ImageBufferPtr buffer);
     void stop_avi_capture();
     void camera_closed();
+    void move_to_jetting_window();
 
 private:
     Ui::DropletObservationWidget *ui;
