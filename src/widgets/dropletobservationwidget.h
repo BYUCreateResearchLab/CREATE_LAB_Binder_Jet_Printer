@@ -31,6 +31,7 @@ private slots:
     void capture_video();
     void add_frame_to_avi(ImageBufferPtr buffer);
     void stop_avi_capture();
+    void camera_closed();
 
 private:
     Ui::DropletObservationWidget *ui;
@@ -39,6 +40,9 @@ private:
     int mNumCapturedFrames{0};
     int mNumFramesToCapture{10};
     int mAviID{0};
+
+    bool mCameraIsConnected{false};
+    bool mVideoHasBeenTaken{false};
 };
 
 #endif // DROPLETOBSERVATIONWIDGET_H

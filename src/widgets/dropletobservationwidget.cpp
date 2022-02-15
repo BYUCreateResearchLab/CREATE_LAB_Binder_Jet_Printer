@@ -11,8 +11,10 @@
 DropletObservationWidget::DropletObservationWidget(QWidget *parent) : PrinterWidget(parent), ui(new Ui::DropletObservationWidget)
 {
     ui->setupUi(this);
-    connect(ui->connect, &QPushButton::clicked, this, &DropletObservationWidget::connect_to_camera);
-    connect(ui->takeVideo, &QPushButton::clicked, this, &DropletObservationWidget::capture_video);
+    ui->takeVideoButton->setEnabled(false);
+    ui->SaveVideoButton->setEnabled(false);
+    connect(ui->connectButton, &QPushButton::clicked, this, &DropletObservationWidget::connect_to_camera);
+    connect(ui->takeVideoButton, &QPushButton::clicked, this, &DropletObservationWidget::capture_video);
     connect(this, &DropletObservationWidget::video_capture_complete, this, &DropletObservationWidget::stop_avi_capture);
 }
 
@@ -24,6 +26,8 @@ DropletObservationWidget::~DropletObservationWidget()
 void DropletObservationWidget::allow_widget_input(bool allowed)
 {
     ui->frame->setEnabled(allowed);
+    //ui->moveToCameraButton->setEnabled(allowed);
+    //ui->TriggerJetButton->setEnabled(allowed);
 }
 
 void DropletObservationWidget::connect_to_camera()
@@ -37,15 +41,13 @@ void DropletObservationWidget::connect_to_camera()
         cameraList.accept();
 
         auto infoList = cameraList.cameraInfo();
-        for (auto& camInfo : infoList)
+        for (auto &camInfo : infoList)
         {
-
             bool live = true;
-            auto* subWindow = new SubWindow(camInfo);
-            auto mdiCount = ui->mdiArea->subWindowList().size();
+            auto *subWindow = new SubWindow(camInfo);
             int numCams = 1;
 
-            connect(subWindow, &SubWindow::cameraOpenFinished, this, [this, live, subWindow, numCams, mdiCount]() {
+            connect(subWindow, &SubWindow::cameraOpenFinished, this, [this, live, subWindow, numCams]() {
 
                 ui->mdiArea->addSubWindow(subWindow);
 
@@ -62,11 +64,21 @@ void DropletObservationWidget::connect_to_camera()
                 }
 
                 this->set_settings();
+                this->ui->takeVideoButton->setEnabled(true);
+                ui->connectButton->setText("Disconnect Camera");
+                mCameraIsConnected = true;
+
+                connect(subWindow, &QWidget::destroyed, this, &DropletObservationWidget::camera_closed);
             });
         }
     }
+}
 
-
+void DropletObservationWidget::camera_closed()
+{
+    ui->connectButton->setText("Connect Camera");
+    mCameraIsConnected = false;
+    mVideoHasBeenTaken = false;
 }
 
 void DropletObservationWidget::set_settings()
@@ -155,7 +167,8 @@ void DropletObservationWidget::stop_avi_capture()
     isavi_CloseAVI(mAviID);
     isavi_ExitAVI(mAviID);
     this->allow_widget_input(true);
-
+    this->mVideoHasBeenTaken = true;
+    this->ui->SaveVideoButton->setEnabled(true);
 }
 
 
