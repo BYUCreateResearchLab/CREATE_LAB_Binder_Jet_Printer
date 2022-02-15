@@ -27,6 +27,7 @@ public:
 public slots:
     void execute_command(std::stringstream &ss);
     void stop();
+    void print_gcmds(bool print);
 
 private:
     void run() override;
@@ -46,6 +47,8 @@ private:
     QWaitCondition mCond;
     bool mQuit{false};
     bool mRunning{true};
+
+    bool mPrintGCmds{false};
 };
 
 #endif // PRINTHREAD_H

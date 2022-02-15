@@ -12,6 +12,7 @@ class PowderSetupWidget;
 class JettingWidget;
 class HighSpeedLineWidget;
 class DropletObservationWidget;
+class JetDrive;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -63,6 +64,7 @@ private:
 
     Printer *mPrinter{nullptr};
     PrintThread *mPrintThread{nullptr};
+    JetDrive *mJetDrive{nullptr};
     LinePrintWidget *mLinePrintingWidget{nullptr};
     QDockWidget *mDockWidget{nullptr};
     OutputWindow *mOutputWindow{nullptr};

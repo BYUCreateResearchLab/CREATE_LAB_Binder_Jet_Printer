@@ -29,10 +29,17 @@ void PrintThread::stop()
     mMutex.unlock();
 }
 
+void PrintThread::print_gcmds(bool print)
+{
+    mMutex.lock();
+    mPrintGCmds = print;
+    mMutex.unlock();
+}
+
 void PrintThread::execute_command(std::stringstream &ss)
 {
     const QMutexLocker locker(&mMutex);
-    if(mQueue.size() != 0) // if the queue is not empty
+    if (mQueue.size() != 0) // if the queue is not empty
     {
         emit error("command queue was not empty when new commands were attempted");
     }
@@ -43,7 +50,7 @@ void PrintThread::execute_command(std::stringstream &ss)
 
         std::string buffer;
         //while(ss >> buffer) // spaces split into different objects
-        while(std::getline(ss, buffer)) // Reads whole line (includes spaces)
+        while (std::getline(ss, buffer)) // Reads whole line (includes spaces)
         {
             //buffer.erase(std::remove(buffer.begin(), buffer.end(), '\n'), buffer.end());
             mQueue.push(buffer);
@@ -63,7 +70,7 @@ void PrintThread::execute_command(std::stringstream &ss)
 void PrintThread::clear_queue()
 {
     mMutex.lock();
-    while(mQueue.size() > 0)
+    while (mQueue.size() > 0)
     {
         mQueue.pop();
     }
@@ -75,14 +82,14 @@ void PrintThread::run()
     while (!mQuit)
     {
 
-        while(mQueue.size() > 0)
+        while (mQueue.size() > 0)
         {
-            if(!mRunning) // If the queue is externally stopped
+            if (!mRunning) // If the queue is externally stopped
             {
                 clear_queue();
                 // Code to run on stop
                 emit response("Stream to Motion Controller Stopped");
-                if(mPrinter->g)
+                if (mPrinter->g)
                 {
                     GCmd(mPrinter->g, "ST"); // stop motors
                     emit response("GCmd: ST");
@@ -92,8 +99,6 @@ void PrintThread::run()
             {
                 // === Code to run on each queue item ===
 
-                //emit response(QString::fromStdString(mQueue.front()));
-                //qDebug() << QString::fromStdString(mQueue.front());
                 // split string into command type and command string
                 std::string commandString = mQueue.front();
                 std::string delimeterChar = ",";
@@ -101,58 +106,62 @@ void PrintThread::run()
                 std::string commandType;
                 pos = commandString.find(delimeterChar);
 
-                if(pos != std::string::npos)
+                if (pos != std::string::npos)
                 {
                     commandType = commandString.substr(0, pos);
                     commandString.erase(0, pos + delimeterChar.length());
-                }else
+                }
+                else
                 {
                     commandType = commandString;
                     commandString = "";
                 }
 
 
-                if(commandType == "GCmd")
+                if (commandType == "GCmd")
                 {
-                    //emit response(QString::fromStdString(commandString));
-                    if(mPrinter->g)
+                    if (mPrintGCmds) emit response(QString::fromStdString(commandString));
+                    if (mPrinter->g)
                     {
                         e(GCmd(mPrinter->g, commandString.c_str()));
-                    }else
+                    }
+                    else
                     {
                         //emit response("ERROR: not connected to controller!");
                     }
                 }
-                else if(commandType == "GMotionComplete")
+                else if (commandType == "GMotionComplete")
                 {
                     //emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
-                    if(mPrinter->g)
+                    if (mPrinter->g)
                     {
                         e(GMotionComplete(mPrinter->g, commandString.c_str()));
-                    }else
+                    }
+                    else
                     {
                         //emit response("ERROR: not connected to controller!");
                     }
                 }
-                else if(commandType == "GSleep")
+                else if (commandType == "GSleep")
                 {
                     //emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
-                    if(mPrinter->g)
+                    if (mPrinter->g)
                     {
                         GSleep(std::stoi(commandString));
-                    }else
+                    }
+                    else
                     {
                         //emit response("ERROR: not connected to controller!");
                     }
                 }
-                else if(commandType == "JetDrive")
+                else if (commandType == "JetDrive")
                 {
 
                 }
-                else if(commandType == "GOpen")
+                else if (commandType == "GOpen")
                 {
                     emit response(QString::fromStdString("Attempting to connect to ") + QString::fromStdString(mPrinter->address));
-                    if(e(GOpen(mPrinter->address, &mPrinter->g)) != G_NO_ERROR)
+                    if (e(GOpen(mPrinter->address, &mPrinter->g)) != G_NO_ERROR)
                     {
                         emit response("Could not connect to motion controller!");
                         stop();
@@ -179,7 +188,10 @@ void PrintThread::run()
                 if(mQueue.size() == 0)
                 {
                     // code to run when the queue completes normally
-                    //emit response("Finished Queue\n");
+                    if (mPrintGCmds)
+                    {
+                        emit response("Finished Queue\n");
+                    }
                 }
 
 

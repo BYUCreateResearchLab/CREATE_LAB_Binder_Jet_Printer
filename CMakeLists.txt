@@ -37,7 +37,7 @@ endif()
 set(HEADERS
 
     src/mainwindow.h
-    src/JetServer.h
+    src/jetdrive.h
     src/lineprintdata.h
     src/outputwindow.h
     src/printer.h
@@ -54,6 +54,7 @@ set(HEADERS
 
 set(SOURCES
 
+    src/jetdrive.cpp
     src/lineprintdata.cpp
     src/main.cpp
     src/mainwindow.cpp

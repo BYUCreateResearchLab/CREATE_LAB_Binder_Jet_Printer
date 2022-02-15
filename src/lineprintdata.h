@@ -89,10 +89,10 @@ public:
 
     TableData numLines = TableData("Number of Lines", type::int_type, 1, 1, 5000);
     TableData lineSpacing = TableData("Line Spacing (mm)", type::float_type, 10, 0.005f, 50);
-    TableData lineLength = TableData("Line Length (mm)", type::float_type, 15, 0.01, 100);
+    TableData lineLength = TableData("Line Length (mm)", type::float_type, 15, 0.01f, 100);
     TableData dropletSpacing = TableData("Droplet Spacing (um)", type::int_type, 5, 1, 50);
     TableData jettingFreq = TableData("Jetting Frequency (Hz)", type::int_type, 1000, 100, 10000);
-    TableData printVelocity = TableData("Printing Velocity (mm/s)", type::float_type, 5, 0.1, 100);
+    TableData printVelocity = TableData("Printing Velocity (mm/s)", type::float_type, 5, 0.1f, 100);
 
     int size = 6; // Number of columns in dataset
 

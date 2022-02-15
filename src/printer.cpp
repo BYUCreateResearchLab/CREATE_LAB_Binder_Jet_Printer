@@ -84,6 +84,11 @@ std::string CMD::detail::Message()
     return {"Message,"};
 }
 
+std::string CMD::detail::GOpen()
+{
+    return {"GOpen"};
+}
+
 // The Acceleration command (AC) sets the linear acceleration
 // of the motors for independent moves, such as PR, PA, and JG moves.
 // The parameters will be rounded down to the nearest factor of 1024
@@ -299,6 +304,132 @@ std::string CMD::disable_forward_software_limit(Axis axis)
 std::string CMD::display_message(const std::string &message)
 {
     return {Message() + message + "\n"};
+}
+
+std::string CMD::open_connection_to_controller()
+{
+    return {GOpen() + "\n"};                // Establish connection with motion controller
+}
+
+std::string CMD::set_default_controller_settings()
+{
+    std::stringstream s;
+
+    // Controller Configuration
+    s << CMD::detail::GCmd() << "MO"              << "\n";   // Ensure motors are off for setup
+
+    // X Axis
+    s << CMD::detail::GCmd() << "MTX=-1"          << "\n";   // Set motor type to reversed brushless
+    s << CMD::detail::GCmd() << "CEX=2"           << "\n";   // Set Encoder to reversed quadrature
+    s << CMD::detail::GCmd() << "BMX=40000"       << "\n";   // Set magnetic pitch of linear motor
+    s << CMD::detail::GCmd() << "AGX=1"           << "\n";   // Set amplifier gain
+    s << CMD::detail::GCmd() << "AUX=9"           << "\n";   // Set current loop (based on inductance of motor)
+    s << CMD::detail::GCmd() << "TLX=3"           << "\n";   // Set constant torque limit to 3V
+    s << CMD::detail::GCmd() << "TKX=0"           << "\n";   // Disable peak torque setting for now
+
+    // Set PID Settings
+    s << CMD::detail::GCmd() << "KDX=250"         << "\n";   // Set Derivative
+    s << CMD::detail::GCmd() << "KPX=40"          << "\n";   // Set Proportional
+    s << CMD::detail::GCmd() << "KIX=2"           << "\n";   // Set Integral
+    s << CMD::detail::GCmd() << "PLX=0.1"         << "\n";   // Set low-pass filter
+
+    // Y Axis
+    s << CMD::detail::GCmd() << "MTY=1"           << "\n";   // Set motor type to standard brushless
+    s << CMD::detail::GCmd() << "CEY=0"           << "\n";   // Set Encoder to reversed quadrature??? (or is it?)
+    s << CMD::detail::GCmd() << "BMY=2000"        << "\n";   // Set magnetic pitch of rotary motor
+    s << CMD::detail::GCmd() << "AGY=1"           << "\n";   // Set amplifier gain
+    s << CMD::detail::GCmd() << "AUY=11"          << "\n";   // Set current loop (based on inductance of motor)
+    s << CMD::detail::GCmd() << "TLY=6"           << "\n";   // Set constant torque limit to 6V
+    s << CMD::detail::GCmd() << "TKY=0"           << "\n";   // Disable peak torque setting for now
+    // Set PID Settings
+    s << CMD::detail::GCmd() << "KDY=500"         << "\n";   // Set Derivative
+    s << CMD::detail::GCmd() << "KPY=70"          << "\n";   // Set Proportional
+    s << CMD::detail::GCmd() << "KIY=1.7002"      << "\n";   // Set Integral
+
+    // Z Axis
+    s << CMD::detail::GCmd() << "MTZ=-2.5"        << "\n";   // Set motor type to standard brushless
+    s << CMD::detail::GCmd() << "CEZ=14"          << "\n";   // Set Encoder to reversed quadrature
+    s << CMD::detail::GCmd() << "AGZ=0"           << "\n";   // Set amplifier gain
+    s << CMD::detail::GCmd() << "AUZ=9"           << "\n";   // Set current loop (based on inductance of motor)
+    // Note: There might be more settings especially for this axis I might want to add later
+
+    // H Axis (Jetting Axis)
+    s << CMD::detail::GCmd() << "MTH=-2"          << "\n";   // Set jetting axis to be stepper motor with defualt low
+    s << CMD::detail::GCmd() << "AGH=0"           << "\n";   // Set gain to lowest value
+    s << CMD::detail::GCmd() << "LDH=3"           << "\n";   // Disable limit sensors for H axis
+    s << CMD::detail::GCmd() << "KSH=0.25"        << "\n";   // Minimize filters on step signals
+    s << CMD::detail::GCmd() << "ITH=1"           << "\n";   // Minimize filters on step signals
+
+    s << CMD::detail::GCmd() << "CC 19200,0,1,0"  << "\n";   //AUX PORT FOR THE ULTRASONIC GENERATOR
+    s << CMD::detail::GCmd() << "CN=-1"           << "\n";   // Set correct polarity for all limit switches
+    s << CMD::detail::GCmd() << "BN"              << "\n";   // Save (burn) these settings to the controller just to be safe
+    s << CMD::detail::GCmd() << "SH XYZ"          << "\n";   // Enable X,Y, and Z motors
+
+    return s.str();
+}
+
+std::string CMD::homing_sequence()
+{
+    std::stringstream s;
+
+    // === Home the X-Axis using the central home sensor index pulse ===
+
+    s << CMD::set_accleration(Axis::X, 800);
+    s << CMD::set_deceleration(Axis::X, 800);
+    s << CMD::set_limit_switch_deceleration(Axis::X, 800);
+    s << CMD::set_jog(Axis::X, -25); // jog towards rear limit
+
+    s << CMD::set_accleration(Axis::Y, 400);
+    s << CMD::set_deceleration(Axis::Y, 400);
+    s << CMD::set_limit_switch_deceleration(Axis::Y, 600);
+    s << CMD::set_jog(Axis::Y, 25); // jog towards front limit
+
+    s << CMD::set_accleration(Axis::Z, 20);
+    s << CMD::set_deceleration(Axis::Z, 20);
+    s << CMD::set_limit_switch_deceleration(Axis::Z, 40);
+    s << CMD::set_jog(Axis::Z, -2);                       // jog to bottom (MAX SPEED of 5mm/s!)
+    s << CMD::disable_forward_software_limit(Axis::Z);    // turn off top software limit
+
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::begin_motion(Axis::Y);
+    s << CMD::begin_motion(Axis::Z);
+
+    s << CMD::motion_complete(Axis::X);
+    s << CMD::motion_complete(Axis::Y);
+    s << CMD::motion_complete(Axis::Z);
+
+    s << CMD::sleep(1000);
+
+    s << CMD::set_jog(Axis::X, 30);
+    s << CMD::set_homing_velocity(Axis::X, 0.5);
+    s << CMD::find_index(Axis::X);
+
+    s << CMD::set_speed(Axis::Y, 40);
+    s << CMD::position_relative(Axis::Y, -200);
+
+    s << CMD::set_accleration(Axis::Z, 10);        // slower acceleration for going back up
+    s << CMD::set_speed(Axis::Z, 2);
+    s << CMD::position_relative(Axis::Z, 13.5322); // TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
+
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::begin_motion(Axis::Y);
+    s << CMD::begin_motion(Axis::Z);
+
+    s << CMD::motion_complete(Axis::X);
+    s << CMD::motion_complete(Axis::Y);
+    s << CMD::motion_complete(Axis::Z);
+
+    s << CMD::set_speed(Axis::X, 50);
+    s << CMD::position_relative(Axis::X, -40);
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::motion_complete(Axis::X);
+
+    s << CMD::define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
+    s << CMD::define_position(Axis::Y, 0);
+    s << CMD::define_position(Axis::Z, 0);
+    s << CMD::set_forward_software_limit(Axis::Z, 0); // set software limit to current position
+
+    return s.str();
 }
 
 std::string CMD::spread_layer(const RecoatSettings &settings)

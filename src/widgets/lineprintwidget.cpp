@@ -117,7 +117,7 @@ void LinePrintWidget::updateCell(int row, int column)
 void LinePrintWidget::updateTable(bool updateVerticalHeaders = false, bool updateHorizontalHeaders = false)
 {
     // Set Table Size
-    ui->tableWidget->setRowCount(table.data.size());
+    ui->tableWidget->setRowCount((int)table.data.size());
     ui->tableWidget->setColumnCount(table.data[0].size);
 
     // Update Vertical Headers if updateVerticalHeaders is set to true
@@ -159,7 +159,7 @@ void LinePrintWidget::updateTable(bool updateVerticalHeaders = false, bool updat
 
 void LinePrintWidget::on_numSets_valueChanged(int rowCount)
 {
-    int prevRowCount = table.data.size(); // get previous row count
+    int prevRowCount = (int)table.data.size(); // get previous row count
     // set new row count
     if(rowCount > prevRowCount) // If adding rows
     {
