@@ -12,7 +12,6 @@ DropletObservationWidget::DropletObservationWidget(QWidget *parent) : PrinterWid
 {
     ui->setupUi(this);
     connect(ui->connect, &QPushButton::clicked, this, &DropletObservationWidget::connect_to_camera);
-    connect(ui->setSettings, &QPushButton::clicked, this, &DropletObservationWidget::set_settings);
     connect(ui->takeVideo, &QPushButton::clicked, this, &DropletObservationWidget::capture_video);
     connect(this, &DropletObservationWidget::video_capture_complete, this, &DropletObservationWidget::stop_avi_capture);
 }
@@ -24,41 +23,11 @@ DropletObservationWidget::~DropletObservationWidget()
 
 void DropletObservationWidget::allow_widget_input(bool allowed)
 {
-    ui->takeVideo->setEnabled(allowed);
-    ui->connect->setEnabled(allowed);
-    ui->setSettings->setEnabled(allowed);
+    ui->frame->setEnabled(allowed);
 }
 
 void DropletObservationWidget::connect_to_camera()
 {
-    //int numCameras{-1};
-    //is_GetNumberOfCameras(&numCameras); // get the number of connected cameras
-    //UEYE_CAMERA_LIST cameraList;
-    //cameraList.dwCount = numCameras; // tell the list how many cameras are connected
-    //qDebug() << QString("There are %1 cameras currently connected").arg(numCameras);
-
-    /*
-    HIDS hCam = 0; //Open the first available camera
-    int nRet = is_InitCamera(&hCam, NULL);
-
-    if (nRet != IS_SUCCESS)
-    {
-        //Check if GigE uEye SE needs a new starter firmware
-        if (nRet == IS_STARTER_FW_UPLOAD_NEEDED)
-        {
-            //Calculate time needed for updating the starter firmware
-            int nTime;
-            is_GetDuration (hCam, IS_SE_STARTER_FW_UPLOAD, &nTime);
-       e.g. have progress bar displayed in separate thread
-
-            //Upload new starter firmware during initialization
-            hCam = hCam | IS_ALLOW_STARTER_FW_UPLOAD;
-            nRet = is_InitCamera(&hCam, NULL);
-
-        end progress bar
-        }
-    }
-    */
 
     CameraList cameraList;
 
@@ -91,36 +60,9 @@ void DropletObservationWidget::connect_to_camera()
                 {
                     subWindow->showMaximized();
                 }
+
+                this->set_settings();
             });
-        }
-    }
-    else
-    {
-        if (cameraList.exec() == QDialog::Accepted)
-        {
-            auto infoList = cameraList.cameraInfo();
-            for (auto& camInfo : infoList)
-            {
-                bool live = true;
-                auto* subWindow = new SubWindow(camInfo);
-                auto mdiCount = ui->mdiArea->subWindowList().size();
-                int numCams = 1;
-
-                connect(subWindow, &SubWindow::cameraOpenFinished, this, [this, live, subWindow, numCams, mdiCount]() {
-
-                    ui->mdiArea->addSubWindow(subWindow);
-
-                    if (live)
-                    {
-                        subWindow->camera()->captureVideo(false);
-                    }
-
-                    if (numCams == 1)
-                    {
-                        subWindow->showMaximized();
-                    }
-                });
-            }
         }
     }
 

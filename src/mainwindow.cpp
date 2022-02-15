@@ -31,6 +31,8 @@
 #include "highspeedlinewidget.h"
 #include "dropletobservationwidget.h"
 
+#include <thread>
+
 inline void split(const std::string &s, char delim, std::vector<std::string> &elems)
 {
     std::stringstream ss;
@@ -342,7 +344,9 @@ void MainWindow::on_connect_clicked()
 
         allow_user_input(false);
         mPrintThread->execute_command(s);
-        mJetDrive->initialize_jet_drive(); // this seems to crash things when it fails to connect...
+        //mJetDrive->initialize_jet_drive(); // this seems to crash things when it fails to connect...
+        std::thread jetDriveThread{&JetDrive::initialize_jet_drive, mJetDrive};
+        jetDriveThread.detach();
     }
     else
     {

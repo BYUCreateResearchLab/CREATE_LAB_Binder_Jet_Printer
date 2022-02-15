@@ -168,6 +168,7 @@ void PrintThread::run()
                     }
                     else
                     {
+                        emit response("Connected to motion controller");
                         emit connected_to_controller();
                     }
                 }

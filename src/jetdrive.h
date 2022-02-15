@@ -42,7 +42,7 @@ private:
     int mJetDrv{MFJDRV_COM9};
     MicroJet *mJetSettings{nullptr};
 
-    float defaultWaitTime{0.1f};
+    float defaultWaitTime{0.0001f};
 
     // don't change these
     HANDLE noCom;

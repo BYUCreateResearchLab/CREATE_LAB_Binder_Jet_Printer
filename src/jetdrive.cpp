@@ -105,7 +105,7 @@ void JetDrive::wait_seconds(float seconds)
 
 void JetDrive::test_log(const char* outputstring, bool status)
 {
-    qDebug() << outputstring << " " << status;
+    qDebug() << outputstring;
 }
 
 // Function Declarations
@@ -148,7 +148,6 @@ int JetDrive::build_command(int command, unsigned char *jetCommand)
         break;
 
     case MFJDRV_DROPS :
-        // WAS : if (gDreamController || mJetSettings->fDrops > 255)
         if (gDreamController || mJetSettings->fDrops > 255)
         {
             jetCommand[3] = (unsigned char)((mJetSettings->fDrops >> 8) & 0x00FF);
@@ -492,6 +491,7 @@ int JetDrive::get_from_jet_drive(int port, int command, unsigned char *input, in
                sprintf(&ReturnText[l+2*k], "%02X\n", input[k]);
            }
        }
+       // remove this if I don't want the input commands to show up
        test_log(ReturnText, false);
        if (ReadDone)
        {
@@ -507,6 +507,7 @@ int JetDrive::get_from_jet_drive(int port, int command, unsigned char *input, in
        else
        {
            status = -103;						// Read failed.
+           test_log("Read failed!", false);
        }
        ReturnLength = ReceivedLength;
        if (status < 0) goto WrapUp;
@@ -833,6 +834,8 @@ int JetDrive::initialize_jet_drive()
     send_command(port, MFJDRV_STROBEENABLE, defaultWaitTime); // 9.) Strobe Enable
     send_command(port, MFJDRV_STROBEDELAY, defaultWaitTime);  // 10.) Strobe Delay
     send_command(port, MFJDRV_SOURCE, defaultWaitTime);       // 11.) Trigger Source
+
+    test_log("Connected to JetDrive", true);
 
     return 0;
 }
