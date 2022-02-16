@@ -39,6 +39,9 @@ private:
     void send_to_jet_drive(int port, int command, unsigned char *output, int lengthOutput);
     void send_command(int port, int command, float waitTimeSeconds);
 
+    void send_command_fast(int port, int command);
+    void send_to_jet_drive_fast(int port, int command, unsigned char *output, int lengthOutput);
+
 private:
     HANDLE hCom;
     int mJetDrv{MFJDRV_COM9};

@@ -50,7 +50,7 @@ private:
     QTimer *mSweepTimer{nullptr};
     JettingWidget *mJettingWidget{nullptr};
     int mNumCapturedFrames{0};
-    int mNumFramesToCapture{10};
+    int mNumFramesToCapture{13};
     int mAviID{0};
 
     int mCurrentStrobeOffset{-1}; // -1 means that a strobe sweep hasn't started

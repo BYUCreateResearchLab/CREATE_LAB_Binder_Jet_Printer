@@ -11,6 +11,7 @@
 #include "jetdrive.h"
 
 #include <QDebug>
+#include <chrono>
 
 DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *parent) : PrinterWidget(parent), ui(new Ui::DropletObservationWidget), mJetDrive(jetDrive)
 {
@@ -114,17 +115,16 @@ void DropletObservationWidget::set_settings()
 {
     double fps{10};
     double exposure_milliseconds{0}; // 0 sets the max possible exposure
-    double newFPS{-1.0};
+    double newFPS{-1};
     double newExposure{-1.0};
     // set framerate
     is_SetFrameRate(mCameraHandle, fps, &newFPS);
     // set exposure
     is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure_milliseconds, sizeof(exposure_milliseconds));
     is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE, &newExposure, sizeof(newExposure));
+    is_SetFrameRate(mCameraHandle, fps, &newFPS);
     qDebug() << QString("The framerate was set as %1 FPS").arg(newFPS);
     qDebug() << QString("The exposure was set as %1 milliseconds").arg(newExposure);
-
-
 }
 
 void DropletObservationWidget::capture_video()
@@ -212,7 +212,7 @@ void DropletObservationWidget::strobe_sweep_button_clicked()
     ui->DropletStatsTextEdit->clear();
     connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
             this, &DropletObservationWidget::start_strobe_sweep);
-    mJetDrive->enable_strobe();
+    //mJetDrive->enable_strobe(); this should usually be enabled
 }
 
 void DropletObservationWidget::start_strobe_sweep()
@@ -221,6 +221,11 @@ void DropletObservationWidget::start_strobe_sweep()
     disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
             this, &DropletObservationWidget::start_strobe_sweep);
 
+    int initialDelay = 90; // I need to tune this
+
+    mSweepTimer = new QTimer(this);
+    connect(mSweepTimer, &QTimer::timeout, this, &DropletObservationWidget::update_strobe_sweep_offset);
+    mSweepTimer->start(initialDelay);
 
     if (mCaptureVideoWithSweep)
     {
@@ -228,30 +233,22 @@ void DropletObservationWidget::start_strobe_sweep()
         connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
                 this, &DropletObservationWidget::add_frame_to_avi, Qt::DirectConnection);
     }
-
-    int initialDelay = 80; // I need to tune this
-
-    mSweepTimer = new QTimer(this);
-    connect(mSweepTimer, &QTimer::timeout, this, &DropletObservationWidget::update_strobe_sweep_offset);
-    mSweepTimer->start(initialDelay);
-
 }
 
 void DropletObservationWidget::update_strobe_sweep_offset()
 {
-    int startStrobeOffset = ui->startTimeSpinBox->value();
-    int endStrobeOffset = ui->endTimeSpinBox->value();
-    double strobeDelay = 100;
-    int stepStrobeOffset = ui->stepTimeSpinBox->value();
+    //auto t1{std::chrono::high_resolution_clock::now()};
+
+    double strobeDelay = 90;
 
     mSweepTimer->setInterval(strobeDelay);
     if (mCurrentStrobeOffset == -1)
     {
-        mCurrentStrobeOffset = startStrobeOffset;
+        mCurrentStrobeOffset = ui->startTimeSpinBox->value();
         mJetDrive->set_strobe_delay(mCurrentStrobeOffset);
         ui->DropletStatsTextEdit->appendPlainText(QString::number(mCurrentStrobeOffset));
     }
-    else if (mCurrentStrobeOffset >= endStrobeOffset)
+    else if (mCurrentStrobeOffset >= ui->endTimeSpinBox->value())
     {
         disconnect(mSweepTimer, &QTimer::timeout, this, &DropletObservationWidget::update_strobe_sweep_offset);
         mSweepTimer->stop();
@@ -260,8 +257,13 @@ void DropletObservationWidget::update_strobe_sweep_offset()
     }
     else
     {
-        mCurrentStrobeOffset += stepStrobeOffset;
+        mCurrentStrobeOffset += ui->stepTimeSpinBox->value();
         mJetDrive->set_strobe_delay(mCurrentStrobeOffset);
+
+        //auto t2{std::chrono::high_resolution_clock::now()};
+        //auto timeSpan = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+        //qDebug() << "This took:" << QString::number(timeSpan) << " milliseconds";
         ui->DropletStatsTextEdit->appendPlainText(QString::number(mCurrentStrobeOffset));
     }
 }

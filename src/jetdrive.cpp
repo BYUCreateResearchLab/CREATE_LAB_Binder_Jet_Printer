@@ -551,6 +551,22 @@ void JetDrive::send_to_jet_drive(int port, int command, unsigned char *output, i
     }
 }
 
+void JetDrive::send_to_jet_drive_fast(int port, int command, unsigned char *output, int lengthOutput)
+{
+    int status{0};
+
+    if (command == MFJDRV_NOCOMMAND) return;
+    if (port != NOCOM)
+    {
+        DWORD SentLength = 0;
+        BOOL WriteDone;
+        WriteDone = WriteFile(hCom, output, (DWORD)lengthOutput, &SentLength, NULL);
+        if (!WriteDone) status = -104;							// Write failed.
+        if (SentLength < (DWORD)lengthOutput) status -= 1000;   // Write incomplete.
+        if (status < 0) status = 0x9E;
+    }
+}
+
 void JetDrive::send_command(int port, int command, float waitTimeSeconds)
 {
     unsigned char jetcommands[128];
@@ -561,6 +577,15 @@ void JetDrive::send_command(int port, int command, float waitTimeSeconds)
     send_to_jet_drive(port, command, jetcommands, commandlength);
     wait_seconds(waitTimeSeconds);
     get_from_jet_drive(port, command, jetdriveinput, commandlength);
+}
+
+void JetDrive::send_command_fast(int port, int command)
+{
+    unsigned char jetcommands[128];
+    unsigned int commandlength = 0;
+
+    commandlength = build_command(command, jetcommands);
+    send_to_jet_drive_fast(port, command, jetcommands, commandlength);
 }
 
 int JetDrive::initialize_jet_drive()
@@ -916,7 +941,7 @@ void JetDrive::set_strobe_delay(short strobeDelay_microseconds)
     if (mJetSettings->fStrobeDelay != strobeDelay_microseconds)
     {
         mJetSettings->fStrobeDelay = strobeDelay_microseconds;
-        send_command(mJetDrv+1, MFJDRV_STROBEDELAY, defaultWaitTime);
+        send_command_fast(mJetDrv+1, MFJDRV_STROBEDELAY);
     }
 }
 
