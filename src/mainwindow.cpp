@@ -55,14 +55,14 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
     // set up widgets
     mLinePrintingWidget = new LinePrintWidget();
     mPowderSetupWidget = new PowderSetupWidget();
-    mJettingWidget = new JettingWidget(mJetDrive);
+    //mJettingWidget = new JettingWidget(mJetDrive);
     mHighSpeedLineWidget = new HighSpeedLineWidget();
     mDropletObservationWidget = new DropletObservationWidget(mJetDrive);
     ui->tabWidget->addTab(mPowderSetupWidget, "Powder Setup");
     ui->tabWidget->addTab(mLinePrintingWidget, "Line Printing");
-    ui->tabWidget->addTab(mJettingWidget, "Jetting");
+    //ui->tabWidget->addTab(mJettingWidget, "Jetting");
     ui->tabWidget->addTab(mHighSpeedLineWidget, "High-Speed Line Printing");
-    ui->tabWidget->addTab(mDropletObservationWidget, "Droplet Observation");
+    ui->tabWidget->addTab(mDropletObservationWidget, "Jetting");
 
     mDockWidget = new QDockWidget("Output Window",this);
     this->addDockWidget(Qt::RightDockWidgetArea, mDockWidget);
@@ -132,10 +132,10 @@ void MainWindow::connected_to_motion_controller()
 
 void MainWindow::allow_user_input(bool allowed)
 {
-    ui->activateHopper->setEnabled(allowed);
+    //ui->activateHopper->setEnabled(allowed);
     ui->activateRoller1->setEnabled(allowed);
-    ui->activateRoller2->setEnabled(allowed);
-    ui->activateJet->setEnabled(allowed);
+    //ui->activateRoller2->setEnabled(allowed);
+    //ui->activateJet->setEnabled(allowed);
     ui->xHome->setEnabled(allowed);
     ui->yHome->setEnabled(allowed);
     ui->xPositive->setEnabled(allowed);

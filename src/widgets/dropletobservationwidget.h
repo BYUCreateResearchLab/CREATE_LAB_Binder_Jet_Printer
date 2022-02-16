@@ -8,6 +8,8 @@
 #include <camera.h>
 #include <QTimer>
 
+#include "jettingwidget.h"
+
 class Camera;
 class JetDrive;
 
@@ -46,6 +48,7 @@ private:
     JetDrive *mJetDrive{nullptr};
     Camera *mCamera{nullptr};
     QTimer *mSweepTimer{nullptr};
+    JettingWidget *mJettingWidget{nullptr};
     int mNumCapturedFrames{0};
     int mNumFramesToCapture{10};
     int mAviID{0};

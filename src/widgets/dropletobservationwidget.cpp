@@ -23,6 +23,11 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     connect(ui->moveToCameraButton, &QPushButton::clicked, this, &DropletObservationWidget::move_to_jetting_window);
     connect(ui->sweepButton, &QPushButton::clicked, this, &DropletObservationWidget::strobe_sweep_button_clicked);
     connect(ui->TriggerJetButton, &QPushButton::clicked, this, &DropletObservationWidget::trigger_jet_clicked);
+
+    mJettingWidget = new JettingWidget(mJetDrive);
+    //ui->frame->layout()->addWidget(mJettingWidget);
+    QGridLayout *gridLayout = ui->frame->findChild<QGridLayout*>("gridLayout_frame");
+    gridLayout->addWidget(mJettingWidget, 9,0,1,2);
 }
 
 DropletObservationWidget::~DropletObservationWidget()
@@ -200,7 +205,7 @@ void DropletObservationWidget::strobe_sweep_button_clicked()
 {
     // start strobe sweep when a frame is received so that the sweep timing is aligned with image aquisition
     connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
-            this, &DropletObservationWidget::start_strobe_sweep, Qt::DirectConnection);
+            this, &DropletObservationWidget::start_strobe_sweep);
     mJetDrive->enable_strobe();
 }
 
@@ -214,7 +219,7 @@ void DropletObservationWidget::start_strobe_sweep()
 
     int initialDelay = 80; // I need to tune this
 
-    mSweepTimer = new QTimer();
+    mSweepTimer = new QTimer(this);
     connect(mSweepTimer, &QTimer::timeout, this, &DropletObservationWidget::update_strobe_sweep_offset);
     mSweepTimer->start(initialDelay);
 
