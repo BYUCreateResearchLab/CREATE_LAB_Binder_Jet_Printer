@@ -226,7 +226,7 @@ void LinePrintWidget::on_startPrint_clicked()
 
     auto t1{std::chrono::high_resolution_clock::now()};
 
-    s << CMD::stop_motion(Axis::Jet);
+    s << CMD::stop_motion(Axis::Jet); // stop jetting if it is currently jetting
     s << CMD::set_accleration(Axis::X, 200);
     s << CMD::set_deceleration(Axis::X, 200);
     s << CMD::set_accleration(Axis::Y, 200);

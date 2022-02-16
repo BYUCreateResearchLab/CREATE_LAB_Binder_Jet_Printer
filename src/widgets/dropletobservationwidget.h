@@ -58,6 +58,7 @@ private:
     bool mIsJetting{false};
     bool mCameraIsConnected{false};
     bool mVideoHasBeenTaken{false};
+    bool mCaptureVideoWithSweep{false};
 };
 
 #endif // DROPLETOBSERVATIONWIDGET_H

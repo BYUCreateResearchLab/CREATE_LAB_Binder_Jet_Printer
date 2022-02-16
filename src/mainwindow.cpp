@@ -351,13 +351,17 @@ void MainWindow::on_connect_clicked()
     }
     else
     {
-        GCmd(mPrinter->g, "MO");       // Disable Motors
-        GClose(mPrinter->g);           // close connection to the motion controller
+        allow_user_input(false);
+        if(mPrinter->g)
+        {
+            GCmd(mPrinter->g, "ST");       // Disable Motors
+            GCmd(mPrinter->g, "MO");       // Disable Motors
+            GClose(mPrinter->g);           // close connection to the motion controller
+        }
         mPrinter->g = 0;               // Reset connection handle
 
         ui->connect->setText("Connect to Controller");
 
-        allow_user_input(false);
     }
 }
 
