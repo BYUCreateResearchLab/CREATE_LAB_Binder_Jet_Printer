@@ -27,6 +27,8 @@ public:
     void enable_strobe();
     void disable_strobe();
     void set_strobe_delay(short strobeDelay_microseconds);
+    void set_num_drops_per_trigger(short numDrops);
+    bool is_connected();
 
 private:
     void wait_seconds(float seconds);

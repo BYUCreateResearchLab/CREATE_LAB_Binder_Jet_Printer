@@ -64,7 +64,7 @@ MicroJet::MicroJet() :
     fUGain(225),
     fMode(0),         // fmode is to set continuous jetting mode (1 to enable continuous jetting, 0 to disable)
     fSource(1),       // fSource is for setting the trigger source (1 for external TTL trigger, 0 for internal trigger)
-    fDrops(1),
+    fDrops(1),        // number of drops per single trigger
     fStrobeDelay(0),  // sets strobe delay in microseconds
     fStrobeDiv(1),    // divider for the stobe (1 means the strobe flashes every pulse, 2 means the strobe flashes every other jetting pulse)
     fStrobeEnable(1),
@@ -918,4 +918,18 @@ void JetDrive::set_strobe_delay(short strobeDelay_microseconds)
         mJetSettings->fStrobeDelay = strobeDelay_microseconds;
         send_command(mJetDrv+1, MFJDRV_STROBEDELAY, defaultWaitTime);
     }
+}
+
+void JetDrive::set_num_drops_per_trigger(short numDrops)
+{
+    if (mJetSettings->fDrops != numDrops)
+    {
+        mJetSettings->fDrops = numDrops;
+        send_command(mJetDrv+1, MFJDRV_DROPS, defaultWaitTime);
+    }
+}
+
+bool JetDrive::is_connected()
+{
+    return mJetDrv != NOCOM;
 }

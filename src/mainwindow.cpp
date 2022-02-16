@@ -55,7 +55,7 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
     // set up widgets
     mLinePrintingWidget = new LinePrintWidget();
     mPowderSetupWidget = new PowderSetupWidget();
-    mJettingWidget = new JettingWidget();
+    mJettingWidget = new JettingWidget(mJetDrive);
     mHighSpeedLineWidget = new HighSpeedLineWidget();
     mDropletObservationWidget = new DropletObservationWidget(mJetDrive);
     ui->tabWidget->addTab(mPowderSetupWidget, "Powder Setup");
