@@ -1,15 +1,18 @@
 #include "dropletobservationwidget.h"
 #include "ui_dropletobservationwidget.h"
 
+#include <QTimer>
+
 #include "ueye.h"
 #include "ueye_tools.h"
 #include "subwindow.h"
 #include "cameralist.h"
 #include "printer.h"
+#include "jetdrive.h"
 
 #include <QDebug>
 
-DropletObservationWidget::DropletObservationWidget(QWidget *parent) : PrinterWidget(parent), ui(new Ui::DropletObservationWidget)
+DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *parent) : PrinterWidget(parent), ui(new Ui::DropletObservationWidget), mJetDrive(jetDrive)
 {
     ui->setupUi(this);
     ui->takeVideoButton->setEnabled(false);
@@ -18,6 +21,8 @@ DropletObservationWidget::DropletObservationWidget(QWidget *parent) : PrinterWid
     connect(ui->takeVideoButton, &QPushButton::clicked, this, &DropletObservationWidget::capture_video);
     connect(this, &DropletObservationWidget::video_capture_complete, this, &DropletObservationWidget::stop_avi_capture);
     connect(ui->moveToCameraButton, &QPushButton::clicked, this, &DropletObservationWidget::move_to_jetting_window);
+    connect(ui->sweepButton, &QPushButton::clicked, this, &DropletObservationWidget::strobe_sweep_button_clicked);
+    connect(ui->TriggerJetButton, &QPushButton::clicked, this, &DropletObservationWidget::trigger_jet_clicked);
 }
 
 DropletObservationWidget::~DropletObservationWidget()
@@ -28,8 +33,12 @@ DropletObservationWidget::~DropletObservationWidget()
 void DropletObservationWidget::allow_widget_input(bool allowed)
 {
     ui->frame->setEnabled(allowed);
-    //ui->moveToCameraButton->setEnabled(allowed);
-    //ui->TriggerJetButton->setEnabled(allowed);
+
+    // DECIDE IF I REALLY WANT THIS...
+    if (!allowed && mIsJetting)
+    {
+        trigger_jet_clicked(); // will turn off jetting if widget input is disabled and nozzle is currently jetting
+    }
 }
 
 void DropletObservationWidget::connect_to_camera()
@@ -140,18 +149,9 @@ void DropletObservationWidget::capture_video()
     isavi_SetFrameRate(mAviID, videoFrameRate); // this does not need to be the same as the camera frame rate
     isavi_StartAVI(mAviID);
 
-
-    //isavi_AddFrame(mAviID, mCamera->m_Images[4].pBuf);
-    // connect to the camera signal such that when a new frame is added, the frame is sent to isavi_AddFrame();
-
-    // once the desired number of frames have been captured, break the link and stop the video
-
-    // NOT THIS ONE...
-    //connect(this, SELECT<>::OVERLOAD_OF(&Camera::frameReceived), this, &Camera::processCurrentImageInMemory, Qt::DirectConnection);
-    // THIS ONE?
-
     // when a frame is added to the camera, add it to the avi file
-    connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived), this, &DropletObservationWidget::add_frame_to_avi, Qt::DirectConnection);
+    connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
+            this, &DropletObservationWidget::add_frame_to_avi, Qt::DirectConnection);
     allow_widget_input(false);
 }
 
@@ -162,7 +162,8 @@ void DropletObservationWidget::add_frame_to_avi(ImageBufferPtr buffer)
     if (mNumCapturedFrames == mNumFramesToCapture)
     {
         // don't add any more frames
-        disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived), this, &DropletObservationWidget::add_frame_to_avi);
+        disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
+                   this, &DropletObservationWidget::add_frame_to_avi);
         emit video_capture_complete();
         unsigned long nLostFrames{777};
         isavi_GetnLostFrames(mAviID, &nLostFrames);
@@ -193,5 +194,79 @@ void DropletObservationWidget::move_to_jetting_window()
 
     emit execute_command(s);
     emit disable_user_input();
+}
+
+void DropletObservationWidget::strobe_sweep_button_clicked()
+{
+    // start strobe sweep when a frame is received so that the sweep timing is aligned with image aquisition
+    connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
+            this, &DropletObservationWidget::start_strobe_sweep, Qt::DirectConnection);
+    mJetDrive->enable_strobe();
+}
+
+void DropletObservationWidget::start_strobe_sweep()
+{
+    // only run this once and then disconnect so when the next frame comes in it doesn't run again
+    disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
+            this, &DropletObservationWidget::start_strobe_sweep);
+
+    mCurrentStrobeOffset = ui->startTimeSpinBox->value();
+
+    int initialDelay = 80; // I need to tune this
+
+    mSweepTimer = new QTimer(this);
+    connect(mSweepTimer, &QTimer::timeout, this, &DropletObservationWidget::update_strobe_sweep_offset);
+    mSweepTimer->start(initialDelay);
+}
+
+void DropletObservationWidget::update_strobe_sweep_offset()
+{
+    int startStrobeOffset = ui->startTimeSpinBox->value();
+    int endStrobeOffset = ui->endTimeSpinBox->value();
+    double strobeDelay = 100;
+    int stepStrobeOffset = ui->stepTimeSpinBox->value();
+
+    mSweepTimer->setInterval(strobeDelay);
+    if (mCurrentStrobeOffset == -1)
+    {
+        mCurrentStrobeOffset = startStrobeOffset;
+        mJetDrive->set_strobe_delay(mCurrentStrobeOffset);
+        ui->DropletStatsTextEdit->appendPlainText(QString::number(mCurrentStrobeOffset) + "\n");
+    }
+    else if (mCurrentStrobeOffset >= endStrobeOffset)
+    {
+        disconnect(mSweepTimer, &QTimer::timeout, this, &DropletObservationWidget::update_strobe_sweep_offset);
+        mSweepTimer->stop();
+        mSweepTimer->deleteLater();
+        mCurrentStrobeOffset = -1;
+    }
+    else
+    {
+        mCurrentStrobeOffset += stepStrobeOffset;
+        mJetDrive->set_strobe_delay(mCurrentStrobeOffset);
+        ui->DropletStatsTextEdit->appendPlainText(QString::number(mCurrentStrobeOffset) + "\n");
+    }
+}
+
+void DropletObservationWidget::trigger_jet_clicked()
+{
+    std::stringstream s;
+    if (!mIsJetting)
+    {
+        s << CMD::servo_here(Axis::Jet);
+        s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
+        s << CMD::set_jog(Axis::Jet, 1000);             // set to jet at 1000hz
+        s << CMD::begin_motion(Axis::Jet);
+        mIsJetting = true;
+        ui->TriggerJetButton->setText("Stop Jetting");
+    }
+    else
+    {
+        s << CMD::stop_motion(Axis::Jet);
+        mIsJetting = false;
+        ui->TriggerJetButton->setText("Trigger Jet");
+    }
+
+    emit execute_command(s);
 }
 
