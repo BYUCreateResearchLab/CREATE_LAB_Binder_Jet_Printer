@@ -214,9 +214,11 @@ void DropletObservationWidget::start_strobe_sweep()
 
     int initialDelay = 80; // I need to tune this
 
-    mSweepTimer = new QTimer(this);
+    mSweepTimer = new QTimer();
     connect(mSweepTimer, &QTimer::timeout, this, &DropletObservationWidget::update_strobe_sweep_offset);
     mSweepTimer->start(initialDelay);
+
+    qDebug() << "we get here but it never calls update_strobe_sweep_offset...";
 }
 
 void DropletObservationWidget::update_strobe_sweep_offset()
@@ -225,6 +227,8 @@ void DropletObservationWidget::update_strobe_sweep_offset()
     int endStrobeOffset = ui->endTimeSpinBox->value();
     double strobeDelay = 100;
     int stepStrobeOffset = ui->stepTimeSpinBox->value();
+
+    qDebug() << "this isn't getting called...";
 
     mSweepTimer->setInterval(strobeDelay);
     if (mCurrentStrobeOffset == -1)
