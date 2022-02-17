@@ -169,15 +169,18 @@ void DropletObservationWidget::capture_video()
     int sensorWidth = sensorInfo.nMaxWidth;   // 2048 for our camera
     int sensorHeight = sensorInfo.nMaxHeight; // 2048
 
-
     IS_POINT_2D nOffset;
     is_AOI(mCameraHandle, IS_AOI_IMAGE_GET_POS, &nOffset, sizeof(nOffset));
 
+    // temp offset for cropping the nozzle out of the frame for Colton
+    int verticalPixelOffset{240};
 
     int posX{nOffset.s32X};
-    int posY{nOffset.s32Y};
+    //int posY{nOffset.s32Y}; THIS GOT CHANGED
+    int posY{verticalPixelOffset};
 
-    isavi_SetImageSize(mAviID, colorMode, AOIWidth, sensorHeight, posX, posY, 0); // not sure why a zero here, but it works haha
+    // verticalPixelOffset was added for testing
+    isavi_SetImageSize(mAviID, colorMode, AOIWidth, (sensorHeight-verticalPixelOffset), posX, posY, 0); // not sure why a zero here, but it works haha
 
     int imageQuality{95}; // 1 is the lowest, 100 is the highest
     isavi_SetImageQuality (mAviID, imageQuality);
