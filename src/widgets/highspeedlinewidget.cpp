@@ -9,6 +9,7 @@
 HighSpeedLineWidget::HighSpeedLineWidget(QWidget *parent) : PrinterWidget(parent), ui(new Ui::HighSpeedLineWidget)
 {
     ui->setupUi(this);
+    setAccessibleName("High Speed Line Widget");
 }
 
 HighSpeedLineWidget::~HighSpeedLineWidget()

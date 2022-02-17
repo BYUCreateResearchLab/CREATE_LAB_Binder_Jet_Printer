@@ -53,12 +53,11 @@ private slots:
     void thread_ended();
     void connected_to_motion_controller();
 
+    void print_to_output_window(QString s);
     void on_removeBuildBox_clicked();
     void on_actionShow_Hide_Console_triggered();
     void generate_printing_message_box(const std::string &message);
 
-    void start_jetting();
-    void stop_jetting();
 private:
     Ui::MainWindow *ui;
 

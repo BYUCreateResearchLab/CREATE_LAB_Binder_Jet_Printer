@@ -47,6 +47,7 @@ private slots:
     void trigger_jet_clicked();
     void framerate_changed();
     void exposure_changed();
+    void save_video_clicked();
 
 private:
     Ui::DropletObservationWidget *ui;
@@ -70,6 +71,8 @@ private:
     bool mCameraIsConnected{false};
     bool mVideoHasBeenTaken{false};
     bool mCaptureVideoWithSweep{false};
+
+    QString mTempFileName{};
 };
 
 #endif // DROPLETOBSERVATIONWIDGET_H

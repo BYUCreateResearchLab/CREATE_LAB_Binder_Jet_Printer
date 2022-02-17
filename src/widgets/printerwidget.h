@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <sstream>
+#include <QString>
 
 namespace Ui {
 class PrinterWidget;
@@ -23,6 +24,7 @@ signals:
     void execute_command(std::stringstream &s);
     void generate_printing_message_box(const std::string &message);
     void disable_user_input();
+    void print_to_output_window(QString s);
 };
 
 #endif // PRINTERWIDGET_H

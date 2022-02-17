@@ -9,6 +9,7 @@ JettingWidget::JettingWidget(JetDrive *jetDrv, QWidget *parent) :
     mJetDrive(jetDrv)
 {
     ui->setupUi(this);
+    setAccessibleName("Jetting Widget");
     connect(ui->updateSettingsButton, &QPushButton::clicked, this, &JettingWidget::update_settings_clicked);
 }
 

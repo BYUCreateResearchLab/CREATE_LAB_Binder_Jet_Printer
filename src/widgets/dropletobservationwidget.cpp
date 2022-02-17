@@ -2,6 +2,9 @@
 #include "ui_dropletobservationwidget.h"
 
 #include <QTimer>
+#include <QStandardPaths>
+#include <QFileDialog>
+#include <QMessageBox>
 
 #include "ueye.h"
 #include "ueye_tools.h"
@@ -16,6 +19,7 @@
 DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *parent) : PrinterWidget(parent), ui(new Ui::DropletObservationWidget), mJetDrive(jetDrive)
 {
     ui->setupUi(this);
+    setAccessibleName("Droplet Observation Widget");
     ui->takeVideoButton->setEnabled(false);
     ui->SaveVideoButton->setEnabled(false);
     ui->sweepFrame->setEnabled(false);
@@ -36,6 +40,9 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     mNumFramesToCapture = int(ui->endTimeSpinBox->value() / ui->stepTimeSpinBox->value()) + 1;
     connect(ui->cameraFPSSpinBox, &QAbstractSpinBox::editingFinished, this, &DropletObservationWidget::framerate_changed);
     connect(ui->shutterAngleSpinBox, &QAbstractSpinBox::editingFinished, this, &DropletObservationWidget::exposure_changed);
+    mTempFileName = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/jetdroplet.avi";
+    qDebug() << "temp video files are stored at " << mTempFileName;
+    connect(ui->SaveVideoButton, &QPushButton::clicked, this, &DropletObservationWidget::save_video_clicked);
 }
 
 DropletObservationWidget::~DropletObservationWidget()
@@ -46,30 +53,18 @@ DropletObservationWidget::~DropletObservationWidget()
 void DropletObservationWidget::allow_widget_input(bool allowed)
 {
     ui->frame->setEnabled(allowed);
-
-    /* this hack doesn't work haha
-    // DECIDE IF I REALLY WANT THIS...
-    if (!allowed && mIsJetting)
-    {
-        //trigger_jet_clicked(); // will turn off jetting if widget input is disabled and nozzle is currently jetting
-        // BUT IT WILL ALSO allow widget input after it is finished...
-        // this seems kind of hacky, I need to fix this logic sometime...
-        mIsJetting = false;
-        ui->TriggerJetButton->setText("Trigger Jet");
-    }
-    */
 }
 
 void DropletObservationWidget::jetting_was_turned_on()
 {
         mIsJetting = true;
-        ui->TriggerJetButton->setText("Stop Jetting");
+        ui->TriggerJetButton->setText("\nStop Jetting\n");
 }
 
 void DropletObservationWidget::jetting_was_turned_off()
 {
     mIsJetting = false;
-    ui->TriggerJetButton->setText("Trigger Jet");
+    ui->TriggerJetButton->setText("\nTrigger Jet\n");
 }
 
 void DropletObservationWidget::connect_to_camera()
@@ -187,9 +182,13 @@ void DropletObservationWidget::capture_video()
     int imageQuality{95}; // 1 is the lowest, 100 is the highest
     isavi_SetImageQuality (mAviID, imageQuality);
 
-    std::string fileNameString{getenv("USERPROFILE")};
-    fileNameString += "/Desktop/testVid.avi";
-    const char* fileName = fileNameString.c_str();
+
+    //std::string fileNameString{getenv("USERPROFILE")};
+    //fileNameString += "/Desktop/testVid.avi";
+    //const char* fileName = fileNameString.c_str();
+
+    // get temp file location
+    const char* fileName = mTempFileName.toStdString().c_str();
 
     isavi_OpenAVI(mAviID, fileName);
 
@@ -248,7 +247,6 @@ void DropletObservationWidget::move_to_jetting_window()
 void DropletObservationWidget::strobe_sweep_button_clicked()
 {
     // start strobe sweep when a frame is received so that the sweep timing is aligned with image aquisition
-    ui->DropletStatsTextEdit->clear();
     connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
             this, &DropletObservationWidget::start_strobe_sweep);
     //mJetDrive->enable_strobe(); this should usually be enabled
@@ -285,7 +283,7 @@ void DropletObservationWidget::update_strobe_sweep_offset()
     {
         mCurrentStrobeOffset = ui->startTimeSpinBox->value();
         mJetDrive->set_strobe_delay(mCurrentStrobeOffset);
-        ui->DropletStatsTextEdit->appendPlainText(QString::number(mCurrentStrobeOffset));
+        emit print_to_output_window(QString::number(mCurrentStrobeOffset));
     }
     else if (mCurrentStrobeOffset >= ui->endTimeSpinBox->value())
     {
@@ -303,7 +301,7 @@ void DropletObservationWidget::update_strobe_sweep_offset()
         //auto timeSpan = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
         //qDebug() << "This took:" << QString::number(timeSpan) << " milliseconds";
-        ui->DropletStatsTextEdit->appendPlainText(QString::number(mCurrentStrobeOffset));
+        emit print_to_output_window(QString::number(mCurrentStrobeOffset));
     }
 }
 
@@ -360,5 +358,15 @@ void DropletObservationWidget::exposure_changed()
     is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &desiredExposure, sizeof(desiredExposure));
     is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE, &newExposure, sizeof(newExposure));
     qDebug() << QString("The exposure was set as %1 milliseconds").arg(newExposure);
+}
+
+void DropletObservationWidget::save_video_clicked()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save as", "", ("Video File (*.avi)"));
+    if (!QFile::copy(mTempFileName, fileName))
+    {
+        QMessageBox::warning(this, "Warning", "Cannot save file");
+        return;
+    }
 }
 

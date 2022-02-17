@@ -95,6 +95,7 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
        connect(printerWidgets[i], &PrinterWidget::execute_command, mPrintThread, &PrintThread::execute_command); // connect "execute_command" signal on powder window to execute on thread
        connect(printerWidgets[i], &PrinterWidget::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
        connect(printerWidgets[i], &PrinterWidget::disable_user_input, this, [this]() {this->allow_user_input(false);});
+       connect(printerWidgets[i], &PrinterWidget::print_to_output_window, this, &MainWindow::print_to_output_window);
     }
 
     // connect jog buttons
@@ -102,9 +103,6 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
     connect(ui->xNegative, &QAbstractButton::released, this, &MainWindow::jog_released);
     connect(ui->yPositive, &QAbstractButton::released, this, &MainWindow::jog_released);
     connect(ui->yNegative, &QAbstractButton::released, this, &MainWindow::jog_released);
-
-    connect(mJettingWidget, &JettingWidget::start_jetting, this, &MainWindow::start_jetting);
-    connect(mJettingWidget, &JettingWidget::stop_jetting, this, &MainWindow::stop_jetting);
 
     // this makes it so that when the line printing widget turns of user input (i.e. starts printing lines, it tells the observation widget
     // that it turned off jetting
@@ -463,6 +461,11 @@ void MainWindow::on_activateJet_stateChanged(int arg1)
     mPrintThread->execute_command(s);
 }
 
+void MainWindow::print_to_output_window(QString s)
+{
+    mOutputWindow->print_string(s);
+}
+
 void MainWindow::on_removeBuildBox_clicked()
 {
     std::stringstream s;
@@ -542,37 +545,5 @@ void MainWindow::generate_printing_message_box(const std::string &message)
     default:
         break;
     }
-}
-
-void MainWindow::start_jetting()
-{
-    /*
-    int port{9};
-    mJetDrive->mJetSettings->fFrequency = 1000L;
-    mJetDrive->SendCommand(port, MFJDRV_FREQUENCY, 0.1f);
-
-    mJetDrive->mJetSettings->fMode = 1;
-    mJetDrive->SendCommand(port, MFJDRV_CONTMODE, 0.1f);
-
-    mJetDrive->mJetSettings->fSource = 0;               // set internal trigger
-    mJetDrive->SendCommand(port, MFJDRV_SOURCE, 0.1f); // set trigger source
-
-    // Start Jetting
-    mJetDrive->SendCommand(port, MFJDRV_SOFTTRIGGER, .1f); // This command turns on continuous jetting if the trigger source is set to internal
-    */
-
-}
-
-void MainWindow::stop_jetting()
-{
-    /*
-    int port{9};
-    mJetDrive->mJetSettings->fMode = 0;
-    mJetDrive->SendCommand(port, MFJDRV_CONTMODE, .1); // This command sets trigger mode to single (also, turns off continuous jetting from the soft trigger)
-
-    mJetDrive->mJetSettings->fSource = 1;               // set external trigger
-    mJetDrive->SendCommand(port, MFJDRV_SOURCE, 0.1); // set trigger source
-    */
-
 }
 

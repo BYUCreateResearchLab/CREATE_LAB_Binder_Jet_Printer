@@ -16,8 +16,8 @@ PowderSetupWidget::PowderSetupWidget(QWidget *parent) : PrinterWidget(parent), u
     setAccessibleName("Powder Setup Widget");
 
     // Set combo box defaults
-    ui->ultrasonicIntensityComboBox->setCurrentIndex(2); // 80%
-    ui->ultrasonicModeComboBox->setCurrentIndex(3);      // Mode D
+    ui->ultrasonicIntensityComboBox->setCurrentIndex(5); // 50%
+    ui->ultrasonicModeComboBox->setCurrentIndex(0);      // Mode A
 }
 
 PowderSetupWidget::~PowderSetupWidget()
