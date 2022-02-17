@@ -106,6 +106,10 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
     connect(mJettingWidget, &JettingWidget::start_jetting, this, &MainWindow::start_jetting);
     connect(mJettingWidget, &JettingWidget::stop_jetting, this, &MainWindow::stop_jetting);
 
+    // this makes it so that when the line printing widget turns of user input (i.e. starts printing lines, it tells the observation widget
+    // that it turned off jetting
+    connect(mLinePrintingWidget, &LinePrintWidget::disable_user_input, mDropletObservationWidget, &DropletObservationWidget::jetting_was_turned_off);
+
 }
 
 void MainWindow::thread_ended()

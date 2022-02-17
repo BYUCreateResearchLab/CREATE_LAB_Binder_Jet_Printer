@@ -26,6 +26,10 @@ public:
     ~DropletObservationWidget();
     void allow_widget_input(bool allowed) override;
 
+public slots:
+    void jetting_was_turned_on();
+    void jetting_was_turned_off();
+
 signals:
     void video_capture_complete();
 
@@ -41,6 +45,8 @@ private slots:
     void start_strobe_sweep();
     void update_strobe_sweep_offset();
     void trigger_jet_clicked();
+    void framerate_changed();
+    void exposure_changed();
 
 private:
     Ui::DropletObservationWidget *ui;
@@ -49,11 +55,16 @@ private:
     Camera *mCamera{nullptr};
     QTimer *mSweepTimer{nullptr};
     JettingWidget *mJettingWidget{nullptr};
-    int mNumCapturedFrames{0};
-    int mNumFramesToCapture{13};
+
+    int mCameraFrameRate{};
+    int mNumFramesToCapture{};
+
     int mAviID{0};
 
+    int mNumCapturedFrames{0};   // Keeps track of the current number of frames captured during video capture
     int mCurrentStrobeOffset{-1}; // -1 means that a strobe sweep hasn't started
+
+    int AOIWidth{680};
 
     bool mIsJetting{false};
     bool mCameraIsConnected{false};

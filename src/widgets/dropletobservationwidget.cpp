@@ -18,6 +18,8 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     ui->setupUi(this);
     ui->takeVideoButton->setEnabled(false);
     ui->SaveVideoButton->setEnabled(false);
+    ui->sweepFrame->setEnabled(false);
+    ui->cameraSettingsFrame->setEnabled(false);
     connect(ui->connectButton, &QPushButton::clicked, this, &DropletObservationWidget::connect_to_camera);
     connect(ui->takeVideoButton, &QPushButton::clicked, this, &DropletObservationWidget::capture_video);
     connect(this, &DropletObservationWidget::video_capture_complete, this, &DropletObservationWidget::stop_avi_capture);
@@ -28,7 +30,12 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     mJettingWidget = new JettingWidget(mJetDrive);
     //ui->frame->layout()->addWidget(mJettingWidget);
     QGridLayout *gridLayout = ui->frame->findChild<QGridLayout*>("gridLayout_frame");
-    gridLayout->addWidget(mJettingWidget, 9,0,1,2);
+    gridLayout->addWidget(mJettingWidget, 23,0,1,2);
+
+    mCameraFrameRate = ui->cameraFPSSpinBox->value();
+    mNumFramesToCapture = int(ui->endTimeSpinBox->value() / ui->stepTimeSpinBox->value()) + 1;
+    connect(ui->cameraFPSSpinBox, &QAbstractSpinBox::editingFinished, this, &DropletObservationWidget::framerate_changed);
+    connect(ui->shutterAngleSpinBox, &QAbstractSpinBox::editingFinished, this, &DropletObservationWidget::exposure_changed);
 }
 
 DropletObservationWidget::~DropletObservationWidget()
@@ -40,16 +47,29 @@ void DropletObservationWidget::allow_widget_input(bool allowed)
 {
     ui->frame->setEnabled(allowed);
 
+    /* this hack doesn't work haha
     // DECIDE IF I REALLY WANT THIS...
     if (!allowed && mIsJetting)
     {
         //trigger_jet_clicked(); // will turn off jetting if widget input is disabled and nozzle is currently jetting
         // BUT IT WILL ALSO allow widget input after it is finished...
-
         // this seems kind of hacky, I need to fix this logic sometime...
         mIsJetting = false;
         ui->TriggerJetButton->setText("Trigger Jet");
     }
+    */
+}
+
+void DropletObservationWidget::jetting_was_turned_on()
+{
+        mIsJetting = true;
+        ui->TriggerJetButton->setText("Stop Jetting");
+}
+
+void DropletObservationWidget::jetting_was_turned_off()
+{
+    mIsJetting = false;
+    ui->TriggerJetButton->setText("Trigger Jet");
 }
 
 void DropletObservationWidget::connect_to_camera()
@@ -77,6 +97,7 @@ void DropletObservationWidget::connect_to_camera()
                 connect(subWindow, &SubWindow::cameraOpenFinished, this, [this, live, subWindow, numCams]() {
 
                     ui->mdiArea->addSubWindow(subWindow);
+                    subWindow->display()->fitToDisplay(true);
 
                     if (live)
                     {
@@ -92,6 +113,8 @@ void DropletObservationWidget::connect_to_camera()
 
                     this->set_settings();
                     this->ui->takeVideoButton->setEnabled(true);
+                    ui->sweepFrame->setEnabled(true);
+                    ui->cameraSettingsFrame->setEnabled(true);
                     ui->connectButton->setText("Disconnect Camera");
                     mCameraIsConnected = true;
 
@@ -107,23 +130,35 @@ void DropletObservationWidget::camera_closed()
     ui->connectButton->setText("Connect Camera");
     ui->takeVideoButton->setEnabled(false);
     ui->SaveVideoButton->setEnabled(false);
+    ui->sweepFrame->setEnabled(false);
+    ui->cameraSettingsFrame->setEnabled(false);
     mCameraIsConnected = false;
     mVideoHasBeenTaken = false;
 }
 
 void DropletObservationWidget::set_settings()
 {
-    double fps{10};
-    double exposure_milliseconds{0}; // 0 sets the max possible exposure
-    double newFPS{-1};
+    mCamera->aoi.setRect(QRect(680, 0, AOIWidth, 2048)); // AOIwidth must be a multiple of 8 for AVI capture
+    double fps(mCameraFrameRate);
+    //double exposure_milliseconds{0}; // 0 sets the max possible exposure
+    double newFPS{-1.0};
     double newExposure{-1.0};
     // set framerate
     is_SetFrameRate(mCameraHandle, fps, &newFPS);
+
     // set exposure
-    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure_milliseconds, sizeof(exposure_milliseconds));
+    double exposureRange[3]; // [0] = min, [1] = max. [2] = increment
+    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE, &exposureRange, sizeof(exposureRange));
+
+    double maxExp = exposureRange[1];
+
+    double desiredExpPercent = ((double)ui->shutterAngleSpinBox->value()) / 360.0;
+    double desiredExposure = maxExp * desiredExpPercent;
+
+    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &desiredExposure, sizeof(desiredExposure));
     is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE, &newExposure, sizeof(newExposure));
-    is_SetFrameRate(mCameraHandle, fps, &newFPS);
     qDebug() << QString("The framerate was set as %1 FPS").arg(newFPS);
+    ui->cameraFPSSpinBox->setValue(newFPS);
     qDebug() << QString("The exposure was set as %1 milliseconds").arg(newExposure);
 }
 
@@ -134,16 +169,20 @@ void DropletObservationWidget::capture_video()
     int colorMode{is_SetColorMode(mCameraHandle, IS_GET_COLOR_MODE)};
     SENSORINFO sensorInfo{};
 
-    is_GetSensorInfo (mCameraHandle, &sensorInfo);
+    is_GetSensorInfo(mCameraHandle, &sensorInfo);
 
-    int sensorWidth = sensorInfo.nMaxWidth;
-    int sensorHeight = sensorInfo.nMaxHeight;
+    int sensorWidth = sensorInfo.nMaxWidth;   // 2048 for our camera
+    int sensorHeight = sensorInfo.nMaxHeight; // 2048
 
-    int posX{0};
-    int posY{0};
-    int lineOffset{0};
 
-    isavi_SetImageSize(mAviID, colorMode, sensorWidth, sensorHeight, posX, posY, lineOffset);
+    IS_POINT_2D nOffset;
+    is_AOI(mCameraHandle, IS_AOI_IMAGE_GET_POS, &nOffset, sizeof(nOffset));
+
+
+    int posX{nOffset.s32X};
+    int posY{nOffset.s32Y};
+
+    isavi_SetImageSize(mAviID, colorMode, AOIWidth, sensorHeight, posX, posY, 0); // not sure why a zero here, but it works haha
 
     int imageQuality{95}; // 1 is the lowest, 100 is the highest
     isavi_SetImageQuality (mAviID, imageQuality);
@@ -154,11 +193,11 @@ void DropletObservationWidget::capture_video()
 
     isavi_OpenAVI(mAviID, fileName);
 
-    int videoFrameRate{10};
-
-    isavi_SetFrameRate(mAviID, videoFrameRate); // this does not need to be the same as the camera frame rate
+    int videoFrameRate{mCameraFrameRate}; // this does not need to be the same as the actual framerate though
+    isavi_SetFrameRate(mAviID, videoFrameRate);
     isavi_StartAVI(mAviID);
 
+    mNumFramesToCapture = int(ui->endTimeSpinBox->value() / ui->stepTimeSpinBox->value()) + 1;
     allow_widget_input(false);
     mCaptureVideoWithSweep = true;
     strobe_sweep_button_clicked();
@@ -221,7 +260,7 @@ void DropletObservationWidget::start_strobe_sweep()
     disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
             this, &DropletObservationWidget::start_strobe_sweep);
 
-    int initialDelay = 90; // I need to tune this
+    int initialDelay = (1000.0 * (1.0/ui->cameraFPSSpinBox->value())) + ui->initialTimerOffsetSpinBox->value(); // I NEED TO TUNE THIS
 
     mSweepTimer = new QTimer(this);
     connect(mSweepTimer, &QTimer::timeout, this, &DropletObservationWidget::update_strobe_sweep_offset);
@@ -239,7 +278,7 @@ void DropletObservationWidget::update_strobe_sweep_offset()
 {
     //auto t1{std::chrono::high_resolution_clock::now()};
 
-    double strobeDelay = 90;
+    double strobeDelay = (1000.0 * (1.0/ui->cameraFPSSpinBox->value())) + ui->timerTimeSpinBox->value();
 
     mSweepTimer->setInterval(strobeDelay);
     if (mCurrentStrobeOffset == -1)
@@ -277,16 +316,49 @@ void DropletObservationWidget::trigger_jet_clicked()
         s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
         s << CMD::set_jog(Axis::Jet, 1000);             // set to jet at 1000hz
         s << CMD::begin_motion(Axis::Jet);
-        mIsJetting = true;
-        ui->TriggerJetButton->setText("Stop Jetting");
+        //mIsJetting = true;
+        //ui->TriggerJetButton->setText("Stop Jetting");
+        jetting_was_turned_on();
     }
     else
     {
         s << CMD::stop_motion(Axis::Jet);
-        mIsJetting = false;
-        ui->TriggerJetButton->setText("Trigger Jet");
+        //mIsJetting = false;
+        //ui->TriggerJetButton->setText("Trigger Jet");
+        jetting_was_turned_off();
     }
 
     emit execute_command(s);
+}
+
+void DropletObservationWidget::framerate_changed()
+{
+    mCameraFrameRate = ui->cameraFPSSpinBox->value();
+    double fps(mCameraFrameRate);
+    double newFPS{-1.0};
+    // set framerate
+    is_SetFrameRate(mCameraHandle, fps, &newFPS);
+    qDebug() << QString("The framerate was set as %1 FPS").arg(newFPS);
+    ui->cameraFPSSpinBox->setValue(newFPS);
+    exposure_changed(); // now update the exposure
+}
+
+void DropletObservationWidget::exposure_changed()
+{
+    double exposureRange[3]; // [0] = min, [1] = max. [2] = increment
+    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE, &exposureRange, sizeof(exposureRange));
+
+    //double minExp = exposureRange[0];
+    double maxExp = exposureRange[1];
+    //double incExp = exposureRange[2];
+
+    double desiredExpPercent = ((double)ui->shutterAngleSpinBox->value()) / 360.0;
+    double desiredExposure = maxExp * desiredExpPercent;
+
+    double newExposure{-1.0};
+    // set exposure
+    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &desiredExposure, sizeof(desiredExposure));
+    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE, &newExposure, sizeof(newExposure));
+    qDebug() << QString("The exposure was set as %1 milliseconds").arg(newExposure);
 }
 
