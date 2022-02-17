@@ -41,6 +41,7 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     connect(ui->cameraFPSSpinBox, &QAbstractSpinBox::editingFinished, this, &DropletObservationWidget::framerate_changed);
     connect(ui->shutterAngleSpinBox, &QAbstractSpinBox::editingFinished, this, &DropletObservationWidget::exposure_changed);
     mTempFileName = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/jetdroplet.avi";
+    //mTempFileName = "C:/Users/ME/Desktop/jetdroplet.avi";
     qDebug() << "temp video files are stored at " << mTempFileName;
     connect(ui->SaveVideoButton, &QPushButton::clicked, this, &DropletObservationWidget::save_video_clicked);
 }
@@ -191,7 +192,8 @@ void DropletObservationWidget::capture_video()
     //const char* fileName = fileNameString.c_str();
 
     // get temp file location
-    const char* fileName = mTempFileName.toStdString().c_str();
+    std::string fileNameString = mTempFileName.toStdString();
+    const char* fileName = fileNameString.c_str();
 
     isavi_OpenAVI(mAviID, fileName);
 
