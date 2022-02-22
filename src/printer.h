@@ -5,6 +5,7 @@
 #include "gclib_errors.h"
 #include "gclib_record.h"
 #include <string>
+#include <sstream>
 
 #define X_CNTS_PER_MM 1000
 #define Y_CNTS_PER_MM 800
@@ -64,6 +65,9 @@ struct RecoatSettings
 namespace CMD
 {
 
+std::string open_connection_to_controller();
+std::string set_default_controller_settings();
+std::string homing_sequence();
 std::string spread_layer(const RecoatSettings &settings);
 //std::string spread_layers();
 std::string set_accleration(Axis axis, double speed_mm_s2);
@@ -120,6 +124,7 @@ std::string GMotionComplete();
 std::string JetDrive();
 std::string GSleep();
 std::string Message();
+std::string GOpen();
 }
 
 }

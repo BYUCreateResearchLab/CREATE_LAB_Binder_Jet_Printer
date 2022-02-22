@@ -62,12 +62,11 @@
 #include <QtOpenGLWidgets/qopenglwidget.h>
 #endif
 
-SvgView::SvgView(QWidget *parent)
-    : QGraphicsView(parent)
-    , m_renderer(Native)
-    , m_svgItem(nullptr)
-    , m_backgroundItem(nullptr)
-    , m_outlineItem(nullptr)
+SvgView::SvgView(QWidget *parent) : QGraphicsView(parent),
+    m_renderer(Native),
+    m_svgItem(nullptr),
+    m_backgroundItem(nullptr),
+    m_outlineItem(nullptr)
 {
     setScene(new QGraphicsScene(this));
     setTransformationAnchor(AnchorViewCenter);
@@ -76,8 +75,8 @@ SvgView::SvgView(QWidget *parent)
     setViewportUpdateMode(FullViewportUpdate);
 
     //setViewportMargins(-2, -2, -2, -2); I added this
-    setViewportMargins(0, 0, 0, 0);
-    setFrameStyle(QFrame::NoFrame);
+    setViewportMargins(-1, -1, 0, 0);
+    //setFrameStyle(QFrame::NoFrame);
 
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -101,8 +100,7 @@ void SvgView::drawBackground(QPainter *p, const QRectF &)
 {
     p->save();
     p->resetTransform();
-
-    p->fillRect(viewport()->rect(), QBrush(Qt::gray, Qt::SolidPattern));
+    //p->fillRect(viewport()->rect(), QBrush(Qt::gray, Qt::SolidPattern));
     //p->drawTiledPixmap(viewport()->rect(), backgroundBrush().texture());
     p->restore();
 }
@@ -113,16 +111,36 @@ QSize SvgView::svgSize() const
 }
 
 
-void SvgView::setup(){
+void SvgView::setup(double xSize, double ySize)
+{
+    mXSize = xSize;
+    mYSize = ySize;
     scene()->clear();
     resetTransform();
 
-    scene()->setSceneRect(0,0,100,100);
-    viewport()->size().height();
-    qreal scaleFactor = size().height() / imageSize;
+    scene()->setSceneRect(0, 0, mXSize, mYSize);
+    qreal scaleFactor = bordered_min_scale_factor();
     scale(scaleFactor, scaleFactor);
+    centerOn(sceneRect().center()); // Center view
+
+    add_print_bed_outline();
 }
 
+void SvgView::add_print_bed_outline()
+{
+    scene()->addRect(0,0, mXSize, mYSize, Qt::NoPen, QBrush(Qt::gray, Qt::SolidPattern));
+    // add print bed area outlines
+    scene()->addLine(0,0, mXSize,0, outlinePen);
+    scene()->addLine(mXSize,0, mXSize,mYSize, outlinePen);
+    scene()->addLine(mXSize,mYSize, 0,mYSize, outlinePen);
+    scene()->addLine(0,mYSize, 0,0, outlinePen);
+}
+
+void SvgView::clear_lines()
+{
+    scene()->clear();
+    add_print_bed_outline();
+}
 
 bool SvgView::openFile(const QString &fileName)
 {
@@ -132,8 +150,7 @@ bool SvgView::openFile(const QString &fileName)
     const bool drawOutline = (m_outlineItem ? m_outlineItem->isVisible() : true);
 
     QScopedPointer<QGraphicsSvgItem> svgItem(new QGraphicsSvgItem(fileName));
-    if (!svgItem->renderer()->isValid())
-        return false;
+    if (!svgItem->renderer()->isValid()) return false;
 
     s->clear();
     resetTransform();
@@ -168,12 +185,6 @@ bool SvgView::openFile(const QString &fileName)
     qreal scaleFactor = this->size().height() / m_svgItem->boundingRect().size().height();
     scale(scaleFactor, scaleFactor);
 
-    //s->sceneRect().height();
-
-    // Debug logs
-
-
-
     return true;
 }
 
@@ -183,11 +194,14 @@ void SvgView::setRenderer(RendererType type)
 {
     m_renderer = type;
 
-    if (m_renderer == OpenGL) {
+    if (m_renderer == OpenGL)
+    {
 #ifdef USE_OPENGLWIDGETS
         setViewport(new QOpenGLWidget);
 #endif
-    } else {
+    }
+    else
+    {
         setViewport(new QWidget);
     }
 }
@@ -199,17 +213,13 @@ void SvgView::setAntialiasing(bool antialiasing)
 
 void SvgView::setViewBackground(bool enable)
 {
-    if (!m_backgroundItem)
-          return;
-
+    if (!m_backgroundItem) return;
     m_backgroundItem->setVisible(enable);
 }
 
 void SvgView::setViewOutline(bool enable)
 {
-    if (!m_outlineItem)
-        return;
-
+    if (!m_outlineItem) return;
     m_outlineItem->setVisible(enable);
 }
 
@@ -230,19 +240,22 @@ void SvgView::zoomOut()
 
 void SvgView::resetZoom()
 {
-    qreal scaleFactor = this->size().height() / imageSize;
-    if (!qFuzzyCompare(zoomFactor(), scaleFactor)) {
+    qreal scaleFactor = bordered_min_scale_factor();
+    if (!qFuzzyCompare(zoomFactor(), scaleFactor)) // if not already the same
+    {
         resetTransform();
-        scale(scaleFactor,scaleFactor);
+        scale(scaleFactor, scaleFactor);
         emit zoomChanged();
-        this->centerOn(imageSize / 2, imageSize / 2); // Center view
+        centerOn(sceneRect().center()); // Center view
     }
 }
 
 void SvgView::paintEvent(QPaintEvent *event)
 {
-    if (m_renderer == Image) {
-        if (m_image.size() != viewport()->size()) {
+    if (m_renderer == Image)
+    {
+        if (m_image.size() != viewport()->size())
+        {
             m_image = QImage(viewport()->size(), QImage::Format_ARGB32_Premultiplied);
         }
 
@@ -253,7 +266,9 @@ void SvgView::paintEvent(QPaintEvent *event)
         QPainter p(viewport());
         p.drawImage(0, 0, m_image);
 
-    } else {
+    }
+    else
+    {
         QGraphicsView::paintEvent(event);
     }
 }
@@ -265,12 +280,15 @@ void SvgView::wheelEvent(QWheelEvent *event)
 
 void SvgView::zoomBy(qreal factor)
 {
-    qreal scaleFactor = this->size().height() / imageSize;
+    qreal scaleFactor = min_scale_factor();
     const qreal currentZoom = zoomFactor();
     if ((factor < 1 && currentZoom < scaleFactor) || (factor > 1 && currentZoom > (scaleFactor * 10))) // Zoom Limits
-        return;
+    {
+        //return; // DO NOTHING HERE?
+    }
     scale(factor, factor);
-    if (zoomFactor() < scaleFactor){ // I added this
+    if (zoomFactor() < bordered_min_scale_factor()) // I added this
+    {
      resetZoom();
     } // end add
     emit zoomChanged();
@@ -278,7 +296,20 @@ void SvgView::zoomBy(qreal factor)
 
 QSvgRenderer *SvgView::renderer() const
 {
-    if (m_svgItem)
-        return m_svgItem->renderer();
-    return nullptr;
+    if (m_svgItem) return m_svgItem->renderer();
+    else return nullptr;
+}
+
+qreal SvgView::min_scale_factor()
+{
+    qreal scaleFactorX = size().width()  / sceneRect().width();
+    qreal scaleFactorY = size().height() / sceneRect().height();
+    return scaleFactorX < scaleFactorY ? scaleFactorX : scaleFactorY;
+}
+
+qreal SvgView::bordered_min_scale_factor()
+{
+    qreal scaleFactorX = size().width()  / (sceneRect().width() + 0.25);
+    qreal scaleFactorY = size().height() / (sceneRect().height() + 0.25);
+    return scaleFactorX < scaleFactorY ? scaleFactorX : scaleFactorY;
 }

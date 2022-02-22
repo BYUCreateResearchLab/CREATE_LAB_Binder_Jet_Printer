@@ -32,7 +32,7 @@ LinePrintWidget::LinePrintWidget(QWidget *parent) : PrinterWidget(parent), ui(ne
     ui->setSpacing->setValue(table.setSpacing);
 
     //SVG Viewer setup
-    ui->SVGViewer->setup();
+    ui->SVGViewer->setup(PRINT_X_SIZE_MM, PRINT_Y_SIZE_MM);
     updatePreviewWindow();
 }
 
@@ -53,7 +53,8 @@ void LinePrintWidget::log(QString message, enum logType messageType = logType::S
 void LinePrintWidget::updatePreviewWindow()
 {
     std::vector<QLineF> lines = table.qLines(); // vector of lines to add to window
-    ui->SVGViewer->scene()->clear(); // clear the window
+    //ui->SVGViewer->scene()->clear(); // clear the window
+    ui->SVGViewer->clear_lines();
     for(size_t i{0}; i < lines.size(); ++i) // for each line
     {
         ui->SVGViewer->scene()->addLine(lines[i], linePen); // add the line to the scene
@@ -117,7 +118,7 @@ void LinePrintWidget::updateCell(int row, int column)
 void LinePrintWidget::updateTable(bool updateVerticalHeaders = false, bool updateHorizontalHeaders = false)
 {
     // Set Table Size
-    ui->tableWidget->setRowCount(table.data.size());
+    ui->tableWidget->setRowCount((int)table.data.size());
     ui->tableWidget->setColumnCount(table.data[0].size);
 
     // Update Vertical Headers if updateVerticalHeaders is set to true
@@ -159,7 +160,7 @@ void LinePrintWidget::updateTable(bool updateVerticalHeaders = false, bool updat
 
 void LinePrintWidget::on_numSets_valueChanged(int rowCount)
 {
-    int prevRowCount = table.data.size(); // get previous row count
+    int prevRowCount = (int)table.data.size(); // get previous row count
     // set new row count
     if(rowCount > prevRowCount) // If adding rows
     {
@@ -205,7 +206,7 @@ void LinePrintWidget::on_printPercentSlider_sliderMoved(int position)
     double percent = (double)position / (double)ui->printPercentSlider->maximum();
 
     std::vector<QLineF> lines = table.qLines(); // vector of lines to add to window
-    ui->SVGViewer->scene()->clear(); // clear the window
+    ui->SVGViewer->clear_lines(); // clear the window
 
     int numLinestoShow = lines.size() * percent;
 
@@ -226,6 +227,7 @@ void LinePrintWidget::on_startPrint_clicked()
 
     auto t1{std::chrono::high_resolution_clock::now()};
 
+    s << CMD::stop_motion(Axis::Jet); // stop jetting if it is currently jetting
     s << CMD::set_accleration(Axis::X, 200);
     s << CMD::set_deceleration(Axis::X, 200);
     s << CMD::set_accleration(Axis::Y, 200);
@@ -316,7 +318,7 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
 
 void LinePrintWidget::allow_widget_input(bool allowed)
 {
-    if(allowed)
+    if (allowed)
     {
         ui->startPrint->setEnabled(true);
     }

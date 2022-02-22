@@ -12,6 +12,7 @@ class PowderSetupWidget;
 class JettingWidget;
 class HighSpeedLineWidget;
 class DropletObservationWidget;
+class JetDrive;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -52,17 +53,20 @@ private slots:
     void thread_ended();
     void connected_to_motion_controller();
 
+    void print_to_output_window(QString s);
     void on_removeBuildBox_clicked();
     void on_actionShow_Hide_Console_triggered();
     void generate_printing_message_box(const std::string &message);
 
-    void start_jetting();
-    void stop_jetting();
+    void tab_was_changed(int index);
+
 private:
     Ui::MainWindow *ui;
+    void resizeEvent(QResizeEvent* event) override;
 
     Printer *mPrinter{nullptr};
     PrintThread *mPrintThread{nullptr};
+    JetDrive *mJetDrive{nullptr};
     LinePrintWidget *mLinePrintingWidget{nullptr};
     QDockWidget *mDockWidget{nullptr};
     OutputWindow *mOutputWindow{nullptr};

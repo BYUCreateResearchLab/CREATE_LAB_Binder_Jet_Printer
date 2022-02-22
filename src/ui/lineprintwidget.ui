@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>885</width>
-    <height>731</height>
+    <width>970</width>
+    <height>790</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -247,18 +247,21 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>400</width>
-           <height>400</height>
+           <width>500</width>
+           <height>500</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>400</width>
-           <height>400</height>
+           <width>500</width>
+           <height>500</height>
           </size>
          </property>
          <property name="mouseTracking">
           <bool>false</bool>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Box</enum>
          </property>
          <property name="interactive">
           <bool>false</bool>
