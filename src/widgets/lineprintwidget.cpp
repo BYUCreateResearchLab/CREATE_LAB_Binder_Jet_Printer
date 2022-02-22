@@ -228,8 +228,8 @@ void LinePrintWidget::on_startPrint_clicked()
     auto t1{std::chrono::high_resolution_clock::now()};
 
     s << CMD::stop_motion(Axis::Jet); // stop jetting if it is currently jetting
-    s << CMD::set_accleration(Axis::X, 200);
-    s << CMD::set_deceleration(Axis::X, 200);
+    s << CMD::set_accleration(Axis::X, 500);
+    s << CMD::set_deceleration(Axis::X, 500);
     s << CMD::set_accleration(Axis::Y, 200);
     s << CMD::set_deceleration(Axis::Y, 200);
     for(int i{0}; i < int(table.numRows()); ++i)
@@ -250,8 +250,8 @@ void LinePrintWidget::on_startPrint_clicked()
 void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &s)
 {
     //Find starting position for line set
-    float x_start{table.startX};
-    for(int i{0}; i < setNum; ++i) // set proper x_start for set to be printed
+    float x_start = table.startX;
+    for (int i{0}; i < setNum; ++i) // set proper x_start for current set to be printed
     {
         x_start += table.data[i].lineLength.value + table.setSpacing;
     }
@@ -284,7 +284,7 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
     // START LINE PRINTING HERE!
     float curY = y_start;
     float curX = x_start;
-    for(int i{0}; i < table.data[setNum].numLines.value; ++i)
+    for (int i{0}; i < table.data[setNum].numLines.value; ++i)
     {
         s << CMD::set_speed(Axis::X, table.data[setNum].printVelocity.value);
 

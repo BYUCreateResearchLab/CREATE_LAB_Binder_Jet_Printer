@@ -136,7 +136,9 @@ class LinePrintData
 public:
     LinePrintData();
     std::vector<LineSet> data = {};
-    float startX=10, startY=10, setSpacing=5;
+    float startX=10;
+    float startY=10;
+    float setSpacing=5;
 
     void addRows(int num_sets);
     void removeRows(int num_sets);

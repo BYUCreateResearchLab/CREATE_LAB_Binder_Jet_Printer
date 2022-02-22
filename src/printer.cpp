@@ -419,10 +419,10 @@ std::string CMD::homing_sequence()
     s << CMD::motion_complete(Axis::Y);
     s << CMD::motion_complete(Axis::Z);
 
-    s << CMD::set_speed(Axis::X, 50);
-    s << CMD::position_relative(Axis::X, -40);
-    s << CMD::begin_motion(Axis::X);
-    s << CMD::motion_complete(Axis::X);
+    //s << CMD::set_speed(Axis::X, 50);
+    //s << CMD::position_relative(Axis::X, -40);
+    //s << CMD::begin_motion(Axis::X);
+    //s << CMD::motion_complete(Axis::X);
 
     s << CMD::define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
     s << CMD::define_position(Axis::Y, 0);
