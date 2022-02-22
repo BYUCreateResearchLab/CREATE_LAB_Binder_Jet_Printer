@@ -32,7 +32,7 @@ LinePrintWidget::LinePrintWidget(QWidget *parent) : PrinterWidget(parent), ui(ne
     ui->setSpacing->setValue(table.setSpacing);
 
     //SVG Viewer setup
-    ui->SVGViewer->setup();
+    ui->SVGViewer->setup(PRINT_X_SIZE_MM, PRINT_Y_SIZE_MM);
     updatePreviewWindow();
 }
 
@@ -53,7 +53,8 @@ void LinePrintWidget::log(QString message, enum logType messageType = logType::S
 void LinePrintWidget::updatePreviewWindow()
 {
     std::vector<QLineF> lines = table.qLines(); // vector of lines to add to window
-    ui->SVGViewer->scene()->clear(); // clear the window
+    //ui->SVGViewer->scene()->clear(); // clear the window
+    ui->SVGViewer->clear_lines();
     for(size_t i{0}; i < lines.size(); ++i) // for each line
     {
         ui->SVGViewer->scene()->addLine(lines[i], linePen); // add the line to the scene
@@ -205,7 +206,7 @@ void LinePrintWidget::on_printPercentSlider_sliderMoved(int position)
     double percent = (double)position / (double)ui->printPercentSlider->maximum();
 
     std::vector<QLineF> lines = table.qLines(); // vector of lines to add to window
-    ui->SVGViewer->scene()->clear(); // clear the window
+    ui->SVGViewer->clear_lines(); // clear the window
 
     int numLinestoShow = lines.size() * percent;
 
@@ -317,7 +318,7 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
 
 void LinePrintWidget::allow_widget_input(bool allowed)
 {
-    if(allowed)
+    if (allowed)
     {
         ui->startPrint->setEnabled(true);
     }

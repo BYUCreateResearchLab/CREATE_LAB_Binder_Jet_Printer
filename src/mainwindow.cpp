@@ -58,11 +58,12 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
     //mJettingWidget = new JettingWidget(mJetDrive);
     mHighSpeedLineWidget = new HighSpeedLineWidget();
     mDropletObservationWidget = new DropletObservationWidget(mJetDrive);
+
     ui->tabWidget->addTab(mPowderSetupWidget, "Powder Setup");
     ui->tabWidget->addTab(mLinePrintingWidget, "Line Printing");
-    //ui->tabWidget->addTab(mJettingWidget, "Jetting");
     ui->tabWidget->addTab(mHighSpeedLineWidget, "High-Speed Line Printing");
     ui->tabWidget->addTab(mDropletObservationWidget, "Jetting");
+
 
     mDockWidget = new QDockWidget("Output Window",this);
     this->addDockWidget(Qt::RightDockWidgetArea, mDockWidget);
@@ -108,6 +109,7 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
     // that it turned off jetting
     connect(mLinePrintingWidget, &LinePrintWidget::disable_user_input, mDropletObservationWidget, &DropletObservationWidget::jetting_was_turned_off);
 
+    connect(ui->tabWidget, &QTabWidget::currentChanged, this, &MainWindow::tab_was_changed);
 }
 
 void MainWindow::thread_ended()
@@ -120,11 +122,26 @@ MainWindow::~MainWindow()
     // On application close
     delete ui;
     delete mJetDrive;
-    if (mPrinter->g)
-    { // if there is an active connection to a controller
+    if (mPrinter->g) // if there is an active connection to a controller
+    {
         GCmd(mPrinter->g, "MO"); // Turn off the motors
-        GClose(mPrinter->g);
-    } // Close the connection to the controller
+        GClose(mPrinter->g); // Close the connection to the controller
+    }
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event) // override the resize event of the main window
+{
+   QMainWindow::resizeEvent(event);
+   // Your code here.
+   mHighSpeedLineWidget->reset_preview_zoom();
+}
+
+void MainWindow::tab_was_changed(int index) // code that gets run when the current tab in the mainwindow is changed
+{
+    if (index == ui->tabWidget->indexOf(mHighSpeedLineWidget))
+    {
+        mHighSpeedLineWidget->reset_preview_zoom();
+    }
 }
 
 void MainWindow::connected_to_motion_controller()

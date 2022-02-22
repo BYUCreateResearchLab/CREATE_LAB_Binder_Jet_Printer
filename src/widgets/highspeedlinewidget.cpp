@@ -10,6 +10,7 @@ HighSpeedLineWidget::HighSpeedLineWidget(QWidget *parent) : PrinterWidget(parent
 {
     ui->setupUi(this);
     setAccessibleName("High Speed Line Widget");
+    setup();
 }
 
 HighSpeedLineWidget::~HighSpeedLineWidget()
@@ -22,7 +23,17 @@ void HighSpeedLineWidget::allow_widget_input(bool allowed)
 
 }
 
-void HighSpeedLineWidget::on_pushButton_clicked()
+void HighSpeedLineWidget::setup()
+{
+    ui->SVGViewer->setup(2, 0.5);
+}
+
+void HighSpeedLineWidget::reset_preview_zoom()
+{
+    ui->SVGViewer->resetZoom();
+}
+
+void HighSpeedLineWidget::print_line()
 {
     std::stringstream s;
 
@@ -65,8 +76,6 @@ void HighSpeedLineWidget::on_pushButton_clicked()
     s << CMD::begin_pvt_motion(Axis::X);
 
     s << CMD::at_time_samples(TriggerOffsetTime); // WHAT DO I PUT HERE?
-
-
 
     emit execute_command(s);
 }

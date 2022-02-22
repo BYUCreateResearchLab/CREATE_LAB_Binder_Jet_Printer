@@ -52,6 +52,7 @@
 #define SVGVIEW_H
 
 #include <QGraphicsView>
+#include <QPen>
 
 QT_BEGIN_NAMESPACE
 class QGraphicsSvgItem;
@@ -69,7 +70,7 @@ public:
 
     explicit SvgView(QWidget *parent = nullptr);
 
-    void setup();
+    void setup(double xSize, double ySize);
     bool openFile(const QString &fileName);
     void setRenderer(RendererType type = Native);
     void drawBackground(QPainter *p, const QRectF &rect) override;
@@ -79,7 +80,8 @@ public:
 
     qreal zoomFactor() const;
 
-    qreal imageSize = 100;
+    qreal mXSize{0};
+    qreal mYSize{0};
 
 public slots:
     void setAntialiasing(bool antialiasing);
@@ -88,6 +90,7 @@ public slots:
     void zoomIn();
     void zoomOut();
     void resetZoom();
+    void clear_lines();
 
 signals:
     void zoomChanged();
@@ -98,12 +101,17 @@ protected:
 
 private:
     void zoomBy(qreal factor);
+    void add_print_bed_outline();
+    qreal min_scale_factor();
+    qreal bordered_min_scale_factor();
 
     RendererType m_renderer;
 
     QGraphicsSvgItem *m_svgItem;
     QGraphicsRectItem *m_backgroundItem;
     QGraphicsRectItem *m_outlineItem;
+
+    QPen outlinePen = QPen(Qt::black, 0.001, Qt::DashLine, Qt::RoundCap);
 
     QImage m_image;
 };

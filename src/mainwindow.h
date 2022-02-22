@@ -58,8 +58,11 @@ private slots:
     void on_actionShow_Hide_Console_triggered();
     void generate_printing_message_box(const std::string &message);
 
+    void tab_was_changed(int index);
+
 private:
     Ui::MainWindow *ui;
+    void resizeEvent(QResizeEvent* event) override;
 
     Printer *mPrinter{nullptr};
     PrintThread *mPrintThread{nullptr};

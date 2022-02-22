@@ -374,4 +374,3 @@ void DropletObservationWidget::save_video_clicked()
         return;
     }
 }
-

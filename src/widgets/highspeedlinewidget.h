@@ -2,10 +2,12 @@
 #define HIGHSPEEDLINEWIDGET_H
 
 #include <QWidget>
+#include <QPen>
 
 #include "printerwidget.h"
 
-namespace Ui {
+namespace Ui
+{
 class HighSpeedLineWidget;
 }
 
@@ -17,10 +19,11 @@ public:
     explicit HighSpeedLineWidget(QWidget *parent = nullptr);
     ~HighSpeedLineWidget();
     void allow_widget_input(bool allowed) override;
-
+    void reset_preview_zoom();
 
 private slots:
-    void on_pushButton_clicked();
+    void print_line();
+    void setup();
 
 private:
     Ui::HighSpeedLineWidget *ui;
