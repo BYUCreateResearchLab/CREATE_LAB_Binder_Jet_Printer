@@ -400,12 +400,18 @@ std::string CMD::homing_sequence()
 
     s << CMD::sleep(1000);
 
+    // home to center index on x axis
     s << CMD::set_jog(Axis::X, 30);
     s << CMD::set_homing_velocity(Axis::X, 0.5);
     s << CMD::find_index(Axis::X);
 
-    s << CMD::set_speed(Axis::Y, 40);
-    s << CMD::position_relative(Axis::Y, -200);
+    //s << CMD::set_speed(Axis::Y, 40);
+    //s << CMD::position_relative(Axis::Y, -200);
+
+    // home y axis to nearest index
+    s << CMD::set_jog(Axis::Y, -0.5);
+    s << CMD::set_homing_velocity(Axis::Y, 0.25);
+    s << CMD::find_index(Axis::Y);
 
     s << CMD::set_accleration(Axis::Z, 10);        // slower acceleration for going back up
     s << CMD::set_speed(Axis::Z, 2);

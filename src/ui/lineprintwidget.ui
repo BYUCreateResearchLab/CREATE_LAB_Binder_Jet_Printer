@@ -75,6 +75,12 @@
          <height>16777215</height>
         </size>
        </property>
+       <property name="minimum">
+        <double>15.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>100.000000000000000</double>
+       </property>
        <property name="value">
         <double>15.000000000000000</double>
        </property>
@@ -87,6 +93,9 @@
          <width>100</width>
          <height>16777215</height>
         </size>
+       </property>
+       <property name="maximum">
+        <double>100.000000000000000</double>
        </property>
        <property name="value">
         <double>10.000000000000000</double>

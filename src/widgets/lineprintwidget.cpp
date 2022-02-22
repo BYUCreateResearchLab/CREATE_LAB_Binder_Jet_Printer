@@ -274,8 +274,13 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
 
     // the 50 is half the build plate size in the x-direction and the 75000 is the center position...
 
-    s << CMD::position_absolute(Axis::X, 75 - (50 - x_start));
-    s << CMD::position_absolute(Axis::Y, y_start);
+    // put these somewhere better soon!
+    double Printer2NozzleOffsetX{-12.7};
+    double Printer2NozzleOffsetY{-182.75};
+    // maybe make an pre-offset position absolute command
+
+    s << CMD::position_absolute(Axis::X, x_start + Printer2NozzleOffsetX);
+    s << CMD::position_absolute(Axis::Y, y_start + Printer2NozzleOffsetY);
     s << CMD::begin_motion(Axis::X);
     s << CMD::begin_motion(Axis::Y);
     s << CMD::motion_complete(Axis::X);
@@ -295,17 +300,17 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
 
         curX = curX + table.data[setNum].lineLength.value;
 
-        s << CMD::position_absolute(Axis::X, 75 - (50 - curX));
+        s << CMD::position_absolute(Axis::X, curX + Printer2NozzleOffsetX);
         s << CMD::begin_motion(Axis::X);
         s << CMD::begin_motion(Axis::Jet);
         s << CMD::motion_complete(Axis::X);
         s << CMD::stop_motion(Axis::Jet);
 
         s << CMD::set_speed(Axis::X, 50);                          // set x-axis move speed to 50 mm/s (change this to be user-settable in the future)
-        s << CMD::position_absolute(Axis::X, 75 - (50 - x_start)); // PA to move x-axis to start of next line
+        s << CMD::position_absolute(Axis::X, x_start + Printer2NozzleOffsetX); // PA to move x-axis to start of next line
 
         curY += table.data[setNum].lineSpacing.value;
-        s << CMD::position_absolute(Axis::Y, curY);
+        s << CMD::position_absolute(Axis::Y, curY + Printer2NozzleOffsetY);
 
         s << CMD::begin_motion(Axis::X);
         s << CMD::begin_motion(Axis::Y);
