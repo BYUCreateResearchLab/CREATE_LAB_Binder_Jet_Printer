@@ -62,6 +62,8 @@ struct RecoatSettings
     double zAxisDefaultAcceleration{};
 };
 
+double calculate_acceleration_distance(double speed_mm_per_s, double acceleration_mm_per_s2);
+
 namespace CMD
 {
 
@@ -92,6 +94,7 @@ std::string stop_motion(Axis axis);
 std::string set_reference_time();
 std::string at_time_samples(int samples);
 std::string at_time_milliseconds(int milliseconds);
+std::string after_absolute_position(Axis axis, double absolutePosition_mm);
 
 std::string set_bit(int bit);
 std::string clear_bit(int bit);
@@ -108,6 +111,10 @@ std::string disable_hopper();
 std::string disable_forward_software_limit(Axis axis);
 
 std::string display_message(const std::string &message);
+
+std::string enable_gearing_for(Axis slaveAxis, Axis masterAxis);
+std::string set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing);
+std::string disable_gearing_for(Axis slaveAxis);
 
 namespace detail
 {

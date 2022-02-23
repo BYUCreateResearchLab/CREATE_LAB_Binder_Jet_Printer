@@ -102,7 +102,8 @@ errorType TableData::updateValue(float val)
     return returnerror;
 }
 
-errorType TableData::updateData(QString input){
+errorType TableData::updateData(QString input)
+{
     if (input != toQString())
     { // If the QString text has changed
         bool ok = false; // indicator for errors of toInt function
@@ -175,6 +176,16 @@ void LinePrintData::removeRows(int num_sets=1)
     data.erase(data.end() - num_sets, data.end());
 }
 
+int LinePrintData::get_column_index_for(const TableData &column)
+{
+    LineSet tempLineSet;
+    for (int i=0; i < tempLineSet.size; i++)
+    {
+        if (tempLineSet[i].typeName == column.typeName) return i;
+    }
+    return 0;
+}
+
 std::vector<QLineF> LinePrintData::qLines()
 {
     float xpos = startX;
@@ -204,6 +215,46 @@ std::vector<QLineF> LinePrintData::qLines()
             {
                 // Add a QLine object for the line
                 returnVec.push_back(QLineF(xpos, yheight - ypos, xpos + data[s].lineLength.value, yheight - ypos));
+                ypos += data[s].lineSpacing.value; // Move the Y position by the lineSpacing amount
+            }
+        }
+        ypos = startY; // Reset the Y Spacing
+        xpos += setSpacing + data[s].lineLength.value; // Move the X Spacing
+    }
+    return returnVec;
+}
+
+std::vector<QLineF> LinePrintData::qAccelerationLines()
+{
+    float xpos = startX;
+    float ypos = startY;
+    float yheight = PRINT_Y_SIZE_MM; // Height of printer
+    // Note: The coordinate system of vector graphics have the origin in the top left (Quad IV)
+    //       but the printer will have the origin in the bottom left corner (Quad I)
+    //       This will require that the y axis coordinate be subtracted by the height
+    //       to visualize in a vector graphic how coordinates will be represented on the printer.
+
+    std::vector<QLineF> returnVec;
+    for (size_t s=0; s < data.size(); s++) // for each set of lines
+    {
+        double accelerationDistance = calculate_acceleration_distance(data[s].printVelocity.value, data[s].printAcceleration.value);
+        // Confirm all of the data fields for the set are not empty
+        bool completeSet = true;
+        for (int c=0; c < data[s].size; c++)
+        { // for each value in a set
+            if (std::isnan(data[s][c].value))
+            {
+                completeSet = false; // mark the set as not complete if there is a NaN value
+            }
+        }
+
+        if (completeSet) // only if there are no NaNs
+        {
+            for (int i=0; i < (int)data[s].numLines.value; i++) // for each line in the set
+            {
+                // Add a QLine object for the accelerations before and after the line
+                returnVec.push_back(QLineF(xpos - accelerationDistance, yheight - ypos, xpos, yheight - ypos));
+                returnVec.push_back(QLineF(xpos + data[s].lineLength.value, yheight - ypos, xpos + data[s].lineLength.value + accelerationDistance, yheight - ypos));
                 ypos += data[s].lineSpacing.value; // Move the Y position by the lineSpacing amount
             }
         }

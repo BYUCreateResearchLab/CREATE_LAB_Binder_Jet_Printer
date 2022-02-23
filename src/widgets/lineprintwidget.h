@@ -32,7 +32,6 @@ public:
     void updatePreviewWindow();
     void checkMinMax(int r, int c, float val, float min, float max, bool isInt, bool &ok);
     void generate_line_set_commands(int setNum, std::stringstream &s);
-    void generate_line_set_commands_new(int setNum, std::stringstream &s);
 
     void allow_widget_input(bool allowed) override;
 
@@ -49,13 +48,22 @@ private slots:
 private:
     Ui::LinePrintWidget *ui;
 
+    void disable_velocity_input();
+    void check_x_start();
+
+
+    // put these somewhere better soon!
+    double Printer2NozzleOffsetX{-12.7};
+    double Printer2NozzleOffsetY{-182.75};
+
+
     std::vector<logType> activeLogTypes = {logType::Error, logType::Status, logType::Standard, logType::Debug};
     // Value types for data input columns for printing lines
     std::vector<std::string> LinePrintDataColumnTypes = {"int", "float", "float", "int", "int", "float", "float"};
     LinePrintData table = LinePrintData();
 
     QPen linePen = QPen(Qt::blue, 0.1, Qt::SolidLine, Qt::RoundCap);
-    QPen lineTravelPen = QPen(Qt::red, 0.5, Qt::SolidLine, Qt::RoundCap);
+    QPen lineTravelPen = QPen(Qt::red, 0.1, Qt::DashLine, Qt::RoundCap);
 };
 
 #endif // LINEPRINTWIDGET_H

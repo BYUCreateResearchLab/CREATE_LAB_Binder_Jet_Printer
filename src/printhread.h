@@ -48,7 +48,7 @@ private:
     bool mQuit{false};
     bool mRunning{true};
 
-    bool mPrintGCmds{false};
+    bool mPrintGCmds{true};
 };
 
 #endif // PRINTHREAD_H

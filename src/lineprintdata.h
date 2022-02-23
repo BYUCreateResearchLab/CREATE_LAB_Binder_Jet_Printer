@@ -92,8 +92,8 @@ public:
     TableData lineLength = TableData("Line Length\n(mm)", type::float_type, 15, 0.01f, 100);
     TableData dropletSpacing = TableData("Droplet Spacing\n(µm)", type::int_type, 5, 1, 50);
     TableData jettingFreq = TableData("Jetting Frequency\n(Hz)", type::int_type, 1000, 100, 10000);
-    TableData printVelocity = TableData("Printing Velocity\n(mm/s)", type::float_type, 5, 0.1f, 100);
-    TableData printAcceleration = TableData("Print Acceleration\n(mm/s2)", type::float_type, 600, 100.0, 1500.0);
+    TableData printVelocity = TableData("Printing Velocity\n(mm/s)", type::float_type, 5, 0.1f, 10000);
+    TableData printAcceleration = TableData("Print Acceleration\n(mm/s2)", type::float_type, 800, 100.0, 1500.0);
 
     int size = 7; // Number of columns in dataset
 
@@ -139,14 +139,17 @@ class LinePrintData
 public:
     LinePrintData();
     std::vector<LineSet> data = {};
-    float startX=10;
-    float startY=10;
-    float setSpacing=5;
+    float startX;
+    float startY;
+    float setSpacing;
 
     void addRows(int num_sets);
     void removeRows(int num_sets);
 
+    int get_column_index_for(const TableData &column);
+
     std::vector<QLineF> qLines();
+    std::vector<QLineF> qAccelerationLines();
 
     int numRows(){return (int)(data.size());}
 };

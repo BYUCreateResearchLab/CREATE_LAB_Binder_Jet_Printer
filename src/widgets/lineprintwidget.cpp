@@ -27,9 +27,15 @@ LinePrintWidget::LinePrintWidget(QWidget *parent) : PrinterWidget(parent), ui(ne
 
     // Misc. Setup
     ui->numSets->setValue(1);
-    ui->startX->setValue(table.startX);
-    ui->startY->setValue(table.startY);
-    ui->setSpacing->setValue(table.setSpacing);
+    //ui->startX->setValue(table.startX);
+    //ui->startY->setValue(table.startY);
+    //ui->setSpacing->setValue(table.setSpacing);
+
+    // get values from ui and update internal data structure
+    table.startX = ui->startX->value();
+    table.startY = ui->startY->value();
+    table.setSpacing = ui->setSpacing->value();
+
 
     //SVG Viewer setup
     ui->SVGViewer->setup(PRINT_X_SIZE_MM, PRINT_Y_SIZE_MM);
@@ -53,11 +59,16 @@ void LinePrintWidget::log(QString message, enum logType messageType = logType::S
 void LinePrintWidget::updatePreviewWindow()
 {
     std::vector<QLineF> lines = table.qLines(); // vector of lines to add to window
+    std::vector<QLineF> accelerationLines = table.qAccelerationLines();
     //ui->SVGViewer->scene()->clear(); // clear the window
     ui->SVGViewer->clear_lines();
     for(size_t i{0}; i < lines.size(); ++i) // for each line
     {
         ui->SVGViewer->scene()->addLine(lines[i], linePen); // add the line to the scene
+    }
+    for(size_t i{0}; i < accelerationLines.size(); ++i) // for each line
+    {
+        ui->SVGViewer->scene()->addLine(accelerationLines[i], lineTravelPen); // add the line to the scene
     }
 }
 
@@ -76,9 +87,10 @@ void LinePrintWidget::CheckCell(int row, int column)
     log("value checked was \"" + cellText + "\"", logType::Debug);
 
     errorType error_state = table.data[row][column].updateData(cellText); // Update cell value and get back error code
-    switch(error_state){
+    switch(error_state)
+    {
     case errorNone: // no error
-        log("The conversion to int was successful and read as " +
+        log("The input was successful and read as " +
             QString::number(table.data[row][column].value), logType::Debug);
         break;
     case errortooSmall: // number was too small and set to min
@@ -96,8 +108,24 @@ void LinePrintWidget::CheckCell(int row, int column)
         break;
     }
 
+    int dropletSpacingColumn = table.get_column_index_for(LineSet().dropletSpacing);
+    int jettingFreqColumn = table.get_column_index_for(LineSet().jettingFreq);
+    int printVelocityColumn = table.get_column_index_for(LineSet().printVelocity);
+
+    if (column == dropletSpacingColumn || column == jettingFreqColumn)
+    {
+        double newPrintSpeed = (table.data[row].dropletSpacing.value * table.data[row].jettingFreq.value)/1000.0;
+        ui->tableWidget->item(row, printVelocityColumn)->setText(QString::number(newPrintSpeed));
+    }
+
     // Update cell text for user interface
     ui->tableWidget->item(row, column)->setText(table.data[row][column].toQString());
+
+    // move start x position if the first set is too close to edge to have space to accelerate
+    if (row == 0)
+    {
+        check_x_start();
+    }
 }
 
 
@@ -154,6 +182,7 @@ void LinePrintWidget::updateTable(bool updateVerticalHeaders = false, bool updat
     }
 
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    disable_velocity_input();
 }
 
 /**************************************************************************
@@ -187,6 +216,7 @@ void LinePrintWidget::on_tableWidget_cellChanged(int row, int column)
 
 void LinePrintWidget::on_startX_valueChanged(double arg1)
 {
+    check_x_start();
     table.startX = arg1;
     updatePreviewWindow();
 }
@@ -230,13 +260,17 @@ void LinePrintWidget::on_startPrint_clicked()
     auto t1{std::chrono::high_resolution_clock::now()};
 
     s << CMD::stop_motion(Axis::Jet); // stop jetting if it is currently jetting
-    s << CMD::set_accleration(Axis::X, 500);
-    s << CMD::set_deceleration(Axis::X, 500);
-    s << CMD::set_accleration(Axis::Y, 200);
-    s << CMD::set_deceleration(Axis::Y, 200);
+
+    //s << CMD::set_accleration(Axis::X, 500);
+    //s << CMD::set_deceleration(Axis::X, 500);
+    // x axis acceleration is set by the user now
+
+    s << CMD::set_accleration(Axis::Y, 300);
+    s << CMD::set_deceleration(Axis::Y, 300);
+
     for(int i{0}; i < int(table.numRows()); ++i)
     {
-        generate_line_set_commands_new(i, s); // Generate sets
+        generate_line_set_commands(i, s); // Generate sets
     }
 
     auto t2{std::chrono::high_resolution_clock::now()};
@@ -252,137 +286,81 @@ void LinePrintWidget::on_startPrint_clicked()
 void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &s)
 {
     //Find starting position for line set
-    float x_start = table.startX;
+    float lineStartX = table.startX;
     for (int i{0}; i < setNum; ++i) // set proper x_start for current set to be printed
     {
-        x_start += table.data[i].lineLength.value + table.setSpacing;
+        lineStartX += table.data[i].lineLength.value + table.setSpacing;
     }
-    float y_start{table.startY};
+    LineSet *currentLineSet = &table.data[setNum];
 
     s << CMD::set_speed(Axis::Y, 40);
     s << CMD::set_speed(Axis::X, 50);
 
-    //calculate line specifics - TODO: CURRENTLY OVERCONSTRAINED
+    s << CMD::set_accleration(Axis::X, currentLineSet->printAcceleration.value);
 
-    //GO TO BEGINNING POINT
-
-    // FIX THIS SECTION BY SETTING THE HOME POSITION OF THE STAGES TO ALWAYS BE THE SAME
-    // AND THEN CREATE FUNCTIONS THAT GENERATE ABSOLUTE POSITIONS FROM BUILD PLATE COORDINATES
-
-    // Maybe there is a better way of doing these commands than just a position absolute
-    // coordinated motion with gearing for the jetting nozzle?
-
-    // We also want the ability to raster in both directions...
-
-    // the 50 is half the build plate size in the x-direction and the 75000 is the center position...
-
-    // put these somewhere better soon!
-    double Printer2NozzleOffsetX{-12.7};
-    double Printer2NozzleOffsetY{-182.75};
-    // maybe make an pre-offset position absolute command
-
-    s << CMD::position_absolute(Axis::X, x_start + Printer2NozzleOffsetX);
-    s << CMD::position_absolute(Axis::Y, y_start + Printer2NozzleOffsetY);
-    s << CMD::begin_motion(Axis::X);
-    s << CMD::begin_motion(Axis::Y);
-    s << CMD::motion_complete(Axis::X);
-    s << CMD::motion_complete(Axis::Y);
-
-    // START LINE PRINTING HERE!
-    float curY = y_start;
-    float curX = x_start;
-    for (int i{0}; i < table.data[setNum].numLines.value; ++i)
-    {
-        s << CMD::set_speed(Axis::X, table.data[setNum].printVelocity.value);
-
-        // configure jetting
-        s << CMD::servo_here(Axis::Jet);
-        s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
-        s << CMD::set_jog(Axis::Jet, 1000);             // jetting frequency in hz
-
-        curX = curX + table.data[setNum].lineLength.value;
-
-        s << CMD::position_absolute(Axis::X, curX + Printer2NozzleOffsetX);
-        s << CMD::begin_motion(Axis::X);
-        s << CMD::begin_motion(Axis::Jet);
-        s << CMD::motion_complete(Axis::X);
-        s << CMD::stop_motion(Axis::Jet);
-
-        s << CMD::set_speed(Axis::X, 50);                          // set x-axis move speed to 50 mm/s (change this to be user-settable in the future)
-        s << CMD::position_absolute(Axis::X, x_start + Printer2NozzleOffsetX); // PA to move x-axis to start of next line
-
-        curY += table.data[setNum].lineSpacing.value;
-        s << CMD::position_absolute(Axis::Y, curY + Printer2NozzleOffsetY);
-
-        s << CMD::begin_motion(Axis::X);
-        s << CMD::begin_motion(Axis::Y);
-        s << CMD::motion_complete(Axis::X);
-        s << CMD::motion_complete(Axis::Y);
-
-        curX = x_start;
-    }
-}
-
-void LinePrintWidget::generate_line_set_commands_new(int setNum, std::stringstream &s)
-{
-    //Find starting position for line set
-    float x_start = table.startX;
-    for (int i{0}; i < setNum; ++i) // set proper x_start for current set to be printed
-    {
-        x_start += table.data[i].lineLength.value + table.setSpacing;
-    }
-    float y_start{table.startY};
-
-    s << CMD::set_speed(Axis::Y, 40);
-    s << CMD::set_speed(Axis::X, 50);
-
-    // put these somewhere better soon!
-    double Printer2NozzleOffsetX{-12.7};
-    double Printer2NozzleOffsetY{-182.75};
     // maybe make an pre-offset position absolute command
 
     // move to the left of the first line to be printed
     //     offset by the distance it will take to accelerate
 
-    s << CMD::position_absolute(Axis::X, x_start + Printer2NozzleOffsetX);
-    s << CMD::position_absolute(Axis::Y, y_start + Printer2NozzleOffsetY);
+    double accelerationDistance = calculate_acceleration_distance(currentLineSet->printVelocity.value, currentLineSet->printAcceleration.value);
+
+    lineStartX += (Printer2NozzleOffsetX - accelerationDistance);
+    double lineEndX = lineStartX + currentLineSet->lineLength.value + (2.0*accelerationDistance);
+    double lineYPos = table.startY + Printer2NozzleOffsetY;
+
+    s << CMD::position_absolute(Axis::X, lineStartX);
+    s << CMD::position_absolute(Axis::Y, lineYPos + Printer2NozzleOffsetY);
     s << CMD::begin_motion(Axis::X);
     s << CMD::begin_motion(Axis::Y);
     s << CMD::motion_complete(Axis::X);
     s << CMD::motion_complete(Axis::Y);
 
+    // configure jetting
+    s << CMD::servo_here(Axis::Jet);
+    s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
+    //s << CMD::set_jog(Axis::Jet, 1000);             // jetting frequency in hz
+
     // START LINE PRINTING HERE!
-    float curY = y_start;
-    float curX = x_start;
-    for (int i{0}; i < table.data[setNum].numLines.value; ++i)
+    for (int i{0}; i < currentLineSet->numLines.value; ++i)
     {
-        s << CMD::set_speed(Axis::X, table.data[setNum].printVelocity.value);
+        s << CMD::set_speed(Axis::X, currentLineSet->printVelocity.value);
 
-        // configure jetting
-        s << CMD::servo_here(Axis::Jet);
-        s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
-        s << CMD::set_jog(Axis::Jet, 1000);             // jetting frequency in hz
+        // Set H to gear as a slave of X
+        // GAH = X;
+        s << CMD::enable_gearing_for(Axis::Jet, Axis::X);
 
-        curX = curX + table.data[setNum].lineLength.value;
-
-        s << CMD::position_absolute(Axis::X, curX + Printer2NozzleOffsetX);
+        s << CMD::position_absolute(Axis::X, lineEndX);
         s << CMD::begin_motion(Axis::X);
-        s << CMD::begin_motion(Axis::Jet);
+        // s << CMD::begin_motion(Axis::Jet);
+
+        // Once the x-axis reaches the start of the line, enable gearing and start jetting
+        // APX = ??
+        s << CMD::after_absolute_position(Axis::X, lineStartX + accelerationDistance);
+        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(Axis::X, currentLineSet->dropletSpacing.value);
+        // GRH = 1/DropletSpacing
+
+        // After the line is printed turn disable gearing to stop jetting
+        // APX = ??
+        // GRH = 0
+        s << CMD::after_absolute_position(Axis::X, lineStartX + accelerationDistance + currentLineSet->lineLength.value);
+        s << CMD::disable_gearing_for(Axis::Jet);
+
+
         s << CMD::motion_complete(Axis::X);
-        s << CMD::stop_motion(Axis::Jet);
+        //s << CMD::stop_motion(Axis::Jet);
 
-        s << CMD::set_speed(Axis::X, 50);                          // set x-axis move speed to 50 mm/s (change this to be user-settable in the future)
-        s << CMD::position_absolute(Axis::X, x_start + Printer2NozzleOffsetX); // PA to move x-axis to start of next line
-
-        curY += table.data[setNum].lineSpacing.value;
-        s << CMD::position_absolute(Axis::Y, curY + Printer2NozzleOffsetY);
+        // move to start of next line
+        s << CMD::set_speed(Axis::X, 50);                 // set x-axis move speed to 50 mm/s (change this to be user-settable in the future)
+        s << CMD::position_absolute(Axis::X, lineStartX); // PA to move x-axis to start of next line
+        lineYPos += currentLineSet->lineSpacing.value;   // move y by the line spacing amount
+        s << CMD::position_absolute(Axis::Y, lineYPos);
 
         s << CMD::begin_motion(Axis::X);
         s << CMD::begin_motion(Axis::Y);
         s << CMD::motion_complete(Axis::X);
         s << CMD::motion_complete(Axis::Y);
 
-        curX = x_start;
     }
 }
 
@@ -395,6 +373,30 @@ void LinePrintWidget::allow_widget_input(bool allowed)
     else
     {
         ui->startPrint->setDisabled(true);
+    }
+}
+
+void LinePrintWidget::disable_velocity_input()
+{
+    int column = table.get_column_index_for(LineSet().printVelocity);
+    for (int row=0; row < ui->tableWidget->model()->rowCount(); row++)
+    {
+        auto currentFlags = ui->tableWidget->item(row, column)->flags();
+        ui->tableWidget->item(row, column)->setFlags(currentFlags & (~Qt::ItemIsEnabled));
+    }
+}
+
+void LinePrintWidget::check_x_start()
+{
+    int row = 0;
+    double accelerationDistance = calculate_acceleration_distance(table.data[row].printVelocity.value, table.data[row].printAcceleration.value);
+    double xStartPos = table.startX + (Printer2NozzleOffsetX - accelerationDistance);
+    if (xStartPos < 0)
+    {
+        table.startX -= xStartPos;
+        ui->startX->setValue(table.startX);
+        log("The x start position had to be changed to " +
+            QString::number(table.startX) + " to accomodate acceleration before printing", logType::Error);
     }
 }
 

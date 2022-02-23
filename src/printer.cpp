@@ -1,6 +1,14 @@
 #include "printer.h"
 
 #include <sstream>
+#include <cmath>
+
+double calculate_acceleration_distance(double speed_mm_per_s, double acceleration_mm_per_s2)
+{
+    // dx = v0*t + .5*a*t^2
+    double accelerationTime = (speed_mm_per_s/acceleration_mm_per_s2);
+    return 0.5 * acceleration_mm_per_s2 * std::pow(accelerationTime, 2);
+}
 
 using namespace CMD::detail;
 
@@ -239,6 +247,11 @@ std::string CMD::at_time_milliseconds(int milliseconds)
     return result;
 }
 
+std::string CMD::after_absolute_position(Axis axis, double absolutePosition_mm)
+{
+    return {create_gcmd("AP", axis, mm2cnts(absolutePosition_mm, axis))};
+}
+
 std::string CMD::set_bit(int bit)
 {
     return {GCmd() + "SB " + std::to_string(bit) + "\n"};
@@ -304,6 +317,22 @@ std::string CMD::disable_forward_software_limit(Axis axis)
 std::string CMD::display_message(const std::string &message)
 {
     return {Message() + message + "\n"};
+}
+
+std::string CMD::enable_gearing_for(Axis slaveAxis, Axis masterAxis)
+{
+    return {GCmd() + "GA" + detail::axis_string(slaveAxis) + "=" + detail::axis_string(masterAxis) + "\n"};
+}
+
+std::string CMD::disable_gearing_for(Axis slaveAxis)
+{
+    return {GCmd() + "GR" + detail::axis_string(slaveAxis) + "=" + "0" + "\n"};
+}
+
+std::string CMD::set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing)
+{
+    double gearingRatio = (1000.0 / ((double)dropletSpacing * mm2cnts(1, masterAxis)));
+    return {GCmd() + "GR" + detail::axis_string(Axis::Jet) + "=" + std::to_string(gearingRatio) + "\n"};
 }
 
 std::string CMD::open_connection_to_controller()
