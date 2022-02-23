@@ -133,7 +133,7 @@
    <item>
     <widget class="QTableWidget" name="tableWidget">
      <attribute name="horizontalHeaderVisible">
-      <bool>false</bool>
+      <bool>true</bool>
      </attribute>
      <attribute name="horizontalHeaderCascadingSectionResizes">
       <bool>false</bool>
@@ -187,6 +187,11 @@
      <column>
       <property name="text">
        <string>Printing Velocity (mm/s)</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Print Acceleration (mm/s2)</string>
       </property>
      </column>
      <item row="0" column="0">
