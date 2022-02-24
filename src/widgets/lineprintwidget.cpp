@@ -270,8 +270,12 @@ void LinePrintWidget::on_startPrint_clicked()
 
     for(int i{0}; i < int(table.numRows()); ++i)
     {
+        std::string setMessage = "Set " + std::to_string(i+1) + " of " + std::to_string(table.numRows());
+        s << CMD::display_message(setMessage);
         generate_line_set_commands(i, s); // Generate sets
     }
+
+    s << CMD::display_message("Print Complete");
 
     auto t2{std::chrono::high_resolution_clock::now()};
     auto timeSpan = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
@@ -293,11 +297,10 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
     }
     LineSet *currentLineSet = &table.data[setNum];
 
-    s << CMD::set_speed(Axis::Y, 60);
-    s << CMD::set_speed(Axis::X, 80);
-
     s << CMD::set_accleration(Axis::Y, 400);
+    s << CMD::set_deceleration(Axis::Y, 400);
     s << CMD::set_accleration(Axis::X, currentLineSet->printAcceleration.value);
+    s << CMD::set_deceleration(Axis::X, currentLineSet->printAcceleration.value);
 
     // maybe make an pre-offset position absolute command
 
@@ -305,17 +308,12 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
     //     offset by the distance it will take to accelerate
 
     double accelerationDistance = calculate_acceleration_distance(currentLineSet->printVelocity.value, currentLineSet->printAcceleration.value);
+    int accelerationTime_ms = (int)((currentLineSet->printVelocity.value/currentLineSet->printAcceleration.value) * 1000.0);
+    int printTime_ms = (int)((currentLineSet->lineLength.value/currentLineSet->printVelocity.value) * 1000.0);
 
     lineStartX += (Printer2NozzleOffsetX - accelerationDistance);
     double lineEndX = lineStartX + currentLineSet->lineLength.value + (2.0*accelerationDistance);
     double lineYPos = table.startY + Printer2NozzleOffsetY;
-
-    s << CMD::position_absolute(Axis::X, lineStartX);
-    s << CMD::position_absolute(Axis::Y, lineYPos);
-    s << CMD::begin_motion(Axis::X);
-    s << CMD::begin_motion(Axis::Y);
-    s << CMD::motion_complete(Axis::X);
-    s << CMD::motion_complete(Axis::Y);
 
     // configure jetting
     s << CMD::servo_here(Axis::Jet);
@@ -325,36 +323,40 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
     // START LINE PRINTING HERE!
     for (int i{0}; i < currentLineSet->numLines.value; ++i)
     {
-        s << CMD::set_speed(Axis::X, currentLineSet->printVelocity.value);
+        s << CMD::set_speed(Axis::Y, 60);
+        s << CMD::set_speed(Axis::X, 80);
 
-        // Set H to gear as a slave of X
-        s << CMD::enable_gearing_for(Axis::Jet, Axis::X);
-
-        s << CMD::position_absolute(Axis::X, lineEndX);
-        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(Axis::X, currentLineSet->dropletSpacing.value);
-        s << CMD::begin_motion(Axis::X);
-
-        // Once the x-axis reaches the start of the line, enable gearing and start jetting
-        //s << CMD::after_absolute_position(Axis::X, lineStartX + accelerationDistance);
-
-        // After the line is printed turn disable gearing to stop jetting
-        //s << CMD::after_absolute_position(Axis::X, lineStartX + accelerationDistance + currentLineSet->lineLength.value);
-
-        s << CMD::motion_complete(Axis::X);
-        s << CMD::disable_gearing_for(Axis::Jet);
-        //s << CMD::stop_motion(Axis::Jet);
-
-        // move to start of next line
-        s << CMD::set_speed(Axis::X, 80);                 // set x-axis move speed to 50 mm/s (change this to be user-settable in the future)
-        s << CMD::position_absolute(Axis::X, lineStartX); // PA to move x-axis to start of next line
-        lineYPos += currentLineSet->lineSpacing.value;   // move y by the line spacing amount
+        s << CMD::position_absolute(Axis::X, lineStartX);
         s << CMD::position_absolute(Axis::Y, lineYPos);
-
         s << CMD::begin_motion(Axis::X);
         s << CMD::begin_motion(Axis::Y);
         s << CMD::motion_complete(Axis::X);
         s << CMD::motion_complete(Axis::Y);
 
+        s << CMD::set_speed(Axis::X, currentLineSet->printVelocity.value);
+
+        // Set H to gear as a slave of X
+        s << CMD::enable_gearing_for(Axis::Jet, Axis::X);
+        std::string lineMessage = "Printing line " + std::to_string(i+1) + " of " + std::to_string((int)currentLineSet->numLines.value);
+        s << CMD::display_message(lineMessage);
+        s << CMD::position_absolute(Axis::X, lineEndX);
+        s << CMD::begin_motion(Axis::X);
+
+        s << CMD::sleep(accelerationTime_ms);
+        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(Axis::X, currentLineSet->dropletSpacing.value);
+        // Once the x-axis reaches the start of the line, enable gearing and start jetting
+        //s << CMD::after_absolute_position(Axis::X, lineStartX + accelerationDistance);
+
+        // After the line is printed turn disable gearing to stop jetting
+        //s << CMD::after_absolute_position(Axis::X, lineStartX + accelerationDistance + currentLineSet->lineLength.value);
+        s << CMD::sleep(printTime_ms);
+        s << CMD::disable_gearing_for(Axis::Jet);
+
+        s << CMD::motion_complete(Axis::X);
+        //s << CMD::stop_motion(Axis::Jet);
+
+        // move to start of next line
+        lineYPos += currentLineSet->lineSpacing.value;   // move y by the line spacing amount
     }
 }
 
