@@ -293,9 +293,10 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
     }
     LineSet *currentLineSet = &table.data[setNum];
 
-    s << CMD::set_speed(Axis::Y, 40);
-    s << CMD::set_speed(Axis::X, 50);
+    s << CMD::set_speed(Axis::Y, 60);
+    s << CMD::set_speed(Axis::X, 80);
 
+    s << CMD::set_accleration(Axis::Y, 400);
     s << CMD::set_accleration(Axis::X, currentLineSet->printAcceleration.value);
 
     // maybe make an pre-offset position absolute command
@@ -310,7 +311,7 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
     double lineYPos = table.startY + Printer2NozzleOffsetY;
 
     s << CMD::position_absolute(Axis::X, lineStartX);
-    s << CMD::position_absolute(Axis::Y, lineYPos + Printer2NozzleOffsetY);
+    s << CMD::position_absolute(Axis::Y, lineYPos);
     s << CMD::begin_motion(Axis::X);
     s << CMD::begin_motion(Axis::Y);
     s << CMD::motion_complete(Axis::X);
@@ -327,31 +328,24 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
         s << CMD::set_speed(Axis::X, currentLineSet->printVelocity.value);
 
         // Set H to gear as a slave of X
-        // GAH = X;
         s << CMD::enable_gearing_for(Axis::Jet, Axis::X);
 
         s << CMD::position_absolute(Axis::X, lineEndX);
+        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(Axis::X, currentLineSet->dropletSpacing.value);
         s << CMD::begin_motion(Axis::X);
-        // s << CMD::begin_motion(Axis::Jet);
 
         // Once the x-axis reaches the start of the line, enable gearing and start jetting
-        // APX = ??
-        s << CMD::after_absolute_position(Axis::X, lineStartX + accelerationDistance);
-        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(Axis::X, currentLineSet->dropletSpacing.value);
-        // GRH = 1/DropletSpacing
+        //s << CMD::after_absolute_position(Axis::X, lineStartX + accelerationDistance);
 
         // After the line is printed turn disable gearing to stop jetting
-        // APX = ??
-        // GRH = 0
-        s << CMD::after_absolute_position(Axis::X, lineStartX + accelerationDistance + currentLineSet->lineLength.value);
-        s << CMD::disable_gearing_for(Axis::Jet);
-
+        //s << CMD::after_absolute_position(Axis::X, lineStartX + accelerationDistance + currentLineSet->lineLength.value);
 
         s << CMD::motion_complete(Axis::X);
+        s << CMD::disable_gearing_for(Axis::Jet);
         //s << CMD::stop_motion(Axis::Jet);
 
         // move to start of next line
-        s << CMD::set_speed(Axis::X, 50);                 // set x-axis move speed to 50 mm/s (change this to be user-settable in the future)
+        s << CMD::set_speed(Axis::X, 80);                 // set x-axis move speed to 50 mm/s (change this to be user-settable in the future)
         s << CMD::position_absolute(Axis::X, lineStartX); // PA to move x-axis to start of next line
         lineYPos += currentLineSet->lineSpacing.value;   // move y by the line spacing amount
         s << CMD::position_absolute(Axis::Y, lineYPos);
