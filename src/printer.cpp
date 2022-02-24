@@ -329,6 +329,12 @@ std::string CMD::disable_gearing_for(Axis slaveAxis)
     return {GCmd() + "GR" + detail::axis_string(slaveAxis) + "=" + "0" + "\n"};
 }
 
+std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
+{
+    // PUT STUFF HERE
+    return "";
+}
+
 std::string CMD::set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing)
 {
     double gearingRatio = (1000.0 / ((double)dropletSpacing * mm2cnts(1, masterAxis)));

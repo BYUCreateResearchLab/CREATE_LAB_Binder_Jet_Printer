@@ -116,6 +116,8 @@ std::string enable_gearing_for(Axis slaveAxis, Axis masterAxis);
 std::string set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing);
 std::string disable_gearing_for(Axis slaveAxis);
 
+std::string mist_layer(double traverseSpeed_mm_per_s);
+
 namespace detail
 {
 std::string axis_string(Axis axis);

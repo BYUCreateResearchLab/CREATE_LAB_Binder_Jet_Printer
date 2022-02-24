@@ -261,6 +261,12 @@ void LinePrintWidget::on_startPrint_clicked()
 
     s << CMD::stop_motion(Axis::Jet); // stop jetting if it is currently jetting
 
+    // mist layer if user selected
+    if (ui->mistLayerCheckBox->isChecked())
+    {
+        s << CMD::mist_layer(ui->mistTraverseSpeedSpinBox->value());
+    }
+
     //s << CMD::set_accleration(Axis::X, 500);
     //s << CMD::set_deceleration(Axis::X, 500);
     // x axis acceleration is set by the user now

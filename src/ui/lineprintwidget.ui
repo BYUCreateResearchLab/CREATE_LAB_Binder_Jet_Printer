@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>970</width>
-    <height>790</height>
+    <width>1063</width>
+    <height>789</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -37,7 +37,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Number of Sets</string>
+        <string>Number of Line Sets</string>
        </property>
       </widget>
      </item>
@@ -48,6 +48,12 @@
          <width>100</width>
          <height>16777215</height>
         </size>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="minimum">
         <number>1</number>
@@ -60,10 +66,76 @@
        </property>
       </widget>
      </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="mistLayerCheckBox">
+       <property name="text">
+        <string>Mist Before Printing</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Misting Traverse Speed</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="mistTraverseSpeedSpinBox">
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+       <property name="value">
+        <number>5</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>mm/s</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
      <item alignment="Qt::AlignRight">
       <widget class="QLabel" name="label_StartXY">
        <property name="text">
-        <string>Start X, Y (mm)</string>
+        <string>Start X, Y</string>
        </property>
       </widget>
      </item>
@@ -75,6 +147,12 @@
          <height>16777215</height>
         </size>
        </property>
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
        <property name="minimum">
         <double>15.000000000000000</double>
        </property>
@@ -83,6 +161,13 @@
        </property>
        <property name="value">
         <double>15.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>x</string>
        </property>
       </widget>
      </item>
@@ -94,6 +179,12 @@
          <height>16777215</height>
         </size>
        </property>
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
        <property name="maximum">
         <double>100.000000000000000</double>
        </property>
@@ -102,10 +193,30 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>mm</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
      <item alignment="Qt::AlignRight">
       <widget class="QLabel" name="label_setSpacing">
        <property name="text">
-        <string>Set Spacing (mm)</string>
+        <string>Set Spacing</string>
        </property>
       </widget>
      </item>
@@ -117,6 +228,12 @@
          <height>16777215</height>
         </size>
        </property>
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
        <property name="decimals">
         <number>2</number>
        </property>
@@ -125,6 +242,13 @@
        </property>
        <property name="value">
         <double>5.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>mm</string>
        </property>
       </widget>
      </item>
