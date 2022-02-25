@@ -50,7 +50,7 @@ LinePrintWidget::~LinePrintWidget()
 void LinePrintWidget::log(QString message, enum logType messageType = logType::Standard)
 {
     // If current message type is an active log type
-    if(std::find(activeLogTypes.begin(), activeLogTypes.end(), messageType) != activeLogTypes.end())
+    if (std::find(activeLogTypes.begin(), activeLogTypes.end(), messageType) != activeLogTypes.end())
     {
         ui->consoleOutput->insertPlainText(message + "\n");
     }
@@ -62,11 +62,11 @@ void LinePrintWidget::updatePreviewWindow()
     std::vector<QLineF> accelerationLines = table.qAccelerationLines();
     //ui->SVGViewer->scene()->clear(); // clear the window
     ui->SVGViewer->clear_lines();
-    for(size_t i{0}; i < lines.size(); ++i) // for each line
+    for (size_t i{0}; i < lines.size(); ++i) // for each line
     {
         ui->SVGViewer->scene()->addLine(lines[i], linePen); // add the line to the scene
     }
-    for(size_t i{0}; i < accelerationLines.size(); ++i) // for each line
+    for (size_t i{0}; i < accelerationLines.size(); ++i) // for each line
     {
         ui->SVGViewer->scene()->addLine(accelerationLines[i], lineTravelPen); // add the line to the scene
     }
@@ -76,7 +76,7 @@ void LinePrintWidget::CheckCell(int row, int column)
 {
     QString cellText = ui->tableWidget->item(row, column)->text();
 
-    if(cellText == table.data[row][column].toQString())
+    if (cellText == table.data[row][column].toQString())
     {
         //Log("Value to check is already stored in the table", logType::Debug);
         return; // break if the UI table value is already stored in the internal table
@@ -89,19 +89,19 @@ void LinePrintWidget::CheckCell(int row, int column)
     errorType error_state = table.data[row][column].updateData(cellText); // Update cell value and get back error code
     switch(error_state)
     {
-    case errorNone: // no error
+    case errorType::errorNone: // no error
         log("The input was successful and read as " +
             QString::number(table.data[row][column].value), logType::Debug);
         break;
-    case errortooSmall: // number was too small and set to min
+    case errorType::errortooSmall: // number was too small and set to min
         log("The number entered is too small\nThe min value is " +
             QString::number(table.data[row][column].min), logType::Error);
         break;
-    case errortooLarge: // number was too large and set to max
+    case errorType::errortooLarge: // number was too large and set to max
         log("The number entered is too large\nThe max value is " +
             QString::number(table.data[row][column].max), logType::Error);
         break;
-    case errorCannotConvert: // Could not convert QString to valid type
+    case errorType::errorCannotConvert: // Could not convert QString to valid type
         log("There was an error with the data. The value was cleared", logType::Error);
         break;
     default:
@@ -173,9 +173,9 @@ void LinePrintWidget::updateTable(bool updateVerticalHeaders = false, bool updat
     }
 
     // Replace cell text for each cell in UI Table
-    for(int r = 0; r < ui->tableWidget->rowCount(); r++)
+    for (int r = 0; r < ui->tableWidget->rowCount(); r++)
     {
-        for(int c = 0; c < ui->tableWidget->columnCount(); c++)
+        for (int c = 0; c < ui->tableWidget->columnCount(); c++)
         {
             updateCell(r,c);
         }
@@ -193,13 +193,13 @@ void LinePrintWidget::on_numSets_valueChanged(int rowCount)
 {
     int prevRowCount = (int)table.data.size(); // get previous row count
     // set new row count
-    if(rowCount > prevRowCount) // If adding rows
+    if (rowCount > prevRowCount) // If adding rows
     {
         table.addRows(rowCount - prevRowCount);
         updateTable(true, false);
         updatePreviewWindow();
     }
-    if(rowCount < prevRowCount) // If removing rows
+    if (rowCount < prevRowCount) // If removing rows
     {
         table.removeRows(prevRowCount - rowCount);
         updateTable(true, false);
@@ -242,7 +242,7 @@ void LinePrintWidget::on_printPercentSlider_sliderMoved(int position)
 
     int numLinestoShow = lines.size() * percent;
 
-    for(int i{0}; i < numLinestoShow; ++i) // for each line
+    for (int i{0}; i < numLinestoShow; ++i) // for each line
     {
         ui->SVGViewer->scene()->addLine(lines[i], linePen); // add the line to the scene
     }
@@ -274,7 +274,7 @@ void LinePrintWidget::on_startPrint_clicked()
     s << CMD::set_accleration(Axis::Y, 300);
     s << CMD::set_deceleration(Axis::Y, 300);
 
-    for(int i{0}; i < int(table.numRows()); ++i)
+    for (int i{0}; i < int(table.numRows()); ++i)
     {
         std::string setMessage = "Set " + std::to_string(i+1) + " of " + std::to_string(table.numRows());
         s << CMD::display_message(setMessage);

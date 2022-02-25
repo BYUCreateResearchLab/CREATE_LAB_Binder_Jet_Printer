@@ -37,22 +37,15 @@
 
 QString TableData::toQString()
 {
-    if (std::isnan(value)) // Return blank if data is NAN
-    {
-        return QString::fromStdString("");
-    }
+    if (std::isnan(value)) return QString::fromStdString("");
     else // Return QString of value according to data type
     {
         switch(dataType)
         {
-        case int_type:
-            return QString::number(value);
-            break;
-        case float_type:
-            return QString::number(value);
-            break;
-        default:
-            return QString::fromStdString("Error in conversion to qstring");
+        case type::int_type: return QString::number(value); break;
+        case type::float_type: return QString::number(value); break;
+
+        default: return QString::fromStdString("Error in conversion to qstring");
         }
     }
 }
@@ -69,9 +62,9 @@ bool TableData::tooLarge(float val)
 
 errorType TableData::checkinRange(float val)
 {
-    if (tooSmall(val)) {return errortooSmall;}
-    else if (tooLarge(val)) {return errortooLarge;}
-    else {return errorNone;}
+    if (tooSmall(val)) return errorType::errortooSmall;
+    else if (tooLarge(val)) return errorType::errortooLarge;
+    else return errorType::errorNone;
 
 }
 // Work on updating this so I can implement checking between related fields
@@ -81,22 +74,14 @@ errorType TableData::updateValue(float val)
 {
     errorType returnerror = checkinRange(val);
 
-    switch(returnerror)
+    switch (returnerror)
     {
-    case errorNone:
-        value = val;
-        break;
-    case errortooSmall:
-        value = min;
-        break;
-    case errortooLarge:
-        value = max;
-        break;
-    case errorCannotConvert: // This should never happen here
-        value = NAN;
-        break;
-    default:
-        break;
+    case errorType::errorNone: value = val; break;
+    case errorType::errortooSmall: value = min; break;
+    case errorType::errortooLarge: value = max; break;
+    case errorType::errorCannotConvert: value = NAN; break; // This shouldn't occur
+
+    default: break;
     }
 
     return returnerror;
@@ -104,18 +89,18 @@ errorType TableData::updateValue(float val)
 
 errorType TableData::updateData(QString input)
 {
-    if (input != toQString())
-    { // If the QString text has changed
+    if (input != toQString()) // If the QString text has changed
+    {
         bool ok = false; // indicator for errors of toInt function
         switch (dataType)
         {
-        case int_type: // if data is an int
+        case type::int_type: // if data is an int
         {
             int cellVal = input.toInt(&ok);
-            if (!ok) // if error
+            if (!ok)
             {
                 value = NAN;
-                return errorCannotConvert; // cannot convert error code
+                return errorType::errorCannotConvert; // cannot convert error code
             }
             else // successful conversion to int
             {
@@ -123,25 +108,26 @@ errorType TableData::updateData(QString input)
             }
         }
             break;
-        case float_type: // if data is a float
+
+        case type::float_type: // if data is a float
         {
             float cellVal = input.toFloat(&ok);
-            if (!ok) // if error
+            if (!ok)
             {
                 value = NAN;
-                return errorCannotConvert; // cannot convert error code
+                return errorType::errorCannotConvert; // cannot convert error code
             }
-            else
-            { // successful conversion to float
+            else // successful conversion to float
+            {
                 return updateValue(cellVal);
             }
         }
             break;
-        default:
-            return errorCannotConvert; // Should be an error...
+
+        default: return errorType::errorCannotConvert; // Should be an error...
         }
     }
-    return errorNone;
+    return errorType::errorNone;
 }
 
 /**************************************************************************
@@ -150,7 +136,6 @@ errorType TableData::updateData(QString input)
 
 LineSet::LineSet()
 {
-
 }
 
 
@@ -160,20 +145,19 @@ LineSet::LineSet()
 
 LinePrintData::LinePrintData()
 {
-
 }
 
-void LinePrintData::addRows(int num_sets=1)
+void LinePrintData::addRows(int numSets=1)
 {
-    for (int i=0; i<num_sets; i++)
+    for (int i=0; i<numSets; i++)
     {
        data.push_back(LineSet());
     }
 }
 
-void LinePrintData::removeRows(int num_sets=1)
+void LinePrintData::removeRows(int numSets=1)
 {
-    data.erase(data.end() - num_sets, data.end());
+    data.erase(data.end() - numSets, data.end());
 }
 
 int LinePrintData::get_column_index_for(const TableData &column)

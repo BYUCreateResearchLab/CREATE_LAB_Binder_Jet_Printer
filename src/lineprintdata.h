@@ -34,9 +34,9 @@
 #include <QString>
 #include <QLineF> // used in LinePrintData method
 
-enum type {int_type, float_type}; // Type specifier for TableData class.
+enum class type {int_type, float_type}; // Type specifier for TableData class.
 // Add types here for additional functionality down the road
-enum errorType {errorNone, errortooSmall, errortooLarge, errorCannotConvert};
+enum class errorType {errorNone, errortooSmall, errortooLarge, errorCannotConvert};
 
 
 /**************************************************************************
@@ -44,14 +44,15 @@ enum errorType {errorNone, errortooSmall, errortooLarge, errorCannotConvert};
  **************************************************************************/
 
 
-class TableData{
+class TableData
+{
 public:
     // Empty constructor
     TableData();
 
     // Detailed constructor
-    TableData(std::string typeName, type dataType, float value=0, float min=0, float max=0, bool state = false):
-        typeName(typeName), dataType(dataType), value(value), min(min), max(max), state(state){}
+    TableData(std::string typeName, type dataType, float value=0, float min=0, float max=0) :
+        typeName(typeName), dataType(dataType), value(value), min(min), max(max){}
 
     // Converts the 'value' member variable to a QString for displaying in the UI table
     QString toQString();
@@ -72,7 +73,6 @@ public:
     std::string typeName;
     type dataType;
     float value, min, max;
-    bool state = false; // Not used yet
 private:
     errorType updateValue(float val); // Internal updating of value. Returns code based off of value limits
 };
@@ -86,49 +86,32 @@ class LineSet
 {
 public:
     LineSet();
-
-    TableData numLines = TableData("Number of Lines", type::int_type, 1, 1, 5000);
-    TableData lineSpacing = TableData("Line Spacing\n(mm)", type::float_type, 10, 0.005f, 50);
-    TableData lineLength = TableData("Line Length\n(mm)", type::float_type, 15, 0.01f, 100);
-    TableData dropletSpacing = TableData("Droplet Spacing\n(µm)", type::int_type, 5, 1, 50);
-    TableData jettingFreq = TableData("Jetting Frequency\n(Hz)", type::int_type, 1000, 100, 10000);
-    TableData printVelocity = TableData("Printing Velocity\n(mm/s)", type::float_type, 5, 0.1f, 10000);
-    TableData printAcceleration = TableData("Print Acceleration\n(mm/s2)", type::float_type, 800, 100.0, 1500.0);
-
+                              // "Display Name", data type, default value, min, max
+    TableData numLines          {"Number of Lines", type::int_type, 1, 1, 5000};
+    TableData lineSpacing       {"Line Spacing\n(mm)", type::float_type, 10, 0.005f, 50};
+    TableData lineLength        {"Line Length\n(mm)", type::float_type, 15, 0.01f, 100};
+    TableData dropletSpacing    {"Droplet Spacing\n(µm)", type::int_type, 5, 1, 50};
+    TableData jettingFreq       {"Jetting Frequency\n(Hz)", type::int_type, 1000, 100, 10000};
+    TableData printVelocity     {"Printing Velocity\n(mm/s)", type::float_type, 5, 0.1f, 10000};
+    TableData printAcceleration {"Print Acceleration\n(mm/s2)", type::float_type, 800, 100.0, 1500.0};
     int size = 7; // Number of columns in dataset
 
+    TableData& operator[](int i)
+    {
+        switch(i)
+        {
+        case 0: return numLines; break;
+        case 1: return lineSpacing; break;
+        case 2: return lineLength; break;
+        case 3: return dropletSpacing; break;
+        case 4: return jettingFreq; break;
+        case 5: return printVelocity; break;
+        case 6: return printAcceleration;
 
-
-    TableData &operator[](int i){
-        switch(i){
-        case 0:
-            return this->numLines;
-            break;
-        case 1:
-            return this->lineSpacing;
-            break;
-        case 2:
-            return this->lineLength;
-            break;
-        case 3:
-            return this->dropletSpacing;
-            break;
-        case 4:
-            return this->jettingFreq;
-            break;
-        case 5:
-            return this->printVelocity;
-            break;
-        case 6:
-            return this->printAcceleration;
-        default:
-            return this->numLines; //ERROR
-            break;
+        default: return numLines; break; // better error handling?
         }
     }
-private:
 };
-
 
 /**************************************************************************
  *                        CLASS  Line Printing                            *
@@ -138,20 +121,21 @@ class LinePrintData
 {
 public:
     LinePrintData();
-    std::vector<LineSet> data = {};
-    float startX;
-    float startY;
-    float setSpacing;
 
-    void addRows(int num_sets);
-    void removeRows(int num_sets);
+    std::vector<LineSet> data{};
+    float startX{};
+    float startY{};
+    float setSpacing{};
+
+    void addRows(int numSets);
+    void removeRows(int numSets);
 
     int get_column_index_for(const TableData &column);
+    int numRows(){return (int)(data.size());}
 
     std::vector<QLineF> qLines();
     std::vector<QLineF> qAccelerationLines();
 
-    int numRows(){return (int)(data.size());}
 };
 
 #endif // LINEPRINTDATA_H
