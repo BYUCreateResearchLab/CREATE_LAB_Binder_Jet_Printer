@@ -192,7 +192,7 @@ std::string CMD::exit_pvt_mode(Axis axis)
     result += GCmd();
     result += "PV";
     result += axis_string(axis);
-    result += "=0,0,0";
+    result += "=,,0";
     result += "\n";
     return result;
 }
@@ -351,9 +351,9 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
     return "";
 }
 
-std::string CMD::set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing)
+std::string CMD::set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing_um)
 {
-    double gearingRatio = (1000.0 / ((double)dropletSpacing * mm2cnts(1, masterAxis)));
+    double gearingRatio = (1000.0 / ((double)dropletSpacing_um * mm2cnts(1, masterAxis)));
     return {GCmd() + "GR" + detail::axis_string(Axis::Jet) + "=" + std::to_string(gearingRatio) + "\n"};
 }
 

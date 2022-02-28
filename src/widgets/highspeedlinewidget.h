@@ -21,6 +21,7 @@ class HighSpeedLineCommandGenerator
 public:
     // each string in the vector will be the code for printing a line
     std::vector<std::string> print_commands_for_lines();
+    std::string generate_commands_for_printing_line(int lineNum);
 
     int numLines{};
     int lineSpacing_um{};
@@ -29,7 +30,8 @@ public:
     int jettingFrequency_Hz{};
     int acceleration_mm_per_s2{};
 
-    const double print_travel_length{20.0};
+    //const double print_travel_length{20.0};
+    const double xTravelSpeed{150.0};
 
     SmallBuildBox buildBox{};
 
@@ -40,7 +42,6 @@ public:
 
 private:
     std::stringstream s_;
-    std::string generate_commands_for_printing_line(int lineNum);
     int cntsPerSec{1024};
 };
 
@@ -61,6 +62,7 @@ public:
 
 private slots:
     void print_line();
+    void stop_printing();
     void setup();
     void update_print_settings();
     void update_print_axes(int index);
@@ -68,6 +70,7 @@ private slots:
 private:
     Ui::HighSpeedLineWidget *ui;
     HighSpeedLineCommandGenerator *print{nullptr};
+    int currentLineToPrintIndex{0};
 };
 
 #endif // HIGHSPEEDLINEWIDGET_H

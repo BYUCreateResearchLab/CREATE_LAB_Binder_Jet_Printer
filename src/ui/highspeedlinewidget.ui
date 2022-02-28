@@ -90,7 +90,7 @@
            <number>5</number>
           </property>
           <property name="maximum">
-           <number>100</number>
+           <number>10000</number>
           </property>
           <property name="singleStep">
            <number>5</number>
@@ -152,6 +152,7 @@
           <property name="font">
            <font>
             <pointsize>12</pointsize>
+            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
@@ -258,7 +259,7 @@
            <number>10</number>
           </property>
           <property name="value">
-           <number>500</number>
+           <number>600</number>
           </property>
          </widget>
         </item>
@@ -370,7 +371,7 @@
            <double>0.000000000000000</double>
           </property>
           <property name="value">
-           <double>-232.750000000000000</double>
+           <double>-132.750000000000000</double>
           </property>
          </widget>
         </item>
@@ -442,6 +443,7 @@
           <property name="font">
            <font>
             <pointsize>12</pointsize>
+            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
@@ -570,6 +572,7 @@
           <property name="font">
            <font>
             <pointsize>12</pointsize>
+            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
