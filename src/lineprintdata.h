@@ -33,6 +33,7 @@
 #include <vector>
 #include <QString>
 #include <QLineF> // used in LinePrintData method
+#include <stdexcept>
 
 enum class type {int_type, float_type}; // Type specifier for TableData class.
 // Add types here for additional functionality down the road
@@ -100,15 +101,16 @@ public:
     {
         switch(i)
         {
-        case 0: return numLines; break;
-        case 1: return lineSpacing; break;
-        case 2: return lineLength; break;
-        case 3: return dropletSpacing; break;
-        case 4: return jettingFreq; break;
-        case 5: return printVelocity; break;
+        case 0: return numLines;
+        case 1: return lineSpacing;
+        case 2: return lineLength;
+        case 3: return dropletSpacing;
+        case 4: return jettingFreq;
+        case 5: return printVelocity;
         case 6: return printAcceleration;
 
-        default: return numLines; break; // better error handling?
+        default:
+            throw std::invalid_argument("table index out of range");
         }
     }
 };

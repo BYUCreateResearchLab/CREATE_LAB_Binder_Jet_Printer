@@ -33,24 +33,11 @@
 
 #include <thread>
 
-inline void split(const std::string &s, char delim, std::vector<std::string> &elems)
-{
-    std::stringstream ss;
-    ss.str(s);
-    std::string item;
-    while (std::getline(ss, item, delim)) {
-        elems.push_back(item);
-    }
-}
-
 MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
     mJetDrive = new JetDrive();
-
-    // revert values to defaults from file (this isn't working right now)
-    on_revertDefault_clicked();
 
     // set up widgets
     mLinePrintingWidget = new LinePrintWidget();
@@ -242,7 +229,6 @@ void MainWindow::on_xNegative_pressed()
 
 void MainWindow::on_xHome_clicked()
 {
-    // LOOK INTO USING THE "HM" COMMAND INSTEAD OF "FI"?
     std::stringstream s;
 
     Axis x{Axis::X};
@@ -383,47 +369,6 @@ void MainWindow::on_connect_clicked()
 
     }
 }
-
-void MainWindow::on_saveDefault_clicked()
-{
-    std::ofstream ofs;
-    ofs.open("C:/Users/ME/Documents/GitHub/CREATE_LAB_Binder_Jet_Printer/PrinterSettings.txt", std::ofstream::out | std::ofstream::trunc);
-    ofs << "XAxisVelocity\t" << std::to_string(ui->xVelocity->value())  << "\n";
-    ofs << "YAxisVelocity\t" << std::to_string(ui->yVelocity->value())  << "\n";
-    ofs << "ZStepSize\t" << std::to_string(ui->zStepSize->value())      << "\n";
-    ofs.close();
-}
-
-void MainWindow::on_revertDefault_clicked()
-{
-    std::string line;
-    std::ifstream myfile("C:/Users/ME/Documents/GitHub/CREATE_LAB_Binder_Jet_Printer/PrinterSettings.txt");
-    if (myfile.is_open())
-    {
-        while (getline(myfile, line))
-        {
-            std::vector<std::string> row_values;
-
-            split(line, '\t', row_values);
-
-            if (row_values[0] == "XAxisVelocity")
-            {
-                ui->xVelocity->setValue(stoi(row_values[1]));
-            }
-            else if (row_values[0] == "YAxisVelocity")
-            {
-                ui->yVelocity->setValue(stoi(row_values[1]));
-            }
-            else if (row_values[0] == "ZStepSize")
-            {
-                ui->zStepSize->setValue(stoi(row_values[1]));
-            }
-        }
-        myfile.close();
-    }
-    else std::cout << "Unable to open settings file\n";//Notify user-> "Unable to open file";
-}
-
 
 void MainWindow::on_activateRoller1_toggled(bool checked)
 {

@@ -55,7 +55,6 @@ void PrintThread::execute_command(std::stringstream &ss)
             //buffer.erase(std::remove(buffer.begin(), buffer.end(), '\n'), buffer.end());
             mQueue.push(buffer);
         }
-
         if (!isRunning())
         {
             start(); // start a new thread if one has not been created before
@@ -81,7 +80,6 @@ void PrintThread::run()
 {
     while (!mQuit)
     {
-
         while (mQueue.size() > 0)
         {
             if (!mRunning) // If the queue is externally stopped

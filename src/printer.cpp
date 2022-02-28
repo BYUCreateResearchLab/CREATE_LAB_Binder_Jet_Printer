@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <cmath>
+#include <stdexcept>
 
 double calculate_acceleration_distance(double speed_mm_per_s, double acceleration_mm_per_s2)
 {
@@ -17,48 +18,63 @@ Printer::Printer()
 
 }
 
+CommandGenerator::CommandGenerator()
+{
+
+}
+
+AxisSettings& CommandGenerator::settings(Axis axis)
+{
+    switch (axis)
+    {
+    case Axis::X:   return xAxisSettings;
+    case Axis::Y:   return yAxisSettings;
+    case Axis::Z:   return zAxisSettings;
+    case Axis::Jet: return zAxisSettings;
+
+    default:
+        throw std::invalid_argument("invalid axis");
+    }
+}
+
+std::stringstream& CommandGenerator::jog_axis(Axis axis, double speed_mm_s)
+{
+    // I need to be able to get settings from the Axis...
+    // settings(axis).acceleration
+    // do I want to use default settings??
+    // do I want to be able to change the defaults in the program??
+    s << CMD::set_accleration(axis, settings(axis).acceleration);
+    s << CMD::set_deceleration(axis, settings(axis).deceleration);
+    s << CMD::set_jog(axis, speed_mm_s);
+    s << CMD::begin_motion(axis);
+    return s;
+}
+
 std::string CMD::detail::axis_string(Axis axis)
 {
     switch (axis)
     {
-    case Axis::X:
-        return {"X"};
-        break;
-    case Axis::Y:
-        return {"Y"};
-        break;
-    case Axis::Z:
-        return {"Z"};
-        break;
-    case Axis::Jet:
-        return {"H"};
-        break;
+    case Axis::X:   return {"X"};
+    case Axis::Y:   return {"Y"};
+    case Axis::Z:   return {"Z"};
+    case Axis::Jet: return {"H"};
+
     default:
-        return {"AXIS STRING ERROR"};
-        break;
+        throw std::invalid_argument("invalid axis");
     }
-    return {"OTHER AXIS STRING ERROR"};
 }
 
 int CMD::detail::mm2cnts(double mm, Axis axis)
 {
     switch (axis)
     {
-    case Axis::X:
-        return mm * X_CNTS_PER_MM;
-        break;
-    case Axis::Y:
-        return mm * Y_CNTS_PER_MM;
-        break;
-    case Axis::Z:
-        return mm * Z_CNTS_PER_MM;
-        break;
-    case Axis::Jet:
-        return mm;
-        break;
+    case Axis::X:   return (int)(mm * X_CNTS_PER_MM);
+    case Axis::Y:   return (int)(mm * Y_CNTS_PER_MM);
+    case Axis::Z:   return (int)(mm * Z_CNTS_PER_MM);
+    case Axis::Jet: return (int)(mm);
+
     default:
-        return 0;
-        break;
+        throw std::invalid_argument("invalid axis");
     }
 }
 

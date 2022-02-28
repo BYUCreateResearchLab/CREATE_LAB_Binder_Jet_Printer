@@ -32,7 +32,6 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     connect(ui->TriggerJetButton, &QPushButton::clicked, this, &DropletObservationWidget::trigger_jet_clicked);
 
     mJettingWidget = new JettingWidget(mJetDrive);
-    //ui->frame->layout()->addWidget(mJettingWidget);
     QGridLayout *gridLayout = ui->frame->findChild<QGridLayout*>("gridLayout_frame");
     gridLayout->addWidget(mJettingWidget, 23,0,1,2);
 
@@ -41,7 +40,6 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     connect(ui->cameraFPSSpinBox, &QAbstractSpinBox::editingFinished, this, &DropletObservationWidget::framerate_changed);
     connect(ui->shutterAngleSpinBox, &QAbstractSpinBox::editingFinished, this, &DropletObservationWidget::exposure_changed);
     mTempFileName = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/jetdroplet.avi";
-    //mTempFileName = "C:/Users/ME/Desktop/jetdroplet.avi";
     qDebug() << "temp video files are stored at " << mTempFileName;
     connect(ui->SaveVideoButton, &QPushButton::clicked, this, &DropletObservationWidget::save_video_clicked);
 }

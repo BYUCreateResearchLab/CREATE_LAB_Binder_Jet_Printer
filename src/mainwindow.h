@@ -44,8 +44,7 @@ private slots:
     void on_zMin_clicked();
     void on_activateHopper_stateChanged(int arg1);
     void on_connect_clicked();
-    void on_saveDefault_clicked();
-    void on_revertDefault_clicked();
+
     void on_activateRoller1_toggled(bool checked);
     void on_activateRoller2_toggled(bool checked);
     void on_activateJet_stateChanged(int arg1);

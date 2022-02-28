@@ -19,8 +19,7 @@ struct SmallBuildBox
 class HighSpeedLineCommandGenerator
 {
 public:
-    // stringstreams are not copyable... is there a better way to handle this?
-    // maybe I can return a reference to an interal vector of stringstreams?
+    // each string in the vector will be the code for printing a line
     std::vector<std::string> print_commands_for_lines();
 
     int numLines{};
@@ -28,7 +27,9 @@ public:
     double lineLength_mm{};
     int dropletSpacing_um{};
     int jettingFrequency_Hz{};
-    int acceleration_mm_per_s{};
+    int acceleration_mm_per_s2{};
+
+    const double print_travel_length{20.0};
 
     SmallBuildBox buildBox{};
 
@@ -39,6 +40,8 @@ public:
 
 private:
     std::stringstream s_;
+    std::string generate_commands_for_printing_line(int lineNum);
+    int cntsPerSec{1024};
 };
 
 namespace Ui

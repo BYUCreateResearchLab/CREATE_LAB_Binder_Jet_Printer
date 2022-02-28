@@ -5,6 +5,7 @@
 
 #include "printer.h"
 #include <sstream>
+#include <cmath>
 
 HighSpeedLineWidget::HighSpeedLineWidget(QWidget *parent) : PrinterWidget(parent), ui(new Ui::HighSpeedLineWidget)
 {
@@ -41,6 +42,8 @@ void HighSpeedLineWidget::setup()
        connect(printSettingWidgets2[i], qOverload<int>(&QComboBox::currentIndexChanged), this, &HighSpeedLineWidget::update_print_settings);
     }
 
+    connect(ui->printButton, &QAbstractButton::clicked, this, &HighSpeedLineWidget::print_line);
+
     update_print_settings();
 }
 
@@ -62,7 +65,7 @@ void HighSpeedLineWidget::update_print_settings()
     print->lineLength_mm = ui->lineLengthSpinBox->value();
     print->dropletSpacing_um = ui->dropletSpacingSpinBox->value();
     print->jettingFrequency_Hz = ui->jettingFrequencySpinBox->value();
-    print->acceleration_mm_per_s = ui->printAccelerationSpinBox->value();
+    print->acceleration_mm_per_s2 = ui->printAccelerationSpinBox->value();
 
     // update build box parameters
     print->buildBox.centerX = ui->buildBoxCenterXSpinBox->value();
@@ -107,11 +110,13 @@ void HighSpeedLineWidget::reset_preview_zoom()
 
 void HighSpeedLineWidget::print_line()
 {
-    std::vector<std::stringstream> lineCommands;
+    std::vector<std::string> lineCommands = print->print_commands_for_lines();
 
     for (auto &printLine : lineCommands)
     {
-        emit execute_command(printLine);
+        std::stringstream s;
+        s << printLine;
+        emit execute_command(s);
         // wait here for user input
         // break if the user wants to stop
     }
@@ -119,50 +124,101 @@ void HighSpeedLineWidget::print_line()
 
 std::vector<std::string> HighSpeedLineCommandGenerator::print_commands_for_lines()
 {
+    std::vector<std::string> returnVec;
+
+    for (int lineNum=0; lineNum < numLines; lineNum++)
+    {
+        returnVec.push_back(generate_commands_for_printing_line(lineNum));
+    }
+    return returnVec;
+}
+
+std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(int lineNum)
+{
     std::stringstream s;
 
-    // set speed and acceleration?
+    Axis nonPrintAxis;
+    if (printAxis == Axis::X) nonPrintAxis = Axis::Y;
+    else nonPrintAxis == Axis::X;
 
-    s << CMD::position_absolute(Axis::X, 0); // move to start of print
-    s << CMD::position_absolute(Axis::Y, 0);
-
+    // move to the jetting position if we are not already there
+    s << CMD::set_jog(Axis::X, 30);
+    s << CMD::set_accleration(Axis::X, 800);
+    s << CMD::set_deceleration(Axis::X, 800);
     s << CMD::begin_motion(Axis::X);
-    s << CMD::begin_motion(Axis::Y);
-
     s << CMD::motion_complete(Axis::X);
-    s << CMD::motion_complete(Axis::Y);
 
-    // add print line to buffer
+    // start PVT motion
+    // position axes where they need to be for printing
+    if (printAxis == Axis::Y)
+    {
+        // move y axis so that bed is behind the nozzle so there is enough space to get up to speed to print
+        s << CMD::position_absolute(printAxis, buildBox.centerY + (print_travel_length/2.0));
+        s << CMD::begin_motion(printAxis);
+        s << CMD::motion_complete(printAxis);
+    }
 
-    double acceleration{100.0};
-    double speed_mm_s{5.0};
-    double lineLength_mm{10.0};
-    int TriggerOffsetTime{512};
+    // move the non-print axis to line position
+    // need to calculate line position based on number of lines and build box size
+    if (nonPrintAxis == Axis::Y)
+    {
+        s << CMD::set_accleration(nonPrintAxis, 600);
+        s << CMD::set_deceleration(nonPrintAxis, 600);
+        s << CMD::set_speed(nonPrintAxis, 60);
+        s << CMD::position_absolute(nonPrintAxis, buildBox.centerY); // NEED TO OFFSET THIS FOR OTHER LINES
+    }
+    else
+    {
+        s << CMD::set_speed(nonPrintAxis, 80);
+        s << CMD::position_absolute(nonPrintAxis, buildBox.centerX); // NEED TO OFFSET THIS FOR OTHER LINES
+    }
+    s << CMD::begin_motion(nonPrintAxis);
+    s << CMD::motion_complete(nonPrintAxis);
 
-    int cntsPerSec{1024};
+    // if printing with the x axis
+    if (printAxis == Axis::X)
+    {
+        s << CMD::position_absolute(printAxis, buildBox.centerX + (print_travel_length/2.0));
+        s << CMD::begin_motion(printAxis);
+        s << CMD::motion_complete(printAxis);
+    }
 
-    int accelTime{int((speed_mm_s/acceleration)*(double)cntsPerSec)};
-    int halfLinePrintTime{int((lineLength_mm / speed_mm_s) * (double)cntsPerSec / 2.0)};
-    double accelDistance{0.5 * acceleration * (speed_mm_s/acceleration) * (speed_mm_s/acceleration)};
+    // if printing with the y axis, this was already done
 
-    int timeToPOI{accelTime + halfLinePrintTime};
+    // line print move, jetting, and TTL trigger
+    double print_speed_mm_per_s = (dropletSpacing_um * jettingFrequency_Hz) / 1000.0;
 
-    qDebug() << QString::number(accelTime);
+    int accelTimeCnts{int((print_speed_mm_per_s/acceleration_mm_per_s2)*(double)cntsPerSec)};
+    int halfLinePrintTimeCnts{int((lineLength_mm / print_speed_mm_per_s) * (double)cntsPerSec / 2.0)};
+    double accelDistance_mm{0.5 * acceleration_mm_per_s2 * std::pow((print_speed_mm_per_s/acceleration_mm_per_s2), 2)};
 
-    s << CMD::add_pvt_data_to_buffer(Axis::X, accelDistance, speed_mm_s, accelTime);     // accelerate
-    s << CMD::add_pvt_data_to_buffer(Axis::X, lineLength_mm/2.0, speed_mm_s, halfLinePrintTime);  // constant velocity to trigger point
-    s << CMD::add_pvt_data_to_buffer(Axis::X, lineLength_mm/2.0, speed_mm_s, halfLinePrintTime);  // constant velocity
-    s << CMD::add_pvt_data_to_buffer(Axis::X, accelDistance, 0, accelTime);     // decelerate
+    int timeToPOICnts{accelTimeCnts + halfLinePrintTimeCnts};
 
-    s << CMD::exit_pvt_mode(Axis::X);
+    // PVT commands are in relative position coordinates
 
-    s << CMD::set_reference_time();
-    s << CMD::begin_pvt_motion(Axis::X);
+    //s << CMD::add_pvt_data_to_buffer(printAxis, accelDistance_mm, speed_mm_s, accelTimeCnts);     // accelerate
+    //s << CMD::add_pvt_data_to_buffer(printAxis, lineLength_mm/2.0, speed_mm_s, halfLinePrintTimeCnts);  // constant velocity to trigger point
+    //s << CMD::add_pvt_data_to_buffer(printAxis, lineLength_mm/2.0, speed_mm_s, halfLinePrintTimeCnts);  // constant velocity
+    //s << CMD::add_pvt_data_to_buffer(printAxis, accelDistance_mm, 0, accelTimeCnts);     // decelerate
 
-    s << CMD::at_time_samples(TriggerOffsetTime); // WHAT DO I PUT HERE?
+    //s << CMD::exit_pvt_mode(Axis::X);
 
-    std::vector<std::string> returnVec;
-    returnVec.push_back(s.str());
-    return returnVec;
+    //s << CMD::begin_pvt_motion(Axis::X);
+
+    // start line print
+
+    // accelerate
+
+    // trigger TTL at right time
+
+    // start printing with gearing
+
+    // stop gearing
+
+    // decelerate to a stop
+
+    // move back to jetting window
+
+    return s.str();
 }
 

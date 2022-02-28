@@ -326,6 +326,9 @@
           <property name="maximum">
            <double>150.000000000000000</double>
           </property>
+          <property name="value">
+           <double>37.299999999999997</double>
+          </property>
          </widget>
         </item>
         <item row="5" column="0">
@@ -360,8 +363,14 @@
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
+          <property name="minimum">
+           <double>-500.000000000000000</double>
+          </property>
           <property name="maximum">
-           <double>500.000000000000000</double>
+           <double>0.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>-232.750000000000000</double>
           </property>
          </widget>
         </item>

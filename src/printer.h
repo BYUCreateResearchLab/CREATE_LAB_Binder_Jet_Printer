@@ -70,8 +70,6 @@ namespace CMD
 std::string open_connection_to_controller();
 std::string set_default_controller_settings();
 std::string homing_sequence();
-std::string spread_layer(const RecoatSettings &settings);
-//std::string spread_layers();
 std::string set_accleration(Axis axis, double speed_mm_s2);
 std::string set_deceleration(Axis axis, double speed_mm_s2);
 std::string set_limit_switch_deceleration(Axis axis, double speed_mm_s2);
@@ -91,6 +89,8 @@ std::string sleep(int milliseconds);
 std::string find_index(Axis axis);
 std::string servo_here(Axis axis);
 std::string stop_motion(Axis axis);
+
+// These trippoint commands don't work through gclib...
 std::string set_reference_time();
 std::string at_time_samples(int samples);
 std::string at_time_milliseconds(int milliseconds);
@@ -117,6 +117,7 @@ std::string set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int 
 std::string disable_gearing_for(Axis slaveAxis);
 
 std::string mist_layer(double traverseSpeed_mm_per_s);
+std::string spread_layer(const RecoatSettings &settings);
 
 namespace detail
 {
@@ -137,5 +138,35 @@ std::string GOpen();
 }
 
 }
+
+struct AxisSettings
+{
+    // I want these to be constant
+    //double counts_per_mm;
+    //double stageLength_mm;
+    double speed;
+    double acceleration;
+    double deceleration;
+};
+
+class CommandGenerator
+{
+public:
+    explicit CommandGenerator();
+    std::stringstream& jog_axis(Axis axis, double speed_mm_s);
+    void clear_command_buffer();
+
+private:
+    std::stringstream s;
+
+    AxisSettings& settings(Axis axis);
+    // how do I want to handle defaults??
+    // PrinterSettings settings_?
+    // do I make this public or private?
+    RecoatSettings recoatSettings;
+    AxisSettings xAxisSettings;
+    AxisSettings yAxisSettings;
+    AxisSettings zAxisSettings;
+};
 
 #endif // PRINTER_H
