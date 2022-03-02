@@ -23,7 +23,18 @@ HighSpeedLineWidget::~HighSpeedLineWidget()
 
 void HighSpeedLineWidget::allow_widget_input(bool allowed)
 {
+    //allow_user_to_change_parameters(allowed);
+    ui->stopPrintButton->setEnabled(allowed);
+    ui->printButton->setEnabled(allowed);
 
+    ui->moveToCenterButton->setEnabled(allowed);
+}
+
+void HighSpeedLineWidget::allow_user_to_change_parameters(bool allowed)
+{
+    ui->printParametersFrame->setEnabled(allowed);
+    ui->buildBoxParametersFrame->setEnabled(allowed);
+    ui->observationSettingsFrame->setEnabled(allowed);
 }
 
 void HighSpeedLineWidget::setup()
@@ -44,6 +55,8 @@ void HighSpeedLineWidget::setup()
 
     connect(ui->printButton, &QAbstractButton::clicked, this, &HighSpeedLineWidget::print_line);
     connect(ui->stopPrintButton, &QAbstractButton::clicked, this, &HighSpeedLineWidget::stop_printing);
+
+    connect(ui->moveToCenterButton, &QAbstractButton::clicked, this, &HighSpeedLineWidget::move_to_build_box_center);
 
     update_print_settings();
 }
@@ -116,33 +129,37 @@ void HighSpeedLineWidget::print_line()
     s << print->generate_commands_for_printing_line(currentLineToPrintIndex);
     //std::stringstream s;
     //s << printLine;
+    allow_user_to_change_parameters(false);
     emit execute_command(s);
-    emit generate_printing_message_box("High speed line testing");
+    std::string messageString = "Printing Line " + std::to_string(currentLineToPrintIndex + 1);
+    emit generate_printing_message_box(messageString);
     // wait here for user input
     // break if the user wants to stop
     currentLineToPrintIndex++;
+    if (currentLineToPrintIndex < print->numLines)
+    {
+        ui->printButton->setText(QString("\nPrint Line ") + QString::number(currentLineToPrintIndex + 1) + QString("\n"));
+    }
 
     if (currentLineToPrintIndex >= (print->numLines)) // the print is done
     {
-        currentLineToPrintIndex = 0; // reset the index counter
-        emit print_to_output_window("All lines have been printed");
+        stop_printing();
     }
 }
 
 void HighSpeedLineWidget::stop_printing()
 {
-    currentLineToPrintIndex = 0; // reset line index counter
-}
-
-std::vector<std::string> HighSpeedLineCommandGenerator::print_commands_for_lines()
-{
-    std::vector<std::string> returnVec;
-
-    for (int lineNum=0; lineNum < numLines; lineNum++)
+    if (currentLineToPrintIndex != 0)
     {
-        returnVec.push_back(generate_commands_for_printing_line(lineNum));
+        if (currentLineToPrintIndex < print->numLines)
+            emit print_to_output_window("Print ended early");
+        else
+            emit print_to_output_window("All lines have been printed");
+
+        allow_user_to_change_parameters(true);
+        ui->printButton->setText("\nStart Print\n");
+        currentLineToPrintIndex = 0; // reset line index counter
     }
-    return returnVec;
 }
 
 std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(int lineNum)
@@ -158,8 +175,8 @@ std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(i
 
     double accelTime = print_speed_mm_per_s/acceleration_mm_per_s2;
     int accelTimeCnts{int((accelTime) * (double)cntsPerSec)};
-    double linePrintTime = (lineLength_mm / print_speed_mm_per_s);
-    int halfLinePrintTimeCnts{int((linePrintTime * (double)cntsPerSec) / 2.0)};
+    double linePrintTime_s = (lineLength_mm / print_speed_mm_per_s);
+    int halfLinePrintTimeCnts{int((linePrintTime_s * (double)cntsPerSec) / 2.0)};
     double accelDistance_mm{0.5 * acceleration_mm_per_s2 * std::pow(accelTime, 2)};
 
     std::string linePrintMessage = "Printing Line " + std::to_string(lineNum + 1);
@@ -188,11 +205,7 @@ std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(i
         s << CMD::motion_complete(printAxis);
     }
 
-    // 1 line: print in center of print axis
-    // 2 line: size = (1*lineSpacing),
-
     // move the non-print axis to line position
-    // need to calculate line position based on number of lines and build box size
     if (nonPrintAxis == Axis::Y)
     {
         s << CMD::set_accleration(nonPrintAxis, 600);
@@ -223,13 +236,10 @@ std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(i
         s << CMD::begin_motion(printAxis);
         s << CMD::motion_complete(printAxis);
     }
-
     // if printing with the y axis, this was already done
 
-    int timeToPOICnts{accelTimeCnts + halfLinePrintTimeCnts};
-
+    // Line Print PVT Commands
     // PVT commands are in relative position coordinates
-
     s << CMD::enable_gearing_for(Axis::Jet, printAxis);
     s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,          -print_speed_mm_per_s, accelTimeCnts);   // accelerate
     s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity to trigger point
@@ -237,26 +247,43 @@ std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(i
     s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,           0,                    accelTimeCnts);   // decelerate
     s << CMD::exit_pvt_mode(printAxis);
 
-    s << CMD::begin_pvt_motion(printAxis);
+    double linePrintTime_ms = linePrintTime_s * 1000.0;
+    double halfLinePrintTime_ms = linePrintTime_ms / 2;
+    double accelTime_ms = accelTime * 1000.0;
+    if (triggerOffset_ms < halfLinePrintTime_ms) // trigger occurs during line print
+    {
+        //s << CMD::display_message("Trigger occured during line print");
+        s << CMD::begin_pvt_motion(printAxis);
+        s << CMD::sleep(accelTime_ms);
+        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
+        s << CMD::sleep(halfLinePrintTime_ms - triggerOffset_ms);
+        s << CMD::set_bit(HS_TTL_BIT);
+        s << CMD::sleep(triggerOffset_ms + halfLinePrintTime_ms);
+    }
+    else if (triggerOffset_ms < (halfLinePrintTime_ms + accelTime_ms)) // trigger occurs during acceleration
+    {
+        //s << CMD::display_message("Trigger occured during acceleration");
+        s << CMD::begin_pvt_motion(printAxis);
+        s << CMD::sleep(accelTime_ms + halfLinePrintTime_ms - triggerOffset_ms);
+        s << CMD::set_bit(HS_TTL_BIT);
+        s << CMD::sleep(triggerOffset_ms - halfLinePrintTime_ms);
+        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
+        s << CMD::sleep(linePrintTime_ms);
+    }
+    else // trigger occurs before acceleration
+    {
+        //s << CMD::display_message("Trigger occured before acceleration");
+        s << CMD::set_bit(HS_TTL_BIT);
+        s << CMD::sleep(triggerOffset_ms - accelTime_ms - halfLinePrintTime_ms);
+        s << CMD::begin_pvt_motion(printAxis);
+        s << CMD::sleep(accelTime_ms);
+        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
+        s << CMD::sleep(linePrintTime_ms);
+    }
 
-    s << CMD::sleep(accelTime * 1000.0);
-    s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
-    s << CMD::sleep(linePrintTime * 1000.0);
     s << CMD::disable_gearing_for(Axis::Jet);
-
     s << CMD::motion_complete(printAxis);
-
-    // start line print
-
-    // accelerate
-
-    // trigger TTL at right time
-
-    // start printing with gearing
-
-    // stop gearing
-
-    // decelerate to a stop
+    s << CMD::clear_bit(HS_TTL_BIT);
 
     // move x-axis back to jetting position
     s << CMD::set_speed(Axis::X, xTravelSpeed);
@@ -264,6 +291,24 @@ std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(i
     s << CMD::begin_motion(Axis::X);
     s << CMD::motion_complete(Axis::X);
 
+    s << CMD::display_message("Line printed");
+
     return s.str();
 }
 
+void HighSpeedLineWidget::move_to_build_box_center()
+{
+    std::stringstream s;
+    s << CMD::display_message("Moving to build box center");
+    s << CMD::set_speed(Axis::X, 60);
+    s << CMD::set_speed(Axis::Y, 40);
+    s << CMD::position_absolute(Axis::X, print->buildBox.centerX);
+    s << CMD::position_absolute(Axis::Y, print->buildBox.centerY);
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::begin_motion(Axis::Y);
+    s << CMD::motion_complete(Axis::X);
+    s << CMD::motion_complete(Axis::Y);
+
+    emit execute_command(s);
+    emit disable_user_input();
+}

@@ -88,6 +88,11 @@ std::string CMD::detail::GCmd()
     return {"GCmd,"};
 }
 
+std::string CMD::detail::GCmdInt() // returns an int for commands like TP, RP, TE, etc.
+{
+    return {"GCmdInt,"};
+}
+
 std::string CMD::detail::GMotionComplete()
 {
     return {"GMotionComplete,"};
@@ -347,8 +352,42 @@ std::string CMD::disable_gearing_for(Axis slaveAxis)
 
 std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
 {
-    // PUT STUFF HERE
-    return "";
+    std::stringstream s;
+
+    const int yAxisTravelSpeed_mm_per_s = 60;
+    const double startPosition_mm = -340;
+    const double endPosition_mm = -154;
+    const int sleepTime_ms = 5000;
+
+    // setup
+    s << CMD::display_message("Misting layer");
+    s << CMD::clear_bit(MISTER_BIT); // just make sure that the mister is off
+    s << CMD::set_accleration(Axis::Y, 600);
+    s << CMD::set_deceleration(Axis::Y, 600);
+    s << CMD::set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
+
+    s << CMD::position_absolute(Axis::Y, startPosition_mm); // move y-axis to start misting position
+    s << CMD::begin_motion(Axis::Y);
+    s << CMD::motion_complete(Axis::Y);
+
+    s << CMD::set_bit(MISTER_BIT); // turn on mister
+    s << CMD::sleep(sleepTime_ms); // wait
+
+    s << CMD::set_speed(Axis::Y, traverseSpeed_mm_per_s); // set traverse speed
+    s << CMD::position_absolute(Axis::Y, endPosition_mm); // travel under mister and specified speed
+    s << CMD::begin_motion(Axis::Y);
+    s << CMD::motion_complete(Axis::Y);
+
+    s << CMD::clear_bit(MISTER_BIT); // turn off mister
+
+    // move forward
+    s << CMD::set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
+    s << CMD::position_absolute(Axis::Y, -100);
+    s << CMD::begin_motion(Axis::Y);
+    s << CMD::motion_complete(Axis::Y);
+    s << CMD::display_message("Misting complete");
+
+    return s.str();
 }
 
 std::string CMD::set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing_um)

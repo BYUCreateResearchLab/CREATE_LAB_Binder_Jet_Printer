@@ -156,6 +156,11 @@ void PrintThread::run()
                 {
 
                 }
+                else if (commandType == "GCmdInt")
+                {
+                    // I NEED TO PLAN OUT BETTER WHAT I WANT TO DO HERE...
+                    // maybe doing it through the thread is not the best option...
+                }
                 else if (commandType == "GOpen")
                 {
                     emit response(QString::fromStdString("Attempting to connect to ") + QString::fromStdString(mPrinter->address));

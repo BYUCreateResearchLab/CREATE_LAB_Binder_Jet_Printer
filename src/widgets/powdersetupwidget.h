@@ -24,6 +24,8 @@ private slots:
     void level_recoat_clicked();
     void normal_recoat_clicked();
 
+    void mist_layer();
+
 private:
     Ui::PowderSetupWidget *ui;
 };

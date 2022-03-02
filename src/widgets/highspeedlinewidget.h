@@ -20,7 +20,6 @@ class HighSpeedLineCommandGenerator
 {
 public:
     // each string in the vector will be the code for printing a line
-    std::vector<std::string> print_commands_for_lines();
     std::string generate_commands_for_printing_line(int lineNum);
 
     int numLines{};
@@ -66,6 +65,9 @@ private slots:
     void setup();
     void update_print_settings();
     void update_print_axes(int index);
+    void allow_user_to_change_parameters(bool allowed);
+
+    void move_to_build_box_center();
 
 private:
     Ui::HighSpeedLineWidget *ui;

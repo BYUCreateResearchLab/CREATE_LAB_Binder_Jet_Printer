@@ -257,19 +257,10 @@ void LinePrintWidget::on_startPrint_clicked()
 {
     std::stringstream s;
 
+    // TIMING CODE
     auto t1{std::chrono::high_resolution_clock::now()};
 
     s << CMD::stop_motion(Axis::Jet); // stop jetting if it is currently jetting
-
-    // mist layer if user selected
-    if (ui->mistLayerCheckBox->isChecked())
-    {
-        s << CMD::mist_layer(ui->mistTraverseSpeedSpinBox->value());
-    }
-
-    //s << CMD::set_accleration(Axis::X, 500);
-    //s << CMD::set_deceleration(Axis::X, 500);
-    // x axis acceleration is set by the user now
 
     s << CMD::set_accleration(Axis::Y, 300);
     s << CMD::set_deceleration(Axis::Y, 300);
@@ -281,11 +272,21 @@ void LinePrintWidget::on_startPrint_clicked()
         generate_line_set_commands(i, s); // Generate sets
     }
 
+    // move the y-axis forward and the x-axis to the jetting window after printing all lines
+    s << CMD::set_speed(Axis::X, 60);
+    s << CMD::set_speed(Axis::Y, 40);
+    s << CMD::position_absolute(Axis::X, X_STAGE_LEN_MM);
+    s << CMD::position_absolute(Axis::Y, 0);
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::begin_motion(Axis::Y);
+    s << CMD::motion_complete(Axis::X);
+    s << CMD::motion_complete(Axis::Y);
+
     s << CMD::display_message("Print Complete");
 
+    // TIMING CODE
     auto t2{std::chrono::high_resolution_clock::now()};
     auto timeSpan = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-
     qDebug() << "This took:" << QString::number(timeSpan) << " milliseconds";
 
     emit disable_user_input();
@@ -324,7 +325,6 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
     // configure jetting
     s << CMD::servo_here(Axis::Jet);
     s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
-    //s << CMD::set_jog(Axis::Jet, 1000);             // jetting frequency in hz
 
     // START LINE PRINTING HERE!
     for (int i{0}; i < currentLineSet->numLines.value; ++i)
@@ -348,34 +348,24 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
         s << CMD::position_absolute(Axis::X, lineEndX);
         s << CMD::begin_motion(Axis::X);
 
+        // Once the x-axis reaches the start of the line, enable gearing and start jetting
         s << CMD::sleep(accelerationTime_ms);
         s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(Axis::X, currentLineSet->dropletSpacing.value);
-        // Once the x-axis reaches the start of the line, enable gearing and start jetting
-        //s << CMD::after_absolute_position(Axis::X, lineStartX + accelerationDistance);
 
         // After the line is printed turn disable gearing to stop jetting
-        //s << CMD::after_absolute_position(Axis::X, lineStartX + accelerationDistance + currentLineSet->lineLength.value);
         s << CMD::sleep(printTime_ms);
         s << CMD::disable_gearing_for(Axis::Jet);
 
         s << CMD::motion_complete(Axis::X);
-        //s << CMD::stop_motion(Axis::Jet);
 
-        // move to start of next line
+        // set start of next line
         lineYPos += currentLineSet->lineSpacing.value;   // move y by the line spacing amount
     }
 }
 
 void LinePrintWidget::allow_widget_input(bool allowed)
 {
-    if (allowed)
-    {
-        ui->startPrint->setEnabled(true);
-    }
-    else
-    {
-        ui->startPrint->setDisabled(true);
-    }
+    ui->startPrint->setEnabled(allowed);
 }
 
 void LinePrintWidget::disable_velocity_input()

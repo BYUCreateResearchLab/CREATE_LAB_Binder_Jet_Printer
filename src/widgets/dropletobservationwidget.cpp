@@ -236,7 +236,9 @@ void DropletObservationWidget::stop_avi_capture()
 void DropletObservationWidget::move_to_jetting_window()
 {
     std::stringstream s;
-    s << CMD::set_jog(Axis::X, 50);
+    s << CMD::set_speed(Axis::X, 50);
+    s << CMD::position_absolute(Axis::X, X_STAGE_LEN_MM);
+    //s << CMD::set_jog(Axis::X, 50);
     s << CMD::set_accleration(Axis::X, 800);
     s << CMD::set_deceleration(Axis::X, 800);
     s << CMD::begin_motion(Axis::X);
@@ -286,7 +288,7 @@ void DropletObservationWidget::update_strobe_sweep_offset()
     {
         mCurrentStrobeOffset = ui->startTimeSpinBox->value();
         mJetDrive->set_strobe_delay(mCurrentStrobeOffset);
-        emit print_to_output_window(QString::number(mCurrentStrobeOffset));
+        //emit print_to_output_window(QString::number(mCurrentStrobeOffset));
     }
     else if (mCurrentStrobeOffset >= ui->endTimeSpinBox->value())
     {
@@ -304,7 +306,7 @@ void DropletObservationWidget::update_strobe_sweep_offset()
         //auto timeSpan = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
         //qDebug() << "This took:" << QString::number(timeSpan) << " milliseconds";
-        emit print_to_output_window(QString::number(mCurrentStrobeOffset));
+        //emit print_to_output_window(QString::number(mCurrentStrobeOffset));
     }
 }
 

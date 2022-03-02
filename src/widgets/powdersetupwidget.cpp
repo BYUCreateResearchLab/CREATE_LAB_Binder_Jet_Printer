@@ -13,6 +13,8 @@ PowderSetupWidget::PowderSetupWidget(QWidget *parent) : PrinterWidget(parent), u
     connect(ui->levelRecoat, &QPushButton::clicked, this, &PowderSetupWidget::level_recoat_clicked);
     connect(ui->normalRecoat, &QPushButton::clicked, this, &PowderSetupWidget::normal_recoat_clicked);
 
+    connect(ui->mistLayerButton, &QAbstractButton::clicked, this, &PowderSetupWidget::mist_layer);
+
     setAccessibleName("Powder Setup Widget");
 
     // Set combo box defaults
@@ -92,4 +94,14 @@ void PowderSetupWidget::normal_recoat_clicked()
 void PowderSetupWidget::allow_widget_input(bool allowed)
 {
     ui->recoaterSettingsFrame->setEnabled(allowed);
+    ui->mistingFrame->setEnabled(allowed);
+}
+
+void PowderSetupWidget::mist_layer()
+{
+    std::stringstream s;
+    s << CMD::mist_layer(ui->mistTraverseSpeedSpinBox->value());
+
+    emit disable_user_input();
+    emit execute_command(s);
 }

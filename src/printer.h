@@ -21,6 +21,9 @@
 #define ROLLER_1_BIT 18
 #define ROLLER_2_BIT 21
 
+#define HS_TTL_BIT 23 // I need to update this
+#define MISTER_BIT 27 // I need to update this
+
 class Printer
 {
 public:
@@ -130,6 +133,7 @@ std::string to_ASCII_code(char charToConvert);
 std::string create_gcmd(const std::string &command, Axis axis, int quantity);
 
 std::string GCmd();
+std::string GCmdInt();
 std::string GMotionComplete();
 std::string JetDrive();
 std::string GSleep();
