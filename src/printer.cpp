@@ -470,6 +470,9 @@ std::string CMD::set_default_controller_settings()
     s << CMD::detail::GCmd() << "BN"              << "\n";   // Save (burn) these settings to the controller just to be safe
     s << CMD::detail::GCmd() << "SH XYZ"          << "\n";   // Enable X,Y, and Z motors
 
+    // Configure Extended I/O
+    s << CMD::detail::GCmd() << "CO 1"            << "\n"; // configures bank 2 as outputs on extended I/O (IO 17-24)
+
     return s.str();
 }
 

@@ -1,3 +1,67 @@
+/*
+ * Extended I/O 44 pin HD D-Sub Connector Pin Layout
+ * Pin 1  - I/O Bit 18
+ * Pin 2  - I/O Bit 21
+ * Pin 3  - I/O Bit 24
+ * Pin 4  - I/O Bit 26
+ * Pin 5  - I/O Bit 29
+ * Pin 6  - I/O Bit 32
+ * Pin 7  - I/O Bit 33
+ * Pin 8  - I/O Bit 36
+ * Pin 9  - I/O Bit 38
+ * Pin 10 - No Connect
+ * Pin 11 - I/O Bit 41
+ * Pin 12 - I/O Bit 44
+ * Pin 13 - I/O Bit 47
+ * Pin 14 - No Connect
+ * Pin 15 - Reserved
+ * Pin 16 - I/O Bit 17
+ * Pin 17 - I/O Bit 20
+ * Pin 18 - I/O Bit 23
+ * Pin 19 - I/O Bit 25
+ * Pin 20 - I/O Bit 28
+ * Pin 21 - I/O Bit 31
+ * Pin 22 - No Connect
+ * Pin 23 - I/O Bit 35
+ * Pin 24 - I/O Bit 37
+ * Pin 25 - No Connect
+ * Pin 26 - I/O Bit 40
+ * Pin 27 - I/O Bit 43
+ * Pin 28 - I/O Bit 46
+ * Pin 29 - I/O Bit 48
+ * Pin 30 - +3.3V
+ * Pin 31 - I/O Bit 19
+ * Pin 32 - I/O Bit 22
+ * Pin 33 - Digital Ground
+ * Pin 34 - I/O Bit 34
+ * Pin 35 - No Connect
+ * Pin 36 - Digital Ground
+ * Pin 37 - I/O Bit 34
+ * Pin 38 - No Connect
+ * Pin 39 - Digital Ground
+ * Pin 40 - I/O Bit 39
+ * Pin 41 - I/O Bit 42
+ * Pin 42 - I/O Bit 45
+ * Pin 43 - Digital Ground
+ * Pin 44 - No Connect
+ *
+ * Extended I/O Banks:
+ * Banks of I/O can be configured using the "CO" command which takes a bitmask of banks
+ * set bit to 1 to set bank as output, set bit to 0 for input
+ * Bit # | IO Bank | IO Points
+ *   7   |  N/A    |   N/A
+ *   6   |  N/A    |   N/A
+ *   5   |  N/A    |   N/A
+ *   4   |  N/A    |   N/A
+ *   3   |  Bank 5 |   41-48
+ *   2   |  Bank 4 |   33-40
+ *   1   |  Bank 3 |   25-32
+ *   0   |  Bank 2 |   17-24
+ *
+ * 00001111 = 15 = all banks set as outputs
+ * 00000001 = 1  = bank 2 set as outputs
+ */
+
 #ifndef PRINTER_H
 #define PRINTER_H
 #include "gclib.h"
@@ -17,12 +81,14 @@
 
 #define PRINT_X_SIZE_MM 100
 #define PRINT_Y_SIZE_MM 100
+#define PRINT_Z_SIZE_MM 14 //?
 
+// NOTE: THESE ARE NOT THE SAME AS THE PIN NUM ON THE DSUB HD44 Cable
 #define ROLLER_1_BIT 18
 #define ROLLER_2_BIT 21
 
-#define HS_TTL_BIT 23 // I need to update this
-#define MISTER_BIT 27 // I need to update this
+#define HS_TTL_BIT 17
+#define MISTER_BIT 20
 
 class Printer
 {
