@@ -44,12 +44,16 @@ private slots:
     void on_printPercentSlider_sliderMoved(int position);
     void on_clearConsole_clicked();
     void on_startPrint_clicked();
+    void when_line_print_completed();
+    void stop_print_button_pressed();
 
 private:
     Ui::LinePrintWidget *ui;
 
     void disable_velocity_input();
     void check_x_start();
+
+    bool printIsRunning_{false};
 
 
     // put these somewhere better soon!

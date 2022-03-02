@@ -104,4 +104,5 @@ void PowderSetupWidget::mist_layer()
 
     emit disable_user_input();
     emit execute_command(s);
+    emit generate_printing_message_box("Misting Layer");
 }

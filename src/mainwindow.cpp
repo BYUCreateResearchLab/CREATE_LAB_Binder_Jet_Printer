@@ -80,10 +80,16 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
     {
         qDebug() << "signals from " << printerWidgets[i]->accessibleName() << " connected";
 
-       connect(printerWidgets[i], &PrinterWidget::execute_command, mPrintThread, &PrintThread::execute_command); // connect "execute_command" signal on powder window to execute on thread
-       connect(printerWidgets[i], &PrinterWidget::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
-       connect(printerWidgets[i], &PrinterWidget::disable_user_input, this, [this]() {this->allow_user_input(false);});
-       connect(printerWidgets[i], &PrinterWidget::print_to_output_window, this, &MainWindow::print_to_output_window);
+        printerWidgets[i]->pass_printer_objects(mPrinter, mPrintThread);
+
+        connect(printerWidgets[i], &PrinterWidget::execute_command, mPrintThread, &PrintThread::execute_command); // connect "execute_command" signal on powder window to execute on thread
+        connect(printerWidgets[i], &PrinterWidget::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
+        connect(printerWidgets[i], &PrinterWidget::disable_user_input, this, [this]() {this->allow_user_input(false);});
+        connect(printerWidgets[i], &PrinterWidget::print_to_output_window, this, &MainWindow::print_to_output_window);
+        connect(printerWidgets[i], &PrinterWidget::stop_print_and_thread, this, &MainWindow::stop_print_and_thread);
+
+        connect(printerWidgets[i], &PrinterWidget::jet_turned_on, mDropletObservationWidget, &DropletObservationWidget::jetting_was_turned_on);
+        connect(printerWidgets[i], &PrinterWidget::jet_turned_off, mDropletObservationWidget, &DropletObservationWidget::jetting_was_turned_off);
     }
 
     // connect jog buttons
@@ -91,10 +97,6 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
     connect(ui->xNegative, &QAbstractButton::released, this, &MainWindow::jog_released);
     connect(ui->yPositive, &QAbstractButton::released, this, &MainWindow::jog_released);
     connect(ui->yNegative, &QAbstractButton::released, this, &MainWindow::jog_released);
-
-    // this makes it so that when the line printing widget turns of user input (i.e. starts printing lines, it tells the observation widget
-    // that it turned off jetting
-    connect(mLinePrintingWidget, &LinePrintWidget::disable_user_input, mDropletObservationWidget, &DropletObservationWidget::jetting_was_turned_off);
 
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, &MainWindow::tab_was_changed);
 }
@@ -111,7 +113,11 @@ MainWindow::~MainWindow()
     delete mJetDrive;
     if (mPrinter->g) // if there is an active connection to a controller
     {
+        GCmd(mPrinter->g, "ST");
         GCmd(mPrinter->g, "MO"); // Turn off the motors
+        GCmd(mPrinter->g, "CB 18"); // stop roller 1
+        GCmd(mPrinter->g, "CB 21"); // stop roller 2
+        GCmd(mPrinter->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
         GClose(mPrinter->g); // Close the connection to the controller
     }
 }
@@ -490,22 +496,25 @@ void MainWindow::generate_printing_message_box(const std::string &message)
     msgBox.setStandardButtons(QMessageBox::Cancel);
     msgBox.setDefaultButton(QMessageBox::Cancel);
     int ret = msgBox.exec();
-    switch (ret) {
-    case QMessageBox::Cancel:
-        mPrintThread->stop();
-        if(mPrinter->g)
-        {
-            // Can't use CMD:: commands here...
-            // work on a way to either send these through the thread even though it is blocked
-            // or be able to strip CMD:: commands of new line and beginning command type so I can use them here
-            GCmd(mPrinter->g, "ST"); // stop motion
-            GCmd(mPrinter->g, "CB 18"); // stop roller 1
-            GCmd(mPrinter->g, "CB 21"); // stop roller 2
-            GCmd(mPrinter->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
-        }
-        break;
-    default:
-        break;
+    switch (ret)
+    {
+    case QMessageBox::Cancel: stop_print_and_thread(); break;
+    default: break;
+    }
+}
+
+void MainWindow::stop_print_and_thread()
+{
+    mPrintThread->stop();
+    if(mPrinter->g)
+    {
+        // Can't use CMD:: commands here...
+        // work on a way to either send these through the thread even though it is blocked
+        // or be able to strip CMD:: commands of new line and beginning command type so I can use them here
+        GCmd(mPrinter->g, "ST"); // stop motion
+        GCmd(mPrinter->g, "CB 18"); // stop roller 1
+        GCmd(mPrinter->g, "CB 21"); // stop roller 2
+        GCmd(mPrinter->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
     }
 }
 

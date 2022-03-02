@@ -59,6 +59,8 @@ private slots:
 
     void tab_was_changed(int index);
 
+    void stop_print_and_thread();
+
 private:
     Ui::MainWindow *ui;
     void resizeEvent(QResizeEvent* event) override;

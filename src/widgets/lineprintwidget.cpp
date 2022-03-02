@@ -40,6 +40,8 @@ LinePrintWidget::LinePrintWidget(QWidget *parent) : PrinterWidget(parent), ui(ne
     //SVG Viewer setup
     ui->SVGViewer->setup(PRINT_X_SIZE_MM, PRINT_Y_SIZE_MM);
     updatePreviewWindow();
+
+    connect(ui->stopPrintButton, &QAbstractButton::clicked, this, &LinePrintWidget::stop_print_button_pressed);
 }
 
 LinePrintWidget::~LinePrintWidget()
@@ -290,8 +292,30 @@ void LinePrintWidget::on_startPrint_clicked()
     qDebug() << "This took:" << QString::number(timeSpan) << " milliseconds";
 
     emit disable_user_input();
+    emit jet_turned_off();
     emit execute_command(s);
-    emit generate_printing_message_box("Print is running.");
+    printIsRunning_ = true;
+    ui->stopPrintButton->setEnabled(true);
+    connect(mPrintThread, &PrintThread::ended, this, &LinePrintWidget::when_line_print_completed);
+    //emit generate_printing_message_box("Print is running.");
+}
+
+void LinePrintWidget::when_line_print_completed()
+{
+    disconnect(mPrintThread, &PrintThread::ended, this, &LinePrintWidget::when_line_print_completed);
+    printIsRunning_ = false;
+    ui->stopPrintButton->setEnabled(false);
+}
+
+void LinePrintWidget::stop_print_button_pressed()
+{
+    if (printIsRunning_)
+    {
+        emit stop_print_and_thread();
+        emit jet_turned_off();
+        ui->stopPrintButton->setEnabled(false);
+        printIsRunning_ = false;
+    }
 }
 
 void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &s)
@@ -366,6 +390,11 @@ void LinePrintWidget::generate_line_set_commands(int setNum, std::stringstream &
 void LinePrintWidget::allow_widget_input(bool allowed)
 {
     ui->startPrint->setEnabled(allowed);
+    ui->tableWidget->setEnabled(allowed);
+    ui->setSpacing->setEnabled(allowed);
+    ui->startX->setEnabled(allowed);
+    ui->startY->setEnabled(allowed);
+    ui->numSets->setEnabled(allowed);
 }
 
 void LinePrintWidget::disable_velocity_input()

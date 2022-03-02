@@ -9,3 +9,10 @@ PrinterWidget::~PrinterWidget()
 {
 
 }
+
+void PrinterWidget::pass_printer_objects(Printer *printer, PrintThread *printThread)
+{
+    mPrinter = printer;
+    mPrintThread = printThread;
+}
+

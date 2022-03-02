@@ -24,7 +24,6 @@ HighSpeedLineWidget::~HighSpeedLineWidget()
 void HighSpeedLineWidget::allow_widget_input(bool allowed)
 {
     //allow_user_to_change_parameters(allowed);
-    ui->stopPrintButton->setEnabled(allowed);
     ui->printButton->setEnabled(allowed);
 
     ui->moveToCenterButton->setEnabled(allowed);
@@ -124,18 +123,30 @@ void HighSpeedLineWidget::reset_preview_zoom()
 
 void HighSpeedLineWidget::print_line()
 {
-    //std::vector<std::string> lineCommands = print->print_commands_for_lines();
+
     std::stringstream s;
     s << print->generate_commands_for_printing_line(currentLineToPrintIndex);
-    //std::stringstream s;
-    //s << printLine;
+
     allow_user_to_change_parameters(false);
     emit execute_command(s);
-    std::string messageString = "Printing Line " + std::to_string(currentLineToPrintIndex + 1);
-    emit generate_printing_message_box(messageString);
-    // wait here for user input
-    // break if the user wants to stop
+    emit jet_turned_on();
+    ui->stopPrintButton->setEnabled(true);
+    printIsRunning_ = true;
+    ui->stopPrintButton->setText("\nStop Printing\n");
+    connect(mPrintThread, &PrintThread::ended, this, &HighSpeedLineWidget::when_line_print_completed);
+
+    //std::string messageString = "Printing Line " + std::to_string(currentLineToPrintIndex + 1);
+    //emit generate_printing_message_box(messageString);
+}
+
+void HighSpeedLineWidget::when_line_print_completed()
+{
+    disconnect(mPrintThread, &PrintThread::ended, this, &HighSpeedLineWidget::when_line_print_completed); // run once
     currentLineToPrintIndex++;
+
+    printIsRunning_ = false;
+    ui->stopPrintButton->setText("\nReset Print\n");
+
     if (currentLineToPrintIndex < print->numLines)
     {
         ui->printButton->setText(QString("\nPrint Line ") + QString::number(currentLineToPrintIndex + 1) + QString("\n"));
@@ -143,23 +154,44 @@ void HighSpeedLineWidget::print_line()
 
     if (currentLineToPrintIndex >= (print->numLines)) // the print is done
     {
-        stop_printing();
+        reset_print();
     }
 }
 
 void HighSpeedLineWidget::stop_printing()
 {
-    if (currentLineToPrintIndex != 0)
+    if (printIsRunning_)
+    {
+        disconnect(mPrintThread, &PrintThread::ended, this, &HighSpeedLineWidget::when_line_print_completed);
+        emit stop_print_and_thread();
+        emit jet_turned_off();
+        emit print_to_output_window("Print Stopped");
+
+        printIsRunning_ = false;
+        ui->stopPrintButton->setText("\nReset Print\n");
+        if (currentLineToPrintIndex == 0)
+        {
+            reset_print();
+        }
+
+    }
+    else if (currentLineToPrintIndex != 0)
     {
         if (currentLineToPrintIndex < print->numLines)
             emit print_to_output_window("Print ended early");
         else
             emit print_to_output_window("All lines have been printed");
 
-        allow_user_to_change_parameters(true);
-        ui->printButton->setText("\nStart Print\n");
-        currentLineToPrintIndex = 0; // reset line index counter
+        reset_print();
     }
+}
+
+void HighSpeedLineWidget::reset_print()
+{
+    allow_user_to_change_parameters(true);
+    ui->stopPrintButton->setEnabled(false);
+    ui->printButton->setText("\nStart Print\n");
+    currentLineToPrintIndex = 0; // reset line index counter
 }
 
 std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(int lineNum)
@@ -181,10 +213,6 @@ std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(i
 
     std::string linePrintMessage = "Printing Line " + std::to_string(lineNum + 1);
     s << CMD::display_message(linePrintMessage);
-
-    // setup jetting axis
-    s << CMD::servo_here(Axis::Jet);
-    s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
 
     // move to the jetting position if we are not already there
     s << CMD::set_accleration(Axis::X, 800);
@@ -225,8 +253,15 @@ std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(i
         double initialOffset = buildBox.centerX + (layersize/2.0);
         s << CMD::position_absolute(nonPrintAxis, initialOffset - (lineNum*(lineSpacing_um/1000.0)));
     }
+
     s << CMD::begin_motion(nonPrintAxis);
     s << CMD::motion_complete(nonPrintAxis);
+
+    // setup jetting axis
+    s << CMD::stop_motion(Axis::Jet); // stop jetting if previously jetting
+    s << CMD::servo_here(Axis::Jet);
+    s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
+
 
     // if printing with the x axis
     if (printAxis == Axis::X)
@@ -292,6 +327,9 @@ std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(i
     s << CMD::motion_complete(Axis::X);
 
     s << CMD::display_message("Line printed");
+
+    s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
+    s << CMD::begin_motion(Axis::Jet);
 
     return s.str();
 }

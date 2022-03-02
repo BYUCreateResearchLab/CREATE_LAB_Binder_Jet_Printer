@@ -59,8 +59,11 @@ public:
     void allow_widget_input(bool allowed) override;
     void reset_preview_zoom();
 
-private slots:
+public slots:
     void print_line();
+    void when_line_print_completed();
+
+private slots:
     void stop_printing();
     void setup();
     void update_print_settings();
@@ -68,11 +71,13 @@ private slots:
     void allow_user_to_change_parameters(bool allowed);
 
     void move_to_build_box_center();
+    void reset_print();
 
 private:
     Ui::HighSpeedLineWidget *ui;
     HighSpeedLineCommandGenerator *print{nullptr};
     int currentLineToPrintIndex{0};
+    bool printIsRunning_{false};
 };
 
 #endif // HIGHSPEEDLINEWIDGET_H

@@ -358,13 +358,23 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
     const double startPosition_mm = -340;
     const double endPosition_mm = -154;
     const int sleepTime_ms = 5000;
+    const double zAxisOffsetUnderRoller{0.5};
 
     // setup
     s << CMD::display_message("Misting layer");
     s << CMD::clear_bit(MISTER_BIT); // just make sure that the mister is off
     s << CMD::set_accleration(Axis::Y, 600);
     s << CMD::set_deceleration(Axis::Y, 600);
-    s << CMD::set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
+    s << CMD::set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);  
+
+    // move z-axis down when going back to avoid hitting the roller
+    s << CMD::set_accleration(Axis::Z, 10);
+    s << CMD::set_deceleration(Axis::Z, 10);
+    s << CMD::set_speed(Axis::Z, 2);
+    s << CMD::position_relative(Axis::Z, -zAxisOffsetUnderRoller);
+    s << CMD::begin_motion(Axis::Z);
+    s << CMD::motion_complete(Axis::Z);
+    //
 
     s << CMD::position_absolute(Axis::Y, startPosition_mm); // move y-axis to start misting position
     s << CMD::begin_motion(Axis::Y);
@@ -380,11 +390,16 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
 
     s << CMD::clear_bit(MISTER_BIT); // turn off mister
 
+    // move z-axis back up
+    s << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller);
+    s << CMD::begin_motion(Axis::Z);
+
     // move forward
     s << CMD::set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
-    s << CMD::position_absolute(Axis::Y, -100);
+    s << CMD::position_absolute(Axis::Y, -50);
     s << CMD::begin_motion(Axis::Y);
     s << CMD::motion_complete(Axis::Y);
+    s << CMD::motion_complete(Axis::Z);
     s << CMD::display_message("Misting complete");
 
     return s.str();
