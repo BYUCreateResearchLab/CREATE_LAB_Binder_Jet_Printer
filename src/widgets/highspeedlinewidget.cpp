@@ -127,6 +127,8 @@ void HighSpeedLineWidget::print_line()
     std::stringstream s;
     s << print->generate_commands_for_printing_line(currentLineToPrintIndex);
 
+    //qDebug().noquote() << QString(CMD::cmd_buf_to_dmc(s).c_str());
+
     allow_user_to_change_parameters(false);
     emit execute_command(s);
     emit jet_turned_on();
@@ -134,9 +136,6 @@ void HighSpeedLineWidget::print_line()
     printIsRunning_ = true;
     ui->stopPrintButton->setText("\nStop Printing\n");
     connect(mPrintThread, &PrintThread::ended, this, &HighSpeedLineWidget::when_line_print_completed);
-
-    //std::string messageString = "Printing Line " + std::to_string(currentLineToPrintIndex + 1);
-    //emit generate_printing_message_box(messageString);
 }
 
 void HighSpeedLineWidget::when_line_print_completed()
@@ -250,7 +249,7 @@ std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(i
         s << CMD::set_speed(nonPrintAxis, xTravelSpeed);
 
         double layersize = (numLines-1)*(lineSpacing_um / 1000.0);
-        double initialOffset = buildBox.centerX + (layersize/2.0);
+        double initialOffset = buildBox.centerX + (layersize / 2.0);
         s << CMD::position_absolute(nonPrintAxis, initialOffset - (lineNum*(lineSpacing_um/1000.0)));
     }
 
@@ -276,18 +275,18 @@ std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(i
     // Line Print PVT Commands
     // PVT commands are in relative position coordinates
     s << CMD::enable_gearing_for(Axis::Jet, printAxis);
-    s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,          -print_speed_mm_per_s, accelTimeCnts);   // accelerate
+    s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,    -print_speed_mm_per_s, accelTimeCnts);         // accelerate
     s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity to trigger point
     s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity
-    s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,           0,                    accelTimeCnts);   // decelerate
+    s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,     0,                    accelTimeCnts);         // decelerate
     s << CMD::exit_pvt_mode(printAxis);
 
     double linePrintTime_ms = linePrintTime_s * 1000.0;
-    double halfLinePrintTime_ms = linePrintTime_ms / 2;
+    double halfLinePrintTime_ms = linePrintTime_ms / 2.0;
     double accelTime_ms = accelTime * 1000.0;
     if (triggerOffset_ms < halfLinePrintTime_ms) // trigger occurs during line print
     {
-        //s << CMD::display_message("Trigger occured during line print");
+        s << CMD::display_message("Trigger occured during line print");
         s << CMD::begin_pvt_motion(printAxis);
         s << CMD::sleep(accelTime_ms);
         s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
@@ -297,7 +296,7 @@ std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(i
     }
     else if (triggerOffset_ms < (halfLinePrintTime_ms + accelTime_ms)) // trigger occurs during acceleration
     {
-        //s << CMD::display_message("Trigger occured during acceleration");
+        s << CMD::display_message("Trigger occured during acceleration");
         s << CMD::begin_pvt_motion(printAxis);
         s << CMD::sleep(accelTime_ms + halfLinePrintTime_ms - triggerOffset_ms);
         s << CMD::set_bit(HS_TTL_BIT);
@@ -307,7 +306,7 @@ std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(i
     }
     else // trigger occurs before acceleration
     {
-        //s << CMD::display_message("Trigger occured before acceleration");
+        s << CMD::display_message("Trigger occured before acceleration");
         s << CMD::set_bit(HS_TTL_BIT);
         s << CMD::sleep(triggerOffset_ms - accelTime_ms - halfLinePrintTime_ms);
         s << CMD::begin_pvt_motion(printAxis);

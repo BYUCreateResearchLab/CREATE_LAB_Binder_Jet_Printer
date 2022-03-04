@@ -635,3 +635,33 @@ std::string CMD::detail::create_gcmd(const std::string &command, Axis axis, int 
     return result;
     // return GCmd() + command + axis_string(axis) + "=" + std::to_string(quantity) + "\n";
 }
+
+std::string CMD::cmd_buf_to_dmc(const std::stringstream &s)
+{
+    std::stringstream ss;
+    ss << s.rdbuf(); // copy to new string stream
+    std::string returnString;
+    std::string buffer;
+    while (std::getline(ss, buffer)) // Reads whole line (includes spaces)
+    {
+        std::string delimeterChar = ",";
+        size_t pos{0};
+        std::string commandType;
+        pos = buffer.find(delimeterChar);
+
+        if (pos != std::string::npos)
+        {
+            commandType = buffer.substr(0, pos);
+            buffer.erase(0, pos + delimeterChar.length());
+        }
+        else
+        {
+            commandType = buffer;
+            buffer = "";
+        }
+        returnString += buffer;
+        returnString += "\n";
+    }
+
+    return returnString;
+}

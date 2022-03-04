@@ -136,6 +136,8 @@ double calculate_acceleration_distance(double speed_mm_per_s, double acceleratio
 namespace CMD
 {
 
+std::string cmd_buf_to_dmc(const std::stringstream &s);
+
 std::string open_connection_to_controller();
 std::string set_default_controller_settings();
 std::string homing_sequence();
