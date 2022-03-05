@@ -128,6 +128,8 @@ void HighSpeedLineWidget::print_line()
     std::string temp = print->generate_dmc_commands_for_printing_line(currentLineToPrintIndex);
     const char *commands = temp.c_str();
 
+    qDebug().noquote() << commands;
+
     //qDebug().noquote() << commands;
 
     if (mPrinter->g)
@@ -136,6 +138,9 @@ void HighSpeedLineWidget::print_line()
     }
     s << "GCmd," << "XQ" << "\n";
     s << "GProgramComplete," << "\n";
+
+    std::string linePrintMessage = "Printing Line " + std::to_string(currentLineToPrintIndex + 1);
+    emit print_to_output_window(QString::fromStdString(linePrintMessage));
 
     allow_user_to_change_parameters(false);
 
@@ -371,9 +376,9 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
     double print_speed_mm_per_s = (dropletSpacing_um * jettingFrequency_Hz) / 1000.0;
 
     double accelTime = print_speed_mm_per_s/acceleration_mm_per_s2;
-    int accelTimeCnts{int((accelTime) * (double)cntsPerSec)};
+    int accelTimeCnts = int(std::round((accelTime) * (double)cntsPerSec));
     double linePrintTime_s = (lineLength_mm / print_speed_mm_per_s);
-    int halfLinePrintTimeCnts{int((linePrintTime_s * (double)cntsPerSec) / 2.0)};
+    int halfLinePrintTimeCnts = int(std::round((linePrintTime_s * (double)cntsPerSec) / 2.0));
     double accelDistance_mm{0.5 * acceleration_mm_per_s2 * std::pow(accelTime, 2)};
 
     // move to the jetting position if we are not already there
@@ -443,36 +448,79 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
     s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity
     s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,     0,                    accelTimeCnts);         // decelerate
     s << CMD::exit_pvt_mode(printAxis);
+    s << CMD::set_reference_time();
+
+
 
     double linePrintTime_ms = linePrintTime_s * 1000.0;
     double halfLinePrintTime_ms = linePrintTime_ms / 2.0;
     double accelTime_ms = accelTime * 1000.0;
     if (triggerOffset_ms < halfLinePrintTime_ms) // trigger occurs during line print
     {
+        qDebug() << "trigger occured during line print";
+
+        //int time1 = std::round(accelTime_ms);
+        //int time2 = std::round(halfLinePrintTime_ms - triggerOffset_ms);
+        //int time3 = std::round(triggerOffset_ms + halfLinePrintTime_ms);
+        //if (time1 != 0) s << CMD::wait(time1);
+        //if (time2 != 0) s << CMD::wait(time2);
+        //if (time3 != 0) s << CMD::wait(time3);
+
+        int time1 = std::round(accelTime_ms);
+        int time2 = std::round(accelTime_ms + halfLinePrintTime_ms - triggerOffset_ms);
+        int time3 = std::round(accelTime_ms + linePrintTime_ms);
+
         s << CMD::begin_pvt_motion(printAxis);
-        s << CMD::wait(accelTime_ms);
+        s << CMD::at_time_milliseconds(time1);
         s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
-        s << CMD::wait(halfLinePrintTime_ms - triggerOffset_ms);
+        if (time2 != time1) s << CMD::at_time_milliseconds(time2);
         s << CMD::set_bit(HS_TTL_BIT);
-        s << CMD::wait(triggerOffset_ms + halfLinePrintTime_ms);
+        s << CMD::at_time_milliseconds(time3);
     }
     else if (triggerOffset_ms < (halfLinePrintTime_ms + accelTime_ms)) // trigger occurs during acceleration
     {
+        qDebug() << "trigger occured during acceleration";
+
+        //int time1 = std::round(accelTime_ms + halfLinePrintTime_ms - triggerOffset_ms);
+        //int time2 = std::round(triggerOffset_ms - halfLinePrintTime_ms);
+        //int time3 = std::round(linePrintTime_ms);
+        //if (time1 != 0) s << CMD::wait(time1);
+        //if (time2 != 0) s << CMD::wait(time2);
+        //if (time3 != 0) s << CMD::wait(time3);
+
+        int time1 = std::round(accelTime_ms + halfLinePrintTime_ms - triggerOffset_ms);
+        int time2 = std::round(accelTime_ms);
+        int time3 = std::round(accelTime_ms + linePrintTime_ms);
+
         s << CMD::begin_pvt_motion(printAxis);
-        s << CMD::wait(accelTime_ms + halfLinePrintTime_ms - triggerOffset_ms);
+        if (time1 != 0) s << CMD::at_time_milliseconds(time1);
         s << CMD::set_bit(HS_TTL_BIT);
-        s << CMD::wait(triggerOffset_ms - halfLinePrintTime_ms);
+        if (time2 != time1) s << CMD::at_time_milliseconds(time2);
         s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
-        s << CMD::wait(linePrintTime_ms);
+        s << CMD::at_time_milliseconds(time3);
     }
     else // trigger occurs before acceleration
     {
+        qDebug() << "trigger occured before acceleration";
+
+        //int time1 = std::round(triggerOffset_ms - accelTime_ms - halfLinePrintTime_ms);
+        //int time2 = std::round(accelTime_ms);
+        //int time3 = std::round(linePrintTime_ms);
+        //if (time1 != 0) s << CMD::wait(time1);
+        //if (time2 != 0) s << CMD::wait(time2);
+        //if (time3 != 0) s << CMD::wait(time3);
+
+        int timeWaitBeforePrint = triggerOffset_ms - accelTime_ms - halfLinePrintTime_ms;
+        int time1 = std::round(timeWaitBeforePrint);
+        int time2 = std::round(timeWaitBeforePrint + accelTime_ms);
+        int time3 = std::round(timeWaitBeforePrint + accelTime_ms + linePrintTime_ms);
+
         s << CMD::set_bit(HS_TTL_BIT);
-        s << CMD::wait(triggerOffset_ms - accelTime_ms - halfLinePrintTime_ms);
+        if (time1 != 0) s << CMD::at_time_milliseconds(time1);
         s << CMD::begin_pvt_motion(printAxis);
-        s << CMD::wait(accelTime_ms);
+        if (time2 != time1) s << CMD::at_time_milliseconds(time2);
         s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
-        s << CMD::wait(linePrintTime_ms);
+        s << CMD::at_time_milliseconds(time3);
     }
 
     s << CMD::disable_gearing_for(Axis::Jet);
