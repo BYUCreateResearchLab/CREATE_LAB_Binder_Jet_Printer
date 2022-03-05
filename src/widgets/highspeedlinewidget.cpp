@@ -142,10 +142,12 @@ void HighSpeedLineWidget::print_line()
     std::string linePrintMessage = "Printing Line " + std::to_string(currentLineToPrintIndex + 1);
     emit print_to_output_window(QString::fromStdString(linePrintMessage));
 
+
     allow_user_to_change_parameters(false);
 
     emit execute_command(s);
     emit jet_turned_on();
+    emit disable_user_input();
     ui->stopPrintButton->setEnabled(true);
     printIsRunning_ = true;
     ui->stopPrintButton->setText("\nStop Printing\n");
