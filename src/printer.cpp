@@ -4,6 +4,18 @@
 #include <cmath>
 #include <stdexcept>
 
+GReturn GCALL GProgramComplete(GCon g)
+{
+    char pred[] = "_XQ=-1"; //predicate for polling the axis' motion status, m is a place holder replaced below.
+       GReturn rc;
+
+       rc = GWaitForBool(g, pred, -1); // poll forever. Change this if a premature exit is desired.
+       if (rc != G_NO_ERROR)
+           return rc;
+
+       return G_NO_ERROR;
+}
+
 double calculate_acceleration_distance(double speed_mm_per_s, double acceleration_mm_per_s2)
 {
     // dx = v0*t + .5*a*t^2
@@ -271,6 +283,16 @@ std::string CMD::at_time_milliseconds(int milliseconds)
 std::string CMD::after_absolute_position(Axis axis, double absolutePosition_mm)
 {
     return {create_gcmd("AP", axis, mm2cnts(absolutePosition_mm, axis))};
+}
+
+std::string CMD::after_motion(Axis axis)
+{
+    return {GCmd() + "AM " + detail::axis_string(axis) + "\n"};
+}
+
+std::string CMD::wait(int milliseconds)
+{
+    return {GCmd() + "WT " + std::to_string(milliseconds) + "\n"};
 }
 
 std::string CMD::set_bit(int bit)

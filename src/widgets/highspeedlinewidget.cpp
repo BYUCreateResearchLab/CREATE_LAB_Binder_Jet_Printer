@@ -125,11 +125,20 @@ void HighSpeedLineWidget::print_line()
 {
 
     std::stringstream s;
-    s << print->generate_commands_for_printing_line(currentLineToPrintIndex);
+    std::string temp = print->generate_dmc_commands_for_printing_line(currentLineToPrintIndex);
+    const char *commands = temp.c_str();
 
-    //qDebug().noquote() << QString(CMD::cmd_buf_to_dmc(s).c_str());
+    //qDebug().noquote() << commands;
+
+    if (mPrinter->g)
+    {
+        GProgramDownload(mPrinter->g, commands, "");
+    }
+    s << "GCmd," << "XQ" << "\n";
+    s << "GProgramComplete," << "\n";
 
     allow_user_to_change_parameters(false);
+
     emit execute_command(s);
     emit jet_turned_on();
     ui->stopPrintButton->setEnabled(true);
@@ -348,4 +357,138 @@ void HighSpeedLineWidget::move_to_build_box_center()
 
     emit execute_command(s);
     emit disable_user_input();
+}
+
+std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_line(int lineNum)
+{
+    std::stringstream s;
+
+    Axis nonPrintAxis;
+    if (printAxis == Axis::X) nonPrintAxis = Axis::Y;
+    else nonPrintAxis = Axis::X;
+
+    // line print move, jetting, and TTL trigger
+    double print_speed_mm_per_s = (dropletSpacing_um * jettingFrequency_Hz) / 1000.0;
+
+    double accelTime = print_speed_mm_per_s/acceleration_mm_per_s2;
+    int accelTimeCnts{int((accelTime) * (double)cntsPerSec)};
+    double linePrintTime_s = (lineLength_mm / print_speed_mm_per_s);
+    int halfLinePrintTimeCnts{int((linePrintTime_s * (double)cntsPerSec) / 2.0)};
+    double accelDistance_mm{0.5 * acceleration_mm_per_s2 * std::pow(accelTime, 2)};
+
+    // move to the jetting position if we are not already there
+    s << CMD::set_accleration(Axis::X, 800);
+    s << CMD::set_deceleration(Axis::X, 800);
+    s << CMD::set_speed(Axis::X, xTravelSpeed);
+    s << CMD::position_absolute(Axis::X, X_STAGE_LEN_MM);
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::after_motion(Axis::X);
+
+    // start PVT motion
+    // position axes where they need to be for printing
+    if (printAxis == Axis::Y)
+    {
+        // move y axis so that bed is behind the nozzle so there is enough space to get up to speed to print
+        s << CMD::set_speed(printAxis, 60);
+        s << CMD::position_absolute(printAxis, buildBox.centerY + (lineLength_mm/2.0) + accelDistance_mm);
+        s << CMD::begin_motion(printAxis);
+        s << CMD::after_motion(printAxis);
+    }
+
+    // move the non-print axis to line position
+    if (nonPrintAxis == Axis::Y)
+    {
+        s << CMD::set_accleration(nonPrintAxis, 600);
+        s << CMD::set_deceleration(nonPrintAxis, 600);
+        s << CMD::set_speed(nonPrintAxis, 60);
+
+        double layersize = (numLines-1)*(lineSpacing_um / 1000.0);
+        double initialOffset = buildBox.centerY - (layersize/2.0);
+
+        s << CMD::position_absolute(nonPrintAxis, initialOffset + (lineNum*(lineSpacing_um/1000.0)));
+    }
+    else
+    {
+        s << CMD::set_speed(nonPrintAxis, xTravelSpeed);
+
+        double layersize = (numLines-1)*(lineSpacing_um / 1000.0);
+        double initialOffset = buildBox.centerX + (layersize / 2.0);
+        s << CMD::position_absolute(nonPrintAxis, initialOffset - (lineNum*(lineSpacing_um/1000.0)));
+    }
+
+    s << CMD::begin_motion(nonPrintAxis);
+    s << CMD::after_motion(nonPrintAxis);
+
+    // setup jetting axis
+    s << CMD::stop_motion(Axis::Jet); // stop jetting if previously jetting
+    s << CMD::servo_here(Axis::Jet);
+    s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
+
+
+    // if printing with the x axis
+    if (printAxis == Axis::X)
+    {
+        s << CMD::set_speed(printAxis, xTravelSpeed);
+        s << CMD::position_absolute(printAxis, buildBox.centerX + (lineLength_mm/2.0) + accelDistance_mm);
+        s << CMD::begin_motion(printAxis);
+        s << CMD::after_motion(printAxis);
+    }
+    // if printing with the y axis, this was already done
+
+    // Line Print PVT Commands
+    // PVT commands are in relative position coordinates
+    s << CMD::enable_gearing_for(Axis::Jet, printAxis);
+    s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,    -print_speed_mm_per_s, accelTimeCnts);         // accelerate
+    s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity to trigger point
+    s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity
+    s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,     0,                    accelTimeCnts);         // decelerate
+    s << CMD::exit_pvt_mode(printAxis);
+
+    double linePrintTime_ms = linePrintTime_s * 1000.0;
+    double halfLinePrintTime_ms = linePrintTime_ms / 2.0;
+    double accelTime_ms = accelTime * 1000.0;
+    if (triggerOffset_ms < halfLinePrintTime_ms) // trigger occurs during line print
+    {
+        s << CMD::begin_pvt_motion(printAxis);
+        s << CMD::wait(accelTime_ms);
+        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
+        s << CMD::wait(halfLinePrintTime_ms - triggerOffset_ms);
+        s << CMD::set_bit(HS_TTL_BIT);
+        s << CMD::wait(triggerOffset_ms + halfLinePrintTime_ms);
+    }
+    else if (triggerOffset_ms < (halfLinePrintTime_ms + accelTime_ms)) // trigger occurs during acceleration
+    {
+        s << CMD::begin_pvt_motion(printAxis);
+        s << CMD::wait(accelTime_ms + halfLinePrintTime_ms - triggerOffset_ms);
+        s << CMD::set_bit(HS_TTL_BIT);
+        s << CMD::wait(triggerOffset_ms - halfLinePrintTime_ms);
+        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
+        s << CMD::wait(linePrintTime_ms);
+    }
+    else // trigger occurs before acceleration
+    {
+        s << CMD::set_bit(HS_TTL_BIT);
+        s << CMD::wait(triggerOffset_ms - accelTime_ms - halfLinePrintTime_ms);
+        s << CMD::begin_pvt_motion(printAxis);
+        s << CMD::wait(accelTime_ms);
+        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
+        s << CMD::wait(linePrintTime_ms);
+    }
+
+    s << CMD::disable_gearing_for(Axis::Jet);
+    s << CMD::after_motion(printAxis);
+    s << CMD::clear_bit(HS_TTL_BIT);
+
+    // move x-axis back to jetting position
+    s << CMD::set_speed(Axis::X, xTravelSpeed);
+    s << CMD::position_absolute(Axis::X, X_STAGE_LEN_MM);
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::after_motion(Axis::X);
+
+    s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
+    s << CMD::begin_motion(Axis::Jet);
+
+    std::string returnString = CMD::cmd_buf_to_dmc(s);
+
+    return returnString;
 }

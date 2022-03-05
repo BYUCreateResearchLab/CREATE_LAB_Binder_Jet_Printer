@@ -90,6 +90,8 @@
 #define HS_TTL_BIT 17
 #define MISTER_BIT 21
 
+GReturn GCALL GProgramComplete(GCon g);
+
 class Printer
 {
 public:
@@ -166,6 +168,8 @@ std::string set_reference_time();
 std::string at_time_samples(int samples);
 std::string at_time_milliseconds(int milliseconds);
 std::string after_absolute_position(Axis axis, double absolutePosition_mm);
+std::string after_motion(Axis axis);
+std::string wait(int milliseconds);
 
 std::string set_bit(int bit);
 std::string clear_bit(int bit);

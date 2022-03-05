@@ -161,6 +161,17 @@ void PrintThread::run()
                     // I NEED TO PLAN OUT BETTER WHAT I WANT TO DO HERE...
                     // maybe doing it through the thread is not the best option...
                 }
+                else if (commandType == "GProgramComplete")
+                {
+                    if (mPrinter->g)
+                    {
+                        e(GProgramComplete(mPrinter->g));
+                    }
+                    else
+                    {
+                        //emit response("ERROR: not connected to controller!");
+                    }
+                }
                 else if (commandType == "GOpen")
                 {
                     emit response(QString::fromStdString("Attempting to connect to ") + QString::fromStdString(mPrinter->address));

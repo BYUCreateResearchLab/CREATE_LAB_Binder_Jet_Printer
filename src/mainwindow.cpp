@@ -511,7 +511,8 @@ void MainWindow::stop_print_and_thread()
         // Can't use CMD:: commands here...
         // work on a way to either send these through the thread even though it is blocked
         // or be able to strip CMD:: commands of new line and beginning command type so I can use them here
-        GCmd(mPrinter->g, "ST"); // stop motion
+        GCmd(mPrinter->g, "HX");    // Halt any running program
+        GCmd(mPrinter->g, "ST");    // stop motion on all axes
         GCmd(mPrinter->g, "CB 18"); // stop roller 1
         GCmd(mPrinter->g, "CB 21"); // stop roller 2
         GCmd(mPrinter->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
