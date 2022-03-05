@@ -85,10 +85,10 @@
 
 // NOTE: THESE ARE NOT THE SAME AS THE PIN NUM ON THE DSUB HD44 Cable
 #define ROLLER_1_BIT 18
-#define ROLLER_2_BIT 21
+#define ROLLER_2_BIT 20
 
 #define HS_TTL_BIT 17
-#define MISTER_BIT 20
+#define MISTER_BIT 21
 
 class Printer
 {
