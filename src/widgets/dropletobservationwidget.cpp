@@ -43,8 +43,8 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     qDebug() << "temp video files are stored at " << mTempFileName;
     connect(ui->SaveVideoButton, &QPushButton::clicked, this, &DropletObservationWidget::save_video_clicked);
 
-    mSweepTimer = new QTimer(this);
-    connect(mSweepTimer, &QTimer::timeout, this, &DropletObservationWidget::update_strobe_sweep_offset);
+    //mSweepTimer = new QTimer(this);
+    //connect(mSweepTimer, &QTimer::timeout, this, &DropletObservationWidget::update_strobe_sweep_offset);
 }
 
 DropletObservationWidget::~DropletObservationWidget()
@@ -233,7 +233,7 @@ void DropletObservationWidget::start_strobe_sweep()
 {
     // update the strobe sweep offset when a new frame is received
     connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
-            this, &DropletObservationWidget::start_strobe_sweep_offset_timer);
+            this, &DropletObservationWidget::update_strobe_sweep_offset);
 
     if (mCaptureVideoWithSweep) // if also capturing a video
     {
@@ -274,16 +274,17 @@ void DropletObservationWidget::stop_avi_capture()
 void DropletObservationWidget::start_strobe_sweep_offset_timer()
 {
     // delay after frame received to update the strobe offset
-    double frameTime = 1.0 / (double)mCameraFrameRate;
-    double ExposureTimePercent = (double)(ui->shutterAngleSpinBox->value()) / 360.0;
-    int delayTime = (int) (frameTime * ExposureTimePercent);
-    mSweepTimer->start(delayTime);
+    //double frameTime = 1.0 / (double)mCameraFrameRate;
+    //double ExposureTimePercent = (double)(ui->shutterAngleSpinBox->value()) / 360.0;
+    //int delayTime = (int) (frameTime * ExposureTimePercent);
+    //int delayTime = ui->timerTimeSpinBox->value();
+    //mSweepTimer->start(delayTime);
 }
 
 void DropletObservationWidget::update_strobe_sweep_offset()
 {
 
-    mSweepTimer->stop();
+    //mSweepTimer->stop();
 
     if (mCurrentStrobeOffset == -1) // if starting strobe sweep
     {
@@ -294,7 +295,7 @@ void DropletObservationWidget::update_strobe_sweep_offset()
     else if (mCurrentStrobeOffset >= ui->endTimeSpinBox->value()) // if sweep complete
     {
         disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
-                this, &DropletObservationWidget::start_strobe_sweep_offset_timer);
+                this, &DropletObservationWidget::update_strobe_sweep_offset);
         mCurrentStrobeOffset = -1;
     }
     else // increment strobe sweep offset
