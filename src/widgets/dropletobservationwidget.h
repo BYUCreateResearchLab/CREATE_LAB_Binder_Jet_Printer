@@ -41,7 +41,7 @@ private slots:
     void stop_avi_capture();
     void camera_closed();
     void move_to_jetting_window();
-    void strobe_sweep_button_clicked();
+    //void strobe_sweep_button_clicked();
     void start_strobe_sweep();
     void update_strobe_sweep_offset();
     void trigger_jet_clicked();
@@ -54,7 +54,7 @@ private:
     HIDS mCameraHandle{0};
     JetDrive *mJetDrive{nullptr};
     Camera *mCamera{nullptr};
-    QTimer *mSweepTimer{nullptr};
+    //QTimer *mSweepTimer{nullptr};
     JettingWidget *mJettingWidget{nullptr};
 
     int mCameraFrameRate{};

@@ -204,15 +204,10 @@ public:
     void setUpdateFuncs();
     void initAutoFuncs();
 
-    NO_DISCARD HIDS getCameraHandle() const {
-        if(!m_hCamera)
-        {
-            return IS_INVALID_HIDS;
-        }
-        else
-        {
-            return m_hCamera;
-        }
+    NO_DISCARD HIDS getCameraHandle() const
+    {
+        if(!m_hCamera) return IS_INVALID_HIDS;
+        else return m_hCamera;
     }
 
     NO_DISCARD int Open(UEYE_CAMERA_INFO camera, bool allowUpload);

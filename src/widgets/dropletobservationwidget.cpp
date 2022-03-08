@@ -28,7 +28,7 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     connect(ui->takeVideoButton, &QPushButton::clicked, this, &DropletObservationWidget::capture_video);
     connect(this, &DropletObservationWidget::video_capture_complete, this, &DropletObservationWidget::stop_avi_capture);
     connect(ui->moveToCameraButton, &QPushButton::clicked, this, &DropletObservationWidget::move_to_jetting_window);
-    connect(ui->sweepButton, &QPushButton::clicked, this, &DropletObservationWidget::strobe_sweep_button_clicked);
+    connect(ui->sweepButton, &QPushButton::clicked, this, &DropletObservationWidget::start_strobe_sweep);
     connect(ui->TriggerJetButton, &QPushButton::clicked, this, &DropletObservationWidget::trigger_jet_clicked);
 
     mJettingWidget = new JettingWidget(mJetDrive);
@@ -68,7 +68,7 @@ void DropletObservationWidget::jetting_was_turned_off()
 
 void DropletObservationWidget::connect_to_camera()
 {
-    if(mCameraIsConnected)
+    if (mCameraIsConnected)
     {
         ui->mdiArea->activeSubWindow()->close();
     }
@@ -76,7 +76,7 @@ void DropletObservationWidget::connect_to_camera()
     {
         CameraList cameraList;
 
-        if(cameraList.isSingleCamOpenable())
+        if (cameraList.isSingleCamOpenable())
         {
             cameraList.selectAll();
             cameraList.accept();
@@ -96,14 +96,12 @@ void DropletObservationWidget::connect_to_camera()
                     if (live)
                     {
                         subWindow->camera()->captureVideo(false);
+                        // There has to be a better way to get these pointers / shared pointers...
                         mCameraHandle = subWindow->camera()->handle();
                         mCamera = subWindow->camera().get();
                     }
 
-                    if (numCams == 1)
-                    {
-                        subWindow->showMaximized();
-                    }
+                    if (numCams == 1) subWindow->showMaximized();
 
                     this->set_settings();
                     this->ui->takeVideoButton->setEnabled(true);
@@ -121,6 +119,8 @@ void DropletObservationWidget::connect_to_camera()
 
 void DropletObservationWidget::camera_closed()
 {
+    mCamera = nullptr;
+    mCameraHandle = 0;
     ui->connectButton->setText("Connect Camera");
     ui->takeVideoButton->setEnabled(false);
     ui->SaveVideoButton->setEnabled(false);
@@ -158,7 +158,7 @@ void DropletObservationWidget::set_settings()
 
 void DropletObservationWidget::capture_video()
 {
-    isavi_InitAVI(&mAviID, mCameraHandle);
+    isavi_InitAVI(&mAviID, mCameraHandle); // initialize AVI capture
 
     int colorMode{is_SetColorMode(mCameraHandle, IS_GET_COLOR_MODE)};
     SENSORINFO sensorInfo{};
@@ -184,11 +184,6 @@ void DropletObservationWidget::capture_video()
     int imageQuality{95}; // 1 is the lowest, 100 is the highest
     isavi_SetImageQuality (mAviID, imageQuality);
 
-
-    //std::string fileNameString{getenv("USERPROFILE")};
-    //fileNameString += "/Desktop/testVid.avi";
-    //const char* fileName = fileNameString.c_str();
-
     // get temp file location
     std::string fileNameString = mTempFileName.toStdString();
     const char* fileName = fileNameString.c_str();
@@ -202,14 +197,54 @@ void DropletObservationWidget::capture_video()
     mNumFramesToCapture = int(ui->endTimeSpinBox->value() / ui->stepTimeSpinBox->value()) + 1;
     allow_widget_input(false);
     mCaptureVideoWithSweep = true;
-    strobe_sweep_button_clicked();
+    start_strobe_sweep();
+}
+
+void DropletObservationWidget::move_to_jetting_window()
+{
+    std::stringstream s;
+    s << CMD::set_speed(Axis::X, 50);
+    s << CMD::position_absolute(Axis::X, X_STAGE_LEN_MM);
+    //s << CMD::set_jog(Axis::X, 50);
+    s << CMD::set_accleration(Axis::X, 800);
+    s << CMD::set_deceleration(Axis::X, 800);
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::display_message("Moving to jetting window");
+    s << CMD::motion_complete(Axis::X);
+
+    emit execute_command(s);
+    emit disable_user_input();
+}
+
+/*
+void DropletObservationWidget::strobe_sweep_button_clicked()
+{
+    // start strobe sweep when a frame is received so that the sweep timing is aligned with image aquisition
+    connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
+            this, &DropletObservationWidget::start_strobe_sweep);
+    //mJetDrive->enable_strobe(); this should usually be enabled
+}
+*/
+
+void DropletObservationWidget::start_strobe_sweep()
+{
+    // update the strobe sweep offset when a new frame is received
+    connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
+            this, &DropletObservationWidget::update_strobe_sweep_offset);
+
+    if (mCaptureVideoWithSweep) // if also capturing a video
+    {
+        // when a frame is added to the camera, add it to the avi file
+        connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
+                this, &DropletObservationWidget::add_frame_to_avi, Qt::DirectConnection);
+    }
 }
 
 void DropletObservationWidget::add_frame_to_avi(ImageBufferPtr buffer)
 {
     isavi_AddFrame(mAviID, reinterpret_cast<char*>(buffer->data()));
     mNumCapturedFrames++;
-    if (mNumCapturedFrames == mNumFramesToCapture)
+    if (mNumCapturedFrames >= mNumFramesToCapture)
     {
         // don't add any more frames
         disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
@@ -233,77 +268,26 @@ void DropletObservationWidget::stop_avi_capture()
     this->mCaptureVideoWithSweep = false;
 }
 
-void DropletObservationWidget::move_to_jetting_window()
-{
-    std::stringstream s;
-    s << CMD::set_speed(Axis::X, 50);
-    s << CMD::position_absolute(Axis::X, X_STAGE_LEN_MM);
-    //s << CMD::set_jog(Axis::X, 50);
-    s << CMD::set_accleration(Axis::X, 800);
-    s << CMD::set_deceleration(Axis::X, 800);
-    s << CMD::begin_motion(Axis::X);
-    s << CMD::display_message("Moving to jetting window");
-    s << CMD::motion_complete(Axis::X);
-
-    emit execute_command(s);
-    emit disable_user_input();
-}
-
-void DropletObservationWidget::strobe_sweep_button_clicked()
-{
-    // start strobe sweep when a frame is received so that the sweep timing is aligned with image aquisition
-    connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
-            this, &DropletObservationWidget::start_strobe_sweep);
-    //mJetDrive->enable_strobe(); this should usually be enabled
-}
-
-void DropletObservationWidget::start_strobe_sweep()
-{
-    // only run this once and then disconnect so when the next frame comes in it doesn't run again
-    disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
-            this, &DropletObservationWidget::start_strobe_sweep);
-
-    int initialDelay = (1000.0 * (1.0/ui->cameraFPSSpinBox->value())) + ui->initialTimerOffsetSpinBox->value(); // I NEED TO TUNE THIS
-
-    mSweepTimer = new QTimer(this);
-    connect(mSweepTimer, &QTimer::timeout, this, &DropletObservationWidget::update_strobe_sweep_offset);
-    mSweepTimer->start(initialDelay);
-
-    if (mCaptureVideoWithSweep)
-    {
-        // when a frame is added to the camera, add it to the avi file
-        connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
-                this, &DropletObservationWidget::add_frame_to_avi, Qt::DirectConnection);
-    }
-}
-
 void DropletObservationWidget::update_strobe_sweep_offset()
 {
-    //auto t1{std::chrono::high_resolution_clock::now()};
+    //maybe put an offset in here somehow??
 
-    double strobeDelay = (1000.0 * (1.0/ui->cameraFPSSpinBox->value())) + ui->timerTimeSpinBox->value();
-
-    mSweepTimer->setInterval(strobeDelay);
-    if (mCurrentStrobeOffset == -1)
+    if (mCurrentStrobeOffset == -1) // if starting strobe sweep
     {
         mCurrentStrobeOffset = ui->startTimeSpinBox->value();
         mJetDrive->set_strobe_delay(mCurrentStrobeOffset);
         //emit print_to_output_window(QString::number(mCurrentStrobeOffset));
     }
-    else if (mCurrentStrobeOffset >= ui->endTimeSpinBox->value())
+    else if (mCurrentStrobeOffset >= ui->endTimeSpinBox->value()) // if sweep complete
     {
-        disconnect(mSweepTimer, &QTimer::timeout, this, &DropletObservationWidget::update_strobe_sweep_offset);
-        mSweepTimer->stop();
-        mSweepTimer->deleteLater();
+        disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
+                this, &DropletObservationWidget::update_strobe_sweep_offset);
         mCurrentStrobeOffset = -1;
     }
-    else
+    else // increment strobe sweep offset
     {
         mCurrentStrobeOffset += ui->stepTimeSpinBox->value();
         mJetDrive->set_strobe_delay(mCurrentStrobeOffset);
-
-        //auto t2{std::chrono::high_resolution_clock::now()};
-        //auto timeSpan = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
         //qDebug() << "This took:" << QString::number(timeSpan) << " milliseconds";
         //emit print_to_output_window(QString::number(mCurrentStrobeOffset));
