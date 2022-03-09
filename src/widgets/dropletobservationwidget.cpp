@@ -229,7 +229,7 @@ void DropletObservationWidget::move_towards_middle()
     s << CMD::set_accleration(Axis::X, 800);
     s << CMD::set_deceleration(Axis::X, 800);
     s << CMD::begin_motion(Axis::X);
-    s << CMD::display_message("Moving to jetting window");
+    s << CMD::display_message("Moving nozzle to the middle");
     s << CMD::motion_complete(Axis::X);
 
     emit execute_command(s);
@@ -272,7 +272,7 @@ void DropletObservationWidget::end_jet_timer()
     mJetVolumeTimer->stop();
     isJettingFor3Minutes = false;
     ui->jetForMinutesButton->setText("Jet For 3 Minutes");
-    emit print_to_output_window("Timer Complete");
+    emit print_to_output_window("Timer Done");
 }
 
 /*
