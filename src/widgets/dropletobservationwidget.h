@@ -41,6 +41,7 @@ private slots:
     void stop_avi_capture();
     void camera_closed();
     void move_to_jetting_window();
+    void move_towards_middle();
     //void strobe_sweep_button_clicked();
     void start_strobe_sweep();
     void start_strobe_sweep_offset_timer();
@@ -49,13 +50,17 @@ private slots:
     void framerate_changed();
     void exposure_changed();
     void save_video_clicked();
+    void jet_for_three_minutes();
+    void end_jet_timer();
 
 private:
     Ui::DropletObservationWidget *ui;
     HIDS mCameraHandle{0};
     JetDrive *mJetDrive{nullptr};
     Camera *mCamera{nullptr};
-    QTimer *mSweepTimer{nullptr};
+    QTimer *mJetVolumeTimer{nullptr};
+    bool isJettingFor3Minutes{false};
+
     JettingWidget *mJettingWidget{nullptr};
 
     int mCameraFrameRate{};

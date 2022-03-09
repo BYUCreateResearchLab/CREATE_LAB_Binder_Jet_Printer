@@ -14,6 +14,7 @@ PowderSetupWidget::PowderSetupWidget(QWidget *parent) : PrinterWidget(parent), u
     connect(ui->normalRecoat, &QPushButton::clicked, this, &PowderSetupWidget::normal_recoat_clicked);
 
     connect(ui->mistLayerButton, &QAbstractButton::clicked, this, &PowderSetupWidget::mist_layer);
+    connect(ui->toggleMisterButton, &QAbstractButton::clicked, this, &PowderSetupWidget::toggle_mister_clicked);
 
     setAccessibleName("Powder Setup Widget");
 
@@ -102,7 +103,31 @@ void PowderSetupWidget::mist_layer()
     std::stringstream s;
     s << CMD::mist_layer(ui->mistTraverseSpeedSpinBox->value());
 
+    if (isMisting)
+    {
+        isMisting = false;
+        s << CMD::clear_bit(MISTER_BIT);
+        ui->toggleMisterButton->setText("Turn On Mister");
+    }
     emit disable_user_input();
     emit execute_command(s);
     emit generate_printing_message_box("Misting Layer");
+}
+
+void PowderSetupWidget::toggle_mister_clicked()
+{
+    std::stringstream s;
+    if (isMisting)
+    {
+        ui->toggleMisterButton->setText("Turn On Mister");
+        s << CMD::clear_bit(MISTER_BIT);
+        isMisting = false;
+    }
+    else
+    {
+        ui->toggleMisterButton->setText("Turn Off Mister");
+        s << CMD::set_bit(MISTER_BIT);
+        isMisting = true;
+    }
+    emit execute_command(s);
 }

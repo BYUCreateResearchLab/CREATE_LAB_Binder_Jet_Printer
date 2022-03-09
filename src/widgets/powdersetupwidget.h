@@ -25,9 +25,11 @@ private slots:
     void normal_recoat_clicked();
 
     void mist_layer();
+    void toggle_mister_clicked();
 
 private:
     Ui::PowderSetupWidget *ui;
+    bool isMisting{false};
 };
 
 #endif // POWDERSETUPWIDGET_H

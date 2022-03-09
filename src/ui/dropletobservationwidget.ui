@@ -25,8 +25,71 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <layout class="QGridLayout" name="gridLayout_frame" columnstretch="0,0">
-      <item row="9" column="0" colspan="2">
+     <layout class="QGridLayout" name="gridLayout_frame" columnstretch="0,0,0">
+      <item row="1" column="2">
+       <widget class="QPushButton" name="TriggerJetButton">
+        <property name="font">
+         <font>
+          <bold>false</bold>
+          <underline>false</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>
+Trigger Jet
+</string>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="moveToCameraButton">
+        <property name="font">
+         <font>
+          <bold>false</bold>
+          <underline>false</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>
+Move Nozzle -&gt; Camera
+</string>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="moveToMiddleButton">
+        <property name="text">
+         <string>
+Move Nozzle To Middle
+</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="3">
+       <widget class="QPushButton" name="connectButton">
+        <property name="font">
+         <font>
+          <bold>false</bold>
+          <underline>false</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>
+Connect to Camera
+</string>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0" colspan="3">
        <widget class="QFrame" name="cameraSettingsFrame">
         <property name="enabled">
          <bool>true</bool>
@@ -158,7 +221,6 @@
            <property name="font">
             <font>
              <pointsize>12</pointsize>
-             <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
@@ -269,26 +331,7 @@
         </layout>
        </widget>
       </item>
-      <item row="0" column="0" colspan="2">
-       <widget class="QPushButton" name="connectButton">
-        <property name="font">
-         <font>
-          <weight>50</weight>
-          <bold>false</bold>
-          <underline>false</underline>
-         </font>
-        </property>
-        <property name="text">
-         <string>
-Connect to Camera
-</string>
-        </property>
-        <property name="flat">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="15" column="0" colspan="2">
+      <item row="15" column="0" colspan="3">
        <widget class="QFrame" name="sweepFrame">
         <property name="frameShape">
          <enum>QFrame::Box</enum>
@@ -456,7 +499,6 @@ Connect to Camera
            <property name="font">
             <font>
              <pointsize>12</pointsize>
-             <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
@@ -468,49 +510,10 @@ Connect to Camera
         </layout>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QPushButton" name="moveToCameraButton">
-        <property name="font">
-         <font>
-          <weight>50</weight>
-          <bold>false</bold>
-          <underline>false</underline>
-         </font>
-        </property>
-        <property name="text">
-         <string>
-Move Nozzle -&gt; Camera
-</string>
-        </property>
-        <property name="flat">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QPushButton" name="TriggerJetButton">
-        <property name="font">
-         <font>
-          <weight>50</weight>
-          <bold>false</bold>
-          <underline>false</underline>
-         </font>
-        </property>
-        <property name="text">
-         <string>
-Trigger Jet
-</string>
-        </property>
-        <property name="flat">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
       <item row="16" column="0">
        <widget class="QPushButton" name="takeVideoButton">
         <property name="font">
          <font>
-          <weight>50</weight>
           <bold>false</bold>
           <underline>false</underline>
          </font>
@@ -525,11 +528,10 @@ Capture Video
         </property>
        </widget>
       </item>
-      <item row="16" column="1">
+      <item row="16" column="2">
        <widget class="QPushButton" name="SaveVideoButton">
         <property name="font">
          <font>
-          <weight>50</weight>
           <bold>false</bold>
           <underline>false</underline>
          </font>
@@ -541,6 +543,25 @@ Save Captured Video
         </property>
         <property name="flat">
          <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="16" column="1">
+       <widget class="QPushButton" name="pushButton_2">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>
+Process Video
+</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="3">
+       <widget class="QPushButton" name="jetForMinutesButton">
+        <property name="text">
+         <string>Jet for 3 Minutes</string>
         </property>
        </widget>
       </item>

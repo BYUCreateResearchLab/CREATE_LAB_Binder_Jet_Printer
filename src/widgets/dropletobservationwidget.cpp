@@ -28,12 +28,14 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     connect(ui->takeVideoButton, &QPushButton::clicked, this, &DropletObservationWidget::capture_video);
     connect(this, &DropletObservationWidget::video_capture_complete, this, &DropletObservationWidget::stop_avi_capture);
     connect(ui->moveToCameraButton, &QPushButton::clicked, this, &DropletObservationWidget::move_to_jetting_window);
+    connect(ui->moveToMiddleButton, &QPushButton::clicked, this, &DropletObservationWidget::move_towards_middle);
     connect(ui->sweepButton, &QPushButton::clicked, this, &DropletObservationWidget::start_strobe_sweep);
     connect(ui->TriggerJetButton, &QPushButton::clicked, this, &DropletObservationWidget::trigger_jet_clicked);
+    connect(ui->jetForMinutesButton, &QPushButton::clicked, this, &DropletObservationWidget::jet_for_three_minutes);
 
     mJettingWidget = new JettingWidget(mJetDrive);
     QGridLayout *gridLayout = ui->frame->findChild<QGridLayout*>("gridLayout_frame");
-    gridLayout->addWidget(mJettingWidget, 23,0,1,2);
+    gridLayout->addWidget(mJettingWidget, 23,0,1,3);
 
     mCameraFrameRate = ui->cameraFPSSpinBox->value();
     mNumFramesToCapture = int(ui->endTimeSpinBox->value() / ui->stepTimeSpinBox->value()) + 1;
@@ -43,8 +45,8 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     qDebug() << "temp video files are stored at " << mTempFileName;
     connect(ui->SaveVideoButton, &QPushButton::clicked, this, &DropletObservationWidget::save_video_clicked);
 
-    //mSweepTimer = new QTimer(this);
-    //connect(mSweepTimer, &QTimer::timeout, this, &DropletObservationWidget::update_strobe_sweep_offset);
+    mJetVolumeTimer = new QTimer(this);
+    connect(mJetVolumeTimer, &QTimer::timeout, this, &DropletObservationWidget::end_jet_timer);
 }
 
 DropletObservationWidget::~DropletObservationWidget()
@@ -217,6 +219,60 @@ void DropletObservationWidget::move_to_jetting_window()
 
     emit execute_command(s);
     emit disable_user_input();
+}
+
+void DropletObservationWidget::move_towards_middle()
+{
+    std::stringstream s;
+    s << CMD::set_speed(Axis::X, 50);
+    s << CMD::position_absolute(Axis::X, (double)X_STAGE_LEN_MM / 2.0);
+    s << CMD::set_accleration(Axis::X, 800);
+    s << CMD::set_deceleration(Axis::X, 800);
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::display_message("Moving to jetting window");
+    s << CMD::motion_complete(Axis::X);
+
+    emit execute_command(s);
+    emit disable_user_input();
+}
+
+void DropletObservationWidget::jet_for_three_minutes()
+{
+    if (!isJettingFor3Minutes)
+    {
+        std::stringstream s;
+        s << CMD::stop_motion(Axis::Jet); // stop jet if it is running
+        s << CMD::servo_here(Axis::Jet);
+        s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
+        s << CMD::set_jog(Axis::Jet, 1000);             // set to jet at 1000hz
+        s << CMD::begin_motion(Axis::Jet);
+        emit execute_command(s);
+        jetting_was_turned_on();
+
+        emit print_to_output_window("Starting 3 minute timer");
+
+        // toggle the jet after three minutes
+        int minutesToJet = 3;
+        isJettingFor3Minutes = true;
+        ui->TriggerJetButton->setEnabled(false);
+        ui->jetForMinutesButton->setText("Cancel Timer");
+        mJetVolumeTimer->start(minutesToJet * 60 * 1000);
+    }
+    else end_jet_timer();
+}
+
+void DropletObservationWidget::end_jet_timer()
+{
+    std::stringstream s;
+    s << CMD::stop_motion(Axis::Jet);
+    emit execute_command(s);
+    jetting_was_turned_off();
+
+    ui->TriggerJetButton->setEnabled(true);
+    mJetVolumeTimer->stop();
+    isJettingFor3Minutes = false;
+    ui->jetForMinutesButton->setText("Jet For 3 Minutes");
+    emit print_to_output_window("Timer Complete");
 }
 
 /*
