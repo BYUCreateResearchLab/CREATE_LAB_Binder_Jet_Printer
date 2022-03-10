@@ -47,6 +47,12 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
 
     mJetVolumeTimer = new QTimer(this);
     connect(mJetVolumeTimer, &QTimer::timeout, this, &DropletObservationWidget::end_jet_timer);
+
+    mProgressBarTimer = new QTimer(this);
+    connect(mProgressBarTimer, &QTimer::timeout, this, &DropletObservationWidget::update_progress_bar);
+    ui->jetProgressBar->setMinimum(0);
+    ui->jetProgressBar->setMaximum(minutesToJet * 60 * 1000);
+    ui->jetProgressBar->setValue(0);
 }
 
 DropletObservationWidget::~DropletObservationWidget()
@@ -252,11 +258,11 @@ void DropletObservationWidget::jet_for_three_minutes()
         emit print_to_output_window("Starting 3 minute timer");
 
         // toggle the jet after three minutes
-        int minutesToJet = 3;
         isJettingFor3Minutes = true;
         ui->TriggerJetButton->setEnabled(false);
         ui->jetForMinutesButton->setText("Cancel Timer");
         mJetVolumeTimer->start(minutesToJet * 60 * 1000);
+        mProgressBarTimer->start(2000);
     }
     else end_jet_timer();
 }
@@ -270,9 +276,17 @@ void DropletObservationWidget::end_jet_timer()
 
     ui->TriggerJetButton->setEnabled(true);
     mJetVolumeTimer->stop();
+    mProgressBarTimer->stop();
+    ui->jetProgressBar->setValue(0);
     isJettingFor3Minutes = false;
     ui->jetForMinutesButton->setText("Jet For 3 Minutes");
     emit print_to_output_window("Timer Done");
+}
+
+void DropletObservationWidget::update_progress_bar()
+{
+    int progress = mJetVolumeTimer->interval() - mJetVolumeTimer->remainingTime();
+    ui->jetProgressBar->setValue(progress);
 }
 
 /*
@@ -346,6 +360,8 @@ void DropletObservationWidget::update_strobe_sweep_offset()
     {
         mCurrentStrobeOffset = ui->startTimeSpinBox->value();
         mJetDrive->set_strobe_delay(mCurrentStrobeOffset);
+        int timeToStepThrough = (ui->endTimeSpinBox->value() - ui->startTimeSpinBox->value());
+        ui->sweepProgressBar->setMaximum(timeToStepThrough);
         //emit print_to_output_window(QString::number(mCurrentStrobeOffset));
     }
     else if (mCurrentStrobeOffset >= ui->endTimeSpinBox->value()) // if sweep complete
@@ -353,14 +369,14 @@ void DropletObservationWidget::update_strobe_sweep_offset()
         disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
                 this, &DropletObservationWidget::update_strobe_sweep_offset);
         mCurrentStrobeOffset = -1;
+        ui->sweepProgressBar->setValue(0);
     }
     else // increment strobe sweep offset
     {
         mCurrentStrobeOffset += ui->stepTimeSpinBox->value();
         mJetDrive->set_strobe_delay(mCurrentStrobeOffset);
-
-        //qDebug() << "This took:" << QString::number(timeSpan) << " milliseconds";
-        //emit print_to_output_window(QString::number(mCurrentStrobeOffset));
+        // update progress bar
+        ui->sweepProgressBar->setValue(mCurrentStrobeOffset - ui->startTimeSpinBox->value());
     }
 }
 

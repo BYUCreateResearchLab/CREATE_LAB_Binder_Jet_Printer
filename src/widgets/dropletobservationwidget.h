@@ -52,14 +52,18 @@ private slots:
     void save_video_clicked();
     void jet_for_three_minutes();
     void end_jet_timer();
+    void update_progress_bar();
 
 private:
     Ui::DropletObservationWidget *ui;
     HIDS mCameraHandle{0};
     JetDrive *mJetDrive{nullptr};
     Camera *mCamera{nullptr};
+
     QTimer *mJetVolumeTimer{nullptr};
+    QTimer *mProgressBarTimer{nullptr};
     bool isJettingFor3Minutes{false};
+    const int minutesToJet = 3;
 
     JettingWidget *mJettingWidget{nullptr};
 
