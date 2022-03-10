@@ -99,6 +99,10 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
     connect(ui->yNegative, &QAbstractButton::released, this, &MainWindow::jog_released);
 
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, &MainWindow::tab_was_changed);
+
+    connect(ui->getXAxisPosition, &QAbstractButton::clicked, this, &MainWindow::get_current_x_axis_position);
+    connect(ui->getYAxisPosition, &QAbstractButton::clicked, this, &MainWindow::get_current_y_axis_position);
+    connect(ui->getZAxisPosition, &QAbstractButton::clicked, this, &MainWindow::get_current_z_axis_position);
 }
 
 void MainWindow::thread_ended()
@@ -159,6 +163,10 @@ void MainWindow::allow_user_input(bool allowed)
     ui->zMax->setEnabled(allowed);
     ui->zMin->setEnabled(allowed);
     ui->removeBuildBox->setEnabled(allowed);
+
+    ui->getXAxisPosition->setEnabled(allowed);
+    ui->getYAxisPosition->setEnabled(allowed);
+    ui->getZAxisPosition->setEnabled(allowed);
 
     // set if user can input on all printer widgets
     QList<PrinterWidget *> printerWidgets = this->findChildren<PrinterWidget *> ();
@@ -516,6 +524,39 @@ void MainWindow::stop_print_and_thread()
         GCmd(mPrinter->g, "CB 18"); // stop roller 1
         GCmd(mPrinter->g, "CB 21"); // stop roller 2
         GCmd(mPrinter->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
+    }
+}
+
+void MainWindow::get_current_x_axis_position()
+{
+    if (mPrinter->g)
+    {
+        int currentXPos;
+        GCmdI(mPrinter->g, "TPX", &currentXPos);
+        double currentXPos_mm = currentXPos / (double)X_CNTS_PER_MM;
+        print_to_output_window("Current X: " + QString::number(currentXPos_mm) + "mm");
+    }
+}
+
+void MainWindow::get_current_y_axis_position()
+{
+    if (mPrinter->g)
+    {
+        int currentYPos;
+        GCmdI(mPrinter->g, "TPY", &currentYPos);
+        double currentYPos_mm = currentYPos / (double)Y_CNTS_PER_MM;
+        print_to_output_window("Current Y: " + QString::number(currentYPos_mm) + "mm");
+    }
+}
+
+void MainWindow::get_current_z_axis_position()
+{
+    if (mPrinter->g)
+    {
+        int currentZPos;
+        GCmdI(mPrinter->g, "TPZ", &currentZPos);
+        double currentZPos_mm = currentZPos / (double)Z_CNTS_PER_MM;
+        print_to_output_window("Current Z: " + QString::number(currentZPos_mm) + "mm");
     }
 }
 
