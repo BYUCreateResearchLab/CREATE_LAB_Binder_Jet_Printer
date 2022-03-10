@@ -127,6 +127,7 @@ void HighSpeedLineWidget::set_x_center()
     GCmdI(mPrinter->g, "TPX", &currentXPos);
     double currentXPos_mm = currentXPos / (double)X_CNTS_PER_MM;
     ui->buildBoxCenterXSpinBox->setValue(currentXPos_mm);
+    update_print_settings();
 }
 
 void HighSpeedLineWidget::set_y_center()
@@ -134,7 +135,8 @@ void HighSpeedLineWidget::set_y_center()
     int currentYPos;
     GCmdI(mPrinter->g, "TPY", &currentYPos);
     double currentYPos_mm = currentYPos / (double)Y_CNTS_PER_MM;
-    ui->buildBoxCenterXSpinBox->setValue(currentYPos_mm);
+    ui->buildBoxCenterYSpinBox->setValue(currentYPos_mm);
+    update_print_settings();
 }
 
 void HighSpeedLineWidget::reset_preview_zoom()
