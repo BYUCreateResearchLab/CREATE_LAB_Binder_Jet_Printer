@@ -70,6 +70,8 @@ private slots:
     void update_print_settings();
     void update_print_axes(int index);
     void allow_user_to_change_parameters(bool allowed);
+    void set_x_center();
+    void set_y_center();
 
     void move_to_build_box_center();
     void reset_print();

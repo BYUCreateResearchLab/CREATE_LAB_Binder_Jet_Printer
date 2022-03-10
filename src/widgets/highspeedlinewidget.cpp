@@ -27,6 +27,8 @@ void HighSpeedLineWidget::allow_widget_input(bool allowed)
     ui->printButton->setEnabled(allowed);
 
     ui->moveToCenterButton->setEnabled(allowed);
+    ui->setXCenter->setEnabled(allowed);
+    ui->setYCenter->setEnabled(allowed);
 }
 
 void HighSpeedLineWidget::allow_user_to_change_parameters(bool allowed)
@@ -56,6 +58,9 @@ void HighSpeedLineWidget::setup()
     connect(ui->stopPrintButton, &QAbstractButton::clicked, this, &HighSpeedLineWidget::stop_printing);
 
     connect(ui->moveToCenterButton, &QAbstractButton::clicked, this, &HighSpeedLineWidget::move_to_build_box_center);
+
+    connect(ui->setXCenter, &QAbstractButton::clicked, this, &HighSpeedLineWidget::set_x_center);
+    connect(ui->setYCenter, &QAbstractButton::clicked, this, &HighSpeedLineWidget::set_y_center);
 
     update_print_settings();
 }
@@ -114,6 +119,22 @@ void HighSpeedLineWidget::update_print_settings()
 void HighSpeedLineWidget::update_print_axes(int index)
 {
     update_print_settings();
+}
+
+void HighSpeedLineWidget::set_x_center()
+{
+    int currentXPos;
+    GCmdI(mPrinter->g, "TPX", &currentXPos);
+    double currentXPos_mm = currentXPos / (double)X_CNTS_PER_MM;
+    ui->buildBoxCenterXSpinBox->setValue(currentXPos_mm);
+}
+
+void HighSpeedLineWidget::set_y_center()
+{
+    int currentYPos;
+    GCmdI(mPrinter->g, "TPY", &currentYPos);
+    double currentYPos_mm = currentYPos / (double)Y_CNTS_PER_MM;
+    ui->buildBoxCenterXSpinBox->setValue(currentYPos_mm);
 }
 
 void HighSpeedLineWidget::reset_preview_zoom()
