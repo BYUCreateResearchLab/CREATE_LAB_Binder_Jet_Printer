@@ -491,6 +491,7 @@ std::string CMD::set_default_controller_settings()
     s << CMD::detail::GCmd() << "CN=-1"           << "\n";   // Set correct polarity for all limit switches
     s << CMD::detail::GCmd() << "BN"              << "\n";   // Save (burn) these settings to the controller just to be safe
     s << CMD::detail::GCmd() << "SH XYZ"          << "\n";   // Enable X,Y, and Z motors
+    s << CMD::detail::GCmd() << "SH H"            << "\n";   // Servo the jetting axis
 
     // Configure Extended I/O
     s << CMD::detail::GCmd() << "CO 1"            << "\n"; // configures bank 2 as outputs on extended I/O (IO 17-24)

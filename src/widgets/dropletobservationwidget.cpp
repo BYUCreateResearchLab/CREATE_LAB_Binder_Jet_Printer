@@ -247,17 +247,16 @@ void DropletObservationWidget::jet_for_three_minutes()
     if (!isJettingFor3Minutes)
     {
         std::stringstream s;
-        s << CMD::stop_motion(Axis::Jet); // stop jet if it is running
-        s << CMD::servo_here(Axis::Jet);
-        s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
-        s << CMD::set_jog(Axis::Jet, 1000);             // set to jet at 1000hz
-        s << CMD::begin_motion(Axis::Jet);
-        emit execute_command(s);
-        jetting_was_turned_on();
+        if (!mIsJetting)
+        {
+            s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
+            s << CMD::set_jog(Axis::Jet, 1000);             // set to jet at 1000hz
+            s << CMD::begin_motion(Axis::Jet);
+            emit execute_command(s);
+            jetting_was_turned_on();
+        }
 
         emit print_to_output_window("Starting 3 minute timer");
-
-        // toggle the jet after three minutes
         isJettingFor3Minutes = true;
         ui->TriggerJetButton->setEnabled(false);
         ui->jetForMinutesButton->setText("Cancel Timer");
@@ -389,9 +388,8 @@ void DropletObservationWidget::trigger_jet_clicked()
         s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
         s << CMD::set_jog(Axis::Jet, 1000);             // set to jet at 1000hz
         s << CMD::begin_motion(Axis::Jet);
-        //mIsJetting = true;
-        //ui->TriggerJetButton->setText("Stop Jetting");
         jetting_was_turned_on();
+        ui->jetForMinutesButton->setEnabled(false);
     }
     else
     {
@@ -399,6 +397,7 @@ void DropletObservationWidget::trigger_jet_clicked()
         //mIsJetting = false;
         //ui->TriggerJetButton->setText("Trigger Jet");
         jetting_was_turned_off();
+        ui->jetForMinutesButton->setEnabled(true);
     }
 
     emit execute_command(s);
