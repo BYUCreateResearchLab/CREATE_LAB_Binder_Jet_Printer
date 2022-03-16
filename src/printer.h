@@ -97,6 +97,7 @@ class Printer
 public:
     Printer();
 
+    // the computer ethernet port needs to be set to 192.168.42.10
     char const *address = "192.168.42.100"; // IP address of motion controller
     GCon g{0};                              // Handle for connection to Galil Motion Controller
 };
