@@ -44,7 +44,7 @@ private:
 
 private:
     HANDLE hCom;
-    int mJetDrv{MFJDRV_COM9};
+    int mJetDrv{MFJDRV_COM4};
     MicroJet *mJetSettings{nullptr};
 
     float defaultWaitTime{0.0001f};
