@@ -16,6 +16,7 @@ https://www.ids-imaging.us/download-details/AB00518.html#anc-software-272
 
 - MSCV2019 compiler
 - QT5
+- Prolific Serial to USB driver (for connecting to JetDrive)
 
 ## Installation Instructions
 - clone this directory
@@ -25,3 +26,10 @@ https://www.ids-imaging.us/download-details/AB00518.html#anc-software-272
   - C:\Program Files (x86)\Galil\gclib\dll\x64
 - add QT5 bin to system PATH
   - C:\Qt\5.15.2\msvc2019_64\bin
+- Set ethernet port connected to motion controller as 192.168.42.10 (make sure motion controller is set as 192.168.42.100
+- Set COM port for JetDrive in device manager to be COM4
+ 
+## Other Helpful Software
+- Galil GDK + Professional License
+
+
