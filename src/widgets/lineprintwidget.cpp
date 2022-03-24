@@ -260,7 +260,7 @@ void LinePrintWidget::on_startPrint_clicked()
     std::stringstream s;
 
     // TIMING CODE
-    auto t1{std::chrono::high_resolution_clock::now()};
+    //auto t1{std::chrono::high_resolution_clock::now()};
 
     s << CMD::stop_motion(Axis::Jet); // stop jetting if it is currently jetting
 
@@ -275,24 +275,19 @@ void LinePrintWidget::on_startPrint_clicked()
     }
 
     // move the y-axis forward and the x-axis to the jetting window after printing all lines
-    s << CMD::set_speed(Axis::X, 60);
-    s << CMD::set_speed(Axis::Y, 40);
-    s << CMD::position_absolute(Axis::X, X_STAGE_LEN_MM);
-    s << CMD::position_absolute(Axis::Y, 0);
-    s << CMD::begin_motion(Axis::X);
-    s << CMD::begin_motion(Axis::Y);
-    s << CMD::motion_complete(Axis::X);
-    s << CMD::motion_complete(Axis::Y);
+    s << CMD::move_xy_axes_to_default_position();
+    s << CMD::set_jog(Axis::Jet, 1000);
+    s << CMD::begin_motion(Axis::Jet);
 
     s << CMD::display_message("Print Complete");
 
     // TIMING CODE
-    auto t2{std::chrono::high_resolution_clock::now()};
-    auto timeSpan = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    qDebug() << "This took:" << QString::number(timeSpan) << " milliseconds";
+    //auto t2{std::chrono::high_resolution_clock::now()};
+    //auto timeSpan = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    //qDebug() << "This took:" << QString::number(timeSpan) << " milliseconds";
 
     emit disable_user_input();
-    emit jet_turned_off();
+    emit jet_turned_on(); // jet is turned on once print is complete
     emit execute_command(s);
     printIsRunning_ = true;
     ui->stopPrintButton->setEnabled(true);

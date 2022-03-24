@@ -103,6 +103,11 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
     connect(ui->getXAxisPosition, &QAbstractButton::clicked, this, &MainWindow::get_current_x_axis_position);
     connect(ui->getYAxisPosition, &QAbstractButton::clicked, this, &MainWindow::get_current_y_axis_position);
     connect(ui->getZAxisPosition, &QAbstractButton::clicked, this, &MainWindow::get_current_z_axis_position);
+
+    connect(ui->stopMotionButton, &QAbstractButton::clicked, this, &MainWindow::stop_button_pressed);
+
+    connect(ui->zAbsoluteMoveButton, &QAbstractButton::clicked, this, &MainWindow::move_z_to_absolute_position);
+
 }
 
 void MainWindow::thread_ended()
@@ -167,6 +172,7 @@ void MainWindow::allow_user_input(bool allowed)
     ui->getXAxisPosition->setEnabled(allowed);
     ui->getYAxisPosition->setEnabled(allowed);
     ui->getZAxisPosition->setEnabled(allowed);
+    ui->zAbsoluteMoveButton->setEnabled(allowed);
 
     // set if user can input on all printer widgets
     QList<PrinterWidget *> printerWidgets = this->findChildren<PrinterWidget *> ();
@@ -511,10 +517,19 @@ void MainWindow::generate_printing_message_box(const std::string &message)
     }
 }
 
+void MainWindow::stop_button_pressed()
+{
+    if (mPrinter->g)
+    {
+        stop_print_and_thread();
+        mDropletObservationWidget->jetting_was_turned_off();
+    }
+}
+
 void MainWindow::stop_print_and_thread()
 {
     mPrintThread->stop();
-    if(mPrinter->g)
+    if (mPrinter->g)
     {
         // Can't use CMD:: commands here...
         // work on a way to either send these through the thread even though it is blocked
@@ -558,5 +573,20 @@ void MainWindow::get_current_z_axis_position()
         double currentZPos_mm = currentZPos / (double)Z_CNTS_PER_MM;
         print_to_output_window("Current Z: " + QString::number(currentZPos_mm) + "mm");
     }
+}
+
+void MainWindow::move_z_to_absolute_position()
+{
+    std::stringstream s;
+
+    s << CMD::position_absolute(Axis::Z, ui->zAbsoluteMoveSpinBox->value());
+    s << CMD::set_accleration(Axis::Z, 10);
+    s << CMD::set_deceleration(Axis::Z, 10);
+    s << CMD::set_speed(Axis::Z, 1.5); // max speed of 5 mm/s!
+    s << CMD::begin_motion(Axis::Z);
+    s << CMD::motion_complete(Axis::Z);
+
+    allow_user_input(false);
+    mPrintThread->execute_command(s);
 }
 

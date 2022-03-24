@@ -372,6 +372,20 @@ std::string CMD::disable_gearing_for(Axis slaveAxis)
     return {GCmd() + "GR" + detail::axis_string(slaveAxis) + "=" + "0" + "\n"};
 }
 
+std::string CMD::move_xy_axes_to_default_position()
+{
+    std::stringstream s;
+    s << CMD::set_speed(Axis::X, 60);
+    s << CMD::set_speed(Axis::Y, 40);
+    s << CMD::position_absolute(Axis::X, X_STAGE_LEN_MM);
+    s << CMD::position_absolute(Axis::Y, 0);
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::begin_motion(Axis::Y);
+    s << CMD::motion_complete(Axis::X);
+    s << CMD::motion_complete(Axis::Y);
+    return s.str();
+}
+
 std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
 {
     std::stringstream s;

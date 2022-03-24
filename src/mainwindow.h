@@ -59,11 +59,14 @@ private slots:
 
     void tab_was_changed(int index);
 
+    void stop_button_pressed();
     void stop_print_and_thread();
 
     void get_current_x_axis_position();
     void get_current_y_axis_position();
     void get_current_z_axis_position();
+
+    void move_z_to_absolute_position();
 
 
 private:

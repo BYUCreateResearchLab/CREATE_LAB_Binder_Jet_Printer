@@ -192,6 +192,8 @@ std::string enable_gearing_for(Axis slaveAxis, Axis masterAxis);
 std::string set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing);
 std::string disable_gearing_for(Axis slaveAxis);
 
+std::string move_xy_axes_to_default_position();
+
 std::string mist_layer(double traverseSpeed_mm_per_s);
 std::string spread_layer(const RecoatSettings &settings);
 

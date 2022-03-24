@@ -66,37 +66,10 @@
         </item>
         <item row="5" column="1">
          <layout class="QGridLayout" name="gridLayout_5">
-          <item row="1" column="2">
-           <widget class="QSpinBox" name="xVelocity">
-            <property name="font">
-             <font>
-              <pointsize>12</pointsize>
-             </font>
-            </property>
-            <property name="maximum">
-             <number>200</number>
-            </property>
-            <property name="value">
-             <number>30</number>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="1">
            <widget class="QLabel" name="X_axis">
             <property name="text">
              <string>X Axis</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="2">
-           <widget class="QSpinBox" name="yVelocity">
-            <property name="font">
-             <font>
-              <pointsize>12</pointsize>
-             </font>
-            </property>
-            <property name="value">
-             <number>30</number>
             </property>
            </widget>
           </item>
@@ -149,6 +122,42 @@
              </size>
             </property>
            </spacer>
+          </item>
+          <item row="1" column="2">
+           <widget class="QDoubleSpinBox" name="xVelocity">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="minimum">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>150.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>30.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QDoubleSpinBox" name="yVelocity">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="minimum">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>30.000000000000000</double>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -270,6 +279,29 @@
         </item>
         <item row="2" column="3" rowspan="3">
          <layout class="QGridLayout" name="gridLayout_2">
+          <item row="2" column="3">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Move to Position</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="3">
+           <widget class="QDoubleSpinBox" name="zAbsoluteMoveSpinBox">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>-15.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>15.000000000000000</double>
+            </property>
+           </widget>
+          </item>
           <item row="5" column="1">
            <spacer name="verticalSpacer">
             <property name="orientation">
@@ -282,39 +314,6 @@
              </size>
             </property>
            </spacer>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="label_3">
-            <property name="text">
-             <string>(Microns)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <spacer name="verticalSpacer_7">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="4" column="1">
-           <widget class="QSpinBox" name="zStepSize">
-            <property name="minimum">
-             <number>1</number>
-            </property>
-            <property name="maximum">
-             <number>15000</number>
-            </property>
-            <property name="value">
-             <number>30</number>
-            </property>
-           </widget>
           </item>
           <item row="1" column="0" rowspan="5">
            <layout class="QVBoxLayout" name="verticalLayout">
@@ -373,6 +372,13 @@
             </item>
            </layout>
           </item>
+          <item row="5" column="3" alignment="Qt::AlignTop">
+           <widget class="QPushButton" name="zAbsoluteMoveButton">
+            <property name="text">
+             <string>Move Z</string>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="1">
            <widget class="QLabel" name="label">
             <property name="text">
@@ -380,8 +386,8 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="1">
-           <spacer name="verticalSpacer_8">
+          <item row="1" column="1">
+           <spacer name="verticalSpacer_7">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
             </property>
@@ -406,6 +412,62 @@
             </property>
            </widget>
           </item>
+          <item row="4" column="1">
+           <widget class="QSpinBox" name="zStepSize">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>15000</number>
+            </property>
+            <property name="value">
+             <number>30</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>(Microns)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <spacer name="verticalSpacer_8">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="3" column="3">
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>(mm)</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <spacer name="horizontalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
          </layout>
         </item>
         <item row="8" column="5" colspan="2">
@@ -429,6 +491,15 @@
              </size>
             </property>
            </spacer>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="QPushButton" name="stopMotionButton">
+            <property name="text">
+             <string>
+Stop Motion
+</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>

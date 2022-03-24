@@ -56,6 +56,8 @@ void PowderSetupWidget::level_recoat_clicked()
     s << CMD::display_message("powder spreading complete");
     s << CMD::display_message("");
 
+    s << CMD::move_xy_axes_to_default_position();
+
     emit execute_command(s);
     emit generate_printing_message_box("Level recoat is in progress.");
 }
@@ -87,6 +89,8 @@ void PowderSetupWidget::normal_recoat_clicked()
     }
     s << CMD::display_message("powder spreading complete");
     s << CMD::display_message("");
+
+    s << CMD::move_xy_axes_to_default_position();
 
     emit execute_command(s);
     emit generate_printing_message_box("Normal recoat is in progress.");
