@@ -346,14 +346,8 @@ void MainWindow::on_activateHopper_stateChanged(int arg1)
 {
     std::stringstream s;
 
-    if (arg1 == 2) // box is checked
-    {
-        s << CMD::enable_hopper();
-    }
-    else
-    {
-        s << CMD::disable_hopper();
-    }
+    if (arg1 == 2) s << CMD::enable_hopper(); // box is checked
+    else           s << CMD::disable_hopper();
 
     mPrintThread->execute_command(s);
 }
@@ -394,14 +388,8 @@ void MainWindow::on_activateRoller1_toggled(bool checked)
 {
     std::stringstream s;
 
-    if (checked == 1)
-    {
-        s << CMD::enable_roller1();
-    }
-    else
-    {
-        s << CMD::disable_roller1();
-    }
+    if (checked == 1) s << CMD::enable_roller1();
+    else              s << CMD::disable_roller1();
 
     mPrintThread->execute_command(s);
 }
@@ -410,14 +398,8 @@ void MainWindow::on_activateRoller2_toggled(bool checked)
 {
     std::stringstream s;
 
-    if (checked == 1)
-    {
-        s << CMD::enable_roller2();
-    }
-    else
-    {
-        s << CMD::disable_roller2();
-    }
+    if (checked == 1) s << CMD::enable_roller2();
+    else              s << CMD::disable_roller2();
 
     mPrintThread->execute_command(s);
 }
@@ -487,14 +469,8 @@ void MainWindow::on_removeBuildBox_clicked()
 
 void MainWindow::on_actionShow_Hide_Console_triggered()
 {
-    if (mDockWidget->isVisible())
-    {
-        mDockWidget->hide();
-    }
-    else
-    {
-        mDockWidget->show();
-    }
+    if (mDockWidget->isVisible()) mDockWidget->hide();
+    else                          mDockWidget->show();
 }
 
 void MainWindow::generate_printing_message_box(const std::string &message)
