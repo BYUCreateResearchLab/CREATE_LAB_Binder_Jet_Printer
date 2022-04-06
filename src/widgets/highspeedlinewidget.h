@@ -32,7 +32,7 @@ public:
     int acceleration_mm_per_s2{};
 
     //const double print_travel_length{20.0};
-    const double xTravelSpeed{150.0};
+    const double xTravelSpeed{50};
 
     SmallBuildBox buildBox{};
 

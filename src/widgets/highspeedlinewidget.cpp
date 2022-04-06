@@ -478,8 +478,12 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
 
     // setup jetting axis
     s << CMD::stop_motion(Axis::Jet); // stop jetting if previously jetting
-    s << CMD::servo_here(Axis::Jet);
-    s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
+    //s << CMD::servo_here(Axis::Jet);
+    //s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
+
+    s << CMD::enable_gearing_for(Axis::Jet, printAxis);
+    // continuous jetting (don't turn off before printing the line)
+    s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
 
 
     // if printing with the x axis
@@ -494,7 +498,7 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
 
     // Line Print PVT Commands
     // PVT commands are in relative position coordinates
-    s << CMD::enable_gearing_for(Axis::Jet, printAxis);
+
     s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,    -print_speed_mm_per_s, accelTimeCnts);         // accelerate
     s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity to trigger point
     s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity
@@ -524,7 +528,7 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
 
         s << CMD::begin_pvt_motion(printAxis);
         s << CMD::at_time_milliseconds(time1);
-        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
+        //s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
         if (time2 != time1) s << CMD::at_time_milliseconds(time2);
         s << CMD::set_bit(HS_TTL_BIT);
         s << CMD::at_time_milliseconds(time3);
@@ -548,7 +552,7 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
         if (time1 != 0) s << CMD::at_time_milliseconds(time1);
         s << CMD::set_bit(HS_TTL_BIT);
         if (time2 != time1) s << CMD::at_time_milliseconds(time2);
-        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
+        //s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
         s << CMD::at_time_milliseconds(time3);
     }
     else // trigger occurs before acceleration
@@ -571,7 +575,7 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
         if (time1 != 0) s << CMD::at_time_milliseconds(time1);
         s << CMD::begin_pvt_motion(printAxis);
         if (time2 != time1) s << CMD::at_time_milliseconds(time2);
-        s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
+        //s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
         s << CMD::at_time_milliseconds(time3);
     }
 
