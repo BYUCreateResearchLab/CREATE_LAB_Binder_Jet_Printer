@@ -78,6 +78,9 @@ private slots:
     void move_to_build_box_center();
     void reset_print();
 
+    void increment_line_number();
+    void decrement_line_number();
+
 private:
     Ui::HighSpeedLineWidget *ui;
     HighSpeedLineCommandGenerator *print{nullptr};

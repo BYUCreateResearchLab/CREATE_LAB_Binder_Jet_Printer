@@ -30,6 +30,8 @@ void HighSpeedLineWidget::allow_widget_input(bool allowed)
     ui->setXCenter->setEnabled(allowed);
     ui->setYCenter->setEnabled(allowed);
     ui->recordFlatButton->setEnabled(allowed);
+    //ui->incrementLineNumButton->setEnabled(allowed);
+    //ui->decrementLineNumButton->setEnabled(allowed);
 }
 
 void HighSpeedLineWidget::allow_user_to_change_parameters(bool allowed)
@@ -64,12 +66,17 @@ void HighSpeedLineWidget::setup()
     connect(ui->setYCenter, &QAbstractButton::clicked, this, &HighSpeedLineWidget::set_y_center);
 
     connect(ui->recordFlatButton, &QAbstractButton::clicked, this, &HighSpeedLineWidget::view_flat);
+    connect(ui->incrementLineNumButton, &QAbstractButton::clicked, this, &HighSpeedLineWidget::increment_line_number);
+    connect(ui->decrementLineNumButton, &QAbstractButton::clicked, this, &HighSpeedLineWidget::decrement_line_number);
 
     update_print_settings();
 }
 
 void HighSpeedLineWidget::update_print_settings()
 {
+    currentLineToPrintIndex = 0;
+    ui->printButton->setText(QString("\nPrint Line\n"));
+
     // check for if other things need to be updated
     bool mustUpdatePreviewWindow{false};
     Axis currentViewAxis = print->viewAxis;
@@ -100,8 +107,18 @@ void HighSpeedLineWidget::update_print_settings()
     print->triggerOffset_ms =ui->triggerOffsetSpinBox->value();
 
     // disable the line spacing spin box if there is only one line being printed
-    if (print->numLines == 1) ui->lineSpacingSpinBox->setEnabled(false);
-    else ui->lineSpacingSpinBox->setEnabled(true);
+    if (print->numLines == 1)
+    {
+        ui->lineSpacingSpinBox->setEnabled(false);
+        ui->incrementLineNumButton->setEnabled(false);
+        ui->decrementLineNumButton->setEnabled(false);
+    }
+    else
+    {
+        ui->lineSpacingSpinBox->setEnabled(true);
+        ui->incrementLineNumButton->setEnabled(true);
+        ui->decrementLineNumButton->setEnabled(true);
+    }
 
     if (mustUpdatePreviewWindow)
     {
@@ -257,6 +274,24 @@ void HighSpeedLineWidget::reset_print()
     ui->stopPrintButton->setEnabled(false);
     ui->printButton->setText("\nStart Print\n");
     currentLineToPrintIndex = 0; // reset line index counter
+}
+
+void HighSpeedLineWidget::increment_line_number()
+{
+    if (currentLineToPrintIndex + 1 < ui->numLinesSpinBox->value())
+    {
+        currentLineToPrintIndex++;
+        ui->printButton->setText(QString("\nPrint Line ") + QString::number(currentLineToPrintIndex + 1) + QString("\n"));
+    }
+}
+
+void HighSpeedLineWidget::decrement_line_number()
+{
+    if (currentLineToPrintIndex > 0)
+    {
+        currentLineToPrintIndex--;
+        ui->printButton->setText(QString("\nPrint Line ") + QString::number(currentLineToPrintIndex + 1) + QString("\n"));
+    }
 }
 
 std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(int lineNum)
@@ -434,8 +469,8 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
     double accelDistance_mm{0.5 * acceleration_mm_per_s2 * std::pow(accelTime, 2)};
 
     // move to the jetting position if we are not already there
-    s << CMD::set_accleration(Axis::X, 800);
-    s << CMD::set_deceleration(Axis::X, 800);
+    s << CMD::set_accleration(Axis::X, 300); // moved down from 800 4/6/22 for slower accelerations
+    s << CMD::set_deceleration(Axis::X, 300);
     s << CMD::set_speed(Axis::X, xTravelSpeed);
     s << CMD::position_absolute(Axis::X, X_STAGE_LEN_MM);
     s << CMD::begin_motion(Axis::X);
