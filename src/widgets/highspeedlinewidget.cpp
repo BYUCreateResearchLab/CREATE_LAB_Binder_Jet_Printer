@@ -196,9 +196,6 @@ void HighSpeedLineWidget::view_flat()
     std::string linePrintMessage = "Viewing flat for line " + std::to_string(currentLineToPrintIndex + 1);
     emit print_to_output_window(QString::fromStdString(linePrintMessage));
 
-
-    allow_user_to_change_parameters(false);
-
     emit execute_command(s);
     emit jet_turned_on();
     //emit disable_user_input();
@@ -642,12 +639,13 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_viewing_fla
 
     // if printing with the y axis, this was already done
 
+    // setup jetting axis
+    s << CMD::stop_motion(Axis::Jet); // stop jetting if previously jetting
+    s << CMD::servo_here(Axis::Jet);
+    s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
+
     if (printAxis == Axis::Y) // only move if we are printing with the y-axis
     {
-        // setup jetting axis
-        s << CMD::stop_motion(Axis::Jet); // stop jetting if previously jetting
-        s << CMD::servo_here(Axis::Jet);
-        s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
 
         // Line Print PVT Commands
         // PVT commands are in relative position coordinates
@@ -712,9 +710,6 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_viewing_fla
         s << CMD::disable_gearing_for(Axis::Jet);
         s << CMD::after_motion(printAxis);
         s << CMD::clear_bit(HS_TTL_BIT);
-
-        s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
-        s << CMD::begin_motion(Axis::Jet);
     }
     else // if printing with the x-axis, dont move anything for the flat, just trigger
     {
@@ -722,6 +717,9 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_viewing_fla
         s << CMD::at_time_milliseconds(100);
         s << CMD::clear_bit(HS_TTL_BIT);
     }
+
+    s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
+    s << CMD::begin_motion(Axis::Jet);
 
     std::string returnString = CMD::cmd_buf_to_dmc(s);
 
