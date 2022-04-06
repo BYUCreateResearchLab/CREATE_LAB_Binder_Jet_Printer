@@ -512,13 +512,13 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
     s << CMD::after_motion(nonPrintAxis);
 
     // setup jetting axis
-    s << CMD::stop_motion(Axis::Jet); // stop jetting if previously jetting
+    //s << CMD::stop_motion(Axis::Jet); // stop jetting if previously jetting
     //s << CMD::servo_here(Axis::Jet);
     //s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
 
-    s << CMD::enable_gearing_for(Axis::Jet, printAxis);
+    //s << CMD::enable_gearing_for(Axis::Jet, printAxis);
     // continuous jetting (don't turn off before printing the line)
-    s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
+    //s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
 
 
     // if printing with the x axis
@@ -614,7 +614,7 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
         s << CMD::at_time_milliseconds(time3);
     }
 
-    s << CMD::disable_gearing_for(Axis::Jet);
+    //s << CMD::disable_gearing_for(Axis::Jet);
     s << CMD::after_motion(printAxis);
     s << CMD::clear_bit(HS_TTL_BIT);
 
@@ -624,8 +624,8 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
     s << CMD::begin_motion(Axis::X);
     s << CMD::after_motion(Axis::X);
 
-    s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
-    s << CMD::begin_motion(Axis::Jet);
+    //s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
+    //s << CMD::begin_motion(Axis::Jet);
 
     std::string returnString = CMD::cmd_buf_to_dmc(s);
 
