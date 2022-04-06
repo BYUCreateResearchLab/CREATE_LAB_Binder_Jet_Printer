@@ -299,7 +299,7 @@ void  MainWindow::on_zUp_clicked()
     std::stringstream s;
     Axis z{Axis::Z};
 
-    s << CMD::position_relative(z, ui->zStepSize->value() / 1000.0); // convert to microns
+    s << CMD::position_relative(z, ui->zStepSize->value() / 1000.0); // convert from microns
     s << CMD::set_accleration(z, 10);
     s << CMD::set_deceleration(z, 10);
     s << CMD::set_speed(z, 1.5); // max speed of 5 mm/s!
@@ -316,7 +316,7 @@ void  MainWindow::on_zDown_clicked()
     std::stringstream s;
     Axis z{Axis::Z};
 
-    s << CMD::position_relative(z, -ui->zStepSize->value() / 1000.0); // convert to microns
+    s << CMD::position_relative(z, -ui->zStepSize->value() / 1000.0); // convert from microns
     s << CMD::set_accleration(z, 10);
     s << CMD::set_deceleration(z, 10);
     s << CMD::set_speed(z, 1.5); // max speed of 5 mm/s!

@@ -22,6 +22,7 @@ public:
     // each string in the vector will be the code for printing a line
     std::string generate_commands_for_printing_line(int lineNum);
     std::string generate_dmc_commands_for_printing_line(int lineNum);
+    std::string generate_dmc_commands_for_viewing_flat(int lineNum);
 
     int numLines{};
     int lineSpacing_um{};
@@ -62,6 +63,7 @@ public:
 
 public slots:
     void print_line();
+    void view_flat();
     void when_line_print_completed();
 
 private slots:

@@ -29,6 +29,7 @@ void HighSpeedLineWidget::allow_widget_input(bool allowed)
     ui->moveToCenterButton->setEnabled(allowed);
     ui->setXCenter->setEnabled(allowed);
     ui->setYCenter->setEnabled(allowed);
+    ui->recordFlatButton->setEnabled(allowed);
 }
 
 void HighSpeedLineWidget::allow_user_to_change_parameters(bool allowed)
@@ -61,6 +62,8 @@ void HighSpeedLineWidget::setup()
 
     connect(ui->setXCenter, &QAbstractButton::clicked, this, &HighSpeedLineWidget::set_x_center);
     connect(ui->setYCenter, &QAbstractButton::clicked, this, &HighSpeedLineWidget::set_y_center);
+
+    connect(ui->recordFlatButton, &QAbstractButton::clicked, this, &HighSpeedLineWidget::view_flat);
 
     update_print_settings();
 }
@@ -175,6 +178,33 @@ void HighSpeedLineWidget::print_line()
     printIsRunning_ = true;
     ui->stopPrintButton->setText("\nStop Printing\n");
     connect(mPrintThread, &PrintThread::ended, this, &HighSpeedLineWidget::when_line_print_completed);
+}
+
+void HighSpeedLineWidget::view_flat()
+{
+    std::stringstream s;
+    std::string temp = print->generate_dmc_commands_for_viewing_flat(currentLineToPrintIndex);
+    const char *commands = temp.c_str();
+
+    if (mPrinter->g)
+    {
+        GProgramDownload(mPrinter->g, commands, "");
+    }
+    s << "GCmd," << "XQ" << "\n";
+    s << "GProgramComplete," << "\n";
+
+    std::string linePrintMessage = "Viewing flat for line " + std::to_string(currentLineToPrintIndex + 1);
+    emit print_to_output_window(QString::fromStdString(linePrintMessage));
+
+
+    allow_user_to_change_parameters(false);
+
+    emit execute_command(s);
+    emit jet_turned_on();
+    //emit disable_user_input();
+    //ui->stopPrintButton->setEnabled(true);
+    //printIsRunning_ = true;
+    //ui->stopPrintButton->setText("\nStop Printing\n");
 }
 
 void HighSpeedLineWidget::when_line_print_completed()
@@ -560,6 +590,138 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
 
     s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
     s << CMD::begin_motion(Axis::Jet);
+
+    std::string returnString = CMD::cmd_buf_to_dmc(s);
+
+    return returnString;
+}
+
+std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_viewing_flat(int lineNum)
+{
+    std::stringstream s;
+
+    Axis nonPrintAxis;
+    if (printAxis == Axis::X) nonPrintAxis = Axis::Y;
+    else nonPrintAxis = Axis::X;
+
+    // line print move, jetting, and TTL trigger
+    double print_speed_mm_per_s = (dropletSpacing_um * jettingFrequency_Hz) / 1000.0;
+
+    double accelTime = print_speed_mm_per_s/acceleration_mm_per_s2;
+    int accelTimeCnts = int(std::round((accelTime) * (double)cntsPerSec));
+    double linePrintTime_s = (lineLength_mm / print_speed_mm_per_s);
+    int halfLinePrintTimeCnts = int(std::round((linePrintTime_s * (double)cntsPerSec) / 2.0));
+    double accelDistance_mm{0.5 * acceleration_mm_per_s2 * std::pow(accelTime, 2)};
+
+    // start PVT motion
+    // position axes where they need to be for printing
+    if (printAxis == Axis::Y)
+    {
+        // move y axis so that bed is behind the nozzle so there is enough space to get up to speed to print
+        s << CMD::set_speed(printAxis, 60);
+        s << CMD::position_absolute(printAxis, buildBox.centerY + (lineLength_mm/2.0) + accelDistance_mm);
+        s << CMD::begin_motion(printAxis);
+        s << CMD::after_motion(printAxis);
+    }
+
+    // move the non-print axis to line position
+    if (nonPrintAxis == Axis::Y)
+    {
+        s << CMD::set_accleration(nonPrintAxis, 600);
+        s << CMD::set_deceleration(nonPrintAxis, 600);
+        s << CMD::set_speed(nonPrintAxis, 60);
+
+        double layersize = (numLines-1)*(lineSpacing_um / 1000.0);
+        double initialOffset = buildBox.centerY - (layersize/2.0);
+
+        s << CMD::position_absolute(nonPrintAxis, initialOffset + (lineNum*(lineSpacing_um/1000.0)));
+    }
+
+    s << CMD::begin_motion(nonPrintAxis);
+    s << CMD::after_motion(nonPrintAxis);
+
+    // if printing with the y axis, this was already done
+
+    if (printAxis == Axis::Y) // only move if we are printing with the y-axis
+    {
+        // setup jetting axis
+        s << CMD::stop_motion(Axis::Jet); // stop jetting if previously jetting
+        s << CMD::servo_here(Axis::Jet);
+        s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
+
+        // Line Print PVT Commands
+        // PVT commands are in relative position coordinates
+        s << CMD::enable_gearing_for(Axis::Jet, printAxis);
+        s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,    -print_speed_mm_per_s, accelTimeCnts);         // accelerate
+        s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity to trigger point
+        s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity
+        s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,     0,                    accelTimeCnts);         // decelerate
+        s << CMD::exit_pvt_mode(printAxis);
+        s << CMD::set_reference_time();
+
+        double linePrintTime_ms = linePrintTime_s * 1000.0;
+        double halfLinePrintTime_ms = linePrintTime_ms / 2.0;
+        double accelTime_ms = accelTime * 1000.0;
+        if (triggerOffset_ms < halfLinePrintTime_ms) // trigger occurs during line print
+        {
+            qDebug() << "trigger occured during line print";
+
+            int time1 = std::round(accelTime_ms);
+            int time2 = std::round(accelTime_ms + halfLinePrintTime_ms - triggerOffset_ms);
+            int time3 = std::round(accelTime_ms + linePrintTime_ms);
+
+            s << CMD::begin_pvt_motion(printAxis);
+            s << CMD::at_time_milliseconds(time1);
+            s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
+            if (time2 != time1) s << CMD::at_time_milliseconds(time2);
+            s << CMD::set_bit(HS_TTL_BIT);
+            s << CMD::at_time_milliseconds(time3);
+        }
+        else if (triggerOffset_ms < (halfLinePrintTime_ms + accelTime_ms)) // trigger occurs during acceleration
+        {
+            qDebug() << "trigger occured during acceleration";
+
+            int time1 = std::round(accelTime_ms + halfLinePrintTime_ms - triggerOffset_ms);
+            int time2 = std::round(accelTime_ms);
+            int time3 = std::round(accelTime_ms + linePrintTime_ms);
+
+            s << CMD::begin_pvt_motion(printAxis);
+            if (time1 != 0) s << CMD::at_time_milliseconds(time1);
+            s << CMD::set_bit(HS_TTL_BIT);
+            if (time2 != time1) s << CMD::at_time_milliseconds(time2);
+            s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
+            s << CMD::at_time_milliseconds(time3);
+        }
+        else // trigger occurs before acceleration
+        {
+            qDebug() << "trigger occured before acceleration";
+
+            int timeWaitBeforePrint = triggerOffset_ms - accelTime_ms - halfLinePrintTime_ms;
+            int time1 = std::round(timeWaitBeforePrint);
+            int time2 = std::round(timeWaitBeforePrint + accelTime_ms);
+            int time3 = std::round(timeWaitBeforePrint + accelTime_ms + linePrintTime_ms);
+
+            s << CMD::set_bit(HS_TTL_BIT);
+            if (time1 != 0) s << CMD::at_time_milliseconds(time1);
+            s << CMD::begin_pvt_motion(printAxis);
+            if (time2 != time1) s << CMD::at_time_milliseconds(time2);
+            s << CMD::set_jetting_gearing_ratio_from_droplet_spacing(printAxis, dropletSpacing_um);
+            s << CMD::at_time_milliseconds(time3);
+        }
+
+        s << CMD::disable_gearing_for(Axis::Jet);
+        s << CMD::after_motion(printAxis);
+        s << CMD::clear_bit(HS_TTL_BIT);
+
+        s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
+        s << CMD::begin_motion(Axis::Jet);
+    }
+    else // if printing with the x-axis, dont move anything for the flat, just trigger
+    {
+        s << CMD::set_bit(HS_TTL_BIT);
+        s << CMD::at_time_milliseconds(100);
+        s << CMD::clear_bit(HS_TTL_BIT);
+    }
 
     std::string returnString = CMD::cmd_buf_to_dmc(s);
 

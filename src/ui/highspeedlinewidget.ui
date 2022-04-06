@@ -663,6 +663,15 @@
    <item row="2" column="1">
     <layout class="QHBoxLayout" name="printButtonLayout">
      <item>
+      <widget class="QPushButton" name="recordFlatButton">
+       <property name="text">
+        <string>
+Record Flat
+</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="printButton">
        <property name="text">
         <string>
