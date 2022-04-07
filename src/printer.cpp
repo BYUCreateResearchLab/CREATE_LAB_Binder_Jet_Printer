@@ -404,12 +404,13 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
     s << CMD::set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);  
 
     // move z-axis down when going back to avoid hitting the roller
-    s << CMD::set_accleration(Axis::Z, 10);
-    s << CMD::set_deceleration(Axis::Z, 10);
-    s << CMD::set_speed(Axis::Z, 2);
-    s << CMD::position_relative(Axis::Z, -zAxisOffsetUnderRoller);
-    s << CMD::begin_motion(Axis::Z);
-    s << CMD::motion_complete(Axis::Z);
+    // TURNED OFF FOR APS!
+    //s << CMD::set_accleration(Axis::Z, 10);
+    //s << CMD::set_deceleration(Axis::Z, 10);
+    //s << CMD::set_speed(Axis::Z, 2);
+    //s << CMD::position_relative(Axis::Z, -zAxisOffsetUnderRoller);
+    //s << CMD::begin_motion(Axis::Z);
+    //s << CMD::motion_complete(Axis::Z);
     //
 
     s << CMD::position_absolute(Axis::Y, startPosition_mm); // move y-axis to start misting position
@@ -427,8 +428,9 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
     s << CMD::clear_bit(MISTER_BIT); // turn off mister
 
     // move z-axis back up
-    s << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller);
-    s << CMD::begin_motion(Axis::Z);
+    // TURNED OFF FOR APS
+    //s << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller);
+    //s << CMD::begin_motion(Axis::Z);
 
     // move forward
     s << CMD::set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
