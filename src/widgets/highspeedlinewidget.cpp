@@ -181,6 +181,9 @@ void HighSpeedLineWidget::print_line()
     }
     s << "GCmd," << "XQ" << "\n";
     s << "GProgramComplete," << "\n";
+    s << CMD::stop_motion(Axis::Jet); // stop jetting to set new jog speed
+    s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
+    s << CMD::begin_motion(Axis::Jet);
 
     std::string linePrintMessage = "Printing Line " + std::to_string(currentLineToPrintIndex + 1);
     emit print_to_output_window(QString::fromStdString(linePrintMessage));
@@ -469,6 +472,12 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
     double accelDistance_mm{0.5 * acceleration_mm_per_s2 * std::pow(accelTime, 2)};
 
     // move to the jetting position if we are not already there
+
+    //start jetting right away
+    s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
+    s << CMD::set_jog(Axis::Jet, jettingFrequency_Hz); // jet at 1000z while waiting
+    s << CMD::begin_motion(Axis::Jet);
+
     s << CMD::set_accleration(Axis::X, 300); // moved down from 800 4/6/22 for slower accelerations
     s << CMD::set_deceleration(Axis::X, 300);
     s << CMD::set_speed(Axis::X, xTravelSpeed);
@@ -617,6 +626,7 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
     //s << CMD::disable_gearing_for(Axis::Jet);
     s << CMD::after_motion(printAxis);
     s << CMD::clear_bit(HS_TTL_BIT);
+    s << CMD::stop_motion(Axis::Jet);
 
     // move x-axis back to jetting position
     s << CMD::set_speed(Axis::X, xTravelSpeed);
@@ -624,8 +634,10 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
     s << CMD::begin_motion(Axis::X);
     s << CMD::after_motion(Axis::X);
 
+    //s << CMD::stop_motion(Axis::Jet); // stop jetting to set new jog speed
     //s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
     //s << CMD::begin_motion(Axis::Jet);
+    //s << CMD::after_motion(Axis::Jet);
 
     std::string returnString = CMD::cmd_buf_to_dmc(s);
 

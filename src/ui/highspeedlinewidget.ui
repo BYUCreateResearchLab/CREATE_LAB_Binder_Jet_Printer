@@ -132,7 +132,7 @@
            <double>0.100000000000000</double>
           </property>
           <property name="value">
-           <double>20.000000000000000</double>
+           <double>30.000000000000000</double>
           </property>
          </widget>
         </item>
@@ -367,7 +367,7 @@
            <double>0.000000000000000</double>
           </property>
           <property name="value">
-           <double>-135.150000000000006</double>
+           <double>-135.099999999999994</double>
           </property>
          </widget>
         </item>
