@@ -580,7 +580,8 @@ std::string CMD::homing_sequence()
     s << CMD::define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
     s << CMD::define_position(Axis::Y, 0);
     s << CMD::define_position(Axis::Z, 0);
-    s << CMD::set_forward_software_limit(Axis::Z, 0); // set software limit to current position
+    // DISABLED FOR APS
+    //s << CMD::set_forward_software_limit(Axis::Z, 0); // set software limit to current position
 
     return s.str();
 }
