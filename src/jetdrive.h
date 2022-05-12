@@ -9,6 +9,7 @@ class MicroJet;
 #define MFJDRV_COM4 3
 #define MFJDRV_COM9 8
 #define MFJDRV_COM7 6
+#define MFJDRV_COM8 7
 
 class JetDrive
 {
@@ -45,7 +46,7 @@ private:
 
 private:
     HANDLE hCom;
-    int mJetDrv{MFJDRV_COM7};
+    int mJetDrv{MFJDRV_COM8};
     MicroJet *mJetSettings{nullptr};
 
     float defaultWaitTime{0.0001f};

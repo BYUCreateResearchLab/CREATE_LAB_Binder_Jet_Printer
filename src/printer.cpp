@@ -403,15 +403,13 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
     s << CMD::set_deceleration(Axis::Y, 600);
     s << CMD::set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);  
 
-    // move z-axis down when going back to avoid hitting the roller
-    // TURNED OFF FOR APS!
-    //s << CMD::set_accleration(Axis::Z, 10);
-    //s << CMD::set_deceleration(Axis::Z, 10);
-    //s << CMD::set_speed(Axis::Z, 2);
-    //s << CMD::position_relative(Axis::Z, -zAxisOffsetUnderRoller);
-    //s << CMD::begin_motion(Axis::Z);
-    //s << CMD::motion_complete(Axis::Z);
-    //
+    s << CMD::set_accleration(Axis::Z, 10);
+    s << CMD::set_deceleration(Axis::Z, 10);
+    s << CMD::set_speed(Axis::Z, 2);
+    s << CMD::position_relative(Axis::Z, -zAxisOffsetUnderRoller);
+    s << CMD::begin_motion(Axis::Z);
+    s << CMD::motion_complete(Axis::Z);
+
 
     s << CMD::position_absolute(Axis::Y, startPosition_mm); // move y-axis to start misting position
     s << CMD::begin_motion(Axis::Y);
@@ -428,9 +426,8 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
     s << CMD::clear_bit(MISTER_BIT); // turn off mister
 
     // move z-axis back up
-    // TURNED OFF FOR APS
-    //s << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller);
-    //s << CMD::begin_motion(Axis::Z);
+    s << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller);
+    s << CMD::begin_motion(Axis::Z);
 
     // move forward
     s << CMD::set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
@@ -524,7 +521,7 @@ std::string CMD::homing_sequence()
     s << CMD::set_accleration(Axis::X, 800);
     s << CMD::set_deceleration(Axis::X, 800);
     s << CMD::set_limit_switch_deceleration(Axis::X, 800);
-    s << CMD::set_jog(Axis::X, -25); // jog towards rear limit
+    s << CMD::set_jog(Axis::X, 25); // jog towards front limit
 
     s << CMD::set_accleration(Axis::Y, 400);
     s << CMD::set_deceleration(Axis::Y, 400);
@@ -548,7 +545,7 @@ std::string CMD::homing_sequence()
     s << CMD::sleep(1000);
 
     // home to center index on x axis
-    s << CMD::set_jog(Axis::X, 30);
+    s << CMD::set_jog(Axis::X, -30);
     s << CMD::set_homing_velocity(Axis::X, 0.5);
     s << CMD::find_index(Axis::X);
 
@@ -580,8 +577,7 @@ std::string CMD::homing_sequence()
     s << CMD::define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
     s << CMD::define_position(Axis::Y, 0);
     s << CMD::define_position(Axis::Z, 0);
-    // DISABLED FOR APS
-    //s << CMD::set_forward_software_limit(Axis::Z, 0); // set software limit to current position
+    s << CMD::set_forward_software_limit(Axis::Z, 0); // set software limit to current position
 
     return s.str();
 }
