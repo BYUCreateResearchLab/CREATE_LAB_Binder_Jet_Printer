@@ -6,7 +6,7 @@
 
 GReturn GCALL GProgramComplete(GCon g)
 {
-    char pred[] = "_XQ=-1"; //predicate for polling the axis' motion status, m is a place holder replaced below.
+    char pred[] = "_XQ=-1";
        GReturn rc;
 
        rc = GWaitForBool(g, pred, -1); // poll forever. Change this if a premature exit is desired.

@@ -11,23 +11,6 @@
 
 using namespace std;
 
-const char * dmc_line_print =
-        R"(#BEGIN;yCnt=800;xCnt=1000;DMData[11];JS#fill("Data",0)
-           #DATA_WT
-           #LOOP;WT100;begin=Data[0];JP#LOOP,begin=0;JP#STOP,begin=2;JS#PRINT;Data[0]=0
-           JP#DATA_WT
-           #STOP;SPX=60*xCnt;SPY=40*yCnt;PAX=150*xCnt;PAY=0;BGXY;AM;EN
-           #PRINT;strtX=Data[1];strtY=Data[2];numLs=Data[3];lSpce=Data[4];lDist=Data[5]
-           dSpce=Data[6];jetHz=Data[7];pVelc=Data[8];pAccl=Data[9];index=Data[10]
-           ACX =pAccl;DCX =pAccl;ACY =400*yCnt;DCY =400*yCnt;SHH;ACH =20000000
-           accT=pVelc/pAccl;accD =accT*accT*pAccl*0.5;gearR=1000.0/(dSpce*xCnt)
-           jOffD =accD +lDist
-           #PRNTL;SPX=60*xCnt;SPY=80*yCnt;PAX=(strtX-accD);PAY=strtY;BGXY;AM;SPX=pVelc
-           GAH=X;PRX=lDist+(2*accD);BGX;ADX=accD;GRH=gearR;ADX=jOffD;GRH=0;AM
-           strtY=strtY+lSpce;index=index+1;JP#PRNTL,index<numLs;EN
-           #fill;^c=0
-           #fill_h;^a[^c]=^b;^c=^c+1;JP#fill_h,(^c<^a[-1]);EN)";
-
 LinePrintWidget::LinePrintWidget(QWidget *parent) : PrinterWidget(parent), ui(new Ui::LinePrintWidget)
 {
     ui->setupUi(this);
@@ -57,6 +40,7 @@ LinePrintWidget::LinePrintWidget(QWidget *parent) : PrinterWidget(parent), ui(ne
     updatePreviewWindow();
 
     connect(ui->stopPrintButton, &QAbstractButton::clicked, this, &LinePrintWidget::stop_print_button_pressed);
+    connect(ui->startPrint, &QAbstractButton::clicked, this, &LinePrintWidget::print_lines_dmc);
 }
 
 LinePrintWidget::~LinePrintWidget()
@@ -270,7 +254,7 @@ void LinePrintWidget::on_clearConsole_clicked()
     ui->consoleOutput->clear();
 }
 
-void LinePrintWidget::on_startPrint_clicked()
+void LinePrintWidget::print_lines_old()
 {
     std::stringstream s;
 
@@ -308,6 +292,50 @@ void LinePrintWidget::on_startPrint_clicked()
     ui->stopPrintButton->setEnabled(true);
     connect(mPrintThread, &PrintThread::ended, this, &LinePrintWidget::when_line_print_completed);
     //emit generate_printing_message_box("Print is running.");
+}
+
+void LinePrintWidget::print_lines_dmc()
+{
+    std::stringstream s;
+
+    if (mPrinter->g)
+    {
+        // upload program with up to full compression enabled on the preprocessor
+        if (GProgramDownload(mPrinter->g, dmcLinePrintCode, "--max 4") == G_NO_ERROR)
+            qDebug() << "Program Downloaded with compression level 4";
+        else
+        {
+            qDebug() << "Unexpected GProgramDownload() behaviour";
+            return;
+        }
+    }
+
+    s << CMD::stop_motion(Axis::Jet); // stop jetting if it is currently jetting
+    s << CMD::set_accleration(Axis::Y, 300);
+    s << CMD::set_deceleration(Axis::Y, 300);
+    //executing/verifying code
+    s << "GCmd," << "XQ" << "\n";
+
+    // pass line_sets here to program here
+    s << line_set_arrays_dmc();
+
+    s << "GProgramComplete," << "\n";
+    s << CMD::stop_motion(Axis::Jet); // stop jetting to set new jog speed
+    s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
+    s << CMD::begin_motion(Axis::Jet);
+
+    s << CMD::display_message("Print Complete");
+
+    emit disable_user_input();
+    emit jet_turned_on(); // jet is turned on once print is complete
+    emit execute_command(s);
+    printIsRunning_ = true;
+    ui->stopPrintButton->setEnabled(true);
+    connect(mPrintThread, &PrintThread::ended, this, &LinePrintWidget::when_line_print_completed);
+
+    return;
+
+
 }
 
 void LinePrintWidget::when_line_print_completed()
@@ -429,5 +457,51 @@ void LinePrintWidget::check_x_start()
         log("The x start position had to be changed to " +
             QString::number(table.startX) + " to accomodate acceleration before printing", logType::Error);
     }
+}
+
+std::vector<std::array<int, 11>> LinePrintWidget::generate_line_set_arrays_dmc()
+{
+    int startX = (table.startX + Printer2NozzleOffsetX) * X_CNTS_PER_MM;
+
+    std::vector<std::array<int, 11>> arrays;
+    arrays.reserve(table.numRows()); // reserve the number of line sets we will be printing
+    for (int i=0; i < table.numRows(); ++i) // for each line set
+    {
+        const int stateVal = 0;
+        const int startY = (table.startY + Printer2NozzleOffsetY) * Y_CNTS_PER_MM;
+        const int numLines = table.data[i].numLines.value;
+        const int lineSpacing = table.data[i].lineSpacing.value * X_CNTS_PER_MM;
+        const int lineLength = table.data[i].lineLength.value * X_CNTS_PER_MM;
+        const int dropletSpacing = table.data[i].dropletSpacing.value * (double)(X_CNTS_PER_MM / 1000);
+        const int jettingFreq = table.data[i].jettingFreq.value;
+        const int printSpeed = table.data[i].printVelocity.value * X_CNTS_PER_MM;
+        const int printAcceleration = table.data[i].printAcceleration.value * X_CNTS_PER_MM;
+        const int index = 0;
+
+        arrays.push_back({stateVal, startX, startY, numLines, lineSpacing, lineLength,
+                     dropletSpacing, jettingFreq, printSpeed, printAcceleration, index});
+        startX += ((table.data[i].lineLength.value + table.setSpacing) * X_CNTS_PER_MM);
+    }
+    arrays.push_back({2,0,0,0,0,0,0,0,0,0,0}); // one more to tell the printer to stop printing
+    return arrays;
+}
+
+std::string LinePrintWidget::line_set_arrays_dmc()
+{
+    auto arrays {generate_line_set_arrays_dmc()};
+    std::stringstream s;
+
+    for (auto &array: arrays)
+    {
+        s << "PrintLineSet,";
+        for (auto &val: array)
+        {
+            s << val;
+            if (&val != &array.back()) s << ",";
+        }
+
+        s << "\n";
+    }
+    return s.str();
 }
 

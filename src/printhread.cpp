@@ -128,6 +128,33 @@ void PrintThread::run()
                         //emit response("ERROR: not connected to controller!");
                     }
                 }
+                else if (commandType == "PrintLineSet")
+                {
+                    if (mPrintGCmds) emit response(QString::fromStdString(commandString));
+                    if (mPrinter->g)
+                    {
+                        // wait until the first value in the Data Array is 0
+                        int val{};
+                        constexpr int sleepTime_ms = 100;
+                        // safety to let the program break out of the loop eventually
+                        constexpr int breakLoopTime_sec = 500; // breaks out in just under 8 minutes
+                        constexpr int maxLoop{(breakLoopTime_sec * 1000) / sleepTime_ms};
+                        int counter{0};
+                        do {
+                            GCmdI(mPrinter->g, "Data[0]=?", &val);
+                            GSleep(sleepTime_ms);
+                            counter++;
+                        }
+                        while (val != 0 && counter < maxLoop);
+
+                        //download full array
+                        e(GArrayDownload(mPrinter->g, "Data", G_BOUNDS, G_BOUNDS, commandString.c_str()));
+                    }
+                    else
+                    {
+                        //emit response("ERROR: not connected to controller!");
+                    }
+                }
                 else if (commandType == "GMotionComplete")
                 {
                     //emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));
