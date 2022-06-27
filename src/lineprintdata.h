@@ -91,7 +91,7 @@ public:
     TableData numLines          {"Number of Lines", type::int_type, 6, 1, 5000};
     TableData lineSpacing       {"Line Spacing\n(mm)", type::float_type, 12, 0.005f, 50};
     TableData lineLength        {"Line Length\n(mm)", type::float_type, 15, 0.01f, 100};
-    TableData dropletSpacing    {"Droplet Spacing\n(µm)", type::int_type, 15, 1, 100};
+    TableData dropletSpacing    {"Droplet Spacing\n(µm)", type::int_type, 15, 1, 300};
     TableData jettingFreq       {"Jetting Frequency\n(Hz)", type::int_type, 1000, 100, 10000};
     TableData printVelocity     {"Printing Velocity\n(mm/s)", type::float_type, 15, 0.1f, 10000};
     TableData printAcceleration {"Print Acceleration\n(mm/s2)", type::float_type, 800, 100.0, 1500.0};
