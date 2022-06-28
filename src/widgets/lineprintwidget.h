@@ -48,6 +48,7 @@ private slots:
     void print_lines_dmc();
     void when_line_print_completed();
     void stop_print_button_pressed();
+    QString read_dmc_code(QString filename);
 
 private:
     Ui::LinePrintWidget *ui;
@@ -74,7 +75,9 @@ private:
     QPen linePen = QPen(Qt::blue, 0.1, Qt::SolidLine, Qt::RoundCap);
     QPen lineTravelPen = QPen(Qt::red, 0.1, Qt::DashLine, Qt::RoundCap);
 
-    const char * dmcLinePrintCode =
+    QString dmcLinePrintCode;
+
+    /*const char * dmcLinePrintCode =
             R"(#BEGIN;yCnt=800;xCnt=1000;DMData[11];JS#fill("Data",0)
                #DATA_WT
                #LOOP;WT100;begin=Data[0];JP#LOOP,begin=0;JP#STOP,begin=2;JS#PRINT;Data[0]=0
@@ -89,7 +92,8 @@ private:
                GAH=X;PRX=lDist+(2*accD);BGX;ADX=accD;GRH=gearR;ADX=jOffD;GRH=0;AM
                strtY=strtY+lSpce;index=index+1;JP#PRNTL,index<numLs;EN
                #fill;^c=0
-               #fill_h;^a[^c]=^b;^c=^c+1;JP#fill_h,(^c<^a[-1]);EN)";
+               #fill_h;^a[^c]=^b;^c=^c+1;JP#fill_h,(^c<^a[-1]);EN)";*/
+
 };
 
 #endif // LINEPRINTWIDGET_H

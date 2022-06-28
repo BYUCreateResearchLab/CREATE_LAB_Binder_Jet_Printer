@@ -41,6 +41,9 @@ LinePrintWidget::LinePrintWidget(QWidget *parent) : PrinterWidget(parent), ui(ne
 
     connect(ui->stopPrintButton, &QAbstractButton::clicked, this, &LinePrintWidget::stop_print_button_pressed);
     connect(ui->startPrint, &QAbstractButton::clicked, this, &LinePrintWidget::print_lines_dmc);
+
+    // get dmc code from QRC
+    dmcLinePrintCode = read_dmc_code(":/src/dmc/Line_Print.dmc");
 }
 
 LinePrintWidget::~LinePrintWidget()
@@ -298,10 +301,13 @@ void LinePrintWidget::print_lines_dmc()
 {
     std::stringstream s;
 
+    QByteArray ba = dmcLinePrintCode.toLocal8Bit();
+    const char *dmcCodeC_Str = ba.data();
+
     if (mPrinter->g)
     {
         // upload program with up to full compression enabled on the preprocessor
-        if (GProgramDownload(mPrinter->g, dmcLinePrintCode, "--max 4") == G_NO_ERROR)
+        if (GProgramDownload(mPrinter->g, dmcCodeC_Str, "--max 4") == G_NO_ERROR)
             qDebug() << "Program Downloaded with compression level 4";
         else
         {
@@ -334,8 +340,6 @@ void LinePrintWidget::print_lines_dmc()
     connect(mPrintThread, &PrintThread::ended, this, &LinePrintWidget::when_line_print_completed);
 
     return;
-
-
 }
 
 void LinePrintWidget::when_line_print_completed()
@@ -504,5 +508,21 @@ std::string LinePrintWidget::line_set_arrays_dmc()
         s << "\n";
     }
     return s.str();
+}
+
+QString LinePrintWidget::read_dmc_code(QString filename)
+{
+    QFile file(filename);
+    if(!file.open(QFile::ReadOnly |
+                  QFile::Text))
+    {
+        qDebug() << " Could not open the file for reading";
+        return "";
+    }
+
+    QTextStream in(&file);
+    return in.readAll();
+
+    file.close();
 }
 
