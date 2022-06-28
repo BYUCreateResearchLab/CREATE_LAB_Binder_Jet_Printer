@@ -509,6 +509,10 @@ std::string CMD::set_default_controller_settings()
     // Configure Extended I/O
     s << CMD::detail::GCmd() << "CO 1"            << "\n"; // configures bank 2 as outputs on extended I/O (IO 17-24)
 
+    // Setup Brushless Motors
+    //s << CMD::detail::GCmd() << "BXX=2"           << "\n"; // setup X axis
+    //s << CMD::detail::GCmd() << "BXY=2"           << "\n"; // setup Y axis
+
     return s.str();
 }
 

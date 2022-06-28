@@ -320,7 +320,7 @@ void LinePrintWidget::print_lines_dmc()
     s << CMD::set_accleration(Axis::Y, 300);
     s << CMD::set_deceleration(Axis::Y, 300);
     //executing/verifying code
-    s << "GCmd," << "XQ" << "\n";
+    s << "GCmd," << "XQ #BEGIN" << "\n";
 
     // pass line_sets here to program here
     s << line_set_arrays_dmc();

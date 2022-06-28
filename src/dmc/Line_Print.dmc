@@ -11,6 +11,10 @@ REM****************************************************************************
 // comments made using ' are only removed if compression is used when uploading
 // comments using REM are always removed when uploading
 REM****************************************************************************
+#AUTO
+BXX=2
+BXY=2
+EN
 #BEGIN
 // Define variables
 yCnt = 800;  //encoder counts per mm for the y-axis
