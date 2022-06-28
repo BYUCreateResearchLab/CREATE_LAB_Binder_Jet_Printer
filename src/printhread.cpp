@@ -145,10 +145,10 @@ void PrintThread::run()
                             GSleep(sleepTime_ms);
                             counter++;
                         }
-                        while (val != 0 && counter < maxLoop);
+                        while (val != 0 && counter < maxLoop && mRunning);
 
-                        //download full array
-                        e(GArrayDownload(mPrinter->g, "Data", G_BOUNDS, G_BOUNDS, commandString.c_str()));
+                        if (mRunning) //download full array
+                            e(GArrayDownload(mPrinter->g, "Data", G_BOUNDS, G_BOUNDS, commandString.c_str()));
                     }
                     else
                     {
