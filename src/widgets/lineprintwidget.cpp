@@ -476,7 +476,7 @@ std::vector<std::array<int, 11>> LinePrintWidget::generate_line_set_arrays_dmc()
         const int numLines = table.data[i].numLines.value;
         const int lineSpacing = table.data[i].lineSpacing.value * Y_CNTS_PER_MM;
         const int lineLength = table.data[i].lineLength.value * X_CNTS_PER_MM;
-        const int dropletSpacing = table.data[i].dropletSpacing.value * (double)(X_CNTS_PER_MM / 1000);
+        const int dropletSpacing = table.data[i].dropletSpacing.value * (double)(X_CNTS_PER_MM / 1000.0);
         const int jettingFreq = table.data[i].jettingFreq.value;
         const int printSpeed = table.data[i].printVelocity.value * X_CNTS_PER_MM;
         const int printAcceleration = table.data[i].printAcceleration.value * X_CNTS_PER_MM;

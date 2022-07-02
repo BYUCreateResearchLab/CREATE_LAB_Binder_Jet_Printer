@@ -1,4 +1,4 @@
-## Outline for line printing DMC program on the BJ system
+## Line printing DMC program on the BJ system
 ## Jacob Lawrence
 // the lines above (two lines of ## with a space after) are needed
 //     for preprocessor features to work
@@ -8,8 +8,6 @@ REM****************************************************************************
 // NOTES:
 // labels can be up to 7 characters
 // variables can be up to 8 characters
-// comments made using ' are only removed if compression is used when uploading
-// comments using REM are always removed when uploading
 REM****************************************************************************
 #AUTO
 BXX=2
@@ -61,16 +59,16 @@ dSpce = Data[6];  // jetting droplet spacing (counts)
 jetHz = Data[7];  // jetting frequency (Hz)
 pVelc = Data[8];  // print speed (counts/sec)
 pAccl = Data[9];  // print acceleration (counts/sec^2)
-index = Data[10]; //index for which line is being printing (#)
-// print logic goes here
-//
-// set accelerations and decelerations
+index = Data[10]; // index for which line is being printing (#)
 
+// print logic goes here
+
+// set accelerations and decelerations
 ACX = pAccl
 DCX = pAccl
 ACY = 400 * yCnt
 DCY = 400 * yCnt
-//
+
 // configure jetting
 SHH
 ACH = 20000000
@@ -80,37 +78,41 @@ accD = accT * accT * pAccl * 0.5 // acceleration dist (in counts)
 REM****************************************************************************
 // for each line to be printed in the set
 // precalculate variables for SPEED!
-gearR = 1000.0 / (dSpce * xCnt); //gearing ratio
-jOffD = accD + lDist; //distance after move start to turn off jetting
+// gearR = 1000.0 / (dSpce * xCnt); // gearing ratio
+jOffD = accD + lDist; // distance after move start to turn off jetting
 #PRNTL
-SPX = 60 * xCnt
-SPY = 80 * yCnt
+SPX = 80 * xCnt
+SPY = 60 * yCnt
 // move to initial start position
 PAX = (strtX - accD)
 PAY = strtY
 BGXY
 AM
-SPX = pVelc
-GAH = X; // enable gearing for jetting axis connected to X-axis
+// print line
+WT 100 // wait for 100 ms before printing the line
+SPX = pVelc // set print speed
+JGH = jetHz // set jetting frequency
+// GAH = X; // enable gearing for jetting axis connected to X-axis
 PRX = lDist + (2*accD)
 BGX
 // enable jetting after acceleration
 ADX = accD
-GRH = gearR
+BGH // begin jetting move (jog)
+// GRH = gearR
 // disable jetting after line printed
 ADX = jOffD
-GRH = 0
+STH // stop jetting
+// GRH = 0
 AM
 strtY = strtY + lSpce
 index = index+1
-JP #PRNTL, index<numLs
-// end subroutine
-EN
+JP #PRNTL, index<numLs // jump to next line or end
+EN // end subroutine
 //*****************************************************************************
-#fill;                      //simple subroutine to fill array with values
-^c= 0;                      //use local scope ^c for iterator
-#fill_h;                    //fill loop
-^a[^c]= ^b;                 //set each value of the array
+#fill;                      // simple subroutine to fill array with values
+^c= 0;                      // use local scope ^c for iterator
+#fill_h;                    // fill loop
+^a[^c]= ^b;                 // set each value of the array
 ^c= ^c+1
-JP #fill_h,(^c<^a[-1]);     //keep setting array values for length of array
+JP #fill_h,(^c<^a[-1]);     // keep setting array values for length of array
 EN
