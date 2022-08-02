@@ -71,14 +71,14 @@ DCY = 400 * yCnt
 
 // configure jetting
 SHH
-ACH = 20000000
+ACH = 1073740800
+DCH = 1073740800
 // calculate acceleration distance
 accT = pVelc / pAccl // acceleration time 
 accD = accT * accT * pAccl * 0.5 // acceleration dist (in counts)
 REM****************************************************************************
 // for each line to be printed in the set
 // precalculate variables for SPEED!
-// gearR = 1000.0 / (dSpce * xCnt); // gearing ratio
 jOffD = accD + lDist; // distance after move start to turn off jetting
 #PRNTL
 SPX = 80 * xCnt
@@ -92,8 +92,7 @@ AM
 WT 100 // wait for 100 ms before printing the line
 SPX = pVelc // set print speed
 JGH = jetHz // set jetting frequency
-// GAH = X; // enable gearing for jetting axis connected to X-axis
-PRX = lDist + (2*accD)
+PRX = lDist + (2.0*accD)
 BGX
 // enable jetting after acceleration
 ADX = accD
