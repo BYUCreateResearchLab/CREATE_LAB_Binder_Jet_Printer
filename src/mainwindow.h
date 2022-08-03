@@ -28,13 +28,13 @@ public:
     void setup(Printer *printerPtr, PrintThread *printerThread);
 
 private slots:
-    // change these over to be jogs that go while the button is pushed and stop when it is released
-    void on_yPositive_pressed();
+    // TODO: change slot names away from using "on_" convention and connect slots manually in .cpp file
+    void on_yPositive_pressed(); // used when +y button is pressed
     void on_xPositive_pressed();
     void on_yNegative_pressed();
     void on_xNegative_pressed();
 
-    void jog_released();
+    void jog_released(); // executed when any jogging buttons above are released
 
     void on_xHome_clicked();
     void on_yHome_clicked();

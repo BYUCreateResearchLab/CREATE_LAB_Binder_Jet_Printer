@@ -23,6 +23,8 @@ void JettingWidget::allow_widget_input(bool allowed)
     ui->jetSettingsFrame->setEnabled(allowed);
 }
 
+// Note: currently the JetDrive settings set during startup are hardcoded in jetdrive.cpp. Changing the defaults in the .ui file for
+//       this wdiget currently does not change the startup values, only the display defaults. work on fixing this
 void JettingWidget::update_settings_clicked()
 {
     // THE JETDRIVE MUST NOT BE JETTING WHEN THE WAVEFORM IS UPDATED, THIS CAN BREAK THE JETDRIVE

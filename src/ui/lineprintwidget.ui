@@ -82,7 +82,10 @@
      <item alignment="Qt::AlignRight">
       <widget class="QLabel" name="label_StartXY">
        <property name="text">
-        <string>Start X, Y</string>
+        <string>Start X</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>
@@ -112,9 +115,19 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>mm  </string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>x</string>
+        <string>Start Y</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>

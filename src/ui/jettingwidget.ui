@@ -57,7 +57,7 @@
        <number>9</number>
       </property>
       <item row="1" column="1">
-       <widget class="QDoubleSpinBox" name="doubleSpinBox">
+       <widget class="QDoubleSpinBox" name="riseTime1SpinBox">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -169,7 +169,7 @@
        </widget>
       </item>
       <item row="2" column="5">
-       <widget class="QDoubleSpinBox" name="doubleSpinBox_6">
+       <widget class="QDoubleSpinBox" name="idleVoltageSpinBox">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -211,12 +211,12 @@
          <double>90.000000000000000</double>
         </property>
         <property name="value">
-         <double>25.000000000000000</double>
+         <double>30.000000000000000</double>
         </property>
        </widget>
       </item>
       <item row="1" column="5">
-       <widget class="QDoubleSpinBox" name="doubleSpinBox_5">
+       <widget class="QDoubleSpinBox" name="riseTime2SpinBox">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -241,7 +241,7 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QDoubleSpinBox" name="doubleSpinBox_2">
+       <widget class="QDoubleSpinBox" name="dwellTimeSpinBox">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -266,7 +266,7 @@
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="QDoubleSpinBox" name="doubleSpinBox_4">
+       <widget class="QDoubleSpinBox" name="fallTimeSpinBox">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -359,7 +359,7 @@
          <double>0.000000000000000</double>
         </property>
         <property name="value">
-         <double>-25.000000000000000</double>
+         <double>-30.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -499,7 +499,7 @@
        </widget>
       </item>
       <item row="4" column="1">
-       <widget class="QDoubleSpinBox" name="doubleSpinBox_3">
+       <widget class="QDoubleSpinBox" name="echoTimeSpinBox">
         <property name="enabled">
          <bool>false</bool>
         </property>

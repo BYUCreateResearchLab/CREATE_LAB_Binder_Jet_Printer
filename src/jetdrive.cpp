@@ -59,8 +59,9 @@ MicroJet::MicroJet() :
     fTDelay(0.0),
     fFrequency(1000L),// fFrequency is for setting the jetting frequency (in Hz?)
     fUIdle(0),
-    fUDwell(25),      // Dwell Voltage
-    fUEcho(-25),      // Echo Voltage
+    // work on syncing these values with the jetting widget on startup
+    fUDwell(30),      // Dwell Voltage
+    fUEcho(-30),      // Echo Voltage
     fUGain(225),
     fMode(0),         // fmode is to set continuous jetting mode (1 to enable continuous jetting, 0 to disable)
     fSource(1),       // fSource is for setting the trigger source (1 for external TTL trigger, 0 for internal trigger)
@@ -897,7 +898,7 @@ void JetDrive::set_internal_trigger()
 
 void JetDrive::set_echo_and_dwell_voltage(short echoVoltage_Volts, short dwellVoltage_Volts)
 {
-    // MAKE SURE THAT NOZZLE IS NOT JETTING BEFORE SENDING THIS COMMAND JUST TO BE SAFE
+    // PLEASE ENSURE THAT NOZZLE IS NOT JETTING BEFORE USING THIS FUNCTION
     if (mJetSettings->fUEcho != echoVoltage_Volts || mJetSettings->fUDwell != dwellVoltage_Volts)
     {
         mJetSettings->fUEcho = echoVoltage_Volts;

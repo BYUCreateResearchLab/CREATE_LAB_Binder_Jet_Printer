@@ -40,36 +40,37 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
     mJetDrive = new JetDrive();
 
     // set up widgets
-    mLinePrintingWidget = new LinePrintWidget();
-    mPowderSetupWidget = new PowderSetupWidget();
-    //mJettingWidget = new JettingWidget(mJetDrive);
-    mHighSpeedLineWidget = new HighSpeedLineWidget();
+    mLinePrintingWidget       = new LinePrintWidget();
+    mPowderSetupWidget        = new PowderSetupWidget();
+    mHighSpeedLineWidget      = new HighSpeedLineWidget();
     mDropletObservationWidget = new DropletObservationWidget(mJetDrive);
 
+    // add widgets to tabs on the top bar
     ui->tabWidget->addTab(mPowderSetupWidget, "Powder Setup");
     ui->tabWidget->addTab(mLinePrintingWidget, "Line Printing");
     ui->tabWidget->addTab(mHighSpeedLineWidget, "High-Speed Line Printing");
     ui->tabWidget->addTab(mDropletObservationWidget, "Jetting");
 
-
+    // add dock widget for showing console output
     mDockWidget = new QDockWidget("Output Window",this);
     this->addDockWidget(Qt::RightDockWidgetArea, mDockWidget);
     mOutputWindow = new OutputWindow(this);
     mDockWidget->setWidget(mOutputWindow);
-
     mOutputWindow->print_string("Starting Program...");
     mOutputWindow->print_string("Program Started");
 
-    //Disable all buttons that require a controller connection
+    // disable all buttons that require a controller connection
     allow_user_input(false);
 }
 
+// runs from main.cpp right after the object is initialized
 void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
 {
-    mPrinter = printerPtr;
+    // assign pointers
+    mPrinter     = printerPtr;
     mPrintThread = printerThread;
 
-    // Connect the string output from the printer thread to the output window widget
+    // connect the string output from the printer thread to the output window widget
     connect(mPrintThread, &PrintThread::response, mOutputWindow, &OutputWindow::print_string);
     connect(mPrintThread, &PrintThread::ended, this, &MainWindow::thread_ended);
     connect(mPrintThread, &PrintThread::connected_to_controller, this, &MainWindow::connected_to_motion_controller);
@@ -110,14 +111,9 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
 
 }
 
-void MainWindow::thread_ended()
-{
-    allow_user_input(true);
-}
-
+// on application close
 MainWindow::~MainWindow()
 {
-    // On application close
     delete ui;
     delete mJetDrive;
     if (mPrinter->g) // if there is an active connection to a controller
@@ -131,24 +127,36 @@ MainWindow::~MainWindow()
     }
 }
 
-void MainWindow::resizeEvent(QResizeEvent* event) // override the resize event of the main window
+void MainWindow::on_connect_clicked()
 {
-   QMainWindow::resizeEvent(event);
-   // Your code here.
-   mHighSpeedLineWidget->reset_preview_zoom();
-}
-
-void MainWindow::tab_was_changed(int index) // code that gets run when the current tab in the mainwindow is changed
-{
-    if (index == ui->tabWidget->indexOf(mHighSpeedLineWidget))
+    if (mPrinter->g == 0)
     {
-        mHighSpeedLineWidget->reset_preview_zoom();
-    }
-}
+        std::stringstream s;
 
-void MainWindow::connected_to_motion_controller()
-{
-    ui->connect->setText("Disconnect Controller");
+        s << CMD::open_connection_to_controller();
+        s << CMD::set_default_controller_settings();
+        s << CMD::homing_sequence();
+
+        allow_user_input(false);
+        mPrintThread->execute_command(s);
+        //mJetDrive->initialize_jet_drive(); // this seems to crash things when it fails to connect...
+        std::thread jetDriveThread{&JetDrive::initialize_jet_drive, mJetDrive};
+        jetDriveThread.detach();
+    }
+    else
+    {
+        allow_user_input(false);
+        if(mPrinter->g)
+        {
+            GCmd(mPrinter->g, "ST");       // Disable Motors
+            GCmd(mPrinter->g, "MO");       // Disable Motors
+            GClose(mPrinter->g);           // close connection to the motion controller
+        }
+        mPrinter->g = 0;               // Reset connection handle
+
+        ui->connect->setText("Connect to Controller");
+
+    }
 }
 
 void MainWindow::allow_user_input(bool allowed)
@@ -352,38 +360,6 @@ void MainWindow::on_activateHopper_stateChanged(int arg1)
     mPrintThread->execute_command(s);
 }
 
-void MainWindow::on_connect_clicked()
-{
-    if (mPrinter->g == 0)
-    {
-        std::stringstream s;
-
-        s << CMD::open_connection_to_controller();
-        s << CMD::set_default_controller_settings();
-        s << CMD::homing_sequence();
-
-        allow_user_input(false);
-        mPrintThread->execute_command(s);
-        //mJetDrive->initialize_jet_drive(); // this seems to crash things when it fails to connect...
-        std::thread jetDriveThread{&JetDrive::initialize_jet_drive, mJetDrive};
-        jetDriveThread.detach();
-    }
-    else
-    {
-        allow_user_input(false);
-        if(mPrinter->g)
-        {
-            GCmd(mPrinter->g, "ST");       // Disable Motors
-            GCmd(mPrinter->g, "MO");       // Disable Motors
-            GClose(mPrinter->g);           // close connection to the motion controller
-        }
-        mPrinter->g = 0;               // Reset connection handle
-
-        ui->connect->setText("Connect to Controller");
-
-    }
-}
-
 void MainWindow::on_activateRoller1_toggled(bool checked)
 {
     std::stringstream s;
@@ -566,3 +542,27 @@ void MainWindow::move_z_to_absolute_position()
     mPrintThread->execute_command(s);
 }
 
+void MainWindow::thread_ended()
+{
+    allow_user_input(true);
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event) // override the resize event of the main window
+{
+   QMainWindow::resizeEvent(event);
+   // Your code here.
+   mHighSpeedLineWidget->reset_preview_zoom();
+}
+
+void MainWindow::tab_was_changed(int index) // code that gets run when the current tab in the mainwindow is changed
+{
+    if (index == ui->tabWidget->indexOf(mHighSpeedLineWidget))
+    {
+        mHighSpeedLineWidget->reset_preview_zoom();
+    }
+}
+
+void MainWindow::connected_to_motion_controller()
+{
+    ui->connect->setText("Disconnect Controller");
+}
