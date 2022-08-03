@@ -15,9 +15,9 @@ BXY=2
 EN
 #BEGIN
 // Define variables
-yCnt = 800;  //encoder counts per mm for the y-axis
-xCnt = 1000; //encoder counts per mm for the x-axis
-DM Data[11]; //reserve array for getting info on line set to print
+yCnt = 800;  // encoder counts per mm for the y-axis
+xCnt = 1000; // encoder counts per mm for the x-axis
+DM Data[11]; // reserve array for getting info on line set to print
 // Note that array names are limited to 6 characters
 //      when they are going to be passed to a subroutine.
 JS #fill("Data", 0);     // fill Data array with 0's
@@ -25,17 +25,17 @@ JS #fill("Data", 0);     // fill Data array with 0's
 #DATA_WT
 #LOOP
 WT 100
-begin = Data[0]; //Get begin bit from PC
-JP#LOOP, begin=0; //Loop while waiting for begin bit
+begin = Data[0]; // get begin bit from PC
+JP #LOOP, begin=0; // loop while waiting for begin bit
 // end program if the computer sets the first value in the array to 2
 // continue if the computer sets the first value to 1
-JP#STOP, begin=2
-JS#PRINT
-Data[0] = 0; 'Reinitialize begin bit
-// Loop back to DATA_WT ot await next input from computer
+JP #STOP, begin=2
+JS #PRINT
+Data[0] = 0; // reinitialize begin bit
+// loop back to DATA_WT ot await next input from computer
 // have the computer look for this value set to 0 to know when to act next
-JP#DATA_WT
-REM****************************************************************************
+JP #DATA_WT
+//****************************************************************************
 #STOP
 // move to default position
 SPX = 60 * xCnt
@@ -47,12 +47,12 @@ AM
 // have the computer tell the nozzle to start jetting again
 // End routine here
 EN
-REM****************************************************************************
+//****************************************************************************
 #PRINT // print sequence
 // place array data in variables
 strtX = Data[1];  // X Axis start position (counts)
 strtY = Data[2];  // Y Axis start position (counts)
-numLs = Data[3];  // Number of lines to print (#)
+numLs = Data[3];  // number of lines to print (#)
 lSpce = Data[4];  // line spacing (counts)
 lDist = Data[5];  // length of line to print (counts)
 dSpce = Data[6];  // jetting droplet spacing (counts)
@@ -97,11 +97,9 @@ BGX
 // enable jetting after acceleration
 ADX = accD
 BGH // begin jetting move (jog)
-// GRH = gearR
 // disable jetting after line printed
 ADX = jOffD
 STH // stop jetting
-// GRH = 0
 AM
 strtY = strtY + lSpce
 index = index+1
