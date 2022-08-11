@@ -458,6 +458,9 @@ std::string CMD::set_default_controller_settings()
     // Controller Configuration
     s << CMD::detail::GCmd() << "MO"              << "\n";   // Ensure motors are off for setup
 
+    // Controller Time Update Setting
+    s << CMD::detail::GCmd() << "TM 500"          << "\n";   // Set the update time of the motion controller
+
     // X Axis
     s << CMD::detail::GCmd() << "MTX=-1"          << "\n";   // Set motor type to reversed brushless
     s << CMD::detail::GCmd() << "CEX=2"           << "\n";   // Set Encoder to reversed quadrature
@@ -500,14 +503,15 @@ std::string CMD::set_default_controller_settings()
     s << CMD::detail::GCmd() << "KSH=0.25"        << "\n";   // Minimize filters on step signals
     s << CMD::detail::GCmd() << "ITH=1"           << "\n";   // Minimize filters on step signals
 
+    // Configure Extended I/O
+    s << CMD::detail::GCmd() << "CO 1"            << "\n"; // configures bank 2 as outputs on extended I/O (IO 17-24)
+
     s << CMD::detail::GCmd() << "CC 19200,0,1,0"  << "\n";   //AUX PORT FOR THE ULTRASONIC GENERATOR
     s << CMD::detail::GCmd() << "CN=-1"           << "\n";   // Set correct polarity for all limit switches
     s << CMD::detail::GCmd() << "BN"              << "\n";   // Save (burn) these settings to the controller just to be safe
     s << CMD::detail::GCmd() << "SH XYZ"          << "\n";   // Enable X,Y, and Z motors
     s << CMD::detail::GCmd() << "SH H"            << "\n";   // Servo the jetting axis
 
-    // Configure Extended I/O
-    s << CMD::detail::GCmd() << "CO 1"            << "\n"; // configures bank 2 as outputs on extended I/O (IO 17-24)
 
     // Setup Brushless Motors
     //s << CMD::detail::GCmd() << "BXX=2"           << "\n"; // setup X axis
