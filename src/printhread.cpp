@@ -121,7 +121,10 @@ void PrintThread::run()
                     if (mPrintGCmds) emit response(QString::fromStdString(commandString));
                     if (mPrinter->g)
                     {
-                        e(GCmd(mPrinter->g, commandString.c_str()));
+                        if (e(GCmd(mPrinter->g, commandString.c_str())) == G_BAD_RESPONSE_QUESTION_MARK)
+                        {
+                            emit response(QString("Above is the error for: ") + QString::fromStdString(commandString));
+                        }
                     }
                     else
                     {
@@ -253,7 +256,7 @@ void PrintThread::run()
 GReturn PrintThread::e(GReturn rc)
 {
     char buf[G_SMALL_BUFFER];
-    GError(rc, buf, G_SMALL_BUFFER); //Get Error Information
+    GError(rc, buf, G_SMALL_BUFFER); // Get Error Information
     if (mPrinter->g)
     {
         GSize size = sizeof(buf);
@@ -265,7 +268,7 @@ GReturn PrintThread::e(GReturn rc)
 
         if ((rc == G_BAD_RESPONSE_QUESTION_MARK) && (GCmdT(mPrinter->g, "TC1", buf, G_SMALL_BUFFER, 0) == G_NO_ERROR))
         {
-            //std::cout << buf << '\n'; //Error code from controller
+            //std::cout << buf << '\n'; // Error code from controller
             emit response(buf);
         }
     }

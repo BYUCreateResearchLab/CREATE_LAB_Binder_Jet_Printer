@@ -469,12 +469,11 @@ std::string CMD::set_default_controller_settings()
     s << CMD::detail::GCmd() << "AUX=9"           << "\n";   // Set current loop (based on inductance of motor)
     s << CMD::detail::GCmd() << "TLX=3"           << "\n";   // Set constant torque limit to 3V
     s << CMD::detail::GCmd() << "TKX=0"           << "\n";   // Disable peak torque setting for now
-
-    // Set PID Settings
-    s << CMD::detail::GCmd() << "KDX=250"         << "\n";   // Set Derivative
-    s << CMD::detail::GCmd() << "KPX=40"          << "\n";   // Set Proportional
-    s << CMD::detail::GCmd() << "KIX=2"           << "\n";   // Set Integral
-    s << CMD::detail::GCmd() << "PLX=0.1"         << "\n";   // Set low-pass filter
+    // Set PID Settings (NOTE: THESE ARE OPTIMIZED FOR TM 500. NEED TO USE OTHER VALUES FOR TM 1000!)
+    s << CMD::detail::GCmd() << "KDX=1000"        << "\n";   // Set Derivative
+    s << CMD::detail::GCmd() << "KPX=100"         << "\n";   // Set Proportional
+    s << CMD::detail::GCmd() << "KIX=0.5"         << "\n";   // Set Integral
+    s << CMD::detail::GCmd() << "PLX=177"         << "\n";   // Set low-pass filter
 
     // Y Axis
     s << CMD::detail::GCmd() << "MTY=1"           << "\n";   // Set motor type to standard brushless
@@ -485,9 +484,10 @@ std::string CMD::set_default_controller_settings()
     s << CMD::detail::GCmd() << "TLY=6"           << "\n";   // Set constant torque limit to 6V
     s << CMD::detail::GCmd() << "TKY=0"           << "\n";   // Disable peak torque setting for now
     // Set PID Settings
-    s << CMD::detail::GCmd() << "KDY=500"         << "\n";   // Set Derivative
-    s << CMD::detail::GCmd() << "KPY=70"          << "\n";   // Set Proportional
-    s << CMD::detail::GCmd() << "KIY=1.7002"      << "\n";   // Set Integral
+    s << CMD::detail::GCmd() << "KDY=2000"        << "\n";   // Set Derivative
+    s << CMD::detail::GCmd() << "KPY=100"         << "\n";   // Set Proportional
+    s << CMD::detail::GCmd() << "KIY=1"           << "\n";   // Set Integral
+    s << CMD::detail::GCmd() << "PLY=50"          << "\n";   // Set low-pass filter
 
     // Z Axis
     s << CMD::detail::GCmd() << "MTZ=-2.5"        << "\n";   // Set motor type to standard brushless
@@ -500,11 +500,11 @@ std::string CMD::set_default_controller_settings()
     s << CMD::detail::GCmd() << "MTH=-2"          << "\n";   // Set jetting axis to be stepper motor with defualt low
     s << CMD::detail::GCmd() << "AGH=0"           << "\n";   // Set gain to lowest value
     s << CMD::detail::GCmd() << "LDH=3"           << "\n";   // Disable limit sensors for H axis
-    s << CMD::detail::GCmd() << "KSH=0.25"        << "\n";   // Minimize filters on step signals
+    s << CMD::detail::GCmd() << "KSH=0.5"         << "\n";   // Minimize filters on step signals (0.25 when TM=1000)
     s << CMD::detail::GCmd() << "ITH=1"           << "\n";   // Minimize filters on step signals
 
     // Configure Extended I/O
-    s << CMD::detail::GCmd() << "CO 1"            << "\n"; // configures bank 2 as outputs on extended I/O (IO 17-24)
+    s << CMD::detail::GCmd() << "CO 1"            << "\n";   // configures bank 2 as outputs on extended I/O (IO 17-24)
 
     s << CMD::detail::GCmd() << "CC 19200,0,1,0"  << "\n";   //AUX PORT FOR THE ULTRASONIC GENERATOR
     s << CMD::detail::GCmd() << "CN=-1"           << "\n";   // Set correct polarity for all limit switches
