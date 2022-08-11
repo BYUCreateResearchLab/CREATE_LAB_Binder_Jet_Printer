@@ -35,7 +35,16 @@ void JettingWidget::update_settings_clicked()
         mJetDrive->set_internal_trigger();
         mJetDrive->set_num_drops_per_trigger(1);
         mJetDrive->set_single_jetting();
-        mJetDrive->set_echo_and_dwell_voltage(ui->echoVoltageSpinBox->value(), ui->dwellVoltageSpinBox->value());
+        MicroJet jetSettings;
+        jetSettings.fTRise = ui->riseTime1SpinBox->value();
+        jetSettings.fTDwell = ui->dwellTimeSpinBox->value();
+        jetSettings.fTFall = ui->fallTimeSpinBox->value();
+        jetSettings.fTEcho = ui->echoTimeSpinBox->value();
+        jetSettings.fTFinal = ui->riseTime2SpinBox->value();
+        jetSettings.fUIdle = ui->idleVoltageSpinBox->value();
+        jetSettings.fUDwell = ui->dwellVoltageSpinBox->value();
+        jetSettings.fUEcho = ui->echoVoltageSpinBox->value();
+        mJetDrive->set_waveform(jetSettings);
         mJetDrive->set_external_trigger(); // will start jetting again if we were jetting previously
     }
     else qDebug() << "the JetDrive is not connected!";

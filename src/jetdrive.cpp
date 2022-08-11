@@ -38,30 +38,30 @@
 
 #define MFJDRV_DUMPLENGTH		29
 
+// I don't think these 3 are the right commands, but I'm not sure it matters for our JetDrive...
 #define MFJDRV_MULTITRIGGER     0x0D
 #define MFJDRV_EXTERNENABLE     0x0C
 #define MFJDRV_EDITCHANNEL      0x0E
-// I don't think these 3 are the right commands, but I'm not sure it matters for our JetDrive...
+
 
 #define gDreamController true
 #define gMultiChannel false
 #define gBreadboardOne false
-//DOES THIS WORK??
 
 short MicroJet::fgNJets = 0;
 
 MicroJet::MicroJet() :
-    fTRise(3.0),
-    fTDwell(20.0),
-    fTFall(4.0),
-    fTEcho(40.0),
-    fTFinal(3.0),
+    fTRise(3.0),   // Rise Time 1 (µs)
+    fTDwell(20.0), // Dwell Time  (µs)
+    fTFall(3.0),   // Fall Time   (µs)
+    fTEcho(40.0),  // Echo Time   (µs)
+    fTFinal(3.0),  // Rise Time 2 (µs)
     fTDelay(0.0),
-    fFrequency(1000L),// fFrequency is for setting the jetting frequency (in Hz?)
-    fUIdle(0),
+    fFrequency(1000L), // fFrequency is for setting the jetting frequency (in Hz?)
+    fUIdle(0), // Idle Voltage (V)
     // work on syncing these values with the jetting widget on startup
-    fUDwell(30),      // Dwell Voltage
-    fUEcho(-30),      // Echo Voltage
+    fUDwell(30),      // Dwell Voltage (V)
+    fUEcho(-30),      // Echo Voltage (V)
     fUGain(225),
     fMode(0),         // fmode is to set continuous jetting mode (1 to enable continuous jetting, 0 to disable)
     fSource(1),       // fSource is for setting the trigger source (1 for external TTL trigger, 0 for internal trigger)
@@ -905,6 +905,19 @@ void JetDrive::set_echo_and_dwell_voltage(short echoVoltage_Volts, short dwellVo
         mJetSettings->fUDwell = dwellVoltage_Volts;
         send_command(mJetDrv+1, MFJDRV_PULSE, 0.55f);
     }
+}
+
+void JetDrive::set_waveform(const MicroJet &jetSettings)
+{
+    mJetSettings->fTRise = jetSettings.fTRise;
+    mJetSettings->fTDwell = jetSettings.fTDwell;
+    mJetSettings->fTFall = jetSettings.fTFall;
+    mJetSettings->fTEcho = jetSettings.fTEcho;
+    mJetSettings->fTFinal = jetSettings.fTFinal;
+    mJetSettings->fUIdle = jetSettings.fUIdle;
+    mJetSettings->fUDwell = jetSettings.fUDwell;
+    mJetSettings->fUEcho = jetSettings.fUEcho;
+    send_command(mJetDrv+1, MFJDRV_PULSE, 0.55f);
 }
 
 void JetDrive::start_continuous_jetting()

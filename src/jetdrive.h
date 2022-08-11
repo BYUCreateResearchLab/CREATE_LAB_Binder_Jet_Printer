@@ -24,8 +24,7 @@ public:
     void set_external_trigger();
     void set_internal_trigger();
     void set_echo_and_dwell_voltage(short echoVoltage_Volts, short dwellVoltage_Volts);
-    // WORK IN PROGRESS: new function that reads in all the settings from the jetting widget, sets them, and updates the jetting waveform
-    // void set_waveform();
+    void set_waveform(const MicroJet &jetSettings);
     void start_continuous_jetting();
     void stop_continuous_jetting();
     void enable_strobe();
