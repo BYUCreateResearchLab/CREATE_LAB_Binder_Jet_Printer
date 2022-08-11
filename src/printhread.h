@@ -26,17 +26,12 @@ class PrintThread : public QThread
 {
     Q_OBJECT
 
+// There should be no slots in an object inheriting QThread
+
 public:
     explicit PrintThread(QObject *parent = nullptr);
     ~PrintThread();
     void setup(Printer *printer);
-
-// TODO: Need to avoid slots in a subclass of QThread. These are actually
-// being run on the main thread as they have affinity there.
-// Work on removing slots, or move to a worker object that is moved to QThread
-public slots:
-    // I'm pretty sure I can just make these public (not slots) as there
-    // are no connections.
     void execute_command(std::stringstream &ss);
     void stop();
     void print_gcmds(bool print);
