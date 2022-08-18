@@ -1,3 +1,8 @@
+//	Drive electronics interface program (excerpts for reference)
+//
+//  (C) 1997-2003 MicroFab Technologies, Inc., Plano, TX, USA.
+//  All rights reserved.
+
 #include "jetdrive.h"
 
 #include <windows.h>

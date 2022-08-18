@@ -70,6 +70,8 @@
 #include "gclib_record.h"
 #include <string>
 #include <sstream>
+#include <string_view>
+#include <functional>
 
 #define X_CNTS_PER_MM 1000
 #define Y_CNTS_PER_MM 800
@@ -83,7 +85,7 @@
 #define PRINT_Y_SIZE_MM 100
 #define PRINT_Z_SIZE_MM 14 //?
 
-// NOTE: THESE ARE NOT THE SAME AS THE PIN NUM ON THE DSUB HD44 Cable
+// NOTE: these are not the same as the pin number on the DSUB HD44 cable
 #define ROLLER_1_BIT 18
 #define ROLLER_2_BIT 20
 
@@ -104,10 +106,7 @@ public:
 
 enum class Axis
 {
-    X,
-    Y,
-    Z,
-    Jet
+    X, Y, Z, Jet
 };
 
 struct RecoatSettings
@@ -201,11 +200,11 @@ namespace detail
 {
 std::string axis_string(Axis axis);
 
-int mm2cnts(double mm, Axis axis);
-int um2cnts(double um, Axis axis);
+constexpr int mm2cnts(double mm, Axis axis);
+constexpr int um2cnts(double um, Axis axis);
 
 std::string to_ASCII_code(char charToConvert);
-std::string create_gcmd(const std::string &command, Axis axis, int quantity);
+std::string create_gcmd(std::string_view command, Axis axis, int quantity);
 
 std::string GCmd();
 std::string GCmdInt();
@@ -218,11 +217,13 @@ std::string GOpen();
 
 }
 
+// === Stuff I'm Working on ===
+
 struct AxisSettings
 {
     // I want these to be constant
-    //double counts_per_mm;
-    //double stageLength_mm;
+    // double counts_per_mm;
+    // double stageLength_mm;
     double speed;
     double acceleration;
     double deceleration;

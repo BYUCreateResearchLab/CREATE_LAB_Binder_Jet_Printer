@@ -66,7 +66,7 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
 // runs from main.cpp right after the object is initialized
 void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
 {
-    // assign pointers
+    // assign pointers to member variables
     mPrinter     = printerPtr;
     mPrintThread = printerThread;
 
@@ -79,10 +79,12 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
     QList<PrinterWidget *> printerWidgets = this->findChildren<PrinterWidget *> ();
     for(int i{0}; i < printerWidgets.count(); ++i)
     {
-        qDebug() << "signals from " << printerWidgets[i]->accessibleName() << " connected";
+        // qDebug() << "signals from " << printerWidgets[i]->accessibleName() << " connected";
 
+        // share pointers with widgets
         printerWidgets[i]->pass_printer_objects(mPrinter, mPrintThread);
 
+        // connect signals and slots
         connect(printerWidgets[i], &PrinterWidget::execute_command, mPrintThread, &PrintThread::execute_command); // connect "execute_command" signal on powder window to execute on thread
         connect(printerWidgets[i], &PrinterWidget::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
         connect(printerWidgets[i], &PrinterWidget::disable_user_input, this, [this]() {this->allow_user_input(false);});
@@ -129,7 +131,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_connect_clicked()
 {
-    if (mPrinter->g == 0)
+    if (mPrinter->g == 0) // if there is no connection to the motion controller
     {
         std::stringstream s;
 
@@ -139,29 +141,29 @@ void MainWindow::on_connect_clicked()
 
         allow_user_input(false);
         mPrintThread->execute_command(s);
-        //mJetDrive->initialize_jet_drive(); // this seems to crash things when it fails to connect...
+
+        // start connection to JetDrive on another thread
         std::thread jetDriveThread{&JetDrive::initialize_jet_drive, mJetDrive};
         jetDriveThread.detach();
     }
-    else
+    else // if there is already a connection
     {
         allow_user_input(false);
-        if(mPrinter->g)
+        if (mPrinter->g)
         {
-            GCmd(mPrinter->g, "ST");       // Disable Motors
-            GCmd(mPrinter->g, "MO");       // Disable Motors
+            GCmd(mPrinter->g, "ST");       // stop motion
+            GCmd(mPrinter->g, "MO");       // disable Motors
             GClose(mPrinter->g);           // close connection to the motion controller
         }
         mPrinter->g = 0;               // Reset connection handle
 
-        ui->connect->setText("Connect to Controller");
-
+        ui->connect->setText("Connect to Controller"); // change button label text
     }
 }
 
 void MainWindow::allow_user_input(bool allowed)
 {
-    //ui->activateHopper->setEnabled(allowed);
+    //ui->activateHopper->setEnabled(allowed); // DISABLED FOR NOW
     ui->activateRoller1->setEnabled(allowed);
     //ui->activateRoller2->setEnabled(allowed);
     //ui->activateJet->setEnabled(allowed);
@@ -205,7 +207,7 @@ void MainWindow::on_yPositive_pressed() // This name is a bit misleading (I need
 void MainWindow::on_xPositive_pressed()
 {
     std::stringstream s;
-    Axis x{Axis::X};
+    Axis x {Axis::X};
 
     s << CMD::set_accleration(x, 800);
     s << CMD::set_deceleration(x, 800);
@@ -231,7 +233,7 @@ void MainWindow::jog_released()
 void MainWindow::on_yNegative_pressed()
 {
     std::stringstream s;
-    Axis y{Axis::Y};
+    Axis y {Axis::Y};
 
     s << CMD::set_accleration(y, 300);
     s << CMD::set_deceleration(y, 300);
@@ -245,7 +247,7 @@ void MainWindow::on_yNegative_pressed()
 void MainWindow::on_xNegative_pressed()
 {
     std::stringstream s;
-    Axis x{Axis::X};
+    Axis x {Axis::X};
 
     s << CMD::set_accleration(x, 800);
     s << CMD::set_deceleration(x, 800);
@@ -274,7 +276,7 @@ void MainWindow::on_xHome_clicked()
 void MainWindow::on_yHome_clicked()
 {
     std::stringstream s;
-    Axis y{Axis::Y};
+    Axis y {Axis::Y};
 
     s << CMD::set_accleration(y, 200);
     s << CMD::set_deceleration(y, 200);
@@ -290,7 +292,7 @@ void MainWindow::on_yHome_clicked()
 void MainWindow::on_zMax_clicked()
 {     
     std::stringstream s;
-    Axis z{Axis::Z};
+    Axis z {Axis::Z};
 
     s << CMD::set_accleration(z, 10);
     s << CMD::set_deceleration(z, 10);
@@ -305,7 +307,7 @@ void MainWindow::on_zMax_clicked()
 void  MainWindow::on_zUp_clicked()
 {
     std::stringstream s;
-    Axis z{Axis::Z};
+    Axis z {Axis::Z};
 
     s << CMD::position_relative(z, ui->zStepSize->value() / 1000.0); // convert from microns
     s << CMD::set_accleration(z, 10);
@@ -322,7 +324,7 @@ void  MainWindow::on_zUp_clicked()
 void  MainWindow::on_zDown_clicked()
 {
     std::stringstream s;
-    Axis z{Axis::Z};
+    Axis z {Axis::Z};
 
     s << CMD::position_relative(z, -ui->zStepSize->value() / 1000.0); // convert from microns
     s << CMD::set_accleration(z, 10);
@@ -338,7 +340,7 @@ void  MainWindow::on_zDown_clicked()
 void  MainWindow::on_zMin_clicked()
 {
     std::stringstream s;
-    Axis z{Axis::Z};
+    Axis z {Axis::Z};
 
     s << CMD::set_accleration(z, 10);
     s << CMD::set_deceleration(z, 10);

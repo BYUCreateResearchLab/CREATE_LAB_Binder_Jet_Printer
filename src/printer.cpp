@@ -49,6 +49,8 @@ AxisSettings& CommandGenerator::settings(Axis axis)
     }
 }
 
+// don't use this function yet...
+// the default accelerations have not been set up yet
 std::stringstream& CommandGenerator::jog_axis(Axis axis, double speed_mm_s)
 {
     // I need to be able to get settings from the Axis...
@@ -76,7 +78,7 @@ std::string CMD::detail::axis_string(Axis axis)
     }
 }
 
-int CMD::detail::mm2cnts(double mm, Axis axis)
+constexpr int CMD::detail::mm2cnts(double mm, Axis axis)
 {
     switch (axis)
     {
@@ -90,7 +92,7 @@ int CMD::detail::mm2cnts(double mm, Axis axis)
     }
 }
 
-int CMD::detail::um2cnts(double um, Axis axis)
+constexpr int CMD::detail::um2cnts(double um, Axis axis)
 {
     return mm2cnts(um / 1000.0, axis);
 }
@@ -397,45 +399,45 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
     const double zAxisOffsetUnderRoller{0.5};
 
     // setup
-    s << CMD::display_message("Misting layer");
-    s << CMD::clear_bit(MISTER_BIT); // just make sure that the mister is off
-    s << CMD::set_accleration(Axis::Y, 600);
-    s << CMD::set_deceleration(Axis::Y, 600);
-    s << CMD::set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);  
+    s << display_message("Misting layer");
+    s << clear_bit(MISTER_BIT); // just make sure that the mister is off
+    s << set_accleration(Axis::Y, 600);
+    s << set_deceleration(Axis::Y, 600);
+    s << set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
 
-    s << CMD::set_accleration(Axis::Z, 10);
-    s << CMD::set_deceleration(Axis::Z, 10);
-    s << CMD::set_speed(Axis::Z, 2);
-    s << CMD::position_relative(Axis::Z, -zAxisOffsetUnderRoller);
-    s << CMD::begin_motion(Axis::Z);
-    s << CMD::motion_complete(Axis::Z);
+    s << set_accleration(Axis::Z, 10);
+    s << set_deceleration(Axis::Z, 10);
+    s << set_speed(Axis::Z, 2);
+    s << position_relative(Axis::Z, -zAxisOffsetUnderRoller);
+    s << begin_motion(Axis::Z);
+    s << motion_complete(Axis::Z);
 
 
-    s << CMD::position_absolute(Axis::Y, startPosition_mm); // move y-axis to start misting position
-    s << CMD::begin_motion(Axis::Y);
-    s << CMD::motion_complete(Axis::Y);
+    s << position_absolute(Axis::Y, startPosition_mm); // move y-axis to start misting position
+    s << begin_motion(Axis::Y);
+    s << motion_complete(Axis::Y);
 
-    s << CMD::set_bit(MISTER_BIT); // turn on mister
-    s << CMD::sleep(sleepTime_ms); // wait
+    s << set_bit(MISTER_BIT); // turn on mister
+    s << sleep(sleepTime_ms); // wait
 
-    s << CMD::set_speed(Axis::Y, traverseSpeed_mm_per_s); // set traverse speed
-    s << CMD::position_absolute(Axis::Y, endPosition_mm); // travel under mister and specified speed
-    s << CMD::begin_motion(Axis::Y);
-    s << CMD::motion_complete(Axis::Y);
+    s << set_speed(Axis::Y, traverseSpeed_mm_per_s); // set traverse speed
+    s << position_absolute(Axis::Y, endPosition_mm); // travel under mister and specified speed
+    s << begin_motion(Axis::Y);
+    s << motion_complete(Axis::Y);
 
-    s << CMD::clear_bit(MISTER_BIT); // turn off mister
+    s << clear_bit(MISTER_BIT); // turn off mister
 
     // move z-axis back up
-    s << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller);
-    s << CMD::begin_motion(Axis::Z);
+    s << position_relative(Axis::Z, zAxisOffsetUnderRoller);
+    s << begin_motion(Axis::Z);
 
     // move forward
-    s << CMD::set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
-    s << CMD::position_absolute(Axis::Y, -50);
-    s << CMD::begin_motion(Axis::Y);
-    s << CMD::motion_complete(Axis::Y);
-    s << CMD::motion_complete(Axis::Z);
-    s << CMD::display_message("Misting complete");
+    s << set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
+    s << position_absolute(Axis::Y, -50);
+    s << begin_motion(Axis::Y);
+    s << motion_complete(Axis::Y);
+    s << motion_complete(Axis::Z);
+    s << display_message("Misting complete");
 
     return s.str();
 }
@@ -453,69 +455,66 @@ std::string CMD::open_connection_to_controller()
 
 std::string CMD::set_default_controller_settings()
 {
+    using CMD::detail::GCmd;
+
     std::stringstream s;
 
     // Controller Configuration
-    s << CMD::detail::GCmd() << "MO"              << "\n";   // Ensure motors are off for setup
+    s << GCmd() << "MO"              << "\n";   // Ensure motors are off for setup
 
     // Controller Time Update Setting
-    s << CMD::detail::GCmd() << "TM 500"          << "\n";   // Set the update time of the motion controller
+    s << GCmd() << "TM 500"          << "\n";   // Set the update time of the motion controller
 
     // X Axis
-    s << CMD::detail::GCmd() << "MTX=-1"          << "\n";   // Set motor type to reversed brushless
-    s << CMD::detail::GCmd() << "CEX=2"           << "\n";   // Set Encoder to reversed quadrature
-    s << CMD::detail::GCmd() << "BMX=40000"       << "\n";   // Set magnetic pitch of linear motor
-    s << CMD::detail::GCmd() << "AGX=1"           << "\n";   // Set amplifier gain
-    s << CMD::detail::GCmd() << "AUX=9"           << "\n";   // Set current loop (based on inductance of motor)
-    s << CMD::detail::GCmd() << "TLX=3"           << "\n";   // Set constant torque limit to 3V
-    s << CMD::detail::GCmd() << "TKX=0"           << "\n";   // Disable peak torque setting for now
-    // Set PID Settings (NOTE: THESE ARE OPTIMIZED FOR TM 500. NEED TO USE OTHER VALUES FOR TM 1000!)
-    s << CMD::detail::GCmd() << "KDX=1000"        << "\n";   // Set Derivative
-    s << CMD::detail::GCmd() << "KPX=100"         << "\n";   // Set Proportional
-    s << CMD::detail::GCmd() << "KIX=0.5"         << "\n";   // Set Integral
-    s << CMD::detail::GCmd() << "PLX=177"         << "\n";   // Set low-pass filter
+    s << GCmd() << "MTX=-1"          << "\n";   // Set motor type to reversed brushless
+    s << GCmd() << "CEX=10"          << "\n";   // Set main and aux encoder to reversed quadrature
+    s << GCmd() << "BMX=40000"       << "\n";   // Set magnetic pitch of linear motor
+    s << GCmd() << "AGX=1"           << "\n";   // Set amplifier gain
+    s << GCmd() << "AUX=9"           << "\n";   // Set current loop (based on inductance of motor)
+    s << GCmd() << "TLX=3"           << "\n";   // Set constant torque limit to 3V
+    s << GCmd() << "TKX=0"           << "\n";   // Disable peak torque setting for now
+    // Set PID Settings (NOTE: PID SETTINGS ARE OPTIMIZED FOR TM 500. NEED TO USE OTHER VALUES FOR TM 1000!)
+    s << GCmd() << "KDX=1000"        << "\n";   // Set Derivative
+    s << GCmd() << "KPX=100"         << "\n";   // Set Proportional
+    s << GCmd() << "KIX=0.5"         << "\n";   // Set Integral
+    s << GCmd() << "PLX=177"         << "\n";   // Set low-pass filter
 
     // Y Axis
-    s << CMD::detail::GCmd() << "MTY=1"           << "\n";   // Set motor type to standard brushless
-    s << CMD::detail::GCmd() << "CEY=0"           << "\n";   // Set Encoder to reversed quadrature??? (or is it?)
-    s << CMD::detail::GCmd() << "BMY=2000"        << "\n";   // Set magnetic pitch of rotary motor
-    s << CMD::detail::GCmd() << "AGY=1"           << "\n";   // Set amplifier gain
-    s << CMD::detail::GCmd() << "AUY=11"          << "\n";   // Set current loop (based on inductance of motor)
-    s << CMD::detail::GCmd() << "TLY=6"           << "\n";   // Set constant torque limit to 6V
-    s << CMD::detail::GCmd() << "TKY=0"           << "\n";   // Disable peak torque setting for now
+    s << GCmd() << "MTY=1"           << "\n";   // Set motor type to standard brushless
+    s << GCmd() << "CEY=0"           << "\n";   // Set encoder to normal quadrature
+    s << GCmd() << "BMY=2000"        << "\n";   // Set magnetic pitch of rotary motor
+    s << GCmd() << "AGY=1"           << "\n";   // Set amplifier gain
+    s << GCmd() << "AUY=11"          << "\n";   // Set current loop (based on inductance of motor)
+    s << GCmd() << "TLY=6"           << "\n";   // Set constant torque limit to 6V
+    s << GCmd() << "TKY=0"           << "\n";   // Disable peak torque setting for now
     // Set PID Settings
-    s << CMD::detail::GCmd() << "KDY=2000"        << "\n";   // Set Derivative
-    s << CMD::detail::GCmd() << "KPY=100"         << "\n";   // Set Proportional
-    s << CMD::detail::GCmd() << "KIY=1"           << "\n";   // Set Integral
-    s << CMD::detail::GCmd() << "PLY=50"          << "\n";   // Set low-pass filter
+    s << GCmd() << "KDY=2000"        << "\n";   // Set Derivative
+    s << GCmd() << "KPY=100"         << "\n";   // Set Proportional
+    s << GCmd() << "KIY=1"           << "\n";   // Set Integral
+    s << GCmd() << "PLY=50"          << "\n";   // Set low-pass filter
 
     // Z Axis
-    s << CMD::detail::GCmd() << "MTZ=-2.5"        << "\n";   // Set motor type to standard brushless
-    s << CMD::detail::GCmd() << "CEZ=14"          << "\n";   // Set Encoder to reversed quadrature
-    s << CMD::detail::GCmd() << "AGZ=0"           << "\n";   // Set amplifier gain
-    s << CMD::detail::GCmd() << "AUZ=9"           << "\n";   // Set current loop (based on inductance of motor)
+    s << GCmd() << "MTZ=-2.5"        << "\n";   // Set motor type to standard brushless
+    s << GCmd() << "CEZ=14"          << "\n";   // Set encoder to reversed quadrature
+    s << GCmd() << "AGZ=0"           << "\n";   // Set amplifier gain
+    s << GCmd() << "AUZ=9"           << "\n";   // Set current loop (based on inductance of motor)
     // Note: There might be more settings especially for this axis I might want to add later
 
     // H Axis (Jetting Axis)
-    s << CMD::detail::GCmd() << "MTH=-2"          << "\n";   // Set jetting axis to be stepper motor with defualt low
-    s << CMD::detail::GCmd() << "AGH=0"           << "\n";   // Set gain to lowest value
-    s << CMD::detail::GCmd() << "LDH=3"           << "\n";   // Disable limit sensors for H axis
-    s << CMD::detail::GCmd() << "KSH=0.5"         << "\n";   // Minimize filters on step signals (0.25 when TM=1000)
-    s << CMD::detail::GCmd() << "ITH=1"           << "\n";   // Minimize filters on step signals
+    s << GCmd() << "MTH=-2"          << "\n";   // Set jetting axis to be stepper motor with defualt low
+    s << GCmd() << "AGH=0"           << "\n";   // Set gain to lowest value
+    s << GCmd() << "LDH=3"           << "\n";   // Disable limit sensors for H axis
+    s << GCmd() << "KSH=0.5"         << "\n";   // Minimize filters on step signals (0.25 when TM=1000)
+    s << GCmd() << "ITH=1"           << "\n";   // Minimize filters on step signals
 
     // Configure Extended I/O
-    s << CMD::detail::GCmd() << "CO 1"            << "\n";   // configures bank 2 as outputs on extended I/O (IO 17-24)
+    s << GCmd() << "CO 1"            << "\n";   // configures bank 2 as outputs on extended I/O (IO 17-24)
 
-    s << CMD::detail::GCmd() << "CC 19200,0,1,0"  << "\n";   //AUX PORT FOR THE ULTRASONIC GENERATOR
-    s << CMD::detail::GCmd() << "CN=-1"           << "\n";   // Set correct polarity for all limit switches
-    s << CMD::detail::GCmd() << "BN"              << "\n";   // Save (burn) these settings to the controller just to be safe
-    s << CMD::detail::GCmd() << "SH XYZ"          << "\n";   // Enable X,Y, and Z motors
-    s << CMD::detail::GCmd() << "SH H"            << "\n";   // Servo the jetting axis
-
-
-    // Setup Brushless Motors
-    //s << CMD::detail::GCmd() << "BXX=2"           << "\n"; // setup X axis
-    //s << CMD::detail::GCmd() << "BXY=2"           << "\n"; // setup Y axis
+    s << GCmd() << "CC 19200,0,1,0"  << "\n";   // AUX PORT FOR THE ULTRASONIC GENERATOR
+    s << GCmd() << "CN=-1"           << "\n";   // Set correct polarity for all limit switches
+    s << GCmd() << "BN"              << "\n";   // Save (burn) these settings to the controller just to be safe
+    s << GCmd() << "SH XYZ"          << "\n";   // Enable X,Y, and Z motors
+    s << GCmd() << "SH H"            << "\n";   // Servo the jetting axis
 
     return s.str();
 }
@@ -526,66 +525,58 @@ std::string CMD::homing_sequence()
 
     // === Home the X-Axis using the central home sensor index pulse ===
 
-    s << CMD::set_accleration(Axis::X, 800);
-    s << CMD::set_deceleration(Axis::X, 800);
-    s << CMD::set_limit_switch_deceleration(Axis::X, 800);
-    s << CMD::set_jog(Axis::X, 25); // jog towards front limit
+    s << set_accleration(Axis::X, 800);
+    s << set_deceleration(Axis::X, 800);
+    s << set_limit_switch_deceleration(Axis::X, 800);
+    s << set_jog(Axis::X, 25); // jog towards front limit
 
-    s << CMD::set_accleration(Axis::Y, 400);
-    s << CMD::set_deceleration(Axis::Y, 400);
-    s << CMD::set_limit_switch_deceleration(Axis::Y, 600);
-    s << CMD::set_jog(Axis::Y, 25); // jog towards front limit
+    s << set_accleration(Axis::Y, 400);
+    s << set_deceleration(Axis::Y, 400);
+    s << set_limit_switch_deceleration(Axis::Y, 600);
+    s << set_jog(Axis::Y, 25); // jog towards front limit
 
-    s << CMD::set_accleration(Axis::Z, 20);
-    s << CMD::set_deceleration(Axis::Z, 20);
-    s << CMD::set_limit_switch_deceleration(Axis::Z, 40);
-    s << CMD::set_jog(Axis::Z, -2);                       // jog to bottom (MAX SPEED of 5mm/s!)
-    s << CMD::disable_forward_software_limit(Axis::Z);    // turn off top software limit
+    s << set_accleration(Axis::Z, 20);
+    s << set_deceleration(Axis::Z, 20);
+    s << set_limit_switch_deceleration(Axis::Z, 40);
+    s << set_jog(Axis::Z, -2);                       // jog to bottom (MAX SPEED of 5mm/s!)
+    s << disable_forward_software_limit(Axis::Z);    // turn off top software limit
 
-    s << CMD::begin_motion(Axis::X);
-    s << CMD::begin_motion(Axis::Y);
-    s << CMD::begin_motion(Axis::Z);
+    s << begin_motion(Axis::X);
+    s << begin_motion(Axis::Y);
+    s << begin_motion(Axis::Z);
 
-    s << CMD::motion_complete(Axis::X);
-    s << CMD::motion_complete(Axis::Y);
-    s << CMD::motion_complete(Axis::Z);
+    s << motion_complete(Axis::X);
+    s << motion_complete(Axis::Y);
+    s << motion_complete(Axis::Z);
 
-    s << CMD::sleep(1000);
+    s << sleep(1000);
 
     // home to center index on x axis
-    s << CMD::set_jog(Axis::X, -30);
-    s << CMD::set_homing_velocity(Axis::X, 0.5);
-    s << CMD::find_index(Axis::X);
-
-    //s << CMD::set_speed(Axis::Y, 40);
-    //s << CMD::position_relative(Axis::Y, -200);
+    s << set_jog(Axis::X, -30);
+    s << set_homing_velocity(Axis::X, 0.5);
+    s << find_index(Axis::X);
 
     // home y axis to nearest index
-    s << CMD::set_jog(Axis::Y, -0.5);
-    s << CMD::set_homing_velocity(Axis::Y, 0.25);
-    s << CMD::find_index(Axis::Y);
+    s << set_jog(Axis::Y, -0.5);
+    s << set_homing_velocity(Axis::Y, 0.25);
+    s << find_index(Axis::Y);
 
-    s << CMD::set_accleration(Axis::Z, 10);        // slower acceleration for going back up
-    s << CMD::set_speed(Axis::Z, 2);
-    s << CMD::position_relative(Axis::Z, 13.5322); // TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
+    s << set_accleration(Axis::Z, 10);        // slower acceleration for going back up
+    s << set_speed(Axis::Z, 2);
+    s << position_relative(Axis::Z, 13.5322); // TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
 
-    s << CMD::begin_motion(Axis::X);
-    s << CMD::begin_motion(Axis::Y);
-    s << CMD::begin_motion(Axis::Z);
+    s << begin_motion(Axis::X);
+    s << begin_motion(Axis::Y);
+    s << begin_motion(Axis::Z);
 
-    s << CMD::motion_complete(Axis::X);
-    s << CMD::motion_complete(Axis::Y);
-    s << CMD::motion_complete(Axis::Z);
+    s << motion_complete(Axis::X);
+    s << motion_complete(Axis::Y);
+    s << motion_complete(Axis::Z);
 
-    //s << CMD::set_speed(Axis::X, 50);
-    //s << CMD::position_relative(Axis::X, -40);
-    //s << CMD::begin_motion(Axis::X);
-    //s << CMD::motion_complete(Axis::X);
-
-    s << CMD::define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
-    s << CMD::define_position(Axis::Y, 0);
-    s << CMD::define_position(Axis::Z, 0);
-    s << CMD::set_forward_software_limit(Axis::Z, 0); // set software limit to current position
+    s << define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
+    s << define_position(Axis::Y, 0);
+    s << define_position(Axis::Z, 0);
+    s << set_forward_software_limit(Axis::Z, 0); // set software limit to current position
 
     return s.str();
 }
@@ -597,67 +588,58 @@ std::string CMD::spread_layer(const RecoatSettings &settings)
     double zAxisOffsetUnderRoller{0.5};
 
     // move z-axis down when going back to get more powder
-    s << CMD::set_accleration(Axis::Z, 10);
-    s << CMD::set_deceleration(Axis::Z, 10);
-    s << CMD::set_speed(Axis::Z, 2);
-    s << CMD::position_relative(Axis::Z, -zAxisOffsetUnderRoller);
-    s << CMD::begin_motion(Axis::Z);
-    s << CMD::motion_complete(Axis::Z);
+    s << set_accleration(Axis::Z, 10);
+    s << set_deceleration(Axis::Z, 10);
+    s << set_speed(Axis::Z, 2);
+    s << position_relative(Axis::Z, -zAxisOffsetUnderRoller);
+    s << begin_motion(Axis::Z);
+    s << motion_complete(Axis::Z);
 
     // jog y-axis to back
-    s << CMD::set_accleration(y, 400);
-    s << CMD::set_deceleration(y, 400);
-    s << CMD::set_jog(y, -50);
-    s << CMD::begin_motion(y);
-    s << CMD::motion_complete(y);
+    s << set_accleration(y, 400);
+    s << set_deceleration(y, 400);
+    s << set_jog(y, -50);
+    s << begin_motion(y);
+    s << motion_complete(y);
 
     // move z-axis back up
-    if(settings.isLevelRecoat)
-    {
-        s << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller);
-    }
+    if (settings.isLevelRecoat)
+        s << position_relative(Axis::Z, zAxisOffsetUnderRoller);
     else
-    {
-        s << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller - (settings.layerHeight_microns / 1000.0));
-    }
+        s << position_relative(Axis::Z, zAxisOffsetUnderRoller - (settings.layerHeight_microns / 1000.0));
+
     // set hopper settings here
-    s << CMD::set_hopper_mode_and_intensity(settings.ultrasonicMode, settings.ultrasonicIntensityLevel);
-    s << CMD::begin_motion(Axis::Z);
-    s << CMD::motion_complete(Axis::Z);
+    s << set_hopper_mode_and_intensity(settings.ultrasonicMode, settings.ultrasonicIntensityLevel);
+    s << begin_motion(Axis::Z);
+    s << motion_complete(Axis::Z);
 
     // turn on hopper
-    s << CMD::enable_hopper();
+    s << enable_hopper();
 
     // wait
-    s << CMD::sleep(settings.waitAfterHopperOn_millisecs);
+    s << sleep(settings.waitAfterHopperOn_millisecs);
 
     // move y-axis forward
-    s << CMD::set_speed(y, settings.recoatSpeed_mm_s);
-    s << CMD::position_relative(y, 120);
-    s << CMD::begin_motion(y);
-    s << CMD::motion_complete(y);
+    s << set_speed(y, settings.recoatSpeed_mm_s);
+    s << position_relative(y, 120);
+    s << begin_motion(y);
+    s << motion_complete(y);
 
     // turn off hopper and enable rollers
-    s << CMD::disable_hopper();
+    s << disable_hopper();
 
-    // move up to roller (NOT NEEDED WITH CURRENT ROLLER PLACEMENT)
-    //s << CMD::set_speed(y, 20);
-    //s << CMD::position_relative(y, 32.5); // move up to roller
-    //s << CMD::begin_motion(y);
-    //s << CMD::motion_complete(y);
-
-    s << CMD::enable_roller1();
-    s << CMD::enable_roller2();
+    s << enable_roller1();
+    s << enable_roller2();
 
     // move y-axis forward under roller
-    s << CMD::set_speed(y, settings.rollerTraverseSpeed_mm_s);
-    s << CMD::position_relative(y, 135);
-    s << CMD::begin_motion(y);
-    s << CMD::motion_complete(y);
+    s << set_speed(y, settings.rollerTraverseSpeed_mm_s);
+    s << position_relative(y, 135);
+    s << begin_motion(y);
+    s << motion_complete(y);
 
     // turn off rollers
-    s << CMD::disable_roller1();
-    s << CMD::disable_roller2();
+    s << disable_roller1();
+    s << disable_roller2();
 
     return s.str();
 }
@@ -667,7 +649,7 @@ std::string CMD::detail::to_ASCII_code(char charToConvert)
     return "{^" + std::to_string(int(charToConvert)) + "}, ";
 }
 
-std::string CMD::detail::create_gcmd(const std::string &command, Axis axis, int quantity)
+std::string CMD::detail::create_gcmd(std::string_view command, Axis axis, int quantity)
 {
     std::string result;
     result += GCmd();
@@ -677,7 +659,6 @@ std::string CMD::detail::create_gcmd(const std::string &command, Axis axis, int 
     result += std::to_string(quantity);
     result += "\n";
     return result;
-    // return GCmd() + command + axis_string(axis) + "=" + std::to_string(quantity) + "\n";
 }
 
 std::string CMD::cmd_buf_to_dmc(const std::stringstream &s)
