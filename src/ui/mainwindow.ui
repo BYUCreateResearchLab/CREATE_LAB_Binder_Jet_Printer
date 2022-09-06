@@ -608,7 +608,7 @@ Home</string>
             </property>
             <property name="font">
              <font>
-              <pointsize>20</pointsize>
+              <pointsize>30</pointsize>
               <italic>false</italic>
               <bold>true</bold>
               <kerning>true</kerning>
@@ -670,7 +670,7 @@ Home</string>
             </property>
             <property name="font">
              <font>
-              <pointsize>20</pointsize>
+              <pointsize>30</pointsize>
               <bold>true</bold>
              </font>
             </property>

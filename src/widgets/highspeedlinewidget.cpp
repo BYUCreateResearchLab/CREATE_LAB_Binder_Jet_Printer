@@ -182,7 +182,7 @@ void HighSpeedLineWidget::print_line()
     s << "GCmd," << "XQ" << "\n";
     s << "GProgramComplete," << "\n";
     s << CMD::stop_motion(Axis::Jet); // stop jetting to set new jog speed
-    s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
+    s << CMD::set_jog(Axis::Jet, 1024); // jet at 1024z while waiting
     s << CMD::begin_motion(Axis::Jet);
 
     std::string linePrintMessage = "Printing Line " + std::to_string(currentLineToPrintIndex + 1);
@@ -431,7 +431,7 @@ std::string HighSpeedLineCommandGenerator::generate_commands_for_printing_line(i
 
     s << CMD::display_message("Line printed");
 
-    s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
+    s << CMD::set_jog(Axis::Jet, 1024); // jet at 1024z while waiting
     s << CMD::begin_motion(Axis::Jet);
 
     return s.str();
@@ -475,7 +475,7 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
 
     //start jetting right away
     s << CMD::set_accleration(Axis::Jet, 20000000); // set super high acceleration for jetting axis
-    s << CMD::set_jog(Axis::Jet, jettingFrequency_Hz); // jet at 1000z while waiting
+    s << CMD::set_jog(Axis::Jet, jettingFrequency_Hz); // jet at 1024z while waiting
     s << CMD::begin_motion(Axis::Jet);
 
     s << CMD::set_accleration(Axis::X, 300); // moved down from 800 4/6/22 for slower accelerations
@@ -635,7 +635,7 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
     s << CMD::after_motion(Axis::X);
 
     //s << CMD::stop_motion(Axis::Jet); // stop jetting to set new jog speed
-    //s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
+    //s << CMD::set_jog(Axis::Jet, 1024); // jet at 1024z while waiting
     //s << CMD::begin_motion(Axis::Jet);
     //s << CMD::after_motion(Axis::Jet);
 
@@ -769,7 +769,7 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_viewing_fla
         s << CMD::clear_bit(HS_TTL_BIT);
     }
 
-    s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
+    s << CMD::set_jog(Axis::Jet, 1024); // jet at 1024z while waiting
     s << CMD::begin_motion(Axis::Jet);
 
     std::string returnString = CMD::cmd_buf_to_dmc(s);

@@ -391,7 +391,8 @@ void MainWindow::on_activateJet_stateChanged(int arg1)
     {        
         s << CMD::servo_here(Axis::Jet);
         s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
-        s << CMD::set_jog(Axis::Jet, 1000);             // set to jet at 1000hz
+        // TODO: get rid of magic numbers here, make a place for system defaults
+        s << CMD::set_jog(Axis::Jet, 1024);             // set to jet at 1024hz
         // ADD OTHER JETTING SETTINGS HERE
         s << CMD::begin_motion(Axis::Jet);
     }

@@ -137,83 +137,100 @@ double calculate_acceleration_distance(double speed_mm_per_s, double acceleratio
 
 namespace CMD
 {
-
-std::string cmd_buf_to_dmc(const std::stringstream &s);
-
-std::string open_connection_to_controller();
-std::string set_default_controller_settings();
-std::string homing_sequence();
-std::string set_accleration(Axis axis, double speed_mm_s2);
-std::string set_deceleration(Axis axis, double speed_mm_s2);
-std::string set_limit_switch_deceleration(Axis axis, double speed_mm_s2);
-std::string set_speed(Axis axis, double speed_mm_s);
-std::string set_jog(Axis axis, double speed_mm_s);
-std::string set_homing_velocity(Axis axis, double velocity_mm_s);
-std::string set_forward_software_limit(Axis axis, double position_mm);
-std::string position_relative(Axis axis, double relativePosition_mm);
-std::string position_absolute(Axis axis, double absolutePosition_mm);
-std::string add_pvt_data_to_buffer(Axis axis, double relativePosition_mm, double velocity_mm, int time_counts);
-std::string exit_pvt_mode(Axis axis);
-std::string begin_pvt_motion(Axis axis);
-std::string define_position(Axis axis, double position_mm);
-std::string begin_motion(Axis axis);
-std::string motion_complete(Axis axis);
-std::string sleep(int milliseconds);
-std::string find_index(Axis axis);
-std::string servo_here(Axis axis);
-std::string stop_motion(Axis axis);
-
-// These trippoint commands don't work through gclib...
-std::string set_reference_time();
-std::string at_time_samples(int samples);
-std::string at_time_milliseconds(int milliseconds);
-std::string after_absolute_position(Axis axis, double absolutePosition_mm);
-std::string after_motion(Axis axis);
-std::string wait(int milliseconds);
-
-std::string set_bit(int bit);
-std::string clear_bit(int bit);
-
-std::string enable_roller1();
-std::string disable_roller1();
-std::string enable_roller2();
-std::string disable_roller2();
-
-std::string set_hopper_mode_and_intensity(int mode, int intensity);
-std::string enable_hopper();
-std::string disable_hopper();
-
-std::string disable_forward_software_limit(Axis axis);
-
-std::string display_message(const std::string &message);
-
-std::string enable_gearing_for(Axis slaveAxis, Axis masterAxis);
-std::string set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing);
-std::string disable_gearing_for(Axis slaveAxis);
-
-std::string move_xy_axes_to_default_position();
-
-std::string mist_layer(double traverseSpeed_mm_per_s);
-std::string spread_layer(const RecoatSettings &settings);
-
+using std::string;
 namespace detail
 {
-std::string axis_string(Axis axis);
+string axis_string(Axis axis);
 
 constexpr int mm2cnts(double mm, Axis axis);
 constexpr int um2cnts(double um, Axis axis);
 
-std::string to_ASCII_code(char charToConvert);
-std::string create_gcmd(std::string_view command, Axis axis, int quantity);
+string to_ASCII_code(char charToConvert);
+string create_gcmd(std::string_view command, Axis axis, int quantity);
 
-std::string GCmd();
-std::string GCmdInt();
-std::string GMotionComplete();
-std::string JetDrive();
-std::string GSleep();
-std::string Message();
-std::string GOpen();
+inline string GCmd() {return "GCmd,";}
+inline string GCmdInt() {return "GCmdInt,";}
+inline string GMotionComplete() {return "GMotionComplete,";}
+inline string JetDrive() {return "JetDrive,";}
+inline string GSleep() {return "GSleep,";}
+inline string Message() {return "Message,";}
+inline string GOpen() {return "GOpen";}
 }
+
+string cmd_buf_to_dmc(const std::stringstream &s);
+
+string open_connection_to_controller();
+string set_default_controller_settings();
+string homing_sequence();
+string set_accleration(Axis axis, double speed_mm_s2);
+string set_deceleration(Axis axis, double speed_mm_s2);
+string set_limit_switch_deceleration(Axis axis, double speed_mm_s2);
+
+// The SP command sets the slew speed of any or all axes
+// for independent moves.
+inline string set_speed(Axis axis, double speed_mm_s)
+{
+    return {detail::create_gcmd(
+                    "SP",
+                    axis,
+                    detail::mm2cnts(speed_mm_s, axis))};
+}
+
+inline string set_jog(Axis axis, double speed_mm_s)
+{
+    return {detail::create_gcmd(
+                    "JG",
+                    axis,
+                    detail::mm2cnts(speed_mm_s, axis))};
+}
+
+string set_homing_velocity(Axis axis, double velocity_mm_s);
+string set_forward_software_limit(Axis axis, double position_mm);
+string position_relative(Axis axis, double relativePosition_mm);
+string position_absolute(Axis axis, double absolutePosition_mm);
+string add_pvt_data_to_buffer(Axis axis, double relativePosition_mm, double velocity_mm, int time_counts);
+string exit_pvt_mode(Axis axis);
+string begin_pvt_motion(Axis axis);
+string define_position(Axis axis, double position_mm);
+string begin_motion(Axis axis);
+string motion_complete(Axis axis);
+string sleep(int milliseconds);
+string find_index(Axis axis);
+string servo_here(Axis axis);
+string stop_motion(Axis axis);
+
+// These trippoint commands don't work through gclib...
+string set_reference_time();
+string at_time_samples(int samples);
+string at_time_milliseconds(int milliseconds);
+string after_absolute_position(Axis axis, double absolutePosition_mm);
+string after_motion(Axis axis);
+string wait(int milliseconds);
+
+string set_bit(int bit);
+string clear_bit(int bit);
+
+string enable_roller1();
+string disable_roller1();
+string enable_roller2();
+string disable_roller2();
+
+string set_hopper_mode_and_intensity(int mode, int intensity);
+string enable_hopper();
+string disable_hopper();
+
+string disable_forward_software_limit(Axis axis);
+
+string display_message(const std::string &message);
+
+string enable_gearing_for(Axis slaveAxis, Axis masterAxis);
+string set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing);
+string disable_gearing_for(Axis slaveAxis);
+
+string move_xy_axes_to_default_position();
+
+string mist_layer(double traverseSpeed_mm_per_s);
+string spread_layer(const RecoatSettings &settings);
 
 }
 

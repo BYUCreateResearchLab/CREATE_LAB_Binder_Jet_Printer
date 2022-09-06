@@ -132,11 +132,12 @@ void SubWindow::onCameraOpenFinished()
 
         /* setup the capture parameter */
         m_camera->SetupCapture();
+        // framereceived signal from eventthread
         connect(m_camera.data(), static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived), this, &SubWindow::onFrameReceived, Qt::DirectConnection);
         connect(this, &SubWindow::updateDisplay, this, &SubWindow::onUpdateDisplay, Qt::DirectConnection);
         connect(this, &SubWindow::updateImageInfo, this, &SubWindow::onUpdateImageInfo);
 
-        cameraOpenFinished();
+        emit cameraOpenFinished();
         setVisible(true);
     }
     else
@@ -180,6 +181,7 @@ void SubWindow::onFrameReceived(ImageBufferPtr buffer)
 
 void SubWindow::onUpdateDisplay(const QImage& image)
 {
+    // called from eventthread
     m_pDisplayWidget->setImage(image);
 }
 

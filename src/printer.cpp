@@ -97,41 +97,6 @@ constexpr int CMD::detail::um2cnts(double um, Axis axis)
     return mm2cnts(um / 1000.0, axis);
 }
 
-std::string CMD::detail::GCmd()
-{
-    return {"GCmd,"};
-}
-
-std::string CMD::detail::GCmdInt() // returns an int for commands like TP, RP, TE, etc.
-{
-    return {"GCmdInt,"};
-}
-
-std::string CMD::detail::GMotionComplete()
-{
-    return {"GMotionComplete,"};
-}
-
-std::string CMD::detail::JetDrive()
-{
-    return {"JetDrive,"};
-}
-
-std::string CMD::detail::GSleep()
-{
-    return {"GSleep,"};
-}
-
-std::string CMD::detail::Message()
-{
-    return {"Message,"};
-}
-
-std::string CMD::detail::GOpen()
-{
-    return {"GOpen"};
-}
-
 // The Acceleration command (AC) sets the linear acceleration
 // of the motors for independent moves, such as PR, PA, and JG moves.
 // The parameters will be rounded down to the nearest factor of 1024
@@ -155,18 +120,6 @@ std::string CMD::set_deceleration(Axis axis, double speed_mm_s2)
 std::string CMD::set_limit_switch_deceleration(Axis axis, double speed_mm_s2)
 {
     return {create_gcmd("SD", axis, mm2cnts(speed_mm_s2, axis))};
-}
-
-// The SP command sets the slew speed of any or all axes
-// for independent moves.
-std::string CMD::set_speed(Axis axis, double speed_mm_s)
-{
-    return {create_gcmd("SP", axis, mm2cnts(speed_mm_s, axis))};
-}
-
-std::string CMD::set_jog(Axis axis, double speed_mm_s)
-{
-    return {create_gcmd("JG", axis, mm2cnts(speed_mm_s, axis))};
 }
 
 std::string CMD::set_homing_velocity(Axis axis, double velocity_mm_s)

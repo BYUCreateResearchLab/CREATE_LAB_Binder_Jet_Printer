@@ -44,7 +44,6 @@ private slots:
     void move_towards_middle();
     //void strobe_sweep_button_clicked();
     void start_strobe_sweep();
-    void start_strobe_sweep_offset_timer();
     void update_strobe_sweep_offset();
     void trigger_jet_clicked();
     void framerate_changed();
@@ -56,16 +55,16 @@ private slots:
 
 private:
     Ui::DropletObservationWidget *ui;
-    HIDS mCameraHandle{0};
-    JetDrive *mJetDrive{nullptr};
-    Camera *mCamera{nullptr};
+    HIDS mCameraHandle {0};
+    JetDrive *mJetDrive {nullptr};
+    Camera *mCamera {nullptr};
 
-    QTimer *mJetVolumeTimer{nullptr};
-    QTimer *mProgressBarTimer{nullptr};
-    bool isJettingFor3Minutes{false};
+    QTimer *mJetVolumeTimer {nullptr};
+    QTimer *mProgressBarTimer {nullptr};
+    bool isJettingFor3Minutes {false};
     const int minutesToJet = 3;
 
-    JettingWidget *mJettingWidget{nullptr};
+    JettingWidget *mJettingWidget {nullptr};
 
     int mCameraFrameRate{};
     int mNumFramesToCapture{};

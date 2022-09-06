@@ -80,10 +80,8 @@ void DropletObservationWidget::jetting_was_turned_off()
 void DropletObservationWidget::connect_to_camera()
 {
     if (mCameraIsConnected)
-    {
         ui->mdiArea->activeSubWindow()->close();
-    }
-    else
+    else // attempt to connect to camera
     {
         CameraList cameraList;
 
@@ -96,9 +94,11 @@ void DropletObservationWidget::connect_to_camera()
             for (auto &camInfo : infoList)
             {
                 bool live = true;
+                // TODO: store a pointer to SubWindow in DropletObservationWidget
                 auto *subWindow = new SubWindow(camInfo);
                 int numCams = 1;
 
+                // run the following lambda when camera connection opens
                 connect(subWindow, &SubWindow::cameraOpenFinished, this, [this, live, subWindow, numCams]() {
 
                     ui->mdiArea->addSubWindow(subWindow);
@@ -115,6 +115,7 @@ void DropletObservationWidget::connect_to_camera()
                     if (numCams == 1) subWindow->showMaximized();
 
                     this->set_settings();
+                    // enable UI buttons
                     this->ui->takeVideoButton->setEnabled(true);
                     ui->sweepFrame->setEnabled(true);
                     ui->cameraSettingsFrame->setEnabled(true);
@@ -130,8 +131,10 @@ void DropletObservationWidget::connect_to_camera()
 
 void DropletObservationWidget::camera_closed()
 {
-    mCamera = nullptr;
+    // runs when SubWindow is destroyed (camera is closed)
+    mCamera = nullptr; // no need to delete, this is handled by SubWindow
     mCameraHandle = 0;
+    // update GUI
     ui->connectButton->setText("Connect Camera");
     ui->takeVideoButton->setEnabled(false);
     ui->SaveVideoButton->setEnabled(false);
@@ -143,28 +146,32 @@ void DropletObservationWidget::camera_closed()
 
 void DropletObservationWidget::set_settings()
 {
+    // QRect(x1,y1,x2,y2)
+    // TODO: get rid of magic numbers
     mCamera->aoi.setRect(QRect(680, 0, AOIWidth, 2048)); // AOIwidth must be a multiple of 8 for AVI capture
     double fps(mCameraFrameRate);
     //double exposure_milliseconds{0}; // 0 sets the max possible exposure
     double newFPS{-1.0};
     double newExposure{-1.0};
+
     // set framerate
     is_SetFrameRate(mCameraHandle, fps, &newFPS);
 
-    // set exposure
+    // get exposure range
     double exposureRange[3]; // [0] = min, [1] = max. [2] = increment
     is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE, &exposureRange, sizeof(exposureRange));
 
     double maxExp = exposureRange[1];
-
     double desiredExpPercent = ((double)ui->shutterAngleSpinBox->value()) / 360.0;
     double desiredExposure = maxExp * desiredExpPercent;
 
+    // set exposure
     is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &desiredExposure, sizeof(desiredExposure));
+    // get actual exposure set
     is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE, &newExposure, sizeof(newExposure));
-    qDebug() << QString("The framerate was set as %1 FPS").arg(newFPS);
     ui->cameraFPSSpinBox->setValue(newFPS);
-    qDebug() << QString("The exposure was set as %1 milliseconds").arg(newExposure);
+    //qDebug() << QString("The framerate was set as %1 FPS").arg(newFPS);
+    //qDebug() << QString("The exposure was set as %1 milliseconds").arg(newExposure);
 }
 
 void DropletObservationWidget::capture_video()
@@ -250,7 +257,7 @@ void DropletObservationWidget::jet_for_three_minutes()
         if (!mIsJetting)
         {
             s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
-            s << CMD::set_jog(Axis::Jet, 1000);             // set to jet at 1000hz
+            s << CMD::set_jog(Axis::Jet, 1024);             // set to jet at 1024hz
             s << CMD::begin_motion(Axis::Jet);
             emit execute_command(s);
             jetting_was_turned_on();
@@ -300,13 +307,19 @@ void DropletObservationWidget::strobe_sweep_button_clicked()
 
 void DropletObservationWidget::start_strobe_sweep()
 {
+    // TODO: something here very occasionally sometimes causes a crash
+    // probably either calling from the wrong thread or
+    // a missing mutex lock
+
     // update the strobe sweep offset when a new frame is received
+    // framereceived from eventthread
     connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
             this, &DropletObservationWidget::update_strobe_sweep_offset);
 
     if (mCaptureVideoWithSweep) // if also capturing a video
     {
         // when a frame is added to the camera, add it to the avi file
+        // framereceived signal from event thread
         connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
                 this, &DropletObservationWidget::add_frame_to_avi, Qt::DirectConnection);
     }
@@ -322,7 +335,7 @@ void DropletObservationWidget::add_frame_to_avi(ImageBufferPtr buffer)
         disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
                    this, &DropletObservationWidget::add_frame_to_avi);
         emit video_capture_complete();
-        unsigned long nLostFrames{777};
+        unsigned long nLostFrames {777};
         isavi_GetnLostFrames(mAviID, &nLostFrames);
         qDebug() << nLostFrames << " frames were dropped during video capture";
     }
@@ -340,16 +353,6 @@ void DropletObservationWidget::stop_avi_capture()
     this->mCaptureVideoWithSweep = false;
 }
 
-void DropletObservationWidget::start_strobe_sweep_offset_timer()
-{
-    // delay after frame received to update the strobe offset
-    //double frameTime = 1.0 / (double)mCameraFrameRate;
-    //double ExposureTimePercent = (double)(ui->shutterAngleSpinBox->value()) / 360.0;
-    //int delayTime = (int) (frameTime * ExposureTimePercent);
-    //int delayTime = ui->timerTimeSpinBox->value();
-    //mSweepTimer->start(delayTime);
-}
-
 void DropletObservationWidget::update_strobe_sweep_offset()
 {
 
@@ -359,7 +362,7 @@ void DropletObservationWidget::update_strobe_sweep_offset()
     {
         mCurrentStrobeOffset = ui->startTimeSpinBox->value();
         mJetDrive->set_strobe_delay(mCurrentStrobeOffset);
-        int timeToStepThrough = (ui->endTimeSpinBox->value() - ui->startTimeSpinBox->value());
+        const int timeToStepThrough = (ui->endTimeSpinBox->value() - ui->startTimeSpinBox->value());
         ui->sweepProgressBar->setMaximum(timeToStepThrough);
         //emit print_to_output_window(QString::number(mCurrentStrobeOffset));
     }
@@ -386,7 +389,7 @@ void DropletObservationWidget::trigger_jet_clicked()
     {
         s << CMD::servo_here(Axis::Jet);
         s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
-        s << CMD::set_jog(Axis::Jet, 1000);             // set to jet at 1000hz
+        s << CMD::set_jog(Axis::Jet, 1024);             // set to jet at 1024hz
         s << CMD::begin_motion(Axis::Jet);
         jetting_was_turned_on();
         ui->jetForMinutesButton->setEnabled(false);

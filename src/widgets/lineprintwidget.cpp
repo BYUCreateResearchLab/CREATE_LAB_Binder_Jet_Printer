@@ -278,7 +278,7 @@ void LinePrintWidget::print_lines_old()
 
     // move the y-axis forward and the x-axis to the jetting window after printing all lines
     s << CMD::move_xy_axes_to_default_position();
-    s << CMD::set_jog(Axis::Jet, 1000);
+    s << CMD::set_jog(Axis::Jet, 1024);
     s << CMD::begin_motion(Axis::Jet);
 
     s << CMD::display_message("Print Complete");
@@ -327,7 +327,7 @@ void LinePrintWidget::print_lines_dmc()
 
     s << "GProgramComplete," << "\n";
     s << CMD::stop_motion(Axis::Jet); // stop jetting to set new jog speed
-    s << CMD::set_jog(Axis::Jet, 1000); // jet at 1000z while waiting
+    s << CMD::set_jog(Axis::Jet, 1024); // jet at 1024hz while waiting
     s << CMD::begin_motion(Axis::Jet);
 
     s << CMD::display_message("Print Complete");
