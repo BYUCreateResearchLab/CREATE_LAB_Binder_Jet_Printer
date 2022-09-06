@@ -459,6 +459,7 @@ std::string CMD::set_default_controller_settings()
     s << GCmd() << "LDH=3"           << "\n";   // Disable limit sensors for H axis
     s << GCmd() << "KSH=0.5"         << "\n";   // Minimize filters on step signals (0.25 when TM=1000)
     s << GCmd() << "ITH=1"           << "\n";   // Minimize filters on step signals
+    s << GCmd() << "YAH=1"           << "\n";   // set step resolution to 1 full step per step
 
     // Configure Extended I/O
     s << GCmd() << "CO 1"            << "\n";   // configures bank 2 as outputs on extended I/O (IO 17-24)
