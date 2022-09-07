@@ -101,7 +101,7 @@ public:
 
     // the computer ethernet port needs to be set to 192.168.42.10
     char const *address = "192.168.42.100"; // IP address of motion controller
-    GCon g{0};                              // Handle for connection to Galil Motion Controller
+    GCon g {0};                             // Handle for connection to Galil Motion Controller
 };
 
 enum class Axis
@@ -148,91 +148,155 @@ constexpr int um2cnts(double um, Axis axis);
 string to_ASCII_code(char charToConvert);
 string create_gcmd(std::string_view command, Axis axis, int quantity);
 
-inline string GCmd() {return "GCmd,";}
-inline string GCmdInt() {return "GCmdInt,";}
-inline string GMotionComplete() {return "GMotionComplete,";}
-inline string JetDrive() {return "JetDrive,";}
-inline string GSleep() {return "GSleep,";}
-inline string Message() {return "Message,";}
-inline string GOpen() {return "GOpen";}
+inline string GCmd() { return "GCmd,"; }
+inline string GCmdInt() { return "GCmdInt,"; }
+inline string GMotionComplete() { return "GMotionComplete,"; }
+inline string JetDrive() { return "JetDrive,"; }
+inline string GSleep() { return "GSleep,"; }
+inline string Message() { return "Message,"; }
+inline string GOpen() { return "GOpen"; }
 }
 
 string cmd_buf_to_dmc(const std::stringstream &s);
-
-string open_connection_to_controller();
 string set_default_controller_settings();
 string homing_sequence();
-string set_accleration(Axis axis, double speed_mm_s2);
-string set_deceleration(Axis axis, double speed_mm_s2);
-string set_limit_switch_deceleration(Axis axis, double speed_mm_s2);
+string move_xy_axes_to_default_position();
+string add_pvt_data_to_buffer(Axis axis, double relativePosition_mm, double velocity_mm, int time_counts);
+string exit_pvt_mode(Axis axis);
+string begin_pvt_motion(Axis axis);
+string set_hopper_mode_and_intensity(int mode, int intensity);
+string set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing);
+string mist_layer(double traverseSpeed_mm_per_s);
+string spread_layer(const RecoatSettings &settings);
+
+// Establish connection with motion controller
+inline string open_connection_to_controller()
+{ return detail::GOpen() + "\n"; }
+
+// The Acceleration command (AC) sets the linear acceleration
+// of the motors for independent moves, such as PR, PA, and JG moves.
+// The parameters will be rounded down to the nearest factor of 1024
+// and have units of counts per second squared.
+inline string set_accleration(Axis axis, double speed_mm_s2)
+{ return detail::create_gcmd("AC", axis, detail::mm2cnts(speed_mm_s2, axis)); }
+
+// The Deceleration command (DC) sets the linear deceleration
+// of the motors for independent moves such as PR, PA, and JG moves.
+// The parameters will be rounded down to the nearest factor of 1024
+// and have units of counts per second squared.
+inline string set_deceleration(Axis axis, double speed_mm_s2)
+{ return detail::create_gcmd("DC", axis, detail::mm2cnts(speed_mm_s2, axis)); }
+
+// The Limit Switch Deceleration command (SD) sets the linear deceleration rate
+// of the motors when a limit switch has been reached.
+inline string set_limit_switch_deceleration(Axis axis, double speed_mm_s2)
+{ return detail::create_gcmd("SD", axis, detail::mm2cnts(speed_mm_s2, axis)); }
 
 // The SP command sets the slew speed of any or all axes
 // for independent moves.
 inline string set_speed(Axis axis, double speed_mm_s)
-{
-    return {detail::create_gcmd(
-                    "SP",
-                    axis,
-                    detail::mm2cnts(speed_mm_s, axis))};
-}
+{ return detail::create_gcmd("SP", axis, detail::mm2cnts(speed_mm_s, axis)); }
 
+// The JG command sets the jog mode and the jog slew speed of the axes.
 inline string set_jog(Axis axis, double speed_mm_s)
-{
-    return {detail::create_gcmd(
-                    "JG",
-                    axis,
-                    detail::mm2cnts(speed_mm_s, axis))};
-}
+{ return detail::create_gcmd("JG", axis, detail::mm2cnts(speed_mm_s, axis)); }
 
-string set_homing_velocity(Axis axis, double velocity_mm_s);
-string set_forward_software_limit(Axis axis, double position_mm);
-string position_relative(Axis axis, double relativePosition_mm);
-string position_absolute(Axis axis, double absolutePosition_mm);
-string add_pvt_data_to_buffer(Axis axis, double relativePosition_mm, double velocity_mm, int time_counts);
-string exit_pvt_mode(Axis axis);
-string begin_pvt_motion(Axis axis);
-string define_position(Axis axis, double position_mm);
-string begin_motion(Axis axis);
-string motion_complete(Axis axis);
-string sleep(int milliseconds);
-string find_index(Axis axis);
-string servo_here(Axis axis);
-string stop_motion(Axis axis);
+// Sets the slew speed for the FI final move to the index and all but the first stage of HM.
+inline string set_homing_velocity(Axis axis, double velocity_mm_s)
+{ return detail::create_gcmd("HV", axis, detail::mm2cnts(velocity_mm_s, axis)); }
 
-// These trippoint commands don't work through gclib...
-string set_reference_time();
+// The FL command sets the forward software position limit.
+// If this limit is exceeded during motion, motion on that axis will decelerate to a stop.
+// Forward motion beyond this limit is not permitted.
+inline string set_forward_software_limit(Axis axis, double position_mm)
+{ return detail::create_gcmd("FL", axis, detail::mm2cnts(position_mm, axis)); }
+
+// The PR command sets the incremental distance and direction of the next move.
+// The move is referenced with respect to the current position.
+inline string position_relative(Axis axis, double relativePosition_mm)
+{ return detail::create_gcmd("PR", axis, detail::mm2cnts(relativePosition_mm, axis)); }
+
+// The PA command sets the end target of the Position Absolute Mode of Motion.
+inline string position_absolute(Axis axis, double absolutePosition_mm)
+{ return detail::create_gcmd("PA", axis, detail::mm2cnts(absolutePosition_mm, axis)); }
+
+// The DP command sets the current motor position and current command positions to a user specified value.
+// The units are in quadrature counts. This command will set both the TP and RP values.
+inline string define_position(Axis axis, double position_mm)
+{ return detail::create_gcmd("DP", axis, detail::mm2cnts(position_mm, axis)); }
+
+// The BG command starts a motion on the specified axis or sequence.
+inline string begin_motion(Axis axis)
+{ return detail::GCmd() + "BG" + detail::axis_string(axis) + "\n"; }
+
+inline string motion_complete(Axis axis)
+{ return detail::GMotionComplete() + detail::axis_string(axis) + "\n"; }
+
+inline string sleep(int milliseconds)
+{ return detail::GSleep() + std::to_string(milliseconds) + "\n";}
+
+// The FI and BG commands move the motor until an encoder index pulse is detected.
+inline string find_index(Axis axis)
+{ return detail::GCmd() + "FI" + detail::axis_string(axis) + "\n"; }
+
+// The SH commands tells the controller to use the current motor position
+// as the command position and to enable servo control at the current position.
+inline string servo_here(Axis axis)
+{ return detail::GCmd() + "SH" + detail::axis_string(axis) + "\n"; }
+
+// The ST command stops motion on the specified axis. Motors will come to a decelerated stop.
+inline string stop_motion(Axis axis)
+{ return detail::GCmd() + "ST" + detail::axis_string(axis) + "\n"; }
+
+// The SB command sets a particular digital output. The SB and CB (Clear Bit)
+// instructions can be used to control the state of output lines.
+inline string set_bit(int bit)
+{ return detail::GCmd() + "SB " + std::to_string(bit) + "\n"; }
+
+// The CB command clears a particular digital output.
+// The SB and CB (Clear Bit) instructions can be used to control the state of output lines.
+inline string clear_bit(int bit)
+{ return detail::GCmd() + "CB " + std::to_string(bit) + "\n"; }
+
+inline string enable_roller1() { return set_bit(ROLLER_1_BIT); }
+inline string disable_roller1() { return clear_bit(ROLLER_1_BIT); }
+
+inline string enable_roller2() { return set_bit(ROLLER_2_BIT); }
+inline string disable_roller2() { return clear_bit(ROLLER_2_BIT); }
+
+// 'U1' sent to the generator over serial port 2. 49 is the ASCII code for '1'
+inline string enable_hopper()
+{ return detail::GCmd() + "MG{P2} {^85}, {^49}, {^13}{N}" + "\n";}
+// 'U0' sent to the generator over serial port 2. 49 is the ASCII code for '1'
+inline string disable_hopper()
+{ return detail::GCmd() + "MG{P2} {^85}, {^48}, {^13}{N}" + "\n"; }
+
+inline string disable_forward_software_limit(Axis axis)
+{ return detail::create_gcmd("FL", axis, 2147483647); }
+
+// this command does not support newlines or commas right now...
+// either will cause the print to fail...
+inline string display_message(const std::string &message)
+{ return detail::Message() + message + "\n"; }
+
+inline string enable_gearing_for(Axis slaveAxis, Axis masterAxis)
+{ return detail::GCmd() + "GA" + detail::axis_string(slaveAxis) + "=" + detail::axis_string(masterAxis) + "\n"; }
+
+inline string disable_gearing_for(Axis slaveAxis)
+{ return detail::GCmd() + "GR" + detail::axis_string(slaveAxis) + "=" + "0" + "\n"; }
+
+// === These trippoint commands don't work through gclib... ===
+// don't use unless uploading these commands to the controller directly
 string at_time_samples(int samples);
 string at_time_milliseconds(int milliseconds);
 string after_absolute_position(Axis axis, double absolutePosition_mm);
-string after_motion(Axis axis);
-string wait(int milliseconds);
 
-string set_bit(int bit);
-string clear_bit(int bit);
+inline string set_reference_time() { return detail::GCmd() + "AT 0" + "\n"; }
+inline string after_motion(Axis axis) { return detail::GCmd() + "AM " + detail::axis_string(axis) + "\n";}
+inline string wait(int milliseconds) { return detail::GCmd() + "WT " + std::to_string(milliseconds) + "\n"; }
+// =====================================================================
 
-string enable_roller1();
-string disable_roller1();
-string enable_roller2();
-string disable_roller2();
-
-string set_hopper_mode_and_intensity(int mode, int intensity);
-string enable_hopper();
-string disable_hopper();
-
-string disable_forward_software_limit(Axis axis);
-
-string display_message(const std::string &message);
-
-string enable_gearing_for(Axis slaveAxis, Axis masterAxis);
-string set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing);
-string disable_gearing_for(Axis slaveAxis);
-
-string move_xy_axes_to_default_position();
-
-string mist_layer(double traverseSpeed_mm_per_s);
-string spread_layer(const RecoatSettings &settings);
-
-}
+} // end CMD namespace
 
 // === Stuff I'm Working on ===
 
