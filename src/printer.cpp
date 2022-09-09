@@ -54,8 +54,21 @@ constexpr int CMD::detail::mm2cnts(double mm, Axis axis)
     }
 }
 
-constexpr int CMD::detail::um2cnts(double um, Axis axis)
-{ return mm2cnts(um / 1000.0, axis); }
+float Printer::motor_type_value(MotorType motorType)
+{
+    switch (motorType)
+    {
+    case MotorType::Servo: return 1;
+    case MotorType::Servo_R: return -1;
+    case MotorType::StepLow: return 2;
+    case MotorType::StepLow_R: return 2.5;
+    case MotorType::StepHigh: return -2;
+    case MotorType::StepHigh_R: return -2.5;
+    case MotorType::Servo2PB: return 4;
+    case MotorType::Servo2PB_R: return -4;
+    default: throw std::invalid_argument("invalid motor type");
+    }
+}
 
 std::string CMD::set_default_controller_settings()
 {
@@ -64,62 +77,64 @@ std::string CMD::set_default_controller_settings()
     std::stringstream s;
 
     // Controller Configuration
-    s << GCmd() << "MO"              << "\n";   // Ensure motors are off for setup
+    s << GCmd("MO")          // Ensure motors are off for setup
 
     // Controller Time Update Setting
-    s << GCmd() << "TM 500"          << "\n";   // Set the update time of the motion controller
+      << GCmd("TM 500")      // Set the update time of the motion controller
 
     // X Axis
-    s << GCmd() << "MTX=-1"          << "\n";   // Set motor type to reversed brushless
-    s << GCmd() << "CEX=10"          << "\n";   // Set main and aux encoder to reversed quadrature
-    s << GCmd() << "BMX=40000"       << "\n";   // Set magnetic pitch of linear motor
-    s << GCmd() << "AGX=1"           << "\n";   // Set amplifier gain
-    s << GCmd() << "AUX=9"           << "\n";   // Set current loop (based on inductance of motor)
-    s << GCmd() << "TLX=3"           << "\n";   // Set constant torque limit to 3V
-    s << GCmd() << "TKX=0"           << "\n";   // Disable peak torque setting for now
-    // Set PID Settings (NOTE: PID SETTINGS ARE OPTIMIZED FOR TM 500. NEED TO USE OTHER VALUES FOR TM 1000!)
-    s << GCmd() << "KDX=1000"        << "\n";   // Set Derivative
-    s << GCmd() << "KPX=100"         << "\n";   // Set Proportional
-    s << GCmd() << "KIX=0.5"         << "\n";   // Set Integral
-    s << GCmd() << "PLX=177"         << "\n";   // Set low-pass filter
+      << GCmd("MTX=-1")      // Set motor type to reversed brushless
+      << GCmd("CEX=10")      // Set main and aux encoder to reversed quadrature
+      << GCmd("BMX=40000")   // Set magnetic pitch of linear motor
+      << GCmd("AGX=1")       // Set amplifier gain
+      << GCmd("AUX=9")       // Set current loop (based on inductance of motor)
+      << GCmd("TLX=3")       // Set constant torque limit to 3V
+      << GCmd("TKX=0")       // Disable peak torque setting for now
+    // Set PID Settings
+    // (NOTE: PID SETTINGS ARE OPTIMIZED FOR TM 500.
+    // NEED TO USE OTHER VALUES FOR TM 1000!)
+      << GCmd("KDX=1000")    // Set Derivative
+      << GCmd("KPX=100")     // Set Proportional
+      << GCmd("KIX=0.5")     // Set Integral
+      << GCmd("PLX=177")     // Set low-pass filter
 
     // Y Axis
-    s << GCmd() << "MTY=1"           << "\n";   // Set motor type to standard brushless
-    s << GCmd() << "CEY=0"           << "\n";   // Set encoder to normal quadrature
-    s << GCmd() << "BMY=2000"        << "\n";   // Set magnetic pitch of rotary motor
-    s << GCmd() << "AGY=1"           << "\n";   // Set amplifier gain
-    s << GCmd() << "AUY=11"          << "\n";   // Set current loop (based on inductance of motor)
-    s << GCmd() << "TLY=6"           << "\n";   // Set constant torque limit to 6V
-    s << GCmd() << "TKY=0"           << "\n";   // Disable peak torque setting for now
+      << GCmd("MTY=1")       // Set motor type to standard brushless
+      << GCmd("CEY=0")       // Set encoder to normal quadrature
+      << GCmd("BMY=2000")    // Set magnetic pitch of rotary motor
+      << GCmd("AGY=1")       // Set amplifier gain
+      << GCmd("AUY=11")      // Set current loop (based on inductance of motor)
+      << GCmd("TLY=6")       // Set constant torque limit to 6V
+      << GCmd("TKY=0")       // Disable peak torque setting for now
     // Set PID Settings
-    s << GCmd() << "KDY=2000"        << "\n";   // Set Derivative
-    s << GCmd() << "KPY=100"         << "\n";   // Set Proportional
-    s << GCmd() << "KIY=1"           << "\n";   // Set Integral
-    s << GCmd() << "PLY=50"          << "\n";   // Set low-pass filter
+      << GCmd("KDY=2000")    // Set Derivative
+      << GCmd("KPY=100")     // Set Proportional
+      << GCmd("KIY=1")       // Set Integral
+      << GCmd("PLY=50")      // Set low-pass filter
 
     // Z Axis
-    s << GCmd() << "MTZ=-2.5"        << "\n";   // Set motor type to standard brushless
-    s << GCmd() << "CEZ=14"          << "\n";   // Set encoder to reversed quadrature
-    s << GCmd() << "AGZ=0"           << "\n";   // Set amplifier gain
-    s << GCmd() << "AUZ=9"           << "\n";   // Set current loop (based on inductance of motor)
+      << GCmd("MTZ=-2.5")    // Stepper motor with active high step pulses, reversed direction
+      << GCmd("CEZ=14")      // Set encoder to reversed quadrature
+      << GCmd("AGZ=0")       // Set amplifier gain
+      << GCmd("AUZ=9")       // Set current loop (based on inductance of motor)
     // Note: There might be more settings especially for this axis I might want to add later
 
     // H Axis (Jetting Axis)
-    s << GCmd() << "MTH=-2"          << "\n";   // Set jetting axis to be stepper motor with defualt low
-    s << GCmd() << "AGH=0"           << "\n";   // Set gain to lowest value
-    s << GCmd() << "LDH=3"           << "\n";   // Disable limit sensors for H axis
-    s << GCmd() << "KSH=0.5"         << "\n";   // Minimize filters on step signals (0.25 when TM=1000)
-    s << GCmd() << "ITH=1"           << "\n";   // Minimize filters on step signals
-    s << GCmd() << "YAH=1"           << "\n";   // set step resolution to 1 full step per step
+      << GCmd("MTH=-2")      // Set jetting axis to be stepper motor with defualt low
+      << GCmd("AGH=0")       // Set gain to lowest value
+      << GCmd("LDH=3")       // Disable limit sensors for H axis
+      << GCmd("KSH=0.5")     // Minimize filters on step signals (0.25 when TM=1000)
+      << GCmd("ITH=1" )      // Minimize filters on step signals
+      << GCmd("YAH=1")       // set step resolution to 1 full step per step
 
     // Configure Extended I/O
-    s << GCmd() << "CO 1"            << "\n";   // configures bank 2 as outputs on extended I/O (IO 17-24)
+      << GCmd("CO 1")        // configures bank 2 as outputs on extended I/O (IO 17-24)
 
-    s << GCmd() << "CC 19200,0,1,0"  << "\n";   // AUX PORT FOR THE ULTRASONIC GENERATOR
-    s << GCmd() << "CN=-1"           << "\n";   // Set correct polarity for all limit switches
-    s << GCmd() << "BN"              << "\n";   // Save (burn) these settings to the controller just to be safe
-    s << GCmd() << "SH XYZ"          << "\n";   // Enable X,Y, and Z motors
-    s << GCmd() << "SH H"            << "\n";   // Servo the jetting axis
+      << GCmd("CC 19200,0,1,0")  // AUX PORT FOR THE ULTRASONIC GENERATOR
+      << GCmd("CN=-1")           // Set correct polarity for all limit switches
+      << GCmd("BN")              // Save (burn) these settings to the controller just to be safe
+      << GCmd("SH XYZ")          // Enable X,Y, and Z motors
+      << GCmd("SH H");           // Servo the jetting axis
 
     return s.str();
 }
@@ -268,9 +283,7 @@ std::string CMD::set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis,
     return {GCmd() + "GR" + detail::axis_string(Axis::Jet) + "=" + std::to_string(gearingRatio) + "\n"};
 }
 
-
-
-std::string CMD::homing_sequence()
+std::string CMD::homing_sequence(bool homeZAxis)
 {
     std::stringstream s;
 
@@ -286,19 +299,25 @@ std::string CMD::homing_sequence()
     s << set_limit_switch_deceleration(Axis::Y, 600);
     s << set_jog(Axis::Y, 25); // jog towards front limit
 
-    s << set_accleration(Axis::Z, 20);
-    s << set_deceleration(Axis::Z, 20);
-    s << set_limit_switch_deceleration(Axis::Z, 40);
-    s << set_jog(Axis::Z, -2);                       // jog to bottom (MAX SPEED of 5mm/s!)
-    s << disable_forward_software_limit(Axis::Z);    // turn off top software limit
+    if (homeZAxis)
+    {
+        s << set_accleration(Axis::Z, 20);
+        s << set_deceleration(Axis::Z, 20);
+        s << set_limit_switch_deceleration(Axis::Z, 40);
+        s << set_jog(Axis::Z, -2);                       // jog to bottom (MAX SPEED of 5mm/s!)
+        s << disable_forward_software_limit(Axis::Z);    // turn off top software limit
+    }
+
 
     s << begin_motion(Axis::X);
     s << begin_motion(Axis::Y);
-    s << begin_motion(Axis::Z);
+    if (homeZAxis)
+        s << begin_motion(Axis::Z);
 
     s << motion_complete(Axis::X);
     s << motion_complete(Axis::Y);
-    s << motion_complete(Axis::Z);
+    if (homeZAxis)
+        s << motion_complete(Axis::Z);
 
     s << sleep(1000);
 
@@ -312,17 +331,23 @@ std::string CMD::homing_sequence()
     s << set_homing_velocity(Axis::Y, 0.25);
     s << find_index(Axis::Y);
 
-    s << set_accleration(Axis::Z, 10);        // slower acceleration for going back up
-    s << set_speed(Axis::Z, 2);
-    s << position_relative(Axis::Z, 13.5322); // TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
+    if (homeZAxis)
+    {
+        s << set_accleration(Axis::Z, 10);        // slower acceleration for going back up
+        s << set_speed(Axis::Z, 2);
+        s << position_relative(Axis::Z, 13.5322); // TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
+    }
+
 
     s << begin_motion(Axis::X);
     s << begin_motion(Axis::Y);
-    s << begin_motion(Axis::Z);
+    if (homeZAxis)
+        s << begin_motion(Axis::Z);
 
     s << motion_complete(Axis::X);
     s << motion_complete(Axis::Y);
-    s << motion_complete(Axis::Z);
+    if (homeZAxis)
+        s << motion_complete(Axis::Z);
 
     s << define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
     s << define_position(Axis::Y, 0);
@@ -335,32 +360,34 @@ std::string CMD::homing_sequence()
 std::string CMD::spread_layer(const RecoatSettings &settings)
 {
     std::stringstream s;
-    Axis y{Axis::Y};
-    double zAxisOffsetUnderRoller{0.5};
+    Axis y {Axis::Y};
+    double zAxisOffsetUnderRoller {0.5};
 
     // move z-axis down when going back to get more powder
-    s << set_accleration(Axis::Z, 10);
-    s << set_deceleration(Axis::Z, 10);
-    s << set_speed(Axis::Z, 2);
-    s << position_relative(Axis::Z, -zAxisOffsetUnderRoller);
-    s << begin_motion(Axis::Z);
-    s << motion_complete(Axis::Z);
+    s << set_accleration(Axis::Z, 10)
+      << set_deceleration(Axis::Z, 10)
+      << set_speed(Axis::Z, 2)
+      << position_relative(Axis::Z, -zAxisOffsetUnderRoller)
+      << begin_motion(Axis::Z)
+      << motion_complete(Axis::Z);
 
     // jog y-axis to back
-    s << set_accleration(y, 400);
-    s << set_deceleration(y, 400);
-    s << set_jog(y, -50);
-    s << begin_motion(y);
-    s << motion_complete(y);
+    s << set_accleration(y, 400)
+      << set_deceleration(y, 400)
+      << set_jog(y, -50)
+      << begin_motion(y)
+      << motion_complete(y);
 
-    // move z-axis back up
-    if (settings.isLevelRecoat)
+    // set z-axis move distance
+    if (settings.isLevelRecoat) // move z-axis back up all the way
         s << position_relative(Axis::Z, zAxisOffsetUnderRoller);
-    else
+    else // move up but a layer thickness down from original position
         s << position_relative(Axis::Z, zAxisOffsetUnderRoller - (settings.layerHeight_microns / 1000.0));
 
-    // set hopper settings here
+    // set hopper settings
     s << set_hopper_mode_and_intensity(settings.ultrasonicMode, settings.ultrasonicIntensityLevel);
+
+    // move z-axis
     s << begin_motion(Axis::Z);
     s << motion_complete(Axis::Z);
 
@@ -393,11 +420,6 @@ std::string CMD::spread_layer(const RecoatSettings &settings)
     s << disable_roller2();
 
     return s.str();
-}
-
-std::string CMD::detail::to_ASCII_code(char charToConvert)
-{
-    return "{^" + std::to_string(int(charToConvert)) + "}, ";
 }
 
 std::string CMD::detail::create_gcmd(std::string_view command, Axis axis, int quantity)

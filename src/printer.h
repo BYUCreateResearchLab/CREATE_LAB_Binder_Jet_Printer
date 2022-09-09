@@ -72,6 +72,7 @@
 #include <sstream>
 #include <string_view>
 #include <functional>
+#include <map>
 
 #define X_CNTS_PER_MM 1000
 #define Y_CNTS_PER_MM 800
@@ -94,6 +95,16 @@
 
 GReturn GCALL GProgramComplete(GCon g);
 
+enum class Axis
+{
+    X, Y, Z, Jet
+};
+
+enum class MotorType
+{
+    Servo, Servo_R, StepLow, StepLow_R, StepHigh, StepHigh_R, Servo2PB, Servo2PB_R
+};
+
 class Printer
 {
 public:
@@ -102,11 +113,7 @@ public:
     // the computer ethernet port needs to be set to 192.168.42.10
     char const *address = "192.168.42.100"; // IP address of motion controller
     GCon g {0};                             // Handle for connection to Galil Motion Controller
-};
-
-enum class Axis
-{
-    X, Y, Z, Jet
+    static float motor_type_value(MotorType motorType);
 };
 
 struct RecoatSettings
@@ -141,14 +148,14 @@ using std::string;
 namespace detail
 {
 string axis_string(Axis axis);
-
 constexpr int mm2cnts(double mm, Axis axis);
-constexpr int um2cnts(double um, Axis axis);
-
-string to_ASCII_code(char charToConvert);
 string create_gcmd(std::string_view command, Axis axis, int quantity);
 
+inline string to_ASCII_code(char charToConvert)
+{ return "{^" + std::to_string(int(charToConvert)) + "}, "; }
+
 inline string GCmd() { return "GCmd,"; }
+inline string GCmd(std::string_view command) { return GCmd() + command.data() + "\n"; }
 inline string GCmdInt() { return "GCmdInt,"; }
 inline string GMotionComplete() { return "GMotionComplete,"; }
 inline string JetDrive() { return "JetDrive,"; }
@@ -157,9 +164,9 @@ inline string Message() { return "Message,"; }
 inline string GOpen() { return "GOpen"; }
 }
 
-string cmd_buf_to_dmc(const std::stringstream &s);
 string set_default_controller_settings();
-string homing_sequence();
+string cmd_buf_to_dmc(const std::stringstream &s);
+string homing_sequence(bool homeZAxis);
 string move_xy_axes_to_default_position();
 string add_pvt_data_to_buffer(Axis axis, double relativePosition_mm, double velocity_mm, int time_counts);
 string exit_pvt_mode(Axis axis);
@@ -222,6 +229,9 @@ inline string position_absolute(Axis axis, double absolutePosition_mm)
 
 // The DP command sets the current motor position and current command positions to a user specified value.
 // The units are in quadrature counts. This command will set both the TP and RP values.
+// The DP command sets the commanded reference position for axes configured as steppers. The units are in steps.
+// Example: "DP 0" This will set the registers for TD and RP to zero, but will not effect the TP register value.
+//          When equipped with an encoder, use the DE command to set the encoder position for stepper mode.
 inline string define_position(Axis axis, double position_mm)
 { return detail::create_gcmd("DP", axis, detail::mm2cnts(position_mm, axis)); }
 

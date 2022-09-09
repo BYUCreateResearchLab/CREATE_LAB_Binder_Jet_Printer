@@ -66,15 +66,15 @@ void PowderSetupWidget::normal_recoat_clicked()
 {
     std::stringstream s;
     int numLayers{ui->recoatCyclesSpinBox->value()};
-    RecoatSettings layerRecoat{};
-    layerRecoat.isLevelRecoat = false;
-    layerRecoat.rollerTraverseSpeed_mm_s = ui->rollerTraverseSpeedSpinBox->value();
-    layerRecoat.recoatSpeed_mm_s = ui->recoatSpeedSpinBox->value();
-    // Index from the combo box must match up with the data to be sent over RS-232 to the generator (see documentation for generator)
-    layerRecoat.ultrasonicIntensityLevel = ui->ultrasonicIntensityComboBox->currentIndex();
-    layerRecoat.ultrasonicMode = ui->ultrasonicModeComboBox->currentIndex();
-    layerRecoat.layerHeight_microns = ui->layerHeightSpinBox->value();
-    layerRecoat.waitAfterHopperOn_millisecs = ui->hopperDwellTimeMsSpinBox->value();
+    RecoatSettings layerRecoatSettings {};
+    layerRecoatSettings.isLevelRecoat = false;
+    layerRecoatSettings.rollerTraverseSpeed_mm_s = ui->rollerTraverseSpeedSpinBox->value();
+    layerRecoatSettings.recoatSpeed_mm_s = ui->recoatSpeedSpinBox->value();
+    // Note: Index from the combo box must match up with the data to be sent over RS-232 to the generator (see documentation of generator)
+    layerRecoatSettings.ultrasonicIntensityLevel = ui->ultrasonicIntensityComboBox->currentIndex();
+    layerRecoatSettings.ultrasonicMode = ui->ultrasonicModeComboBox->currentIndex();
+    layerRecoatSettings.layerHeight_microns = ui->layerHeightSpinBox->value();
+    layerRecoatSettings.waitAfterHopperOn_millisecs = ui->hopperDwellTimeMsSpinBox->value();
 
     s << CMD::display_message("starting normal recoat...");
     for(int i{0}; i < numLayers; ++i)
@@ -85,7 +85,7 @@ void PowderSetupWidget::normal_recoat_clicked()
         message += std::to_string(numLayers);
         message += "...";
         s << CMD::display_message(message);
-        s << CMD::spread_layer(layerRecoat);
+        s << CMD::spread_layer(layerRecoatSettings);
     }
     s << CMD::display_message("powder spreading complete");
     s << CMD::display_message("");

@@ -137,7 +137,8 @@ void MainWindow::on_connect_clicked()
 
         s << CMD::open_connection_to_controller();
         s << CMD::set_default_controller_settings();
-        s << CMD::homing_sequence();
+        const bool homeZAxis = ui->homeZAxisCheckBox->isChecked();
+        s << CMD::homing_sequence(homeZAxis);
 
         allow_user_input(false);
         mPrintThread->execute_command(s);
