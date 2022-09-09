@@ -159,6 +159,7 @@ void MainWindow::on_connect_clicked()
         mPrinter->g = 0;               // Reset connection handle
 
         ui->connect->setText("Connect to Controller"); // change button label text
+        ui->homeZAxisCheckBox->setEnabled(true);
     }
 }
 
@@ -569,4 +570,5 @@ void MainWindow::tab_was_changed(int index) // code that gets run when the curre
 void MainWindow::connected_to_motion_controller()
 {
     ui->connect->setText("Disconnect Controller");
+    ui->homeZAxisCheckBox->setEnabled(false);
 }
