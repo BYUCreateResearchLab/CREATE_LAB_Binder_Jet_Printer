@@ -190,16 +190,17 @@ void DropletObservationWidget::capture_video()
     is_AOI(mCameraHandle, IS_AOI_IMAGE_GET_POS, &nOffset, sizeof(nOffset));
 
     // temp offset for cropping the nozzle out of the frame for Colton
-    int verticalPixelOffset{240};
+    const int cropPixelAmount {240};
+    int verticalPixelOffset = ui->cropCheckBox->isChecked() ? cropPixelAmount : 0;
 
-    int posX{nOffset.s32X};
+    int posX {nOffset.s32X};
     //int posY{nOffset.s32Y}; THIS GOT CHANGED
     int posY{verticalPixelOffset};
 
     // verticalPixelOffset was added for testing
     isavi_SetImageSize(mAviID, colorMode, AOIWidth, (sensorHeight-verticalPixelOffset), posX, posY, 0); // not sure why a zero here, but it works haha
 
-    int imageQuality{95}; // 1 is the lowest, 100 is the highest
+    int imageQuality {95}; // 1 is the lowest, 100 is the highest
     isavi_SetImageQuality (mAviID, imageQuality);
 
     // get temp file location

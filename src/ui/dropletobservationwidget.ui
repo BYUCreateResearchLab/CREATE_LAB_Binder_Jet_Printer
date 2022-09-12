@@ -26,8 +26,20 @@
       <enum>QFrame::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_frame" columnstretch="0,0,0">
-      <item row="1" column="2">
-       <widget class="QPushButton" name="TriggerJetButton">
+      <item row="16" column="1">
+       <widget class="QPushButton" name="pushButton_2">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>
+Process Video
+</string>
+        </property>
+       </widget>
+      </item>
+      <item row="16" column="0">
+       <widget class="QPushButton" name="takeVideoButton">
         <property name="font">
          <font>
           <bold>false</bold>
@@ -36,7 +48,7 @@
         </property>
         <property name="text">
          <string>
-Trigger Jet
+Capture Video
 </string>
         </property>
         <property name="flat">
@@ -44,30 +56,10 @@ Trigger Jet
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QPushButton" name="moveToCameraButton">
-        <property name="font">
-         <font>
-          <bold>false</bold>
-          <underline>false</underline>
-         </font>
-        </property>
+      <item row="2" column="0" colspan="3">
+       <widget class="QPushButton" name="jetForMinutesButton">
         <property name="text">
-         <string>
-Move Nozzle -&gt; Camera
-</string>
-        </property>
-        <property name="flat">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QPushButton" name="moveToMiddleButton">
-        <property name="text">
-         <string>
-Move Nozzle To Middle
-</string>
+         <string>Jet for 3 Minutes</string>
         </property>
        </widget>
       </item>
@@ -89,6 +81,15 @@ Connect to Camera
         </property>
        </widget>
       </item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="moveToMiddleButton">
+        <property name="text">
+         <string>
+Move Nozzle To Middle
+</string>
+        </property>
+       </widget>
+      </item>
       <item row="9" column="0" colspan="3">
        <widget class="QFrame" name="cameraSettingsFrame">
         <property name="enabled">
@@ -107,26 +108,16 @@ Connect to Camera
          <enum>QFrame::Sunken</enum>
         </property>
         <layout class="QGridLayout" name="gridLayout_2">
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_9">
-           <property name="text">
-            <string>Framerate</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" colspan="3">
-          <widget class="QLabel" name="label_18">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-             <bold>true</bold>
-            </font>
+         <item row="1" column="5">
+          <widget class="QLabel" name="label_16">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
            <property name="text">
-            <string>Camera Settings</string>
+            <string>°</string>
            </property>
           </widget>
          </item>
@@ -149,29 +140,6 @@ Connect to Camera
            </property>
            <property name="value">
             <number>180</number>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="3">
-          <widget class="QLabel" name="label_15">
-           <property name="text">
-            <string>Shutter Angle</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QLabel" name="label_12">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>fps   </string>
            </property>
           </widget>
          </item>
@@ -200,8 +168,31 @@ Connect to Camera
            </property>
           </widget>
          </item>
-         <item row="1" column="5">
-          <widget class="QLabel" name="label_16">
+         <item row="0" column="0" colspan="3">
+          <widget class="QLabel" name="label_18">
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Camera Settings</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>Shutter Angle</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLabel" name="label_12">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -209,7 +200,17 @@ Connect to Camera
             </sizepolicy>
            </property>
            <property name="text">
-            <string>°</string>
+            <string>fps   </string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>Framerate</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -402,24 +403,6 @@ Connect to Camera
         </layout>
        </widget>
       </item>
-      <item row="16" column="0">
-       <widget class="QPushButton" name="takeVideoButton">
-        <property name="font">
-         <font>
-          <bold>false</bold>
-          <underline>false</underline>
-         </font>
-        </property>
-        <property name="text">
-         <string>
-Capture Video
-</string>
-        </property>
-        <property name="flat">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
       <item row="16" column="2">
        <widget class="QPushButton" name="SaveVideoButton">
         <property name="font">
@@ -438,22 +421,39 @@ Save Captured Video
         </property>
        </widget>
       </item>
-      <item row="16" column="1">
-       <widget class="QPushButton" name="pushButton_2">
-        <property name="enabled">
-         <bool>false</bool>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="moveToCameraButton">
+        <property name="font">
+         <font>
+          <bold>false</bold>
+          <underline>false</underline>
+         </font>
         </property>
         <property name="text">
          <string>
-Process Video
+Move Nozzle -&gt; Camera
 </string>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
-      <item row="2" column="0" colspan="3">
-       <widget class="QPushButton" name="jetForMinutesButton">
+      <item row="1" column="2">
+       <widget class="QPushButton" name="TriggerJetButton">
+        <property name="font">
+         <font>
+          <bold>false</bold>
+          <underline>false</underline>
+         </font>
+        </property>
         <property name="text">
-         <string>Jet for 3 Minutes</string>
+         <string>
+Trigger Jet
+</string>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -464,6 +464,16 @@ Process Video
         </property>
         <property name="value">
          <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="17" column="0" colspan="2">
+       <widget class="QCheckBox" name="cropCheckBox">
+        <property name="text">
+         <string>Crop top of video on capture</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
