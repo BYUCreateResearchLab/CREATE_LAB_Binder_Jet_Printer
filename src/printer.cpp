@@ -213,9 +213,8 @@ std::string CMD::move_xy_axes_to_default_position()
 {
     std::stringstream s;
     s << CMD::set_speed(Axis::X, 60);
-    s << CMD::set_speed(Axis::Y, 40);
+    s << CMD::set_jog(Axis::Y, 40);
     s << CMD::position_absolute(Axis::X, X_STAGE_LEN_MM);
-    s << CMD::position_absolute(Axis::Y, 0);
     s << CMD::begin_motion(Axis::X);
     s << CMD::begin_motion(Axis::Y);
     s << CMD::motion_complete(Axis::X);
@@ -316,6 +315,17 @@ std::string CMD::homing_sequence(bool homeZAxis)
 
     s << motion_complete(Axis::X);
     s << motion_complete(Axis::Y);
+
+    // TODO: This is a temporary solution that depends on alignment of ballscrew and motor index pulse
+    //       find a better way to do this
+    // move y-axis forward a bit to avoid being right on top of the index pulse
+    s << position_relative(Axis::Y, -2);
+    s << set_speed(Axis::Y, 10);
+    s << begin_motion(Axis::Y);
+    s << motion_complete(Axis::Y);
+    // =================================
+
+    // this is put after the short y move because the z axis is slow
     if (homeZAxis)
         s << motion_complete(Axis::Z);
 

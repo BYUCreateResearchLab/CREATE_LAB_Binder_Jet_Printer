@@ -39,9 +39,8 @@ JP #DATA_WT
 #STOP
 // move to default position
 SPX = 60 * xCnt
-SPY = 40 * yCnt
 PAX = 150 * xCnt
-PAY = 0
+JGY = 40 * yCnt
 BGXY
 AM
 // have the computer tell the nozzle to start jetting again
