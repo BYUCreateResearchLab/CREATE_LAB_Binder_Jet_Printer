@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <fstream>
 
 class Printer;
 class PrintThread;
@@ -67,6 +68,7 @@ private slots:
     void get_current_z_axis_position();
 
     void move_z_to_absolute_position();
+    void open_log_file();
 
 
 private:
@@ -85,6 +87,8 @@ private:
     JettingWidget *mJettingWidget{nullptr};
     HighSpeedLineWidget *mHighSpeedLineWidget{nullptr};
     DropletObservationWidget *mDropletObservationWidget{nullptr};
+
+    std::ofstream m_logFile;
 
 };
 #endif // MAINWINDOW_H

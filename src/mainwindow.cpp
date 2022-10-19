@@ -51,10 +51,14 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
     ui->tabWidget->addTab(mHighSpeedLineWidget, "High-Speed Line Printing");
     ui->tabWidget->addTab(mDropletObservationWidget, "Jetting");
 
+    // open a txt file for logging commands
+    open_log_file();
+    m_logFile << "Application opened at " << QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm").toStdString() << "\n";
+
     // add dock widget for showing console output
     mDockWidget = new QDockWidget("Output Window",this);
     this->addDockWidget(Qt::RightDockWidgetArea, mDockWidget);
-    mOutputWindow = new OutputWindow(this);
+    mOutputWindow = new OutputWindow(this, m_logFile);
     mDockWidget->setWidget(mOutputWindow);
     mOutputWindow->print_string("Starting Program...");
     mOutputWindow->print_string("Program Started");
@@ -127,6 +131,9 @@ MainWindow::~MainWindow()
         GCmd(mPrinter->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
         GClose(mPrinter->g); // Close the connection to the controller
     }
+    // log application close and close the file
+    m_logFile << "Application closed at " << QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm").toStdString() << "\n";
+    m_logFile.close();
 }
 
 void MainWindow::on_connect_clicked()
@@ -545,6 +552,16 @@ void MainWindow::move_z_to_absolute_position()
 
     allow_user_input(false);
     mPrintThread->execute_command(s);
+}
+
+void MainWindow::open_log_file()
+{
+    QString folderName = "BJ_Logs";
+    QString logDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/" + folderName;
+    if(!QDir(logDir).exists()) QDir().mkdir(logDir);
+    QDateTime date = QDateTime::currentDateTime();
+    QString fileName = logDir + "/BJ_Log_" + date.toString("yyyy_MM_dd") + ".txt";
+    m_logFile.open(fileName.toStdString(), std::ios::app); // append
 }
 
 void MainWindow::thread_ended()

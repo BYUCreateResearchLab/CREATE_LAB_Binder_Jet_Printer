@@ -275,6 +275,7 @@ inline string enable_roller2() { return set_bit(ROLLER_2_BIT); }
 inline string disable_roller2() { return clear_bit(ROLLER_2_BIT); }
 
 // 'U1' sent to the generator over serial port 2. 49 is the ASCII code for '1'
+// TODO: Try "MG{P2} U1\r"
 inline string enable_hopper()
 { return detail::GCmd() + "MG{P2} {^85}, {^49}, {^13}{N}" + "\n";}
 // 'U0' sent to the generator over serial port 2. 49 is the ASCII code for '1'
