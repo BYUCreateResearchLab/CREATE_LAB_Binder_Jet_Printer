@@ -58,6 +58,7 @@ Thumbs.db
 *.vcxproj
 *vcxproj.*
 .vscode/*
+.vs/
 
 # MinGW generated files
 *.Debug
@@ -76,5 +77,8 @@ CMakeLists.txt.user
 # Build Folders
 build/*
 !build/build.xml
-debug/
-release/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+out/
