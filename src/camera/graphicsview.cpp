@@ -55,3 +55,5 @@ double GraphicsView::scaleFactor() const
 {
     return scale_factor;
 }
+
+#include "moc_graphicsview.cpp"

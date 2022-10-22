@@ -153,3 +153,5 @@ void EventThread::resetCntFromEvent(uint32_t event)
 {
     eventCnt[event] = 0;
 }
+
+#include "moc_eventthread.cpp"

@@ -776,3 +776,5 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_viewing_fla
 
     return returnString;
 }
+
+#include "moc_highspeedlinewidget.cpp"

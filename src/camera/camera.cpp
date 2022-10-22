@@ -2563,3 +2563,5 @@ bool Camera::isRollingShutterMode() const
         return !qvariant_cast<SENSORINFO>(sensorInfo()).bGlobShutter;
     }
 }
+
+#include "moc_camera.cpp"

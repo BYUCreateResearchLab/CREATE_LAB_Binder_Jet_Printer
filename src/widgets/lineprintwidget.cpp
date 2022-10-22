@@ -526,3 +526,4 @@ QString LinePrintWidget::read_dmc_code(QString filename)
     file.close();
 }
 
+#include "moc_lineprintwidget.cpp"

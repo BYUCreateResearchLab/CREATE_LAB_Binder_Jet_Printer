@@ -135,3 +135,5 @@ void PowderSetupWidget::toggle_mister_clicked()
     }
     emit execute_command(s);
 }
+
+#include "moc_powdersetupwidget.cpp"

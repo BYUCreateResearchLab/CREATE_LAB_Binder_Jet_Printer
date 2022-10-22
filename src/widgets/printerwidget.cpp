@@ -16,3 +16,4 @@ void PrinterWidget::pass_printer_objects(Printer *printer, PrintThread *printThr
     mPrintThread = printThread;
 }
 
+#include "moc_printerwidget.cpp"

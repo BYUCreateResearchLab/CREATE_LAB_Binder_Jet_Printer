@@ -213,3 +213,5 @@ uint64_t GraphicsScene::displayCount()
 {
     return m_nFrameDisplayCount;
 }
+
+#include "moc_graphicsscene.cpp"

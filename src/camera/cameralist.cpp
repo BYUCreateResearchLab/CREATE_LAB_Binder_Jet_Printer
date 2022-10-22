@@ -163,3 +163,5 @@ bool CameraList::isSingleCamOpenable()
         return true;
     }
 }
+
+#include "moc_cameralist.cpp"

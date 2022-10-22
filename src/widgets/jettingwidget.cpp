@@ -50,3 +50,4 @@ void JettingWidget::update_settings_clicked()
     else qDebug() << "the JetDrive is not connected!";
 }
 
+#include "moc_jettingwidget.cpp"

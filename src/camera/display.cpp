@@ -217,3 +217,4 @@ Display::~Display()
     delete limitTimer;
 }
 
+#include "moc_display.cpp"

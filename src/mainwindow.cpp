@@ -589,3 +589,5 @@ void MainWindow::connected_to_motion_controller()
     ui->connect->setText("Disconnect Controller");
     ui->homeZAxisCheckBox->setEnabled(false);
 }
+
+#include "moc_mainwindow.cpp"

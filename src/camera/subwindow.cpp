@@ -550,3 +550,5 @@ void SubWindow::fixMaximizedMenu()
         }
     }
 }
+
+#include "moc_subwindow.cpp"

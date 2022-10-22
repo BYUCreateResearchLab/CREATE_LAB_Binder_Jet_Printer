@@ -313,3 +313,5 @@ qreal SvgView::bordered_min_scale_factor()
     qreal scaleFactorY = size().height() / (sceneRect().height() + 0.25);
     return scaleFactorX < scaleFactorY ? scaleFactorX : scaleFactorY;
 }
+
+#include "moc_svgview.cpp"

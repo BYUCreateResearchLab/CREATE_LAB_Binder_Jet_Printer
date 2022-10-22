@@ -274,3 +274,5 @@ GReturn PrintThread::e(GReturn rc)
     }
     return rc;
 }
+
+#include "moc_printhread.cpp"

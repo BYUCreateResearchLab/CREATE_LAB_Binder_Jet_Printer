@@ -447,3 +447,5 @@ void DropletObservationWidget::save_video_clicked()
         return;
     }
 }
+
+#include "moc_dropletobservationwidget.cpp"

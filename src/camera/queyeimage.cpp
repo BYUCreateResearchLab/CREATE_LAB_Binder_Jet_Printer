@@ -531,3 +531,5 @@ QuEyeImage& QuEyeImage::operator=(QImage&& image)
     qSwap(*static_cast<QImage*>(this), image);
     return *this;
 };
+
+#include "moc_queyeimage.cpp"

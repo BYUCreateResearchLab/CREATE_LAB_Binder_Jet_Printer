@@ -30,3 +30,5 @@ void OutputWindow::clear_text()
 {
     ui->mOutputText->clear();
 }
+
+#include "moc_outputwindow.cpp"
