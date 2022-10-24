@@ -312,8 +312,12 @@ void DropletObservationWidget::start_strobe_sweep()
     // probably either calling from the wrong thread or
     // a missing mutex lock
 
+    // start strobe sweep
+    update_strobe_sweep_offset();
+
     // update the strobe sweep offset when a new frame is received
     // framereceived from eventthread
+    // update must be done from the main thread (accesses ui)
     connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
             this, &DropletObservationWidget::update_strobe_sweep_offset);
 
