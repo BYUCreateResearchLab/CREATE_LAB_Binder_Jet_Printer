@@ -15,8 +15,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 set(GCLIB_INSTALL_DIR "C:/Program Files (x86)/Galil/gclib")
-#set(UEYE_API_INCLUDE_DIR "C:/Program Files/IDS/uEye/develop/include")
-#set(UEYE_API_LIBRARY_DIR "C:/Program Files/IDS/uEye/develop/lib")
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Svg REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Svg REQUIRED)
@@ -26,31 +24,18 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     find_package(Qt${QT_VERSION_MAJOR} COMPONENTS SvgWidgets)
 endif()
 
-#add_library(gclib SHARED IMPORTED GLOBAL)
-#set_property(TARGET gclib PROPERTY IMPORTED_LOCATION ${GCLIB_INSTALL_DIR}/dll/x64/gclib.dll)
-#set_property(TARGET gclib PROPERTY IMPORTED_IMPLIB ${GCLIB_INSTALL_DIR}/lib/dynamic/x64/gclib.lib)
-
-#add_library(gclibo SHARED IMPORTED GLOBAL)
-#set_property(TARGET gclibo PROPERTY IMPORTED_LOCATION ${GCLIB_INSTALL_DIR}/dll/x64/gclibo.dll)
-#set_property(TARGET gclibo PROPERTY IMPORTED_IMPLIB ${GCLIB_INSTALL_DIR}/lib/dynamic/x64/gclibo.lib)
-
 set(HEADERS
 
-    src/mainwindow.h
-    src/jetdrive.h
-    src/lineprintdata.h
-    src/outputwindow.h
-    src/printer.h
-    src/printhread.h
-    src/printobject.h
-    src/svgview.h
-    src/vec2.h
-    src/widgets/printerwidget.h
-    src/widgets/powdersetupwidget.h
-    src/widgets/jettingwidget.h
-    src/widgets/lineprintwidget.h
-    src/widgets/highspeedlinewidget.h
-    src/widgets/dropletobservationwidget.h
+    include/mainwindow.h
+    include/jetdrive.h
+    include/lineprintdata.h
+    include/outputwindow.h
+    include/printer.h
+    include/printhread.h
+    include/printobject.h
+    include/svgview.h
+    include/vec2.h
+
 )
 
 set(SOURCES
@@ -64,12 +49,29 @@ set(SOURCES
     src/printhread.cpp
     src/printobject.cpp
     src/svgview.cpp
+
+)
+
+set(WIDGET_HEADERS
+
+    include/widgets/printerwidget.h
+    include/widgets/powdersetupwidget.h
+    include/widgets/jettingwidget.h
+    include/widgets/lineprintwidget.h
+    include/widgets/highspeedlinewidget.h
+    include/widgets/dropletobservationwidget.h
+
+)
+
+set(WIDGET_SOURCES
+
     src/widgets/printerwidget.cpp
     src/widgets/highspeedlinewidget.cpp
     src/widgets/jettingwidget.cpp
     src/widgets/lineprintwidget.cpp
     src/widgets/powdersetupwidget.cpp
     src/widgets/dropletobservationwidget.cpp
+
 )
 
 set(FORMS
@@ -83,38 +85,48 @@ set(FORMS
     src/ui/dropletobservationwidget.ui
 )
 
-set(RESOURCES
-    resources.qrc
-    bjprinter.rc
+set(CAMERA_HEADERS
+    include/camera/camera.h
+    include/camera/display.h
+    include/camera/eventthread.h
+    include/camera/graphicsscene.h
+    include/camera/graphicsview.h
+    include/camera/property_class.h
+    include/camera/queyeimage.h
+    include/camera/subwindow.h
+    include/camera/utils.h
+    include/camera/cameralist.h
 )
 
 set(CAMERA_SOURCES
     src/camera/camera.cpp
-    src/camera/camera.h
     src/camera/display.cpp
-    src/camera/display.h
     src/camera/eventthread.cpp
-    src/camera/eventthread.h
     src/camera/graphicsscene.cpp
-    src/camera/graphicsscene.h
     src/camera/graphicsview.cpp
-    src/camera/graphicsview.h
-    src/camera/property_class.h
     src/camera/queyeimage.cpp
-    src/camera/queyeimage.h
     src/camera/subwindow.cpp
-    src/camera/subwindow.h
     src/camera/utils.cpp
-    src/camera/utils.h
     src/camera/cameralist.cpp
-    src/camera/cameralist.h
+)
+
+set(RESOURCES
+
+    resources.qrc
+    bjprinter.rc
+
 )
 
 source_group("1 - Header Files" REGULAR_EXPRESSION "^.*\.(h|hpp)$")
 source_group("2 - Source Files" REGULAR_EXPRESSION "^.*\.(cpp)$")
 source_group("3 - UI Forms" REGULAR_EXPRESSION ".*\.ui")
-source_group("2 - Source Files/Printer Widgets" REGULAR_EXPRESSION "widget.*\.cpp")
-source_group("1 - Header Files/Printer Widgets" REGULAR_EXPRESSION "widget.*\.h")
+
+source_group("2 - Source Files/Printer Widgets" FILES ${WIDGET_HEADERS})
+source_group("1 - Header Files/Printer Widgets" FILES ${WIDGET_SOURCES})
+
+source_group("1 - Header Files/Camera" FILES ${CAMERA_HEADERS})
+source_group("2 - Source Files/Camera" FILES ${CAMERA_SOURCES})
+
 source_group("3 - UI Forms/Printer Widgets" REGULAR_EXPRESSION "widget.*\.ui")
 source_group("4 - Resources" REGULAR_EXPRESSION "^.*\.(rc|qrc)$")
 
@@ -131,15 +143,23 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${SOURCES}
         ${FORMS}
         ${RESOURCES}
+        ${WIDGET_HEADERS}
+        ${WIDGET_SOURCES}
+        ${CAMERA_HEADERS}
         ${CAMERA_SOURCES}
     )
 else()
     add_executable(${EXE_NAME} ${GUI_TYPE}
+
         ${HEADERS}
         ${SOURCES}
         ${FORMS}
         ${RESOURCES}
+        ${WIDGET_HEADERS}
+        ${WIDGET_SOURCES}
+        ${CAMERA_HEADERS}
         ${CAMERA_SOURCES}
+
     )
 endif()
 
@@ -153,25 +173,30 @@ if (WIN32)
 endif()
 
 target_link_directories(${EXE_NAME} PUBLIC
+
     ${GCLIB_LIBRARY_DIR}
+
 )
 
 target_link_libraries(${EXE_NAME} PUBLIC
+
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Svg
     gclib
     gclibo
     ueye_api${PLATFORM_SUFFIX}
     ueye_tools${PLATFORM_SUFFIX}
-    )
+
+)
 
 target_include_directories(${EXE_NAME} PUBLIC
+
     ${GCLIB_INSTALL_DIR}/include
-    src
-    src/widgets
-    src/ui
-    src/camera
-    )
+    include
+    include/widgets
+    include/camera
+
+)
 
 set_target_properties(${EXE_NAME} PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
