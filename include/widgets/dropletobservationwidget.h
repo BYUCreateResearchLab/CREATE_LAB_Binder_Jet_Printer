@@ -12,6 +12,10 @@
 
 class Camera;
 class JetDrive;
+class DropletAnalyzer;
+class DropletAnalyzerWidget;
+class QMainWindow;
+//class DropletAnalyzerWindow;
 
 namespace Ui {
 class DropletObservationWidget;
@@ -55,33 +59,37 @@ private slots:
 
 private:
     Ui::DropletObservationWidget *ui;
-    HIDS mCameraHandle {0};
-    JetDrive *mJetDrive {nullptr};
-    Camera *mCamera {nullptr};
+    HIDS m_cameraHandle {0};
+    JetDrive *m_JetDrive {nullptr};
+    Camera *m_Camera {nullptr};
 
-    QTimer *mJetVolumeTimer {nullptr};
-    QTimer *mProgressBarTimer {nullptr};
-    bool isJettingFor3Minutes {false};
-    const int minutesToJet = 3;
+    QTimer *m_JetVolumeTimer {nullptr};
+    QTimer *m_ProgressBarTimer {nullptr};
+    bool m_isJettingFor3Minutes {false};
+    const int m_minutesToJet = 3;
 
-    JettingWidget *mJettingWidget {nullptr};
+    JettingWidget *m_JettingWidget {nullptr};
 
-    int mCameraFrameRate{};
-    int mNumFramesToCapture{};
+    std::unique_ptr<DropletAnalyzer> m_analyzer;
+    DropletAnalyzerWidget *m_analyzerWidget {nullptr};
+    QMainWindow *m_analyzerWindow {nullptr};
 
-    int mAviID{0};
+    int m_cameraFrameRate{};
+    int m_numFramesToCapture{};
 
-    int mNumCapturedFrames{0};   // Keeps track of the current number of frames captured during video capture
-    int mCurrentStrobeOffset{-1}; // -1 means that a strobe sweep hasn't started
+    int m_aviID{0};
 
-    int AOIWidth{680};
+    int m_numCapturedFrames{0};   // Keeps track of the current number of frames captured during video capture
+    int m_currentStrobeOffset{-1}; // -1 means that a strobe sweep hasn't started
 
-    bool mIsJetting{false};
-    bool mCameraIsConnected{false};
-    bool mVideoHasBeenTaken{false};
-    bool mCaptureVideoWithSweep{false};
+    int m_AOIWidth{680};
 
-    QString mTempFileName{};
+    bool m_isJetting {false};
+    bool m_cameraIsConnected {false};
+    bool m_videoHasBeenTaken {false};
+    bool m_captureVideoWithSweep {false};
+
+    QString m_tempFileName{};
 };
 
 #endif // DROPLETOBSERVATIONWIDGET_H

@@ -12,18 +12,26 @@
 #include "cameralist.h"
 #include "printer.h"
 #include "jetdrive.h"
+#include "dropletanalyzer.h"
+#include "dropletanalyzerwidget.h"
 
 #include <QDebug>
 #include <chrono>
 
-DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *parent) : PrinterWidget(parent), ui(new Ui::DropletObservationWidget), mJetDrive(jetDrive)
+DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *parent) :
+    PrinterWidget(parent),
+    ui(new Ui::DropletObservationWidget),
+    m_JetDrive(jetDrive)
 {
     ui->setupUi(this);
+
     setAccessibleName("Droplet Observation Widget");
+
     ui->takeVideoButton->setEnabled(false);
     ui->SaveVideoButton->setEnabled(false);
     ui->sweepFrame->setEnabled(false);
     ui->cameraSettingsFrame->setEnabled(false);
+
     connect(ui->connectButton, &QPushButton::clicked, this, &DropletObservationWidget::connect_to_camera);
     connect(ui->takeVideoButton, &QPushButton::clicked, this, &DropletObservationWidget::capture_video);
     connect(this, &DropletObservationWidget::video_capture_complete, this, &DropletObservationWidget::stop_avi_capture);
@@ -33,26 +41,41 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     connect(ui->TriggerJetButton, &QPushButton::clicked, this, &DropletObservationWidget::trigger_jet_clicked);
     connect(ui->jetForMinutesButton, &QPushButton::clicked, this, &DropletObservationWidget::jet_for_three_minutes);
 
-    mJettingWidget = new JettingWidget(mJetDrive);
+    m_JettingWidget = new JettingWidget(m_JetDrive);
     QGridLayout *gridLayout = ui->frame->findChild<QGridLayout*>("gridLayout_frame");
-    gridLayout->addWidget(mJettingWidget, 23,0,1,3);
+    gridLayout->addWidget(m_JettingWidget, 23,0,1,3);
 
-    mCameraFrameRate = ui->cameraFPSSpinBox->value();
-    mNumFramesToCapture = int(ui->endTimeSpinBox->value() / ui->stepTimeSpinBox->value()) + 1;
+    m_cameraFrameRate = ui->cameraFPSSpinBox->value();
+    m_numFramesToCapture = int(ui->endTimeSpinBox->value() / ui->stepTimeSpinBox->value()) + 1;
     connect(ui->cameraFPSSpinBox, &QAbstractSpinBox::editingFinished, this, &DropletObservationWidget::framerate_changed);
     connect(ui->shutterAngleSpinBox, &QAbstractSpinBox::editingFinished, this, &DropletObservationWidget::exposure_changed);
-    mTempFileName = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/jetdroplet.avi";
-    qDebug() << "temp video files are stored at " << mTempFileName;
+    m_tempFileName = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/jetdroplet.avi";
+    qDebug() << "temp video files are stored at " << m_tempFileName;
     connect(ui->SaveVideoButton, &QPushButton::clicked, this, &DropletObservationWidget::save_video_clicked);
 
-    mJetVolumeTimer = new QTimer(this);
-    connect(mJetVolumeTimer, &QTimer::timeout, this, &DropletObservationWidget::end_jet_timer);
+    m_JetVolumeTimer = new QTimer(this);
+    connect(m_JetVolumeTimer, &QTimer::timeout, this, &DropletObservationWidget::end_jet_timer);
 
-    mProgressBarTimer = new QTimer(this);
-    connect(mProgressBarTimer, &QTimer::timeout, this, &DropletObservationWidget::update_progress_bar);
+    m_ProgressBarTimer = new QTimer(this);
+    connect(m_ProgressBarTimer, &QTimer::timeout, this, &DropletObservationWidget::update_progress_bar);
+
     ui->jetProgressBar->setMinimum(0);
-    ui->jetProgressBar->setMaximum(minutesToJet * 60 * 1000);
+    ui->jetProgressBar->setMaximum(m_minutesToJet * 60 * 1000);
     ui->jetProgressBar->setValue(0);
+
+    // droplet analyzer objects
+    m_analyzer = std::make_unique<DropletAnalyzer>();
+    m_analyzerWidget = new DropletAnalyzerWidget(this, m_analyzer.get());
+    m_analyzerWindow = new QMainWindow(this);
+
+    // setup analyzer window
+    m_analyzerWindow->setObjectName("DropletAnalyzerWindow");
+    m_analyzerWindow->setCentralWidget(m_analyzerWidget);
+    m_analyzerWindow->setGeometry(1000, 100, 300, 1000);
+    m_analyzerWindow->setWindowTitle("Droplet Analyzer");
+
+    m_analyzerWindow->show();
+
 }
 
 DropletObservationWidget::~DropletObservationWidget()
@@ -67,19 +90,19 @@ void DropletObservationWidget::allow_widget_input(bool allowed)
 
 void DropletObservationWidget::jetting_was_turned_on()
 {
-        mIsJetting = true;
-        ui->TriggerJetButton->setText("\nStop Jetting\n");
+    m_isJetting = true;
+    ui->TriggerJetButton->setText("\nStop Jetting\n");
 }
 
 void DropletObservationWidget::jetting_was_turned_off()
 {
-    mIsJetting = false;
+    m_isJetting = false;
     ui->TriggerJetButton->setText("\nTrigger Jet\n");
 }
 
 void DropletObservationWidget::connect_to_camera()
 {
-    if (mCameraIsConnected)
+    if (m_cameraIsConnected)
         ui->mdiArea->activeSubWindow()->close();
     else // attempt to connect to camera
     {
@@ -108,8 +131,8 @@ void DropletObservationWidget::connect_to_camera()
                     {
                         subWindow->camera()->captureVideo(false);
                         // There has to be a better way to get these pointers / shared pointers...
-                        mCameraHandle = subWindow->camera()->handle();
-                        mCamera = subWindow->camera().get();
+                        m_cameraHandle = subWindow->camera()->handle();
+                        m_Camera = subWindow->camera().get();
                     }
 
                     if (numCams == 1) subWindow->showMaximized();
@@ -120,7 +143,7 @@ void DropletObservationWidget::connect_to_camera()
                     ui->sweepFrame->setEnabled(true);
                     ui->cameraSettingsFrame->setEnabled(true);
                     ui->connectButton->setText("Disconnect Camera");
-                    mCameraIsConnected = true;
+                    m_cameraIsConnected = true;
 
                     connect(subWindow, &QWidget::destroyed, this, &DropletObservationWidget::camera_closed);
                 });
@@ -132,43 +155,43 @@ void DropletObservationWidget::connect_to_camera()
 void DropletObservationWidget::camera_closed()
 {
     // runs when SubWindow is destroyed (camera is closed)
-    mCamera = nullptr; // no need to delete, this is handled by SubWindow
-    mCameraHandle = 0;
+    m_Camera = nullptr; // no need to delete, this is handled by SubWindow
+    m_cameraHandle = 0;
     // update GUI
     ui->connectButton->setText("Connect Camera");
     ui->takeVideoButton->setEnabled(false);
     ui->SaveVideoButton->setEnabled(false);
     ui->sweepFrame->setEnabled(false);
     ui->cameraSettingsFrame->setEnabled(false);
-    mCameraIsConnected = false;
-    mVideoHasBeenTaken = false;
+    m_cameraIsConnected = false;
+    m_videoHasBeenTaken = false;
 }
 
 void DropletObservationWidget::set_settings()
 {
     // QRect(x1,y1,x2,y2)
     // TODO: get rid of magic numbers
-    mCamera->aoi.setRect(QRect(680, 0, AOIWidth, 2048)); // AOIwidth must be a multiple of 8 for AVI capture
-    double fps(mCameraFrameRate);
+    m_Camera->aoi.setRect(QRect(680, 0, m_AOIWidth, 2048)); // AOIwidth must be a multiple of 8 for AVI capture
+    double fps(m_cameraFrameRate);
     //double exposure_milliseconds{0}; // 0 sets the max possible exposure
     double newFPS{-1.0};
     double newExposure{-1.0};
 
     // set framerate
-    is_SetFrameRate(mCameraHandle, fps, &newFPS);
+    is_SetFrameRate(m_cameraHandle, fps, &newFPS);
 
     // get exposure range
     double exposureRange[3]; // [0] = min, [1] = max. [2] = increment
-    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE, &exposureRange, sizeof(exposureRange));
+    is_Exposure(m_cameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE, &exposureRange, sizeof(exposureRange));
 
     double maxExp = exposureRange[1];
     double desiredExpPercent = ((double)ui->shutterAngleSpinBox->value()) / 360.0;
     double desiredExposure = maxExp * desiredExpPercent;
 
     // set exposure
-    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &desiredExposure, sizeof(desiredExposure));
+    is_Exposure(m_cameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &desiredExposure, sizeof(desiredExposure));
     // get actual exposure set
-    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE, &newExposure, sizeof(newExposure));
+    is_Exposure(m_cameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE, &newExposure, sizeof(newExposure));
     ui->cameraFPSSpinBox->setValue(newFPS);
     //qDebug() << QString("The framerate was set as %1 FPS").arg(newFPS);
     //qDebug() << QString("The exposure was set as %1 milliseconds").arg(newExposure);
@@ -176,18 +199,18 @@ void DropletObservationWidget::set_settings()
 
 void DropletObservationWidget::capture_video()
 {
-    isavi_InitAVI(&mAviID, mCameraHandle); // initialize AVI capture
+    isavi_InitAVI(&m_aviID, m_cameraHandle); // initialize AVI capture
 
-    int colorMode{is_SetColorMode(mCameraHandle, IS_GET_COLOR_MODE)};
+    int colorMode{is_SetColorMode(m_cameraHandle, IS_GET_COLOR_MODE)};
     SENSORINFO sensorInfo{};
 
-    is_GetSensorInfo(mCameraHandle, &sensorInfo);
+    is_GetSensorInfo(m_cameraHandle, &sensorInfo);
 
     int sensorWidth = sensorInfo.nMaxWidth;   // 2048 for our camera
     int sensorHeight = sensorInfo.nMaxHeight; // 2048
 
     IS_POINT_2D nOffset;
-    is_AOI(mCameraHandle, IS_AOI_IMAGE_GET_POS, &nOffset, sizeof(nOffset));
+    is_AOI(m_cameraHandle, IS_AOI_IMAGE_GET_POS, &nOffset, sizeof(nOffset));
 
     // temp offset for cropping the nozzle out of the frame for Colton
     const int cropPixelAmount {240};
@@ -198,24 +221,24 @@ void DropletObservationWidget::capture_video()
     int posY{verticalPixelOffset};
 
     // verticalPixelOffset was added for testing
-    isavi_SetImageSize(mAviID, colorMode, AOIWidth, (sensorHeight-verticalPixelOffset), posX, posY, 0); // not sure why a zero here, but it works haha
+    isavi_SetImageSize(m_aviID, colorMode, m_AOIWidth, (sensorHeight-verticalPixelOffset), posX, posY, 0); // not sure why a zero here, but it works haha
 
     int imageQuality {95}; // 1 is the lowest, 100 is the highest
-    isavi_SetImageQuality (mAviID, imageQuality);
+    isavi_SetImageQuality (m_aviID, imageQuality);
 
     // get temp file location
-    std::string fileNameString = mTempFileName.toStdString();
+    std::string fileNameString = m_tempFileName.toStdString();
     const char* fileName = fileNameString.c_str();
 
-    isavi_OpenAVI(mAviID, fileName);
+    isavi_OpenAVI(m_aviID, fileName);
 
-    int videoFrameRate{mCameraFrameRate}; // this does not need to be the same as the actual framerate though
-    isavi_SetFrameRate(mAviID, videoFrameRate);
-    isavi_StartAVI(mAviID);
+    int videoFrameRate{m_cameraFrameRate}; // this does not need to be the same as the actual framerate though
+    isavi_SetFrameRate(m_aviID, videoFrameRate);
+    isavi_StartAVI(m_aviID);
 
-    mNumFramesToCapture = int(ui->endTimeSpinBox->value() / ui->stepTimeSpinBox->value()) + 1;
+    m_numFramesToCapture = int(ui->endTimeSpinBox->value() / ui->stepTimeSpinBox->value()) + 1;
     allow_widget_input(false);
-    mCaptureVideoWithSweep = true;
+    m_captureVideoWithSweep = true;
     start_strobe_sweep();
 }
 
@@ -252,10 +275,10 @@ void DropletObservationWidget::move_towards_middle()
 
 void DropletObservationWidget::jet_for_three_minutes()
 {
-    if (!isJettingFor3Minutes)
+    if (!m_isJettingFor3Minutes)
     {
         std::stringstream s;
-        if (!mIsJetting)
+        if (!m_isJetting)
         {
             s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
             s << CMD::set_jog(Axis::Jet, 1024);             // set to jet at 1024hz
@@ -265,11 +288,11 @@ void DropletObservationWidget::jet_for_three_minutes()
         }
 
         emit print_to_output_window("Starting 3 minute timer");
-        isJettingFor3Minutes = true;
+        m_isJettingFor3Minutes = true;
         ui->TriggerJetButton->setEnabled(false);
         ui->jetForMinutesButton->setText("Cancel Timer");
-        mJetVolumeTimer->start(minutesToJet * 60 * 1000);
-        mProgressBarTimer->start(2000);
+        m_JetVolumeTimer->start(m_minutesToJet * 60 * 1000);
+        m_ProgressBarTimer->start(2000);
     }
     else end_jet_timer();
 }
@@ -282,17 +305,17 @@ void DropletObservationWidget::end_jet_timer()
     jetting_was_turned_off();
 
     ui->TriggerJetButton->setEnabled(true);
-    mJetVolumeTimer->stop();
-    mProgressBarTimer->stop();
+    m_JetVolumeTimer->stop();
+    m_ProgressBarTimer->stop();
     ui->jetProgressBar->setValue(0);
-    isJettingFor3Minutes = false;
+    m_isJettingFor3Minutes = false;
     ui->jetForMinutesButton->setText("Jet For 3 Minutes");
     emit print_to_output_window("Timer Done");
 }
 
 void DropletObservationWidget::update_progress_bar()
 {
-    int progress = mJetVolumeTimer->interval() - mJetVolumeTimer->remainingTime();
+    int progress = m_JetVolumeTimer->interval() - m_JetVolumeTimer->remainingTime();
     ui->jetProgressBar->setValue(progress);
 }
 
@@ -318,44 +341,44 @@ void DropletObservationWidget::start_strobe_sweep()
     // update the strobe sweep offset when a new frame is received
     // framereceived from eventthread
     // update must be done from the main thread (accesses ui)
-    connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
+    connect(m_Camera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
             this, &DropletObservationWidget::update_strobe_sweep_offset);
 
-    if (mCaptureVideoWithSweep) // if also capturing a video
+    if (m_captureVideoWithSweep) // if also capturing a video
     {
         // when a frame is added to the camera, add it to the avi file
         // framereceived signal from event thread
-        connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
+        connect(m_Camera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
                 this, &DropletObservationWidget::add_frame_to_avi, Qt::DirectConnection);
     }
 }
 
 void DropletObservationWidget::add_frame_to_avi(ImageBufferPtr buffer)
 {
-    isavi_AddFrame(mAviID, reinterpret_cast<char*>(buffer->data()));
-    mNumCapturedFrames++;
-    if (mNumCapturedFrames >= mNumFramesToCapture)
+    isavi_AddFrame(m_aviID, reinterpret_cast<char*>(buffer->data()));
+    m_numCapturedFrames++;
+    if (m_numCapturedFrames >= m_numFramesToCapture)
     {
         // don't add any more frames
-        disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
+        disconnect(m_Camera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
                    this, &DropletObservationWidget::add_frame_to_avi);
         emit video_capture_complete();
         unsigned long nLostFrames {777};
-        isavi_GetnLostFrames(mAviID, &nLostFrames);
+        isavi_GetnLostFrames(m_aviID, &nLostFrames);
         qDebug() << nLostFrames << " frames were dropped during video capture";
     }
 }
 
 void DropletObservationWidget::stop_avi_capture()
 {
-    mNumCapturedFrames = 0;
-    isavi_StopAVI(mAviID);
-    isavi_CloseAVI(mAviID);
-    isavi_ExitAVI(mAviID);
+    m_numCapturedFrames = 0;
+    isavi_StopAVI(m_aviID);
+    isavi_CloseAVI(m_aviID);
+    isavi_ExitAVI(m_aviID);
     this->allow_widget_input(true);
-    this->mVideoHasBeenTaken = true;
+    this->m_videoHasBeenTaken = true;
     this->ui->SaveVideoButton->setEnabled(true);
-    this->mCaptureVideoWithSweep = false;
+    this->m_captureVideoWithSweep = false;
 }
 
 void DropletObservationWidget::update_strobe_sweep_offset()
@@ -363,34 +386,34 @@ void DropletObservationWidget::update_strobe_sweep_offset()
 
     //mSweepTimer->stop();
 
-    if (mCurrentStrobeOffset == -1) // if starting strobe sweep
+    if (m_currentStrobeOffset == -1) // if starting strobe sweep
     {
-        mCurrentStrobeOffset = ui->startTimeSpinBox->value();
-        mJetDrive->set_strobe_delay(mCurrentStrobeOffset);
+        m_currentStrobeOffset = ui->startTimeSpinBox->value();
+        m_JetDrive->set_strobe_delay(m_currentStrobeOffset);
         const int timeToStepThrough = (ui->endTimeSpinBox->value() - ui->startTimeSpinBox->value());
         ui->sweepProgressBar->setMaximum(timeToStepThrough);
         //emit print_to_output_window(QString::number(mCurrentStrobeOffset));
     }
-    else if (mCurrentStrobeOffset >= ui->endTimeSpinBox->value()) // if sweep complete
+    else if (m_currentStrobeOffset >= ui->endTimeSpinBox->value()) // if sweep complete
     {
-        disconnect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
+        disconnect(m_Camera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
                 this, &DropletObservationWidget::update_strobe_sweep_offset);
-        mCurrentStrobeOffset = -1;
+        m_currentStrobeOffset = -1;
         ui->sweepProgressBar->setValue(0);
     }
     else // increment strobe sweep offset
     {
-        mCurrentStrobeOffset += ui->stepTimeSpinBox->value();
-        mJetDrive->set_strobe_delay(mCurrentStrobeOffset);
+        m_currentStrobeOffset += ui->stepTimeSpinBox->value();
+        m_JetDrive->set_strobe_delay(m_currentStrobeOffset);
         // update progress bar
-        ui->sweepProgressBar->setValue(mCurrentStrobeOffset - ui->startTimeSpinBox->value());
+        ui->sweepProgressBar->setValue(m_currentStrobeOffset - ui->startTimeSpinBox->value());
     }
 }
 
 void DropletObservationWidget::trigger_jet_clicked()
 {
     std::stringstream s;
-    if (!mIsJetting)
+    if (!m_isJetting)
     {
         s << CMD::servo_here(Axis::Jet);
         s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
@@ -413,11 +436,11 @@ void DropletObservationWidget::trigger_jet_clicked()
 
 void DropletObservationWidget::framerate_changed()
 {
-    mCameraFrameRate = ui->cameraFPSSpinBox->value();
-    double fps(mCameraFrameRate);
+    m_cameraFrameRate = ui->cameraFPSSpinBox->value();
+    double fps(m_cameraFrameRate);
     double newFPS{-1.0};
     // set framerate
-    is_SetFrameRate(mCameraHandle, fps, &newFPS);
+    is_SetFrameRate(m_cameraHandle, fps, &newFPS);
     qDebug() << QString("The framerate was set as %1 FPS").arg(newFPS);
     ui->cameraFPSSpinBox->setValue(newFPS);
     exposure_changed(); // now update the exposure
@@ -426,7 +449,7 @@ void DropletObservationWidget::framerate_changed()
 void DropletObservationWidget::exposure_changed()
 {
     double exposureRange[3]; // [0] = min, [1] = max. [2] = increment
-    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE, &exposureRange, sizeof(exposureRange));
+    is_Exposure(m_cameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE, &exposureRange, sizeof(exposureRange));
 
     //double minExp = exposureRange[0];
     double maxExp = exposureRange[1];
@@ -437,15 +460,15 @@ void DropletObservationWidget::exposure_changed()
 
     double newExposure{-1.0};
     // set exposure
-    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &desiredExposure, sizeof(desiredExposure));
-    is_Exposure(mCameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE, &newExposure, sizeof(newExposure));
+    is_Exposure(m_cameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &desiredExposure, sizeof(desiredExposure));
+    is_Exposure(m_cameraHandle, IS_EXPOSURE_CMD_GET_EXPOSURE, &newExposure, sizeof(newExposure));
     qDebug() << QString("The exposure was set as %1 milliseconds").arg(newExposure);
 }
 
 void DropletObservationWidget::save_video_clicked()
 {
     QString fileName = QFileDialog::getSaveFileName(this, "Save as", "", ("Video File (*.avi)"));
-    if (!QFile::copy(mTempFileName, fileName))
+    if (!QFile::copy(m_tempFileName, fileName))
     {
         QMessageBox::warning(this, "Warning", "Cannot save file");
         return;

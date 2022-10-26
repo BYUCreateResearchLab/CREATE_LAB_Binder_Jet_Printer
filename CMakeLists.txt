@@ -16,8 +16,9 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 set(GCLIB_INSTALL_DIR "C:/Program Files (x86)/Galil/gclib")
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Svg REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Svg REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Svg PrintSupport REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Svg PrintSupport REQUIRED)
 find_package(ueyeapi REQUIRED)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -83,9 +84,12 @@ set(FORMS
     src/ui/outputwindow.ui
     src/ui/powdersetupwidget.ui
     src/ui/dropletobservationwidget.ui
+    src/ui/dropletanalyzerwidget.ui
+
 )
 
 set(CAMERA_HEADERS
+
     include/camera/camera.h
     include/camera/display.h
     include/camera/eventthread.h
@@ -96,9 +100,11 @@ set(CAMERA_HEADERS
     include/camera/subwindow.h
     include/camera/utils.h
     include/camera/cameralist.h
+
 )
 
 set(CAMERA_SOURCES
+
     src/camera/camera.cpp
     src/camera/display.cpp
     src/camera/eventthread.cpp
@@ -108,6 +114,25 @@ set(CAMERA_SOURCES
     src/camera/subwindow.cpp
     src/camera/utils.cpp
     src/camera/cameralist.cpp
+
+)
+
+set(DA_HEADERS
+
+    include/dropletanalyzer/dropletanalyzer.h
+    include/dropletanalyzer/dropletanalyzerwidget.h
+    include/dropletanalyzer/imageviewer.h
+    include/dropletanalyzer/linearanalysis.h
+    include/dropletanalyzer/qcustomplot.h
+
+)
+
+set(DA_SOURCES
+
+    src/dropletanalyzer/dropletanalyzer.cpp
+    src/dropletanalyzer/imageviewer.cpp
+    src/dropletanalyzer/dropletanalyzerwidget.cpp
+    src/dropletanalyzer/qcustomplot.cpp
 )
 
 set(RESOURCES
@@ -121,11 +146,14 @@ source_group("1 - Header Files" REGULAR_EXPRESSION "^.*\.(h|hpp)$")
 source_group("2 - Source Files" REGULAR_EXPRESSION "^.*\.(cpp)$")
 source_group("3 - UI Forms" REGULAR_EXPRESSION ".*\.ui")
 
-source_group("2 - Source Files/Printer Widgets" FILES ${WIDGET_HEADERS})
-source_group("1 - Header Files/Printer Widgets" FILES ${WIDGET_SOURCES})
+source_group("1 - Header Files/Printer Widgets" FILES ${WIDGET_HEADERS})
+source_group("2 - Source Files/Printer Widgets" FILES ${WIDGET_SOURCES})
 
 source_group("1 - Header Files/Camera" FILES ${CAMERA_HEADERS})
 source_group("2 - Source Files/Camera" FILES ${CAMERA_SOURCES})
+
+source_group("1 - Header Files/Droplet Analyzer" FILES ${DA_HEADERS})
+source_group("2 - Source Files/Droplet Analyzer" FILES ${DA_SOURCES})
 
 source_group("3 - UI Forms/Printer Widgets" REGULAR_EXPRESSION "widget.*\.ui")
 source_group("4 - Resources" REGULAR_EXPRESSION "^.*\.(rc|qrc)$")
@@ -147,6 +175,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${WIDGET_SOURCES}
         ${CAMERA_HEADERS}
         ${CAMERA_SOURCES}
+        ${DA_HEADERS}
+        ${DA_SOURCES}
     )
 else()
     add_executable(${EXE_NAME} ${GUI_TYPE}
@@ -159,6 +189,8 @@ else()
         ${WIDGET_SOURCES}
         ${CAMERA_HEADERS}
         ${CAMERA_SOURCES}
+        ${DA_HEADERS}
+        ${DA_SOURCES}
 
     )
 endif()
@@ -182,10 +214,12 @@ target_link_libraries(${EXE_NAME} PUBLIC
 
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Svg
+    Qt${QT_VERSION_MAJOR}::PrintSupport
     gclib
     gclibo
     ueye_api${PLATFORM_SUFFIX}
     ueye_tools${PLATFORM_SUFFIX}
+    ${OpenCV_LIBS}
 
 )
 
@@ -195,6 +229,8 @@ target_include_directories(${EXE_NAME} PUBLIC
     include
     include/widgets
     include/camera
+    include/dropletanalyzer
+    ${OpenCV_INCLUDE_DIRS}
 
 )
 

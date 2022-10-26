@@ -12,6 +12,7 @@ https://www.ids-imaging.us/download-details/AB00518.html#anc-software-272
   - for IDS UI-3370CP-M-GL camera
 
 - OpenCV:
+https://opencv.org/releases/ 
   - version 4.5.5 for MSVC
 
 - MSCV2019 compiler
@@ -26,6 +27,10 @@ https://www.ids-imaging.us/download-details/AB00518.html#anc-software-272
   - C:\Program Files (x86)\Galil\gclib\dll\x64
 - add QT5 bin to system PATH
   - C:\Qt\5.15.2\msvc2019_64\bin
+- add OpenCV bin to system PATH
+  - ..\opencv\build\x64\vc15\bin
+- add OPENCV_DIR to environement variables
+  - ..\opencv\build\x64\vc15\lib
 - Set ethernet port connected to motion controller as 192.168.42.10 (make sure motion controller is set as 192.168.42.100
 - Set COM port for JetDrive in device manager to be COM4
  
