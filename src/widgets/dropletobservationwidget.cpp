@@ -41,6 +41,13 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     connect(ui->TriggerJetButton, &QPushButton::clicked, this, &DropletObservationWidget::trigger_jet_clicked);
     connect(ui->jetForMinutesButton, &QPushButton::clicked, this, &DropletObservationWidget::jet_for_three_minutes);
 
+    // enable buttons for droplet analysis after video capture has completed
+    connect(this, &DropletObservationWidget::video_capture_complete, this, [this](){
+        this->ui->openAnalyzerWindowButton->setEnabled(true);
+        this->ui->getDropletVelocityButton->setEnabled(true);
+        this->ui->detectImageScaleButton->setEnabled(true);
+    });
+
     m_JettingWidget = new JettingWidget(m_JetDrive);
     QGridLayout *gridLayout = ui->frame->findChild<QGridLayout*>("gridLayout_frame");
     gridLayout->addWidget(m_JettingWidget, 23,0,1,3);
@@ -66,21 +73,26 @@ DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *
     // droplet analyzer objects
     m_analyzer = std::make_unique<DropletAnalyzer>();
     m_analyzerWidget = new DropletAnalyzerWidget(this, m_analyzer.get());
-    m_analyzerWindow = new QMainWindow(this);
+    m_analyzerWindow = std::make_unique<DropletAnalyzerMainWindow>(m_analyzerWidget); // don't set parent so the window shows up in taskbar
 
-    // setup analyzer window
-    m_analyzerWindow->setObjectName("DropletAnalyzerWindow");
-    m_analyzerWindow->setCentralWidget(m_analyzerWidget);
-    m_analyzerWindow->setGeometry(1000, 100, 300, 1000);
-    m_analyzerWindow->setWindowTitle("Droplet Analyzer");
-
-    m_analyzerWindow->show();
-
+    // allow the droplet analyzer and widget to print to the sidebar ouput window
+    connect(m_analyzerWidget, &DropletAnalyzerWidget::print_to_output_window, this, &PrinterWidget::print_to_output_window);
+    connect(m_analyzer.get(), &DropletAnalyzer::print_to_output_window, this, &PrinterWidget::print_to_output_window);
+    setup();
 }
 
 DropletObservationWidget::~DropletObservationWidget()
 {
     delete ui;
+}
+
+void DropletObservationWidget::setup()
+{
+    ui->imageScaleSpinBox->setValue(m_analyzer->camera_settings().imagePixelSize_um);
+    connect(m_analyzerWidget, &DropletAnalyzerWidget::image_scaled_was_changed, this, [this](){this->ui->imageScaleSpinBox->setValue(this->m_analyzer->camera_settings().imagePixelSize_um);});
+    connect(ui->imageScaleSpinBox, &QDoubleSpinBox::editingFinished, this, [this](){this->m_analyzerWidget->set_image_scale(this->ui->imageScaleSpinBox->value());});
+    //connect(ui->imageScaleSpinBox, &QDoubleSpinBox::editingFinished, m_analyzerWidget, );
+    ui->cameraSettingsFrame->setEnabled(true);
 }
 
 void DropletObservationWidget::allow_widget_input(bool allowed)
@@ -98,6 +110,22 @@ void DropletObservationWidget::jetting_was_turned_off()
 {
     m_isJetting = false;
     ui->TriggerJetButton->setText("\nTrigger Jet\n");
+}
+
+void DropletObservationWidget::show_droplet_analyzer_widget()
+{
+    m_analyzerWindow.get()->show();
+    m_analyzerWindow.get()->activateWindow();
+}
+
+void DropletObservationWidget::hide_droplet_analyzer_widget()
+{
+    m_analyzerWindow.get()->hide();
+}
+
+bool DropletObservationWidget::is_droplet_anlyzer_window_visible() const
+{
+    return !m_analyzerWindow.get()->isHidden();
 }
 
 void DropletObservationWidget::connect_to_camera()

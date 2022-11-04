@@ -977,3 +977,8 @@ bool JetDrive::is_connected()
 {
     return mJetDrv != NOCOM;
 }
+
+const MicroJet &JetDrive::get_jet_drive_settings() const
+{
+    return *mJetSettings;
+}

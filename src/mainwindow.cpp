@@ -115,6 +115,8 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
 
     connect(ui->zAbsoluteMoveButton, &QAbstractButton::clicked, this, &MainWindow::move_z_to_absolute_position);
 
+    connect(ui->actionShow_Hide_Droplet_Tool, &QAction::triggered, this, &MainWindow::show_hide_droplet_analyzer_window);
+
 }
 
 // on application close
@@ -459,6 +461,18 @@ void MainWindow::on_actionShow_Hide_Console_triggered()
 {
     if (mDockWidget->isVisible()) mDockWidget->hide();
     else                          mDockWidget->show();
+}
+
+void MainWindow::show_hide_droplet_analyzer_window()
+{
+    if (!mDropletObservationWidget->is_droplet_anlyzer_window_visible())
+    {
+        mDropletObservationWidget->show_droplet_analyzer_widget();
+    }
+    else
+    {
+        mDropletObservationWidget->hide_droplet_analyzer_widget();
+    }
 }
 
 void MainWindow::generate_printing_message_box(const std::string &message)

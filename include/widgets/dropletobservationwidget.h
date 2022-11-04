@@ -15,6 +15,7 @@ class JetDrive;
 class DropletAnalyzer;
 class DropletAnalyzerWidget;
 class QMainWindow;
+class DropletAnalyzerMainWindow;
 //class DropletAnalyzerWindow;
 
 namespace Ui {
@@ -29,15 +30,20 @@ public:
     explicit DropletObservationWidget(JetDrive *jetDrive, QWidget *parent = nullptr);
     ~DropletObservationWidget();
     void allow_widget_input(bool allowed) override;
+    bool is_droplet_anlyzer_window_visible() const;
 
 public slots:
     void jetting_was_turned_on();
     void jetting_was_turned_off();
 
+    void show_droplet_analyzer_widget();
+    void hide_droplet_analyzer_widget();
+
 signals:
     void video_capture_complete();
 
 private slots:
+    void setup();
     void connect_to_camera();
     void set_settings();
     void capture_video();
@@ -72,7 +78,7 @@ private:
 
     std::unique_ptr<DropletAnalyzer> m_analyzer;
     DropletAnalyzerWidget *m_analyzerWidget {nullptr};
-    QMainWindow *m_analyzerWindow {nullptr};
+    std::unique_ptr<DropletAnalyzerMainWindow> m_analyzerWindow;
 
     int m_cameraFrameRate{};
     int m_numFramesToCapture{};

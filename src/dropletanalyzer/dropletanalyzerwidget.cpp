@@ -42,6 +42,17 @@ DropletAnalyzerWidget::DropletAnalyzerWidget(QWidget *parent, DropletAnalyzer *a
 
 DropletAnalyzerWidget::~DropletAnalyzerWidget() {}
 
+void DropletAnalyzerWidget::hide_plot_window()
+{
+    m_graphWindow->hide();
+}
+
+void DropletAnalyzerWidget::set_image_scale(double imageScale_um_per_px)
+{
+    ui->imageScaleSpinBox->setValue(imageScale_um_per_px);
+    image_scale_was_edited();
+}
+
 void DropletAnalyzerWidget::setup()
 {
     nozzle_diameter_was_changed();
@@ -82,8 +93,12 @@ void DropletAnalyzerWidget::setup()
 
 void DropletAnalyzerWidget::reset()
 {
+    m_analyzer->reset();
+    m_view->reset();
     ui->strobeSweepStepSpinBox->setValue(m_analyzer->get_strobe_step_time());
     image_scale_detected();
+
+    ui->videoSettingsGroupBox->setEnabled(true);
 
     m_videoLoaded = false;
     m_trackerPositions.clear();
@@ -100,8 +115,30 @@ void DropletAnalyzerWidget::reset()
     disconnect(ui->frameSlider, &QSlider::valueChanged, this, &DropletAnalyzerWidget::process_frame_request);
     disconnect(this, &DropletAnalyzerWidget::show_frame, m_analyzer, &DropletAnalyzer::show_frame);
 
+    // reset slider
+    ui->frameSlider->setValue(0);
+    ui->frameSlider->setRange(0,0);
+
+    // reset image
+
+
     update_view_settings(); // tell other thread to not show procssed frame
     ui->analyzeVideoButton->setEnabled(false);
+}
+
+void DropletAnalyzerWidget::load_video_from_observation_widget(QString filePath, MicroJet jetSettings, double strobe_sweep_step_time_us)
+{
+    reset();
+    ui->strobeSweepStepSpinBox->setValue(strobe_sweep_step_time_us);
+    strobe_step_time_was_changed(strobe_sweep_step_time_us);
+    m_analyzer->set_jetting_settings(jetSettings);
+
+    // load video on thread of analyzer
+    QMetaObject::invokeMethod(m_analyzer, [this, filePath]()
+    { m_analyzer->load_video(filePath.toStdString()); }, Qt::QueuedConnection);
+
+    // wait until video is loaded
+    setEnabled(false);
 }
 
 void DropletAnalyzerWidget::magnification_was_edited()
@@ -116,6 +153,7 @@ void DropletAnalyzerWidget::magnification_was_edited()
         qDebug() << "magnification value was different enough";
         m_analyzer->camera_settings().imagePixelSize_um = m_analyzer->camera_settings().image_pixel_size_from_mag(ui->magnificationSpinBox->value());
         ui->imageScaleSpinBox->setValue(m_analyzer->camera_settings().imagePixelSize_um);
+        emit image_scaled_was_changed();
     }
 }
 
@@ -132,6 +170,7 @@ void DropletAnalyzerWidget::image_scale_was_edited()
         qDebug() << "image scale value was different enough";
         m_analyzer->camera_settings().imagePixelSize_um = ui->imageScaleSpinBox->value();
         ui->magnificationSpinBox->setValue(m_analyzer->camera_settings().calculate_lens_magnification());
+        emit image_scaled_was_changed();
     }
 }
 
@@ -147,7 +186,7 @@ void DropletAnalyzerWidget::strobe_step_time_was_changed(int stepTime_us)
 
 void DropletAnalyzerWidget::set_frame_range(int numFrames)
 {
-    qDebug() << "There are " << numFrames << "frames in the video";
+    // emit print_to_output_window(QString("There are %1 frames in the video").arg(numFrames));
     ui->frameSlider->setRange(0, numFrames-1);
     ui->frameSlider->setValue(0);
 }
@@ -172,6 +211,7 @@ void DropletAnalyzerWidget::image_scale_detected()
     this->setEnabled(true);
     ui->imageScaleSpinBox->setValue(m_analyzer->camera_settings().imagePixelSize_um);
     ui->magnificationSpinBox->setValue(m_analyzer->camera_settings().calculate_lens_magnification());
+    emit image_scaled_was_changed();
 }
 
 void DropletAnalyzerWidget::image_scale_detection_failed()
@@ -179,7 +219,7 @@ void DropletAnalyzerWidget::image_scale_detection_failed()
     this->setEnabled(true);
     ui->analyzeVideoButton->setFocus();
     ui->detectLensMagButton->setEnabled(false);
-    qDebug() << "Could not detect nozzle in video";
+    emit print_to_output_window("Could not detect nozzle in video");
 }
 
 void DropletAnalyzerWidget::load_video_button_pressed()
@@ -195,8 +235,8 @@ void DropletAnalyzerWidget::load_video_button_pressed()
         if (file.size() > (maxFileSizeBytes) ||
            (file.suffix() != "avi" && file.suffix() != "mp4"))
         {
-            qDebug() << "Invalid file or file is too large";
-            qDebug() << "Max file size is" << maxFileSizeBytes / 1000000 << "Mb";
+            emit print_to_output_window("Invalid file or file is too large");
+            emit print_to_output_window(QString("Max file size is %1 MB").arg(maxFileSizeBytes / 1000000));
             return;
         }
 
@@ -232,11 +272,14 @@ void DropletAnalyzerWidget::video_loaded()
 void DropletAnalyzerWidget::video_load_failed()
 {
     this->setEnabled(true);
-    qDebug() << "video failed to load";
+    emit print_to_output_window("video failed to load");
 }
 
 void DropletAnalyzerWidget::video_analysis_complete()
 {
+    ui->showDropletTrackingCheckBox->setChecked(true);
+    update_view_settings();
+
     this->setEnabled(true);
     ui->displaySettingsGroupBox->setEnabled(true);
     ui->exportDataButton->setEnabled(true);
@@ -250,7 +293,7 @@ void DropletAnalyzerWidget::video_analysis_complete()
     fitLine.intercept = data.intercept;
     fitLine.slope = data.velocity_m_s;
     auto fitY = LinearAnalysis::get_fit_vals(fitLine, dataX);
-    qDebug() << "Velocity: " << data.velocity_m_s << " m/s";
+    emit print_to_output_window(QString("Droplet Velocity: %1 m/s").arg(data.velocity_m_s));
 
     m_graphWindow->plot_data(dataX, dataY);
     m_graphWindow->plot_trend_line(dataX, fitY);
@@ -324,6 +367,33 @@ void DropletGraphWindow::plot_trend_line(const std::vector<double> &x, const std
                               QVector<double>(y.begin(), y.end()));
     m_plot->graph(1)->setScatterStyle(QCPScatterStyle::ssNone);
     m_plot->replot();
+}
+
+
+DropletAnalyzerMainWindow::DropletAnalyzerMainWindow(DropletAnalyzerWidget* analyzerWidget, QWidget *parent) :
+    QMainWindow(parent),
+    m_dropletAnalyzerWidget(analyzerWidget)
+{
+    setCentralWidget(m_dropletAnalyzerWidget);
+
+    setObjectName("DropletAnalyzerWindow");
+    setGeometry(1000, 100, 300, 1000);
+    setWindowTitle("Droplet Analyzer");
+
+    //QSize size = QGuiApplication::primaryScreen()->availableGeometry().size();
+    //resize(size.height() * .45, size.height() * .75);
+}
+
+DropletAnalyzerMainWindow::~DropletAnalyzerMainWindow()
+{
+
+}
+
+void DropletAnalyzerMainWindow::closeEvent (QCloseEvent *event)
+{
+    m_dropletAnalyzerWidget->hide_plot_window();
+    m_dropletAnalyzerWidget->reset();
+
 }
 
 #include "moc_dropletanalyzerwidget.cpp"

@@ -772,6 +772,7 @@ Home</string>
      <string>Window</string>
     </property>
     <addaction name="actionShow_Hide_Console"/>
+    <addaction name="actionShow_Hide_Droplet_Tool"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -785,6 +786,11 @@ Home</string>
   <action name="actionShow_Hide_Console">
    <property name="text">
     <string>Show/Hide Console</string>
+   </property>
+  </action>
+  <action name="actionShow_Hide_Droplet_Tool">
+   <property name="text">
+    <string>Show/Hide Droplet Tool</string>
    </property>
   </action>
  </widget>

@@ -50,6 +50,7 @@ DropletAnalyzer::DropletAnalyzer() : QObject()
     m_thread.reset(new QThread);
     m_thread->setObjectName("Converter Thread");
     camera_settings().cameraPixelSize_um = 5.5; // for IDS camera
+    m_jetSettings.reset();
     moveToThread(m_thread.get());
     m_thread->start();
 }
@@ -388,6 +389,12 @@ void DropletAnalyzer::generate_tracking_csv()
     }
 }
 
+void DropletAnalyzer::set_jetting_settings(const MicroJet &jetSettings)
+{
+    QMutexLocker lock(&m_mutex);
+    m_jetSettings = jetSettings;
+}
+
 void DropletAnalyzer::detect_nozzle()
 {
     cv::Mat bw;
@@ -429,11 +436,11 @@ void DropletAnalyzer::detect_nozzle()
             // get bottom face
             std::vector<cv::Point> nozzleTip = {m_nozzleOutline[1], m_nozzleOutline[2]};
             m_originPoint = (nozzleTip[0] + nozzleTip[1]) / 2.0;
-            qDebug() << "origin point " << m_originPoint.x << m_originPoint.y;
+            //qDebug() << "origin point " << m_originPoint.x << m_originPoint.y;
             return;
         }
     }
-    qDebug() << "Could not detect nozzle, no valid contours found";
+    emit print_to_output_window("Could not detect nozzle, no valid contours found");
 }
 
 void DropletAnalyzer::estimate_image_scale()

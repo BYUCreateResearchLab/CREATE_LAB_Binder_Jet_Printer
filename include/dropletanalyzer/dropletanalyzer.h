@@ -6,9 +6,11 @@
 #include <QImage>
 #include <QThread>
 #include <QMutex>
+#include <optional>
 
 #include "opencv2/core/mat.hpp"
 #include "opencv2/core/types.hpp"
+#include "jetdrive.h"
 
 typedef std::vector<std::vector<cv::Point>> Points2D;
 
@@ -67,6 +69,7 @@ signals:
    void video_analysis_successful();
    void image_scale_estimated();
    void image_scale_estimation_failed();
+   void print_to_output_window(QString s);
 
 public slots:
    DropletCameraSettings& camera_settings();
@@ -88,6 +91,7 @@ public slots:
    void track_droplet();
    void calculate_scaled_drop_pos();
    void generate_tracking_csv();
+   void set_jetting_settings(const MicroJet& jetSettings);
 
 private slots:
    void cleanup();
@@ -119,6 +123,8 @@ private:
 
    DropletCameraSettings m_cameraSettings;
    DropViewSettings m_viewSettings;
+
+   std::optional<MicroJet> m_jetSettings;
 
    std::unique_ptr<QThread> m_thread;
 };

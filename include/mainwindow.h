@@ -56,6 +56,7 @@ private slots:
     void print_to_output_window(QString s);
     void on_removeBuildBox_clicked();
     void on_actionShow_Hide_Console_triggered();
+    void show_hide_droplet_analyzer_window();
     void generate_printing_message_box(const std::string &message);
 
     void tab_was_changed(int index);

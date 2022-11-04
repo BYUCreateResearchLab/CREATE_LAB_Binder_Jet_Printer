@@ -33,6 +33,8 @@ public:
     void set_num_drops_per_trigger(short numDrops);
     bool is_connected();
 
+    const MicroJet& get_jet_drive_settings() const;
+
 private:
     void wait_seconds(float seconds);
     void test_log(const char* outputstring, bool status);

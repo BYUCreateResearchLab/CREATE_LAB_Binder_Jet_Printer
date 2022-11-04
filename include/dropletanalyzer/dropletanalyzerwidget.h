@@ -6,6 +6,7 @@
 
 #include "opencv2/core/mat.hpp"
 #include "opencv2/core/types.hpp"
+#include "jetdrive.h"
 
 class DropletAnalyzer;
 class ImageViewer;
@@ -29,12 +30,20 @@ class DropletAnalyzerWidget : public QWidget
 public:
     explicit DropletAnalyzerWidget(QWidget *parent, DropletAnalyzer *analyzer);
     ~DropletAnalyzerWidget();
+    void hide_plot_window();
+
+public slots:
+    void set_image_scale(double imageScale_um_per_px);
+    void reset();
+    void load_video_from_observation_widget(QString filePath, MicroJet jetSettings, double strobe_sweep_step_time_us);
+
 signals:
     void show_frame(int frameNum);
+    void print_to_output_window(QString s);
+    void image_scaled_was_changed();
 
 private:
     void setup();
-    void reset();
     void magnification_was_edited();
     void image_scale_was_edited();
     void nozzle_diameter_was_changed();
@@ -60,6 +69,19 @@ private:
     DropletAnalyzer *m_analyzer {nullptr};
     std::unique_ptr<QThread> m_displayThread;
     std::vector<cv::Mat> m_video;
+};
+
+class DropletAnalyzerMainWindow : public QMainWindow
+{
+    Q_OBJECT
+
+public:
+    DropletAnalyzerMainWindow(DropletAnalyzerWidget* analyzerWidget, QWidget *parent = nullptr);
+    ~DropletAnalyzerMainWindow();
+
+private:
+    void closeEvent(QCloseEvent *bar) override;
+    DropletAnalyzerWidget *m_dropletAnalyzerWidget {nullptr};
 };
 
 
