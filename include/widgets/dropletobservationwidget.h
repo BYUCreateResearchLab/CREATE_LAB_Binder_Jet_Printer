@@ -36,8 +36,10 @@ public slots:
     void jetting_was_turned_on();
     void jetting_was_turned_off();
 
-    void show_droplet_analyzer_widget();
+    void show_droplet_analyzer_widget(bool loadTempVideo = false);
     void hide_droplet_analyzer_widget();
+
+    void calculate_droplet_velocity();
 
 signals:
     void video_capture_complete();

@@ -92,7 +92,14 @@ void DropletObservationWidget::setup()
     connect(m_analyzerWidget, &DropletAnalyzerWidget::image_scaled_was_changed, this, [this](){this->ui->imageScaleSpinBox->setValue(this->m_analyzer->camera_settings().imagePixelSize_um);});
     connect(ui->imageScaleSpinBox, &QDoubleSpinBox::editingFinished, this, [this](){this->m_analyzerWidget->set_image_scale(this->ui->imageScaleSpinBox->value());});
     //connect(ui->imageScaleSpinBox, &QDoubleSpinBox::editingFinished, m_analyzerWidget, );
+
+    // load video and show widget when button is pressed
+    connect(ui->openAnalyzerWindowButton, &QPushButton::clicked, this, [this](){this->show_droplet_analyzer_widget(true);});
+
     ui->cameraSettingsFrame->setEnabled(true);
+
+    // enable droplet analyzer widget when analysis is complete
+    connect(m_analyzer.get(), &DropletAnalyzer::video_analysis_successful, this, [this](){this->ui->frame->setEnabled(true);});
 }
 
 void DropletObservationWidget::allow_widget_input(bool allowed)
@@ -112,8 +119,14 @@ void DropletObservationWidget::jetting_was_turned_off()
     ui->TriggerJetButton->setText("\nTrigger Jet\n");
 }
 
-void DropletObservationWidget::show_droplet_analyzer_widget()
+void DropletObservationWidget::show_droplet_analyzer_widget(bool loadTempVideo)
 {
+    if (loadTempVideo)
+    {
+        m_analyzerWidget->load_video_from_observation_widget(m_tempFileName,
+                                                             m_JettingWidget->get_jet_drive_settings(),
+                                                             ui->stepTimeSpinBox->value());
+    }
     m_analyzerWindow.get()->show();
     m_analyzerWindow.get()->activateWindow();
 }
@@ -121,6 +134,19 @@ void DropletObservationWidget::show_droplet_analyzer_widget()
 void DropletObservationWidget::hide_droplet_analyzer_widget()
 {
     m_analyzerWindow.get()->hide();
+}
+
+void DropletObservationWidget::calculate_droplet_velocity()
+{
+    m_analyzerWidget->load_video_from_observation_widget(m_tempFileName,
+                                                         m_JettingWidget->get_jet_drive_settings(),
+                                                         ui->stepTimeSpinBox->value());
+    QMetaObject::invokeMethod(m_analyzer.get(), [this]()
+    { this->m_analyzer.get()->analyze_video(); }, Qt::QueuedConnection);
+
+    // disable droplet observation widget settings until analysis is complete
+    this->ui->frame->setEnabled(false);
+
 }
 
 bool DropletObservationWidget::is_droplet_anlyzer_window_visible() const

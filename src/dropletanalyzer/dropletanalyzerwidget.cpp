@@ -297,7 +297,8 @@ void DropletAnalyzerWidget::video_analysis_complete()
 
     m_graphWindow->plot_data(dataX, dataY);
     m_graphWindow->plot_trend_line(dataX, fitY);
-    m_graphWindow->show();
+
+    if (!isHidden()) m_graphWindow->show();
 
     // use this if you want to have Qt delete the graph window when it is closed, otherwise it is just hidden
     //m_graphWindow->setAttribute(Qt::WA_DeleteOnClose);
