@@ -96,6 +96,7 @@ void DropletObservationWidget::setup()
     // load video and show widget when button is pressed
     connect(ui->openAnalyzerWindowButton, &QPushButton::clicked, this, [this](){this->show_droplet_analyzer_widget(true);});
 
+    connect(ui->getDropletVelocityButton, &QPushButton::clicked, this, &DropletObservationWidget::calculate_droplet_velocity);
     ui->cameraSettingsFrame->setEnabled(true);
 
     // enable droplet analyzer widget when analysis is complete
