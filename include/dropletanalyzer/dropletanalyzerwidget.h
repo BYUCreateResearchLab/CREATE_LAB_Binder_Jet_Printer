@@ -7,6 +7,7 @@
 #include "opencv2/core/mat.hpp"
 #include "opencv2/core/types.hpp"
 #include "jetdrive.h"
+#include "dropletanalyzer.h"
 
 class DropletAnalyzer;
 class ImageViewer;
@@ -36,6 +37,7 @@ public slots:
     void set_image_scale(double imageScale_um_per_px);
     void reset();
     void load_video_from_observation_widget(QString filePath, MicroJet jetSettings, double strobe_sweep_step_time_us);
+    void export_tracking_data(QString filename);
 
 signals:
     void show_frame(int frameNum);
@@ -57,6 +59,7 @@ private:
     void load_video_button_pressed();
     void video_analysis_complete();
     void process_frame_request(int frameNum);
+    void export_data_button_pressed();
 
 private:
     Ui::DropletAnalyzerWidget *ui {nullptr};
@@ -64,7 +67,7 @@ private:
     DropletGraphWindow *m_graphWindow {nullptr};
 
     bool m_videoLoaded {false};
-    std::vector<cv::Point> m_trackerPositions;
+    DropTrackingData m_trackingData;
 
     DropletAnalyzer *m_analyzer {nullptr};
     std::unique_ptr<QThread> m_displayThread;

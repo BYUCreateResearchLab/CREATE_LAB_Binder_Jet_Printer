@@ -544,6 +544,17 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>riseTime1SpinBox</tabstop>
+  <tabstop>dwellTimeSpinBox</tabstop>
+  <tabstop>fallTimeSpinBox</tabstop>
+  <tabstop>echoTimeSpinBox</tabstop>
+  <tabstop>riseTime2SpinBox</tabstop>
+  <tabstop>idleVoltageSpinBox</tabstop>
+  <tabstop>dwellVoltageSpinBox</tabstop>
+  <tabstop>echoVoltageSpinBox</tabstop>
+  <tabstop>updateSettingsButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

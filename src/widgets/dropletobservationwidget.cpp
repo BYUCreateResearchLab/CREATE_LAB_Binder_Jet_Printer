@@ -374,16 +374,6 @@ void DropletObservationWidget::update_progress_bar()
     ui->jetProgressBar->setValue(progress);
 }
 
-/*
-void DropletObservationWidget::strobe_sweep_button_clicked()
-{
-    // start strobe sweep when a frame is received so that the sweep timing is aligned with image aquisition
-    connect(mCamera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
-            this, &DropletObservationWidget::start_strobe_sweep);
-    //mJetDrive->enable_strobe(); this should usually be enabled
-}
-*/
-
 void DropletObservationWidget::start_strobe_sweep()
 {
     // TODO: something here very occasionally sometimes causes a crash
@@ -480,8 +470,6 @@ void DropletObservationWidget::trigger_jet_clicked()
     else
     {
         s << CMD::stop_motion(Axis::Jet);
-        //mIsJetting = false;
-        //ui->TriggerJetButton->setText("Trigger Jet");
         jetting_was_turned_off();
         ui->jetForMinutesButton->setEnabled(true);
     }
@@ -525,7 +513,7 @@ void DropletObservationWidget::save_video_clicked()
     QString fileName = QFileDialog::getSaveFileName(this, "Save as", "", ("Video File (*.avi)"));
     if (!QFile::copy(m_tempFileName, fileName))
     {
-        QMessageBox::warning(this, "Warning", "Cannot save file");
+        QMessageBox::warning(this, "Warning", "Did not save file");
         return;
     }
 }

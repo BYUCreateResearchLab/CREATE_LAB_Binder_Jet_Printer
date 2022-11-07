@@ -175,6 +175,7 @@ void DropletAnalyzer::reset()
     m_dropletContours.clear();
     m_trackerPoints.clear();
     m_trackingData.clear();
+    m_jetSettings.reset();
 }
 
 void DropletAnalyzer::update_view_settings(const DropViewSettings& viewSettings)
@@ -393,6 +394,12 @@ void DropletAnalyzer::set_jetting_settings(const MicroJet &jetSettings)
 {
     QMutexLocker lock(&m_mutex);
     m_jetSettings = jetSettings;
+}
+
+std::optional<MicroJet> DropletAnalyzer::get_jetting_settings()
+{
+    QMutexLocker lock(&m_mutex);
+    return m_jetSettings;
 }
 
 void DropletAnalyzer::detect_nozzle()

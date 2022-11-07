@@ -336,6 +336,21 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>imageScaleSpinBox</tabstop>
+  <tabstop>magnificationSpinBox</tabstop>
+  <tabstop>nozzleTipDiameter</tabstop>
+  <tabstop>detectLensMagButton</tabstop>
+  <tabstop>strobeSweepStepSpinBox</tabstop>
+  <tabstop>showProcessedFrameCheckBox</tabstop>
+  <tabstop>showNozzleOutlineCheckBox</tabstop>
+  <tabstop>showDropletContourCheckBox</tabstop>
+  <tabstop>showDropletTrackingCheckBox</tabstop>
+  <tabstop>loadVideoButton</tabstop>
+  <tabstop>analyzeVideoButton</tabstop>
+  <tabstop>exportDataButton</tabstop>
+  <tabstop>frameSlider</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -65,8 +65,8 @@ MicroJet::MicroJet() :
     fFrequency(1000L), // fFrequency is for setting the jetting frequency (in Hz?)
     fUIdle(0), // Idle Voltage (V)
     // work on syncing these values with the jetting widget on startup
-    fUDwell(30),      // Dwell Voltage (V)
-    fUEcho(-30),      // Echo Voltage (V)
+    fUDwell(20),      // Dwell Voltage (V)
+    fUEcho(-20),      // Echo Voltage (V)
     fUGain(225),
     fMode(0),         // fmode is to set continuous jetting mode (1 to enable continuous jetting, 0 to disable)
     fSource(1),       // fSource is for setting the trigger source (1 for external TTL trigger, 0 for internal trigger)

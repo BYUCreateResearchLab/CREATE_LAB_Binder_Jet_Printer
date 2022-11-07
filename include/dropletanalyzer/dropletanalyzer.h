@@ -92,6 +92,7 @@ public slots:
    void calculate_scaled_drop_pos();
    void generate_tracking_csv();
    void set_jetting_settings(const MicroJet& jetSettings);
+   std::optional<MicroJet> get_jetting_settings();
 
 private slots:
    void cleanup();

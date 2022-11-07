@@ -10,9 +10,9 @@
 #include <QMessageBox>
 #include <QThread>
 #include <QStandardPaths>
+#include <fstream>
 
 #include "imageviewer.h"
-#include "dropletanalyzer.h"
 #include "linearanalysis.h"
 #include "qcustomplot.h"
 
@@ -63,7 +63,7 @@ void DropletAnalyzerWidget::setup()
     ui->detectLensMagButton->setEnabled(false);
 
     // startup lens magnification
-    ui->magnificationSpinBox->setValue(5);
+    ui->magnificationSpinBox->setValue(4);
     m_analyzer->camera_settings().imagePixelSize_um = m_analyzer->camera_settings().image_pixel_size_from_mag(ui->magnificationSpinBox->value());
     ui->imageScaleSpinBox->setValue(m_analyzer->camera_settings().imagePixelSize_um);
 
@@ -76,6 +76,7 @@ void DropletAnalyzerWidget::setup()
     connect(ui->detectLensMagButton, &QPushButton::clicked, m_analyzer, &DropletAnalyzer::estimate_image_scale);
     connect(m_analyzer, &DropletAnalyzer::image_scale_estimated, this, &DropletAnalyzerWidget::image_scale_detected);
     connect(m_analyzer, &DropletAnalyzer::image_scale_estimation_failed, this, &DropletAnalyzerWidget::image_scale_detection_failed);
+    connect(ui->exportDataButton, &QPushButton::clicked, this, &DropletAnalyzerWidget::export_data_button_pressed);
 
     connect(ui->loadVideoButton, &QPushButton::clicked, this, &DropletAnalyzerWidget::load_video_button_pressed);
     connect(m_analyzer, &DropletAnalyzer::video_load_failed, this, &DropletAnalyzerWidget::video_load_failed);
@@ -101,7 +102,6 @@ void DropletAnalyzerWidget::reset()
     ui->videoSettingsGroupBox->setEnabled(true);
 
     m_videoLoaded = false;
-    m_trackerPositions.clear();
 
     ui->frameLabel->setText("");
     ui->showDropletContourCheckBox->setChecked(false);
@@ -118,9 +118,6 @@ void DropletAnalyzerWidget::reset()
     // reset slider
     ui->frameSlider->setValue(0);
     ui->frameSlider->setRange(0,0);
-
-    // reset image
-
 
     update_view_settings(); // tell other thread to not show procssed frame
     ui->analyzeVideoButton->setEnabled(false);
@@ -139,6 +136,70 @@ void DropletAnalyzerWidget::load_video_from_observation_widget(QString filePath,
 
     // wait until video is loaded
     setEnabled(false);
+}
+
+void DropletAnalyzerWidget::export_tracking_data(QString filename)
+{
+    // ensure extension is .csv
+    auto filePath = QFileInfo(filename);
+    filename = filePath.absolutePath() + "/" + filePath.baseName() + ".csv";
+
+    std::ofstream file;
+    file.open(filename.toStdString());
+
+    file << "DATE_TIME,"
+            "IMAGE_SCALE,"
+            "STROBE_STEP_TIME,"
+            "DROPLET_VELOCITY,"
+            "JET_ANGLE,"
+            "RISE_TIME_1,DWELL_TIME,FALL_TIME,ECHO_TIME,"
+            "RISE_TIME_2,IDLE_VOLTAGE,DWELL_VOLTAGE,ECHO_VOLTAGE"
+            "\n";
+
+    file << ","
+            "um/px,"
+            "us,"
+            "m/s,"
+            "Rad,"
+            "us,us,us,us,"
+            "us,V,V,V"
+            "\n";
+
+    file << QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss").toStdString() << ",";
+    file << m_analyzer->camera_settings().imagePixelSize_um << ",";
+    file << ui->strobeSweepStepSpinBox->value() << ",";
+    file << m_trackingData.velocity_m_s << ",";
+    file << m_trackingData.drop_angle_rad << ",";
+
+    std::optional<MicroJet> jetSettings = m_analyzer->get_jetting_settings();
+    if (jetSettings.has_value())
+    {
+        auto settings = jetSettings.value();
+        file << settings.fTRise << ","
+             << settings.fTDwell << ","
+             << settings.fTFall << ","
+             << settings.fTEcho << ","
+             << settings.fTFinal << ","
+             << settings.fUIdle << ","
+             << settings.fUDwell << ","
+             << settings.fUEcho;
+    }
+    file << "\n";
+
+
+    // write tracking data to .csv file
+    file << "T,X,Y\n";
+    file << "us,um,um\n";
+
+    for (size_t i{0}; i<m_trackingData.t.size(); i++)
+    {
+        file << m_trackingData.t[i]
+                << "," << m_trackingData.x[i]
+                   << "," << m_trackingData.y[i] << "\n";
+    }
+
+
+    file.close();
 }
 
 void DropletAnalyzerWidget::magnification_was_edited()
@@ -285,15 +346,15 @@ void DropletAnalyzerWidget::video_analysis_complete()
     ui->exportDataButton->setEnabled(true);
 
     // plot data
-    auto data = m_analyzer->get_droplet_tracking_data();
-    const auto& dataX = data.t;
-    const auto& dataY = data.y;
+    m_trackingData = m_analyzer->get_droplet_tracking_data();
+    const auto& dataX = m_trackingData.t;
+    const auto& dataY = m_trackingData.y;
 
     LinearAnalysis::FitLine fitLine;
-    fitLine.intercept = data.intercept;
-    fitLine.slope = data.velocity_m_s;
+    fitLine.intercept = m_trackingData.intercept;
+    fitLine.slope = m_trackingData.velocity_m_s;
     auto fitY = LinearAnalysis::get_fit_vals(fitLine, dataX);
-    emit print_to_output_window(QString("Droplet Velocity: %1 m/s").arg(data.velocity_m_s));
+    emit print_to_output_window(QString("Droplet Velocity: %1 m/s").arg(m_trackingData.velocity_m_s));
 
     m_graphWindow->plot_data(dataX, dataY);
     m_graphWindow->plot_trend_line(dataX, fitY);
@@ -309,6 +370,17 @@ void DropletAnalyzerWidget::process_frame_request(int frameNum)
     QString labelText = "Frame " + QString::number(frameNum + 1);
     ui->frameLabel->setText(labelText);
     emit show_frame(frameNum);
+}
+
+void DropletAnalyzerWidget::export_data_button_pressed()
+{
+    QString defaultDir = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+    QString filename = QFileDialog::getSaveFileName(this, "Save Tracking Data", defaultDir, ("csv (*.csv)"));
+
+    if(!filename.isEmpty() && !filename.isNull())
+    {
+        export_tracking_data(filename);
+    }
 }
 
 

@@ -322,7 +322,7 @@ Trigger Jet
             <number>1000</number>
            </property>
            <property name="value">
-            <number>500</number>
+            <number>300</number>
            </property>
           </widget>
          </item>
@@ -457,7 +457,7 @@ Trigger Jet
             <number>100</number>
            </property>
            <property name="value">
-            <number>50</number>
+            <number>15</number>
            </property>
           </widget>
          </item>
@@ -557,6 +557,27 @@ Capture Video
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>connectButton</tabstop>
+  <tabstop>moveToMiddleButton</tabstop>
+  <tabstop>moveToCameraButton</tabstop>
+  <tabstop>TriggerJetButton</tabstop>
+  <tabstop>jetForMinutesButton</tabstop>
+  <tabstop>cameraFPSSpinBox</tabstop>
+  <tabstop>shutterAngleSpinBox</tabstop>
+  <tabstop>imageScaleSpinBox</tabstop>
+  <tabstop>detectImageScaleButton</tabstop>
+  <tabstop>startTimeSpinBox</tabstop>
+  <tabstop>endTimeSpinBox</tabstop>
+  <tabstop>stepTimeSpinBox</tabstop>
+  <tabstop>sweepDelaySpinBox</tabstop>
+  <tabstop>sweepButton</tabstop>
+  <tabstop>takeVideoButton</tabstop>
+  <tabstop>getDropletVelocityButton</tabstop>
+  <tabstop>SaveVideoButton</tabstop>
+  <tabstop>openAnalyzerWindowButton</tabstop>
+  <tabstop>cropCheckBox</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
