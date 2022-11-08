@@ -71,7 +71,7 @@ DropletCameraSettings& DropletAnalyzer::camera_settings()
 
 void DropletAnalyzer::load_video(const std::string& filename)
 {
-    reset();
+    // don't call reset here
     auto *m_videoCapture = new cv::VideoCapture(filename);
     // load all frames into ram
     if (m_videoCapture->isOpened())
