@@ -87,11 +87,13 @@
 #define PRINT_Z_SIZE_MM 14 //?
 
 // NOTE: these are not the same as the pin number on the DSUB HD44 cable
-#define ROLLER_1_BIT 18
-#define ROLLER_2_BIT 20
+#define ROLLER_1_BIT 18 // pin 1
+#define ROLLER_2_BIT 20 // pin 17
 
-#define HS_TTL_BIT 17
-#define MISTER_BIT 21
+#define HEAT_LAMP_BIT 24 // pin 3
+
+#define HS_TTL_BIT 17 // pin 16
+#define MISTER_BIT 21 // pin 2
 
 GReturn GCALL GProgramComplete(GCon g);
 

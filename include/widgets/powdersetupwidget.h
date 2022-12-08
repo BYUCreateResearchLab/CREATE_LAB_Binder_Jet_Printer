@@ -27,6 +27,8 @@ private slots:
     void mist_layer();
     void toggle_mister_clicked();
 
+    void cure_layer_pressed();
+
 private:
     Ui::PowderSetupWidget *ui;
     bool isMisting{false};
