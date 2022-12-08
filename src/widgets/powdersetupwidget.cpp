@@ -153,10 +153,6 @@ void PowderSetupWidget::cure_layer_pressed()
 
     s << display_message("curing layer...");
 
-    s << set_accleration(y, 400);
-    s << set_deceleration(y, 400);
-    s << move_xy_axes_to_default_position();
-
     // move z-axis down when going back to get more powder
     s << set_accleration(Axis::Z, 10)
       << set_deceleration(Axis::Z, 10)
@@ -166,6 +162,9 @@ void PowderSetupWidget::cure_layer_pressed()
       << motion_complete(Axis::Z);
 
     // move to just before the heat lamp
+    s << set_accleration(y, 400);
+    s << set_deceleration(y, 400);
+    s << set_speed(y, defaultTraverseSpeed);
     s << position_absolute(y, heatLampStart_mm)
       << begin_motion(y)
       << motion_complete(y);
@@ -186,7 +185,7 @@ void PowderSetupWidget::cure_layer_pressed()
     s << position_relative(Axis::Z, zAxisOffsetUnderRoller);
     // move to back of y-axis
     s << position_absolute(y, -Y_STAGE_LEN_MM);
-
+    s << set_speed(y, defaultTraverseSpeed);
     s << begin_motion(Axis::Z);
     s << begin_motion(y);
     s << motion_complete(y);
