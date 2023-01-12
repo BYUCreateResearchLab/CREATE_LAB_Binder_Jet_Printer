@@ -170,7 +170,7 @@ void PowderSetupWidget::cure_layer_pressed()
       << motion_complete(y);
 
     // turn on heat lamp
-    set_bit(HEAT_LAMP_BIT);
+    s << set_bit(HEAT_LAMP_BIT);
 
     // traverse under heat lamp
     s << set_speed(y, heatingTraverseSpeed);
@@ -179,7 +179,7 @@ void PowderSetupWidget::cure_layer_pressed()
     s << motion_complete(y);
 
     // turn off heat lamp
-    clear_bit(HEAT_LAMP_BIT);
+    s << clear_bit(HEAT_LAMP_BIT);
 
     // move z-axis back up
     s << position_relative(Axis::Z, zAxisOffsetUnderRoller);
