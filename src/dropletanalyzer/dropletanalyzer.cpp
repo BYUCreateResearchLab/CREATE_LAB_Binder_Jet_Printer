@@ -407,6 +407,8 @@ void DropletAnalyzer::detect_nozzle()
     cv::Mat bw;
     cv::GaussianBlur(m_medianFrame, bw, cv::Size(3,3), 0); // first, blur the image
     // TODO: make the '60' value something smarter for the threshold value
+    // with the current threshold, the processing will not function if the image
+    // is not bright enough as it won't know where the nozzle is at
     cv::threshold(bw, bw, 60, 255, cv::THRESH_BINARY_INV);
 
     // Floodfill from point (0, 0)
