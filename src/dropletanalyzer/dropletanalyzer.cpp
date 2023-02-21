@@ -17,7 +17,6 @@ int computeMedian(std::vector<uchar> elements)
     return elements[elements.size() / 2];
 }
 
-// TODO: this doesn't need to compute the median in color, just grayscale
 cv::Mat compute_median(std::vector<cv::Mat> vec)
 {
     // Note: Expects the image to be CV_8UC1
@@ -27,10 +26,10 @@ cv::Mat compute_median(std::vector<cv::Mat> vec)
 
     for (int row{0}; row < vec[0].rows; row++) // for each row
     {
-        for (int col{0}; col<vec[0].cols; col++) // for each column
+        for (int col{0}; col < vec[0].cols; col++) // for each column
         {
+            // get pixels from every nth frame (defined by frameIncrement)
             std::vector<uchar> elements;
-            // get pixels from all frames
             for (size_t imgNumber{0}; imgNumber<vec.size(); imgNumber+=frameIncrement)
             {
                 elements.push_back(vec[imgNumber].at<uchar>(row, col));
@@ -316,6 +315,10 @@ void DropletAnalyzer::detect_contours()
         Points2D unfilteredContours;
         std::vector<cv::Vec4i> hierarchy;
 
+        // TODO: update the threshold filter here and on display to be adaptive
+        // in some way instead of just hardcoding in the threshold.
+        // Also make sure that the threshold is done the same in both places by
+        // creating a function used in both places
         const int thresholdValue = 40;
         int minContourSize = 100; // in pixels
 
@@ -405,21 +408,24 @@ std::optional<MicroJet> DropletAnalyzer::get_jetting_settings()
 void DropletAnalyzer::detect_nozzle()
 {
     cv::Mat bw;
-    cv::GaussianBlur(m_medianFrame, bw, cv::Size(3,3), 0); // first, blur the image
-    // TODO: make the '60' value something smarter for the threshold value
-    // with the current threshold, the processing will not function if the image
-    // is not bright enough as it won't know where the nozzle is at
-    cv::threshold(bw, bw, 60, 255, cv::THRESH_BINARY_INV);
+    cv::GaussianBlur(m_medianFrame, bw, cv::Size(5,5), 0); // first, blur the image
+    // calculate the threshold value from the mean pixel value
+    const float meanVal = cv::mean(m_medianFrame).val[0];
+    cv::threshold(bw, bw, meanVal*0.5, 255, cv::THRESH_BINARY_INV);
+    // THRESH_OTSU will automatically calculate the appropriate threshold value
+    // But doesn't do a very good job when the nozzle is not in frame...
+    //const double threshTest = cv::threshold(bw, bw, 0, 255, cv::THRESH_BINARY_INV | cv::THRESH_OTSU);
 
-    // Floodfill from point (0, 0)
+    // since sometimes after thresholding reflections on the nozzle exceed the threshold:
+    // Floodfill from middle of the image so that everything is white except for inside the nozzle
     cv::Mat im_floodfill = bw.clone();
-    cv::floodFill(im_floodfill, cv::Point(0,0), cv::Scalar(255));
+    cv::floodFill(im_floodfill, cv::Point(im_floodfill.cols/2,im_floodfill.rows/2), cv::Scalar(255));
 
     // Invert floodfilled image
     cv::Mat im_floodfill_inv;
     cv::bitwise_not(im_floodfill, im_floodfill_inv);
 
-    // Combine the two images to get the foreground.
+    // Combine the two images to get solid filled in threshold of the nozzle
     cv::Mat filled = (bw | im_floodfill_inv);
 
     // Find contours

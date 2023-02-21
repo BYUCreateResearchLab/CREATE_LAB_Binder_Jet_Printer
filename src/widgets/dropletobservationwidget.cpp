@@ -385,7 +385,7 @@ void DropletObservationWidget::start_strobe_sweep()
 
     // update the strobe sweep offset when a new frame is received
     // framereceived from eventthread
-    // update must be done from the main thread (accesses ui)
+    // update must be done from the main thread (accesses ui) (default queued connection)
     connect(m_Camera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
             this, &DropletObservationWidget::update_strobe_sweep_offset);
 

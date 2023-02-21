@@ -37,6 +37,7 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
 {
     ui->setupUi(this);
 
+    // TODO: Fix memory leaks here
     mJetDrive = new JetDrive();
 
     // set up widgets
