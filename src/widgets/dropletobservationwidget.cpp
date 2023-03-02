@@ -268,8 +268,9 @@ void DropletObservationWidget::capture_video()
     is_AOI(m_cameraHandle, IS_AOI_IMAGE_GET_POS, &nOffset, sizeof(nOffset));
 
     // temp offset for cropping the nozzle out of the frame for Colton
-    const int cropPixelAmount {240};
-    int verticalPixelOffset = ui->cropCheckBox->isChecked() ? cropPixelAmount : 0;
+    //const int cropPixelAmount {240};
+    //const int verticalPixelOffset = ui->cropCheckBox->isChecked() ? cropPixelAmount : 0;
+    const int verticalPixelOffset = 0;
 
     int posX {nOffset.s32X};
     //int posY{nOffset.s32Y}; THIS GOT CHANGED

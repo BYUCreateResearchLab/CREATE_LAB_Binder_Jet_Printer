@@ -72,7 +72,7 @@ private:
     std::vector<std::string> LinePrintDataColumnTypes = {"int", "float", "float", "int", "int", "float", "float"};
     LinePrintData table = LinePrintData();
 
-    QPen linePen = QPen(Qt::blue, 0.1, Qt::SolidLine, Qt::RoundCap);
+    QPen linePen = QPen(QColor(42, 130, 218), 0.1, Qt::SolidLine, Qt::RoundCap);
     QPen lineTravelPen = QPen(Qt::red, 0.1, Qt::DashLine, Qt::RoundCap);
 
     QString dmcLinePrintCode;

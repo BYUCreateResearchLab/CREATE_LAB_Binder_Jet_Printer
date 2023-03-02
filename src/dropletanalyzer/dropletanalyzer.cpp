@@ -17,28 +17,21 @@ int computeMedian(std::vector<uchar> elements)
     return elements[elements.size() / 2];
 }
 
-cv::Mat compute_median(std::vector<cv::Mat> vec)
+cv::Mat compute_median(const std::vector<cv::Mat> &vec)
 {
     // Note: Expects the image to be CV_8UC1
     cv::Mat medianImg(vec[0].rows, vec[0].cols, CV_8UC1);
-    // only choose subset of frames for median (don't need all for a good median)
-    const int frameIncrement = std::ceil(vec.size() / 15.0);
 
-    for (int row{0}; row < vec[0].rows; row++) // for each row
+    // Calculate median with parallel execution
+    medianImg.forEach<uchar>([vec](uchar &p, const int *pos) -> void
     {
-        for (int col{0}; col < vec[0].cols; col++) // for each column
-        {
-            // get pixels from every nth frame (defined by frameIncrement)
-            std::vector<uchar> elements;
-            for (size_t imgNumber{0}; imgNumber<vec.size(); imgNumber+=frameIncrement)
-            {
-                elements.push_back(vec[imgNumber].at<uchar>(row, col));
-            }
+        std::vector<uchar> elements;
+        elements.reserve(vec.size());
+        for (int i{0}; i<vec.size(); ++i)
+            elements.emplace_back(vec[i].at<uchar>(pos[0], pos[1]));
+        p = computeMedian(elements);
+    });
 
-            // get median pixel
-            medianImg.at<uchar>(row, col) = computeMedian(elements);
-        }
-    }
     return medianImg;
 }
 
@@ -76,6 +69,7 @@ void DropletAnalyzer::load_video(const std::string& filename)
     if (m_videoCapture->isOpened())
     {
         m_numFrames = m_videoCapture->get(cv::CAP_PROP_FRAME_COUNT);
+        m_video.reserve(m_numFrames);
         while (1)
         {
             cv::Mat frame;

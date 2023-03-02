@@ -52,6 +52,13 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
     ui->tabWidget->addTab(mHighSpeedLineWidget, "High-Speed Line Printing");
     ui->tabWidget->addTab(mDropletObservationWidget, "Jetting");
 
+    for (int i{0}; i < ui->tabWidget->count(); ++i)
+    {
+        auto widget = ui->tabWidget->widget(i);
+        widget->setAutoFillBackground(true);
+    }
+    //ui->tabWidget->setStyleSheet("QTabWidget::pane { border: 0; }");
+
     // open a txt file for logging commands
     open_log_file();
     m_logFile << "Application opened at " << QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm").toStdString() << "\n";
@@ -168,7 +175,7 @@ void MainWindow::on_connect_clicked()
         }
         mPrinter->g = 0;               // Reset connection handle
 
-        ui->connect->setText("Connect to Controller"); // change button label text
+        ui->connect->setText("\nConnect to Controller\n"); // change button label text
         ui->homeZAxisCheckBox->setEnabled(true);
     }
 }
@@ -277,7 +284,7 @@ void MainWindow::on_xHome_clicked()
     s << CMD::set_accleration(x, 800);
     s << CMD::set_deceleration(x, 800);
     s << CMD::position_absolute(x, 0);
-    s << CMD::set_speed(x, ui->xVelocity->value());
+    s << CMD::set_speed(x, 50);
     s << CMD::begin_motion(x);
     s << CMD::motion_complete(x);
 
@@ -290,10 +297,10 @@ void MainWindow::on_yHome_clicked()
     std::stringstream s;
     Axis y {Axis::Y};
 
-    s << CMD::set_accleration(y, 200);
-    s << CMD::set_deceleration(y, 200);
+    s << CMD::set_accleration(y, 300);
+    s << CMD::set_deceleration(y, 300);
     s << CMD::position_absolute(y, 0);
-    s << CMD::set_speed(y, ui->yVelocity->value());
+    s << CMD::set_speed(y, 50);
     s << CMD::begin_motion(y);
     s << CMD::motion_complete(y);
 
@@ -467,13 +474,9 @@ void MainWindow::on_actionShow_Hide_Console_triggered()
 void MainWindow::show_hide_droplet_analyzer_window()
 {
     if (!mDropletObservationWidget->is_droplet_anlyzer_window_visible())
-    {
         mDropletObservationWidget->show_droplet_analyzer_widget();
-    }
     else
-    {
         mDropletObservationWidget->hide_droplet_analyzer_widget();
-    }
 }
 
 void MainWindow::generate_printing_message_box(const std::string &message)
@@ -601,7 +604,7 @@ void MainWindow::tab_was_changed(int index) // code that gets run when the curre
 
 void MainWindow::connected_to_motion_controller()
 {
-    ui->connect->setText("Disconnect Controller");
+    ui->connect->setText("\nDisconnect Controller\n");
     ui->homeZAxisCheckBox->setEnabled(false);
 }
 

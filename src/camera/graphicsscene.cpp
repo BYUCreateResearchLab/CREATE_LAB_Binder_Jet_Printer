@@ -128,7 +128,7 @@ void GraphicsScene::reset()
     clear();
     image = QImage();
 
-    setBackgroundBrush(Qt::gray);
+    setBackgroundBrush(QColor(46,47,48));
     initCrosshair();
 
     update(sceneRect());

@@ -75,7 +75,7 @@ SvgView::SvgView(QWidget *parent) : QGraphicsView(parent),
     setViewportUpdateMode(FullViewportUpdate);
 
     //setViewportMargins(-2, -2, -2, -2); I added this
-    setViewportMargins(-1, -1, 0, 0);
+    //setViewportMargins(-1, -1, 0, 0);
     //setFrameStyle(QFrame::NoFrame);
 
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -128,7 +128,7 @@ void SvgView::setup(double xSize, double ySize)
 
 void SvgView::add_print_bed_outline()
 {
-    scene()->addRect(0,0, mXSize, mYSize, Qt::NoPen, QBrush(Qt::gray, Qt::SolidPattern));
+    scene()->addRect(0,0, mXSize, mYSize, Qt::NoPen, QBrush(QColor(40, 40, 40), Qt::SolidPattern));
     // add print bed area outlines
     scene()->addLine(0,0, mXSize,0, outlinePen);
     scene()->addLine(mXSize,0, mXSize,mYSize, outlinePen);

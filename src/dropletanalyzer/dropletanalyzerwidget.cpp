@@ -354,7 +354,9 @@ void DropletAnalyzerWidget::video_analysis_complete()
     fitLine.intercept = m_trackingData.intercept;
     fitLine.slope = m_trackingData.velocity_m_s;
     auto fitY = LinearAnalysis::get_fit_vals(fitLine, dataX);
-    emit print_to_output_window(QString("Droplet Velocity: %1 m/s").arg(m_trackingData.velocity_m_s));
+    const QString text = QString("Droplet Velocity: %1 m/s").arg(m_trackingData.velocity_m_s, 0, 'f', 3);
+    emit print_to_output_window(text);
+    ui->outputTextEdit->appendPlainText(text);
 
     m_graphWindow->plot_data(dataX, dataY);
     m_graphWindow->plot_trend_line(dataX, fitY);

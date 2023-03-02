@@ -80,7 +80,7 @@ public:
     {
         clear();
         image = QImage();
-        setBackgroundBrush(QColor(240,240,240));
+        setBackgroundBrush(QColor(46,47,48));
         update(sceneRect());
     }
 
@@ -117,7 +117,7 @@ ImageViewer::ImageViewer(QWidget *parent) : QWidget(parent)
     auto *layout = new QHBoxLayout(this);
     layout->addWidget(graphicsView);
     layout->setContentsMargins(0, 0, 0, 0);
-    graphicsView->setStyleSheet("border-color: rgb(220, 220, 220);border-width : 1.0px;border-style:solid;");
+    graphicsView->setStyleSheet("border-color: rgb(60, 60, 60);border-width : 1.0px;border-style:solid;");
 
     setLayout(layout);
     connect(graphicsView, &DAGraphicsView::zoomFactorChanged, this, &ImageViewer::onZoomFactorChanged);
