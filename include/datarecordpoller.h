@@ -18,9 +18,13 @@ public:
     void poll_controller_blocking();
     void poll_controller_async();
 
+    GDataRecord r; //user's data record union.
+
+signals:
+    void read_done();
+
 private:
     GCon g;
-    GDataRecord r; //user's data record union.
 
     QTimer *timer {nullptr};
     int pollPeriod = {100};
