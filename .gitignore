@@ -73,6 +73,7 @@ Thumbs.db
 
 # Cmake
 CMakeLists.txt.user
+CMakeSettings.json
 
 # Build Folders
 build/*

@@ -1,0 +1,7 @@
+#define Q_OBJECT
+#define slots
+#define signals
+#define QT_BEGIN_NAMESPACE
+#define QT_END_NAMESPACE
+#define Q_DECL_CONSTEXPR
+#define Q_DECLARE_METATYPE
