@@ -48,7 +48,7 @@ void Controller::handle_ready_read()
             // finish once all of the bytes have been written and read
             if (iX200 >= xCmd.size())
             {
-                qDebug() << "Connected to JetDrive";
+                emit response("Connected to JetDrive");
                 initState = INITIALIZED;
                 iX200 = 0;
             }
@@ -62,10 +62,8 @@ void Controller::handle_ready_read()
             expectedResponseSize = response_size(static_cast<CMD>(readData.at(1)));
         else if (readData.size() >= expectedResponseSize)
         {
-            // readData.at(0) gives me an error code
-            qDebug() << "response received";
-            qDebug() << readData;
-
+            // TODO: can do something with the response here (error checking)
+            // qDebug() << readData;
             readData.clear();
             write_next();
         }
@@ -93,6 +91,20 @@ void Controller::initialize_jet_drive()
     // write the X2000 command byte by byte
     for (const auto byte : xCmd)
         write(QByteArray(1, byte));
+
+    // initialize jetDrive parameters (order specified in command reference)
+    write(commandBuilder->build_command(CMD::RESET, jetParams));        // 1.) Soft Reset
+    write(commandBuilder->build_command(CMD::GETVERSION, jetParams));   // 2.) Version
+                                                                        // 3.) Get Number of Channels
+    write(commandBuilder->build_command(CMD::PULSE, jetParams));        // 4.) Pulse Waveform
+    write(commandBuilder->build_command(CMD::CONTMODE, jetParams));     // 5.) Trigger Mode
+    write(commandBuilder->build_command(CMD::DROPS, jetParams));        // 6.) Number of Drops per Trigger
+    write(commandBuilder->build_command(CMD::FULLFREQ, jetParams));     // 7.) Frequency
+    write(commandBuilder->build_command(CMD::STROBEDIV, jetParams));    // 8.) Strobe Divider
+    write(commandBuilder->build_command(CMD::STROBEENABLE, jetParams)); // 9.) Strobe Enable
+    write(commandBuilder->build_command(CMD::STROBEDELAY, jetParams));  // 10.) Strobe Delay
+    write(commandBuilder->build_command(CMD::SOURCE, jetParams));       // 11.) Trigger Source
+
 }
 
 int Controller::connect_to_jet_drive(const QString &portName)
@@ -122,8 +134,8 @@ int Controller::connect_to_jet_drive(const QString &portName)
     }
 
     // wait after connection to initialize
-    qDebug() << "Connecting to JetDrive";
-    QTimer::singleShot(2000, this, &Controller::initialize_jet_drive);
+    emit response("Connecting to JetDrive");
+    QTimer::singleShot(500, this, &Controller::initialize_jet_drive);
     return 0;
 }
 
@@ -132,10 +144,10 @@ void Controller::disconnect_serial()
     clear_members();
     if (is_connected())
     {
-        qDebug() << "Disconnecting JetDrive";
+        emit response("Disconnecting JetDrive");
         serialPort->close();
     }
-    else qDebug() << "JetDrive is already disconnected";
+    else emit response("JetDrive is already disconnected");
 }
 
 void Controller::clear_members()

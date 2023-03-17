@@ -124,6 +124,11 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
 
     connect(ui->actionShow_Hide_Droplet_Tool, &QAction::triggered, this, &MainWindow::show_hide_droplet_analyzer_window);
 
+    // connect response from jetDrive to output window
+    connect(mJetDrive, &JetDrive::Controller::response, this, &MainWindow::print_to_output_window);
+    connect(mJetDrive, &JetDrive::Controller::timeout, this, &MainWindow::print_to_output_window);
+    connect(mJetDrive, &JetDrive::Controller::error, this, &MainWindow::print_to_output_window);
+
 }
 
 // on application close
@@ -172,6 +177,8 @@ void MainWindow::on_connect_clicked()
             GClose(mPrinter->g);           // close connection to the motion controller
         }
         mPrinter->g = 0;               // Reset connection handle
+
+        mJetDrive->disconnect_serial();
 
         ui->connect->setText("\nConnect to Controller\n"); // change button label text
         ui->homeZAxisCheckBox->setEnabled(true);

@@ -35,9 +35,7 @@ set(HEADERS
     include/outputwindow.h
     include/printer.h
     include/printhread.h
-    include/printobject.h
     include/svgview.h
-    include/vec2.h
 
 )
 
@@ -52,7 +50,6 @@ set(SOURCES
     src/outputwindow.cpp
     src/printer.cpp
     src/printhread.cpp
-    src/printobject.cpp
     src/svgview.cpp
 
 )
