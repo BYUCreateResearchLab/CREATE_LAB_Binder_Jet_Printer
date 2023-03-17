@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <fstream>
 
+#include "datarecordpoller.h"
+
 class Printer;
 class PrintThread;
 class LinePrintWidget;
@@ -87,6 +89,9 @@ private:
     DropletObservationWidget *mDropletObservationWidget{nullptr};
 
     std::ofstream m_logFile;
+
+    DataRecordPoller drPoller;
+
 
 };
 #endif // MAINWINDOW_H

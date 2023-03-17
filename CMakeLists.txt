@@ -36,6 +36,7 @@ set(HEADERS
     include/printer.h
     include/printhread.h
     include/svgview.h
+    include/datarecordpoller.h
 
 )
 
@@ -51,6 +52,7 @@ set(SOURCES
     src/printer.cpp
     src/printhread.cpp
     src/svgview.cpp
+    src/datarecordpoller.cpp
 
 )
 

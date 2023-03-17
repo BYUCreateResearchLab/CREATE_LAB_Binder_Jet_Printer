@@ -166,6 +166,8 @@ void MainWindow::on_connect_clicked()
         // Connect to JetDrive
         mJetDrive->connect_to_jet_drive("COM8");
 
+        drPoller.connect_to_controller("192.168.42.100 --subscribe ALL");
+
     }
     else // if there is already a connection
     {
