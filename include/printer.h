@@ -116,6 +116,7 @@ public:
     char const *address = "192.168.42.100"; // IP address of motion controller
     GCon g {0};                             // Handle for connection to Galil Motion Controller
     static float motor_type_value(MotorType motorType);
+    const char * jetDriveCOMPort {"COM8"};
 };
 
 struct RecoatSettings

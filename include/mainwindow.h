@@ -70,14 +70,15 @@ private slots:
     void move_z_to_absolute_position();
     void open_log_file();
 
+    void connect_to_jet_drive_button_pressed();
 
 private:
     Ui::MainWindow *ui;
     void resizeEvent(QResizeEvent* event) override;
 
-    Printer *mPrinter{nullptr};
-    PrintThread *mPrintThread{nullptr};
-    JetDrive::Controller *mJetDrive{nullptr};
+    Printer *printer{nullptr};
+    PrintThread *printThread{nullptr};
+    JetDrive::Controller *jetDrive{nullptr};
     LinePrintWidget *mLinePrintingWidget{nullptr};
     QDockWidget *mDockWidget{nullptr};
     OutputWindow *mOutputWindow{nullptr};
@@ -89,9 +90,5 @@ private:
     DropletObservationWidget *mDropletObservationWidget{nullptr};
 
     std::ofstream m_logFile;
-
-    DataRecordPoller drPoller;
-
-
 };
 #endif // MAINWINDOW_H

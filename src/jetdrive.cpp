@@ -78,6 +78,7 @@ void Controller::handle_timeout()
 {
     timer->stop();
     emit error("Serial IO Timeout: No response from JetDrive");
+    emit error(readData);
     disconnect_serial();
 
 }
@@ -109,7 +110,7 @@ void Controller::initialize_jet_drive()
 
 int Controller::connect_to_jet_drive(const QString &portName)
 {
-    if (is_connected()) {qDebug() << "Already connected to JetDrive"; return 0;} // return if already connected
+    if (is_connected()) {emit response("Already connected to JetDrive"); return 0;} // return if already connected
 
     clear_members();
 

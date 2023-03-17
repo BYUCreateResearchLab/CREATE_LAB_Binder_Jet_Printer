@@ -54,7 +54,7 @@ void JettingWidget::update_settings_clicked()
         mJetDrive->set_waveform(waveform);
         mJetDrive->set_external_trigger(); // will start jetting again if we were jetting previously
     }
-    else qDebug() << "the JetDrive is not connected!";
+    else emit print_to_output_window("Waveform update error. JetDrive is not connected!");
 }
 
 void JettingWidget::update_ui(const JetDrive::Settings &settings)

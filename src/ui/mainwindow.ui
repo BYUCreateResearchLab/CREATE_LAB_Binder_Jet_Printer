@@ -769,6 +769,15 @@ Connect to Controller
           </item>
          </layout>
         </item>
+        <item row="1" column="3">
+         <widget class="QPushButton" name="connectToJetDriveButton">
+          <property name="text">
+           <string>
+Connect to JetDrive
+</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
      </widget>

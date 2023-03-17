@@ -37,13 +37,13 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
 {
     ui->setupUi(this);
 
-    mJetDrive = new JetDrive::Controller(this);
+    jetDrive = new JetDrive::Controller(this);
 
     // set up widgets
     mLinePrintingWidget       = new LinePrintWidget();
     mPowderSetupWidget        = new PowderSetupWidget();
     mHighSpeedLineWidget      = new HighSpeedLineWidget();
-    mDropletObservationWidget = new DropletObservationWidget(mJetDrive);
+    mDropletObservationWidget = new DropletObservationWidget(jetDrive);
 
     // add widgets to tabs on the top bar
     ui->tabWidget->addTab(mPowderSetupWidget, "Powder Setup");
@@ -78,13 +78,13 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
 void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
 {
     // assign pointers to member variables
-    mPrinter     = printerPtr;
-    mPrintThread = printerThread;
+    printer     = printerPtr;
+    printThread = printerThread;
 
     // connect the string output from the printer thread to the output window widget
-    connect(mPrintThread, &PrintThread::response, mOutputWindow, &OutputWindow::print_string);
-    connect(mPrintThread, &PrintThread::ended, this, &MainWindow::thread_ended);
-    connect(mPrintThread, &PrintThread::connected_to_controller, this, &MainWindow::connected_to_motion_controller);
+    connect(printThread, &PrintThread::response, mOutputWindow, &OutputWindow::print_string);
+    connect(printThread, &PrintThread::ended, this, &MainWindow::thread_ended);
+    connect(printThread, &PrintThread::connected_to_controller, this, &MainWindow::connected_to_motion_controller);
 
     // connect signals for each of the printer widgets
     QList<PrinterWidget *> printerWidgets = this->findChildren<PrinterWidget *> ();
@@ -93,10 +93,10 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
         // qDebug() << "signals from " << printerWidgets[i]->accessibleName() << " connected";
 
         // share pointers with widgets
-        printerWidgets[i]->pass_printer_objects(mPrinter, mPrintThread);
+        printerWidgets[i]->pass_printer_objects(printer, printThread);
 
         // connect signals and slots
-        connect(printerWidgets[i], &PrinterWidget::execute_command, mPrintThread, &PrintThread::execute_command); // connect "execute_command" signal on powder window to execute on thread
+        connect(printerWidgets[i], &PrinterWidget::execute_command, printThread, &PrintThread::execute_command); // connect "execute_command" signal on powder window to execute on thread
         connect(printerWidgets[i], &PrinterWidget::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
         connect(printerWidgets[i], &PrinterWidget::disable_user_input, this, [this]() {this->allow_user_input(false);});
         connect(printerWidgets[i], &PrinterWidget::print_to_output_window, this, &MainWindow::print_to_output_window);
@@ -125,9 +125,11 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
     connect(ui->actionShow_Hide_Droplet_Tool, &QAction::triggered, this, &MainWindow::show_hide_droplet_analyzer_window);
 
     // connect response from jetDrive to output window
-    connect(mJetDrive, &JetDrive::Controller::response, this, &MainWindow::print_to_output_window);
-    connect(mJetDrive, &JetDrive::Controller::timeout, this, &MainWindow::print_to_output_window);
-    connect(mJetDrive, &JetDrive::Controller::error, this, &MainWindow::print_to_output_window);
+    connect(jetDrive, &JetDrive::Controller::response, this, &MainWindow::print_to_output_window);
+    connect(jetDrive, &JetDrive::Controller::timeout, this, &MainWindow::print_to_output_window);
+    connect(jetDrive, &JetDrive::Controller::error, this, &MainWindow::print_to_output_window);
+
+    connect(ui->connectToJetDriveButton, &QPushButton::pressed, this, &MainWindow::connect_to_jet_drive_button_pressed);
 
 }
 
@@ -135,14 +137,14 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
 MainWindow::~MainWindow()
 {
     delete ui;
-    if (mPrinter->g) // if there is an active connection to a controller
+    if (printer->g) // if there is an active connection to a controller
     {
-        GCmd(mPrinter->g, "ST");
-        GCmd(mPrinter->g, "MO"); // Turn off the motors
-        GCmd(mPrinter->g, "CB 18"); // stop roller 1
-        GCmd(mPrinter->g, "CB 21"); // stop roller 2
-        GCmd(mPrinter->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
-        GClose(mPrinter->g); // Close the connection to the controller
+        GCmd(printer->g, "ST");
+        GCmd(printer->g, "MO"); // Turn off the motors
+        GCmd(printer->g, "CB 18"); // stop roller 1
+        GCmd(printer->g, "CB 21"); // stop roller 2
+        GCmd(printer->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
+        GClose(printer->g); // Close the connection to the controller
     }
     // log application close and close the file
     m_logFile << "Application closed at " << QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm").toStdString() << "\n";
@@ -151,7 +153,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_connect_clicked()
 {
-    if (mPrinter->g == 0) // if there is no connection to the motion controller
+    if (printer->g == 0) // if there is no connection to the motion controller
     {
         std::stringstream s;
 
@@ -161,26 +163,24 @@ void MainWindow::on_connect_clicked()
         s << CMD::homing_sequence(homeZAxis);
 
         allow_user_input(false);
-        mPrintThread->execute_command(s);
+        printThread->execute_command(s);
 
         // Connect to JetDrive
-        mJetDrive->connect_to_jet_drive("COM8");
-
-        drPoller.connect_to_controller("192.168.42.100 --subscribe ALL");
+        jetDrive->connect_to_jet_drive(printer->jetDriveCOMPort);
 
     }
     else // if there is already a connection
     {
         allow_user_input(false);
-        if (mPrinter->g)
+        if (printer->g)
         {
-            GCmd(mPrinter->g, "ST");       // stop motion
-            GCmd(mPrinter->g, "MO");       // disable Motors
-            GClose(mPrinter->g);           // close connection to the motion controller
+            GCmd(printer->g, "ST");       // stop motion
+            GCmd(printer->g, "MO");       // disable Motors
+            GClose(printer->g);           // close connection to the motion controller
         }
-        mPrinter->g = 0;               // Reset connection handle
+        printer->g = 0;               // Reset connection handle
 
-        mJetDrive->disconnect_serial();
+        jetDrive->disconnect_serial();
 
         ui->connect->setText("\nConnect to Controller\n"); // change button label text
         ui->homeZAxisCheckBox->setEnabled(true);
@@ -227,7 +227,7 @@ void MainWindow::on_yPositive_pressed() // This name is a bit misleading (I need
     s << CMD::set_jog(Axis::Y, -ui->yVelocity->value());
     s << CMD::begin_motion(Axis::Y);
 
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 void MainWindow::on_xPositive_pressed()
@@ -240,7 +240,7 @@ void MainWindow::on_xPositive_pressed()
     s << CMD::set_jog(x, ui->xVelocity->value());
     s << CMD::begin_motion(x);
 
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 void MainWindow::jog_released()
@@ -253,7 +253,7 @@ void MainWindow::jog_released()
     s << CMD::motion_complete(Axis::Y);
     s << CMD::motion_complete(Axis::Z);
 
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 void MainWindow::on_yNegative_pressed()
@@ -267,7 +267,7 @@ void MainWindow::on_yNegative_pressed()
     s << CMD::begin_motion(y);
 
     // send off to thread to send to printer
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 void MainWindow::on_xNegative_pressed()
@@ -280,7 +280,7 @@ void MainWindow::on_xNegative_pressed()
     s << CMD::set_jog(x, -ui->xVelocity->value());
     s << CMD::begin_motion(x);
 
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 void MainWindow::on_xHome_clicked()
@@ -296,7 +296,7 @@ void MainWindow::on_xHome_clicked()
     s << CMD::motion_complete(x);
 
     allow_user_input(false);
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 void MainWindow::on_yHome_clicked()
@@ -312,7 +312,7 @@ void MainWindow::on_yHome_clicked()
     s << CMD::motion_complete(y);
 
     allow_user_input(false);
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 void MainWindow::on_zMax_clicked()
@@ -327,7 +327,7 @@ void MainWindow::on_zMax_clicked()
     s << CMD::motion_complete(z);
 
     allow_user_input(false);
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 void  MainWindow::on_zUp_clicked()
@@ -344,7 +344,7 @@ void  MainWindow::on_zUp_clicked()
 
 
     allow_user_input(false);
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 void  MainWindow::on_zDown_clicked()
@@ -360,7 +360,7 @@ void  MainWindow::on_zDown_clicked()
     s << CMD::motion_complete(z);
 
     allow_user_input(false);
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 void  MainWindow::on_zMin_clicked()
@@ -375,7 +375,7 @@ void  MainWindow::on_zMin_clicked()
     s << CMD::motion_complete(z);
 
     allow_user_input(false);
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 void MainWindow::on_activateRoller1_toggled(bool checked)
@@ -385,7 +385,7 @@ void MainWindow::on_activateRoller1_toggled(bool checked)
     if (checked == 1) s << CMD::enable_roller1();
     else              s << CMD::disable_roller1();
 
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 void MainWindow::print_to_output_window(QString s)
@@ -426,7 +426,7 @@ void MainWindow::on_removeBuildBox_clicked()
     s << CMD::motion_complete(Axis::Z);
 
     allow_user_input(false);
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 
@@ -466,7 +466,7 @@ void MainWindow::generate_printing_message_box(const std::string &message)
 
 void MainWindow::stop_button_pressed()
 {
-    if (mPrinter->g)
+    if (printer->g)
     {
         stop_print_and_thread();
         mDropletObservationWidget->jetting_was_turned_off();
@@ -475,26 +475,26 @@ void MainWindow::stop_button_pressed()
 
 void MainWindow::stop_print_and_thread()
 {
-    mPrintThread->stop();
-    if (mPrinter->g)
+    printThread->stop();
+    if (printer->g)
     {
         // Can't use CMD:: commands here...
         // work on a way to either send these through the thread even though it is blocked
         // or be able to strip CMD:: commands of new line and beginning command type so I can use them here
-        GCmd(mPrinter->g, "HX");    // Halt any running program
-        GCmd(mPrinter->g, "ST");    // stop motion on all axes
-        GCmd(mPrinter->g, "CB 18"); // stop roller 1
-        GCmd(mPrinter->g, "CB 21"); // stop roller 2
-        GCmd(mPrinter->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
+        GCmd(printer->g, "HX");    // Halt any running program
+        GCmd(printer->g, "ST");    // stop motion on all axes
+        GCmd(printer->g, "CB 18"); // stop roller 1
+        GCmd(printer->g, "CB 21"); // stop roller 2
+        GCmd(printer->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
     }
 }
 
 void MainWindow::get_current_x_axis_position()
 {
-    if (mPrinter->g)
+    if (printer->g)
     {
         int currentXPos;
-        GCmdI(mPrinter->g, "TPX", &currentXPos);
+        GCmdI(printer->g, "TPX", &currentXPos);
         double currentXPos_mm = currentXPos / (double)X_CNTS_PER_MM;
         print_to_output_window("Current X: " + QString::number(currentXPos_mm) + "mm");
     }
@@ -502,10 +502,10 @@ void MainWindow::get_current_x_axis_position()
 
 void MainWindow::get_current_y_axis_position()
 {
-    if (mPrinter->g)
+    if (printer->g)
     {
         int currentYPos;
-        GCmdI(mPrinter->g, "TPY", &currentYPos);
+        GCmdI(printer->g, "TPY", &currentYPos);
         double currentYPos_mm = currentYPos / (double)Y_CNTS_PER_MM;
         print_to_output_window("Current Y: " + QString::number(currentYPos_mm) + "mm");
     }
@@ -513,10 +513,10 @@ void MainWindow::get_current_y_axis_position()
 
 void MainWindow::get_current_z_axis_position()
 {
-    if (mPrinter->g)
+    if (printer->g)
     {
         int currentZPos;
-        GCmdI(mPrinter->g, "TPZ", &currentZPos);
+        GCmdI(printer->g, "TPZ", &currentZPos);
         double currentZPos_mm = currentZPos / (double)Z_CNTS_PER_MM;
         print_to_output_window("Current Z: " + QString::number(currentZPos_mm) + "mm");
     }
@@ -534,7 +534,7 @@ void MainWindow::move_z_to_absolute_position()
     s << CMD::motion_complete(Axis::Z);
 
     allow_user_input(false);
-    mPrintThread->execute_command(s);
+    printThread->execute_command(s);
 }
 
 void MainWindow::open_log_file()
@@ -545,6 +545,11 @@ void MainWindow::open_log_file()
     QDateTime date = QDateTime::currentDateTime();
     QString fileName = logDir + "/BJ_Log_" + date.toString("yyyy_MM_dd") + ".txt";
     m_logFile.open(fileName.toStdString(), std::ios::app); // append
+}
+
+void MainWindow::connect_to_jet_drive_button_pressed()
+{
+    jetDrive->connect_to_jet_drive(printer->jetDriveCOMPort);
 }
 
 void MainWindow::thread_ended()
