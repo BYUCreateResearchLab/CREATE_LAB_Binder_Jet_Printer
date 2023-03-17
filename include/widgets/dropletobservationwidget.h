@@ -11,7 +11,7 @@
 #include "jettingwidget.h"
 
 class Camera;
-class JetDrive;
+namespace JetDrive { class Controller; }
 class DropletAnalyzer;
 class DropletAnalyzerWidget;
 class QMainWindow;
@@ -27,7 +27,7 @@ class DropletObservationWidget : public PrinterWidget
     Q_OBJECT
 
 public:
-    explicit DropletObservationWidget(JetDrive *jetDrive, QWidget *parent = nullptr);
+    explicit DropletObservationWidget(JetDrive::Controller *jetDrive, QWidget *parent = nullptr);
     ~DropletObservationWidget();
     void allow_widget_input(bool allowed) override;
     bool is_droplet_anlyzer_window_visible() const;
@@ -68,7 +68,7 @@ private slots:
 private:
     Ui::DropletObservationWidget *ui;
     HIDS m_cameraHandle {0};
-    JetDrive *m_JetDrive {nullptr};
+    JetDrive::Controller *m_JetDrive {nullptr};
     Camera *m_Camera {nullptr};
 
     QTimer *m_JetVolumeTimer {nullptr};

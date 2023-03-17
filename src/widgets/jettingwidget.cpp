@@ -3,7 +3,7 @@
 
 #include "QDebug"
 
-JettingWidget::JettingWidget(JetDrive *jetDrv, QWidget *parent) :
+JettingWidget::JettingWidget(JetDrive::Controller *jetDrv, QWidget *parent) :
     PrinterWidget(parent),
     ui(new Ui::JettingWidget),
     mJetDrive(jetDrv)
@@ -11,7 +11,7 @@ JettingWidget::JettingWidget(JetDrive *jetDrv, QWidget *parent) :
     ui->setupUi(this);
     setAccessibleName("Jetting Widget");
     connect(ui->updateSettingsButton, &QPushButton::clicked, this, &JettingWidget::update_settings_clicked);
-    update_ui(mJetDrive->get_jet_drive_settings());
+    update_ui(mJetDrive->get_jetting_parameters());
     // can't call update_settings_clicked() here because it will try to send commands to the JetDrive which is not connected on startup...
 }
 
@@ -25,7 +25,7 @@ void JettingWidget::allow_widget_input(bool allowed)
     ui->jetSettingsFrame->setEnabled(allowed);
 }
 
-const MicroJet &JettingWidget::get_jet_drive_settings()
+const JetDrive::Settings& JettingWidget::get_jet_drive_settings()
 {
     return m_jetSettings;
 }
@@ -40,32 +40,34 @@ void JettingWidget::update_settings_clicked()
     {
         mJetDrive->set_internal_trigger();
         mJetDrive->set_num_drops_per_trigger(1);
-        mJetDrive->set_single_jetting();
-        m_jetSettings.fTRise = ui->riseTime1SpinBox->value();
-        m_jetSettings.fTDwell = ui->dwellTimeSpinBox->value();
-        m_jetSettings.fTFall = ui->fallTimeSpinBox->value();
-        m_jetSettings.fTEcho = ui->echoTimeSpinBox->value();
-        m_jetSettings.fTFinal = ui->riseTime2SpinBox->value();
-        m_jetSettings.fUIdle = ui->idleVoltageSpinBox->value();
-        m_jetSettings.fUDwell = ui->dwellVoltageSpinBox->value();
-        m_jetSettings.fUEcho = ui->echoVoltageSpinBox->value();
-        mJetDrive->set_waveform(m_jetSettings);
+        mJetDrive->set_single_jetting();        
+        JetDrive::Waveform waveform;
+        waveform.fTRise = ui->riseTime1SpinBox->value();
+        waveform.fTDwell = ui->dwellTimeSpinBox->value();
+        waveform.fTFall = ui->fallTimeSpinBox->value();
+        waveform.fTEcho = ui->echoTimeSpinBox->value();
+        waveform.fTFinal = ui->riseTime2SpinBox->value();
+        waveform.fUIdle = ui->idleVoltageSpinBox->value();
+        waveform.fUDwell = ui->dwellVoltageSpinBox->value();
+        waveform.fUEcho = ui->echoVoltageSpinBox->value();
+
+        mJetDrive->set_waveform(waveform);
         mJetDrive->set_external_trigger(); // will start jetting again if we were jetting previously
     }
     else qDebug() << "the JetDrive is not connected!";
 }
 
-void JettingWidget::update_ui(const MicroJet &settings)
+void JettingWidget::update_ui(const JetDrive::Settings &settings)
 {
     m_jetSettings = settings;
-    ui->riseTime1SpinBox->setValue(settings.fTRise);
-    ui->dwellTimeSpinBox->setValue(settings.fTDwell);
-    ui->fallTimeSpinBox->setValue(settings.fTFall);
-    ui->echoTimeSpinBox->setValue(settings.fTEcho);
-    ui->riseTime2SpinBox->setValue(settings.fTFinal);
-    ui->idleVoltageSpinBox->setValue(settings.fUIdle);
-    ui->dwellVoltageSpinBox->setValue(settings.fUDwell);
-    ui->echoVoltageSpinBox->setValue(settings.fUEcho);
+    ui->riseTime1SpinBox->setValue(settings.waveform.fTRise);
+    ui->dwellTimeSpinBox->setValue(settings.waveform.fTDwell);
+    ui->fallTimeSpinBox->setValue(settings.waveform.fTFall);
+    ui->echoTimeSpinBox->setValue(settings.waveform.fTEcho);
+    ui->riseTime2SpinBox->setValue(settings.waveform.fTFinal);
+    ui->idleVoltageSpinBox->setValue(settings.waveform.fUIdle);
+    ui->dwellVoltageSpinBox->setValue(settings.waveform.fUDwell);
+    ui->echoVoltageSpinBox->setValue(settings.waveform.fUEcho);
 }
 
 #include "moc_jettingwidget.cpp"

@@ -17,8 +17,8 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 set(GCLIB_INSTALL_DIR "C:/Program Files (x86)/Galil/gclib")
 
 find_package(OpenCV REQUIRED)
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Svg PrintSupport REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Svg PrintSupport REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Svg PrintSupport SerialPort REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Svg PrintSupport SerialPort REQUIRED)
 find_package(ueyeapi REQUIRED)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -29,6 +29,8 @@ set(HEADERS
 
     include/mainwindow.h
     include/jetdrive.h
+    include/mfjdrv.h
+    include/asyncserialdevice.h
     include/lineprintdata.h
     include/outputwindow.h
     include/printer.h
@@ -42,6 +44,8 @@ set(HEADERS
 set(SOURCES
 
     src/jetdrive.cpp
+    src/mfjdrv.cpp
+    src/asyncserialdevice.cpp
     src/lineprintdata.cpp
     src/main.cpp
     src/mainwindow.cpp
@@ -215,6 +219,7 @@ target_link_libraries(${EXE_NAME} PUBLIC
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Svg
     Qt${QT_VERSION_MAJOR}::PrintSupport
+    Qt${QT_VERSION_MAJOR}::SerialPort
     gclib
     gclibo
     ueye_api${PLATFORM_SUFFIX}

@@ -18,7 +18,7 @@
 #include <QDebug>
 #include <chrono>
 
-DropletObservationWidget::DropletObservationWidget(JetDrive *jetDrive, QWidget *parent) :
+DropletObservationWidget::DropletObservationWidget(JetDrive::Controller *jetDrive, QWidget *parent) :
     PrinterWidget(parent),
     ui(new Ui::DropletObservationWidget),
     m_JetDrive(jetDrive)

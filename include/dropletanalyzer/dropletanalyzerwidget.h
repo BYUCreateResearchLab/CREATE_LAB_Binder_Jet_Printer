@@ -36,7 +36,7 @@ public:
 public slots:
     void set_image_scale(double imageScale_um_per_px);
     void reset();
-    void load_video_from_observation_widget(QString filePath, MicroJet jetSettings, double strobe_sweep_step_time_us);
+    void load_video_from_observation_widget(QString filePath, JetDrive::Settings jetSettings, double strobe_sweep_step_time_us);
     void export_tracking_data(QString filename);
 
 signals:

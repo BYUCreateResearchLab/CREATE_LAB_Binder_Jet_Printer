@@ -123,7 +123,7 @@ void DropletAnalyzerWidget::reset()
     ui->analyzeVideoButton->setEnabled(false);
 }
 
-void DropletAnalyzerWidget::load_video_from_observation_widget(QString filePath, MicroJet jetSettings, double strobe_sweep_step_time_us)
+void DropletAnalyzerWidget::load_video_from_observation_widget(QString filePath, JetDrive::Settings jetSettings, double strobe_sweep_step_time_us)
 {
     reset();
     ui->strobeSweepStepSpinBox->setValue(strobe_sweep_step_time_us);
@@ -171,18 +171,18 @@ void DropletAnalyzerWidget::export_tracking_data(QString filename)
     file << m_trackingData.velocity_m_s << ",";
     file << m_trackingData.drop_angle_rad << ",";
 
-    std::optional<MicroJet> jetSettings = m_analyzer->get_jetting_settings();
+    std::optional<JetDrive::Settings> jetSettings = m_analyzer->get_jetting_settings();
     if (jetSettings.has_value())
     {
-        auto settings = jetSettings.value();
-        file << settings.fTRise << ","
-             << settings.fTDwell << ","
-             << settings.fTFall << ","
-             << settings.fTEcho << ","
-             << settings.fTFinal << ","
-             << settings.fUIdle << ","
-             << settings.fUDwell << ","
-             << settings.fUEcho;
+        auto waveform = jetSettings.value().waveform;
+        file << waveform.fTRise << ","
+             << waveform.fTDwell << ","
+             << waveform.fTFall << ","
+             << waveform.fTEcho << ","
+             << waveform.fTFinal << ","
+             << waveform.fUIdle << ","
+             << waveform.fUDwell << ","
+             << waveform.fUEcho;
     }
     file << "\n";
 

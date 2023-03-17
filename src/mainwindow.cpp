@@ -37,8 +37,7 @@ MainWindow::MainWindow(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::Ma
 {
     ui->setupUi(this);
 
-    // TODO: Fix memory leaks here
-    mJetDrive = new JetDrive();
+    mJetDrive = new JetDrive::Controller(this);
 
     // set up widgets
     mLinePrintingWidget       = new LinePrintWidget();
@@ -131,7 +130,6 @@ void MainWindow::setup(Printer *printerPtr, PrintThread *printerThread)
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete mJetDrive;
     if (mPrinter->g) // if there is an active connection to a controller
     {
         GCmd(mPrinter->g, "ST");
@@ -160,9 +158,9 @@ void MainWindow::on_connect_clicked()
         allow_user_input(false);
         mPrintThread->execute_command(s);
 
-        // start connection to JetDrive on another thread
-        std::thread jetDriveThread{&JetDrive::initialize_jet_drive, mJetDrive};
-        jetDriveThread.detach();
+        // Connect to JetDrive
+        mJetDrive->connect_to_jet_drive("COM8");
+
     }
     else // if there is already a connection
     {
@@ -371,54 +369,12 @@ void  MainWindow::on_zMin_clicked()
     mPrintThread->execute_command(s);
 }
 
-void MainWindow::on_activateHopper_stateChanged(int arg1)
-{
-    std::stringstream s;
-
-    if (arg1 == 2) s << CMD::enable_hopper(); // box is checked
-    else           s << CMD::disable_hopper();
-
-    mPrintThread->execute_command(s);
-}
-
 void MainWindow::on_activateRoller1_toggled(bool checked)
 {
     std::stringstream s;
 
     if (checked == 1) s << CMD::enable_roller1();
     else              s << CMD::disable_roller1();
-
-    mPrintThread->execute_command(s);
-}
-
-void MainWindow::on_activateRoller2_toggled(bool checked)
-{
-    std::stringstream s;
-
-    if (checked == 1) s << CMD::enable_roller2();
-    else              s << CMD::disable_roller2();
-
-    mPrintThread->execute_command(s);
-}
-
-
-void MainWindow::on_activateJet_stateChanged(int arg1)
-{
-    std::stringstream s;
-
-    if (arg1 == 2)
-    {        
-        s << CMD::servo_here(Axis::Jet);
-        s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
-        // TODO: get rid of magic numbers here, make a place for system defaults
-        s << CMD::set_jog(Axis::Jet, 1024);             // set to jet at 1024hz
-        // ADD OTHER JETTING SETTINGS HERE
-        s << CMD::begin_motion(Axis::Jet);
-    }
-    else
-    {
-        s << CMD::stop_motion(Axis::Jet);
-    }
 
     mPrintThread->execute_command(s);
 }

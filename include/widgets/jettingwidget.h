@@ -15,10 +15,10 @@ class JettingWidget : public PrinterWidget
     Q_OBJECT
 
 public:
-    explicit JettingWidget(JetDrive *jetDrv, QWidget *parent = nullptr);
+    explicit JettingWidget(JetDrive::Controller *jetDrv, QWidget *parent = nullptr);
     ~JettingWidget();
     void allow_widget_input(bool allowed) override;
-    const MicroJet& get_jet_drive_settings();
+    const JetDrive::Settings& get_jet_drive_settings();
 
 signals:
     void start_jetting();
@@ -26,12 +26,12 @@ signals:
 
 private slots:
     void update_settings_clicked();
-    void update_ui(const MicroJet& settings);
+    void update_ui(const JetDrive::Settings& settings);
 
 private:
     Ui::JettingWidget *ui;
-    JetDrive *mJetDrive{nullptr};
-    MicroJet m_jetSettings;
+    JetDrive::Controller *mJetDrive{nullptr};
+    JetDrive::Settings m_jetSettings;
 
 };
 

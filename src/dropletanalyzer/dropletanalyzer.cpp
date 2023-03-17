@@ -387,13 +387,13 @@ void DropletAnalyzer::generate_tracking_csv()
     }
 }
 
-void DropletAnalyzer::set_jetting_settings(const MicroJet &jetSettings)
+void DropletAnalyzer::set_jetting_settings(const JetDrive::Settings &jetSettings)
 {
     QMutexLocker lock(&m_mutex);
     m_jetSettings = jetSettings;
 }
 
-std::optional<MicroJet> DropletAnalyzer::get_jetting_settings()
+std::optional<JetDrive::Settings> DropletAnalyzer::get_jetting_settings()
 {
     QMutexLocker lock(&m_mutex);
     return m_jetSettings;

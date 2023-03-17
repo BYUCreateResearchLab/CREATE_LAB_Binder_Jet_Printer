@@ -13,7 +13,7 @@ class PowderSetupWidget;
 class JettingWidget;
 class HighSpeedLineWidget;
 class DropletObservationWidget;
-class JetDrive;
+namespace JetDrive { class Controller; }
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -43,12 +43,9 @@ private slots:
     void on_zUp_clicked();
     void on_zDown_clicked();
     void on_zMin_clicked();
-    void on_activateHopper_stateChanged(int arg1);
     void on_connect_clicked();
 
     void on_activateRoller1_toggled(bool checked);
-    void on_activateRoller2_toggled(bool checked);
-    void on_activateJet_stateChanged(int arg1);
     void allow_user_input(bool allowed);
     void thread_ended();
     void connected_to_motion_controller();
@@ -78,7 +75,7 @@ private:
 
     Printer *mPrinter{nullptr};
     PrintThread *mPrintThread{nullptr};
-    JetDrive *mJetDrive{nullptr};
+    JetDrive::Controller *mJetDrive{nullptr};
     LinePrintWidget *mLinePrintingWidget{nullptr};
     QDockWidget *mDockWidget{nullptr};
     OutputWindow *mOutputWindow{nullptr};

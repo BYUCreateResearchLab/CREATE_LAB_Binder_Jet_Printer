@@ -91,8 +91,8 @@ public slots:
    void track_droplet();
    void calculate_scaled_drop_pos();
    void generate_tracking_csv();
-   void set_jetting_settings(const MicroJet& jetSettings);
-   std::optional<MicroJet> get_jetting_settings();
+   void set_jetting_settings(const JetDrive::Settings& jetSettings);
+   std::optional<JetDrive::Settings> get_jetting_settings();
 
 private slots:
    void cleanup();
@@ -125,7 +125,7 @@ private:
    DropletCameraSettings m_cameraSettings;
    DropViewSettings m_viewSettings;
 
-   std::optional<MicroJet> m_jetSettings;
+   std::optional<JetDrive::Settings> m_jetSettings;
 
    std::unique_ptr<QThread> m_thread;
 };
