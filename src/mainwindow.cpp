@@ -78,12 +78,15 @@ MainWindow::MainWindow(QMainWindow *parent)
     allow_user_input(false);
 
 
+    // this really should be owned by the printer
     interruptHandler = new GInterruptHandler(this);
 
     connect(interruptHandler,
             &GInterruptHandler::status,
             this,
-            [](uchar status){ qDebug() << QByteArray(1, status).toHex(); });
+            [](uchar status){ qDebug() << QString::fromStdString(interrupt_string((Interrupt)status)); });
+
+    interruptHandler->start();
 
 }
 
@@ -228,6 +231,9 @@ MainWindow::~MainWindow()
                .toStdString()
             << "\n";
     logFile.close();
+
+    // I need to actually handle this
+    interruptHandler->stop();
 }
 
 void MainWindow::on_connect_clicked()

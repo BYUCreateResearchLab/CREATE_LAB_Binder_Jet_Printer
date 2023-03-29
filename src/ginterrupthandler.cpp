@@ -15,20 +15,28 @@ GInterruptHandler::~GInterruptHandler()
 
 void GInterruptHandler::connect_to_controller(std::string_view IPAddress)
 {
-    QString stringIn  = QString("%s --subscribe EI").arg(IPAddress.data());
-    GOpen(stringIn.toStdString().c_str(), &g);
+    std::string stringIn = IPAddress.data();
+    stringIn += " --subscribe EI";
+    GOpen(stringIn.c_str(), &g);
 
     // send EI command (subscribe to all axes complete interrupt)
-    GCmd(g, "EI 256");
+    // work to be able to build up this number from documentation on EI command
+    GCmd(g, "EI 8447");
+    // individual axis interrupts and all axes complete interrupts seem to be exclusive.
+    // the controller will prefer to send a single axis complete interrupt instead of all axes interrupt
 
-    QMutexLocker locker(&mutex);
+    // could also put up in the GOpen function with '--timeout 500'
+    GTimeout(g, 500);
+
+    mutex.lock();
     waitCondition.wakeOne();
+    mutex.unlock();
 }
 
 void GInterruptHandler::stop()
 {
     mutex.lock();
-    mQuit = false;
+    mQuit = true;
     mutex.unlock();
 }
 
@@ -37,6 +45,7 @@ void GInterruptHandler::run()
     GStatus stat;
     mutex.lock();
     // wait until the motion controller is connected
+    qDebug() << "Wait";
     waitCondition.wait(&mutex);
     // Once the thread is woken
     while (!mQuit)
@@ -49,6 +58,8 @@ void GInterruptHandler::run()
         mutex.lock();
     }
     mutex.unlock();
+
+    qDebug() << "Quit";
 }
 
 #include "moc_ginterrupthandler.cpp"

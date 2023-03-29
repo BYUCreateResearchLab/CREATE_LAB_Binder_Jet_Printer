@@ -109,6 +109,43 @@ enum class MotorType
     Servo, Servo_R, StepLow, StepLow_R, StepHigh, StepHigh_R, Servo2PB, Servo2PB_R
 };
 
+enum Interrupt
+{
+    X_MOTION_COMPLETE = 0xD0,
+    Y_MOTION_COMPLETE = 0xD1,
+    Z_MOTION_COMPLETE = 0xD2,
+    D_MOTION_COMPLETE = 0xD3,
+    E_MOTION_COMPLETE = 0xD4,
+    F_MOTION_COMPLETE = 0xD5,
+    G_MOTION_COMPLETE = 0xD6,
+    JETTING_COMPLETE = 0xD7,
+    ALL_MOTION_COMPLETE = 0xD8,
+    EXCESS_POSITION_ERROR = 0xC8,
+    LIMIT_SWITCH = 0xC0,
+    PROGRAM_STOPPED = 0xDB
+    // there are a few more
+};
+
+inline std::string interrupt_string(Interrupt interrupt)
+{
+    switch (interrupt)
+    {
+    case Interrupt::X_MOTION_COMPLETE:
+        return "X motion complete";
+    case Interrupt::Y_MOTION_COMPLETE:
+        return "Y motion complete";
+    case Interrupt::Z_MOTION_COMPLETE:
+        return "Z motion complete";
+    case Interrupt::JETTING_COMPLETE:
+        return "Jetting Stopped";
+    case Interrupt::ALL_MOTION_COMPLETE:
+        return "All motion complete";
+    case Interrupt::PROGRAM_STOPPED:
+        return "Program stopped";
+    default:
+        return "Interrupt not recognized";
+    }
+}
 
 class Printer
 {
