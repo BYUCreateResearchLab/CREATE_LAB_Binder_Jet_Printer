@@ -10,10 +10,10 @@ PrintThread::PrintThread(QObject *parent) : QThread(parent)
 
 PrintThread::~PrintThread()
 {
-    mMutex.lock();
+    mutex.lock();
     mQuit = true;
-    mCond.wakeOne();
-    mMutex.unlock();
+    waitCondition.wakeOne();
+    mutex.unlock();
     wait();
 }
 
@@ -24,65 +24,54 @@ void PrintThread::setup(Printer *printer)
 
 void PrintThread::stop()
 {
-    mMutex.lock();
-    mRunning = false;
-    mMutex.unlock();
+    mutex.lock();
+    running = false;
+    mutex.unlock();
 }
 
 void PrintThread::print_gcmds(bool print)
 {
-    mMutex.lock();
+    mutex.lock();
     mPrintGCmds = print;
-    mMutex.unlock();
+    mutex.unlock();
 }
 
 void PrintThread::execute_command(std::stringstream &ss)
 {
-    const QMutexLocker locker(&mMutex);
-    if (mQueue.size() != 0) // if the queue is not empty
+    const QMutexLocker locker(&mutex);
+    if (queue.size() != 0) // if the queue is not empty
     {
         emit error("command queue was not empty when new commands were attempted");
+        return;
     }
-    else // start or wake the thread
-    {
-        // Auto execute code here
-        // emit response("Testing...\n");
 
-        std::string buffer;
-        //while(ss >> buffer) // spaces split into different objects
-        while (std::getline(ss, buffer)) // Reads whole line (includes spaces)
-        {
-            //buffer.erase(std::remove(buffer.begin(), buffer.end(), '\n'), buffer.end());
-            mQueue.push(buffer);
-        }
-        if (!isRunning())
-        {
-            start(); // start a new thread if one has not been created before
-        }
-        else
-        {
-            mCond.wakeOne();   // else wake the thread
-        }
-    }
+    // start or wake the thread
+
+    std::string buffer;
+    //while(ss >> buffer) // spaces split into different objects
+    while (std::getline(ss, buffer)) // Reads whole line (includes spaces)
+    { queue.push(buffer); }
+    if (!isRunning())
+    { start(); } // start a new thread if one has not been created before
+    else
+    { waitCondition.wakeOne(); } // else wake the thread
 }
 
 void PrintThread::clear_queue()
 {
-    mMutex.lock();
-    while (mQueue.size() > 0)
-    {
-        mQueue.pop();
-    }
-    mMutex.unlock();
+    mutex.lock();
+    while (queue.size() > 0)
+    { queue.pop(); }
+    mutex.unlock();
 }
 
 void PrintThread::run()
 {
     while (!mQuit)
     {
-        while (mQueue.size() > 0)
+        while (queue.size() > 0)
         {
-            if (!mRunning) // If the queue is externally stopped
+            if (!running) // If the queue is externally stopped
             {
                 clear_queue();
                 // Code to run on stop
@@ -98,7 +87,7 @@ void PrintThread::run()
                 // === Code to run on each queue item ===
 
                 // split string into command type and command string
-                std::string commandString = mQueue.front();
+                std::string commandString = queue.front();
                 std::string delimeterChar = ",";
                 size_t pos{0};
                 std::string commandType;
@@ -148,9 +137,9 @@ void PrintThread::run()
                             GSleep(sleepTime_ms);
                             counter++;
                         }
-                        while (val != 0 && counter < maxLoop && mRunning);
+                        while (val != 0 && counter < maxLoop && running);
 
-                        if (mRunning) //download full array
+                        if (running) //download full array
                             e(GArrayDownload(mPrinter->g, "Data", G_BOUNDS, G_BOUNDS, commandString.c_str()));
                     }
                     else
@@ -229,8 +218,8 @@ void PrintThread::run()
 
 
                 //msleep(150);
-                mQueue.pop(); // remove command from the queue
-                if(mQueue.size() == 0)
+                queue.pop(); // remove command from the queue
+                if(queue.size() == 0)
                 {
                     // code to run when the queue completes normally
                     if (mPrintGCmds)
@@ -245,11 +234,12 @@ void PrintThread::run()
         }
 
         emit ended();
-        mMutex.lock();
-        mCond.wait(&mMutex); // wait until thread is woken again by transaction call
+        mutex.lock();
+        // wait until thread is woken again by transaction call
+        waitCondition.wait(&mutex);
         // Once the thread is woken again
-        mRunning = true;
-        mMutex.unlock();
+        running = true;
+        mutex.unlock();
     }
 }
 

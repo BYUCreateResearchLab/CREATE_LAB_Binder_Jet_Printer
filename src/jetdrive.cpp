@@ -8,12 +8,17 @@ namespace JetDrive
 
 Controller::Controller(QObject *parent) :
     AsyncSerialDevice(parent),
-    commandBuilder (std::make_unique<CommandBuilder>())
+    cmdBuilder (std::make_unique<CommandBuilder>())
 {
     // connect timer for handling timeout errors
-    connect(serialPort, &QSerialPort::readyRead, this, &Controller::handle_ready_read);
-    connect(timer, &QTimer::timeout, this, &Controller::handle_timeout);
-    connect(serialPort, &QSerialPort::errorOccurred, this, &Controller::handle_serial_error);
+    connect(serialPort, &QSerialPort::readyRead,
+            this, &Controller::handle_ready_read);
+
+    connect(timer, &QTimer::timeout,
+            this, &Controller::handle_timeout);
+
+    connect(serialPort, &QSerialPort::errorOccurred,
+            this, &Controller::handle_serial_error);
 }
 
 Controller::~Controller()
@@ -59,7 +64,7 @@ void Controller::handle_ready_read()
     case INITIALIZED:
         // the command is in the second byte received
         if (readData.size() == 2)
-            expectedResponseSize = response_size(static_cast<CMD>(readData.at(1)));
+            expectedResponseSize = response_size((CMD)(readData.at(1)));
         else if (readData.size() >= expectedResponseSize)
         {
             // TODO: can do something with the response here (error checking)
@@ -94,37 +99,29 @@ void Controller::initialize_jet_drive()
         write(QByteArray(1, byte));
 
     // initialize jetDrive parameters (order specified in command reference)
-    write(commandBuilder->build_command(CMD::RESET, jetParams));        // 1.) Soft Reset
-    write(commandBuilder->build_command(CMD::GETVERSION, jetParams));   // 2.) Version
-                                                                        // 3.) Get Number of Channels
-    write(commandBuilder->build_command(CMD::PULSE, jetParams));        // 4.) Pulse Waveform
-    write(commandBuilder->build_command(CMD::CONTMODE, jetParams));     // 5.) Trigger Mode
-    write(commandBuilder->build_command(CMD::DROPS, jetParams));        // 6.) Number of Drops per Trigger
-    write(commandBuilder->build_command(CMD::FULLFREQ, jetParams));     // 7.) Frequency
-    write(commandBuilder->build_command(CMD::STROBEDIV, jetParams));    // 8.) Strobe Divider
-    write(commandBuilder->build_command(CMD::STROBEENABLE, jetParams)); // 9.) Strobe Enable
-    write(commandBuilder->build_command(CMD::STROBEDELAY, jetParams));  // 10.) Strobe Delay
-    write(commandBuilder->build_command(CMD::SOURCE, jetParams));       // 11.) Trigger Source
-
+    write(cmdBuilder->build(CMD::RESET, jetParams));        // 1.) Soft Reset
+    write(cmdBuilder->build(CMD::GETVERSION, jetParams));   // 2.) Version
+                                                            // 3.) Get Number of Channels
+    write(cmdBuilder->build(CMD::PULSE, jetParams));        // 4.) Pulse Waveform
+    write(cmdBuilder->build(CMD::CONTMODE, jetParams));     // 5.) Trigger Mode
+    write(cmdBuilder->build(CMD::DROPS, jetParams));        // 6.) Number of Drops per Trigger
+    write(cmdBuilder->build(CMD::FULLFREQ, jetParams));     // 7.) Frequency
+    write(cmdBuilder->build(CMD::STROBEDIV, jetParams));    // 8.) Strobe Divider
+    write(cmdBuilder->build(CMD::STROBEENABLE, jetParams)); // 9.) Strobe Enable
+    write(cmdBuilder->build(CMD::STROBEDELAY, jetParams));  // 10.) Strobe Delay
+    write(cmdBuilder->build(CMD::SOURCE, jetParams));       // 11.) Trigger Source
 }
 
 int Controller::connect_to_jet_drive(const QString &portName)
 {
-    if (is_connected()) {emit response("Already connected to JetDrive"); return 0;} // return if already connected
+    if (is_connected()) // return if already connected
+    {
+        emit response("Already connected to JetDrive");
+        return 0;
+    }
 
     clear_members();
-
     serialPort->setPortName(portName);
-
-    // I think it will automatically set these settings for me
-    // but just to be safe :)
-    /*
-    serialPort->setBaudRate(QSerialPort::Baud9600);
-    serialPort->setDataBits(QSerialPort::Data8);
-    serialPort->setParity(QSerialPort::NoParity);
-    serialPort->setStopBits(QSerialPort::OneStop);
-    serialPort->setFlowControl(QSerialPort::NoFlowControl);
-    */
 
     // attempt to open connection to serial port
     if (!serialPort->open(QIODevice::ReadWrite))
@@ -156,15 +153,13 @@ void Controller::clear_members()
     iX200 = 0;
     initState = InitState::NOT_INITIALIZED;
     clear_command_queue();
-    //disconnect(serialPort, &QSerialPort::readyRead,
-    //           this, &Controller::handle_ready_read);
 }
 
 void Controller::set_waveform(const Waveform &waveform)
 {
     QMutexLocker lock(&mutex);
     jetParams.waveform = waveform;
-    write(commandBuilder->build_command(CMD::PULSE, jetParams));
+    write(cmdBuilder->build(CMD::PULSE, jetParams));
 }
 
 void Controller::set_continuous_jetting()
@@ -173,7 +168,7 @@ void Controller::set_continuous_jetting()
     if (jetParams.fMode != 1)
     {
         jetParams.fMode = 1;
-        write(commandBuilder->build_command(CMD::CONTMODE, jetParams));
+        write(cmdBuilder->build(CMD::CONTMODE, jetParams));
     }
 }
 
@@ -183,7 +178,7 @@ void Controller::set_single_jetting()
     if (jetParams.fMode != 0)
     {
         jetParams.fMode = 0;
-        write(commandBuilder->build_command(CMD::CONTMODE, jetParams));
+        write(cmdBuilder->build(CMD::CONTMODE, jetParams));
     }
 }
 
@@ -193,7 +188,7 @@ void Controller::set_continuous_mode_frequency(long frequency_Hz)
     if (jetParams.fFrequency != frequency_Hz)
     {
         jetParams.fFrequency = frequency_Hz;
-        write(commandBuilder->build_command(CMD::FULLFREQ, jetParams));
+        write(cmdBuilder->build(CMD::FULLFREQ, jetParams));
     }
 }
 
@@ -203,7 +198,7 @@ void Controller::set_num_drops_per_trigger(short numDrops)
     if (jetParams.fDrops != numDrops)
     {
         jetParams.fDrops = numDrops;
-        write(commandBuilder->build_command(CMD::DROPS, jetParams));
+        write(cmdBuilder->build(CMD::DROPS, jetParams));
     }
 }
 
@@ -213,7 +208,7 @@ void Controller::set_external_trigger()
     if (jetParams.fSource != 1)
     {
         jetParams.fSource = 1;
-        write(commandBuilder->build_command(CMD::CONTMODE, jetParams));
+        write(cmdBuilder->build(CMD::CONTMODE, jetParams));
     }
 }
 
@@ -223,7 +218,7 @@ void Controller::set_internal_trigger()
     if (jetParams.fSource != 0)
     {
         jetParams.fSource = 0;
-        write(commandBuilder->build_command(CMD::CONTMODE, jetParams));
+        write(cmdBuilder->build(CMD::CONTMODE, jetParams));
     }
 }
 
@@ -232,7 +227,7 @@ void Controller::start_continuous_jetting()
     set_continuous_jetting();
     set_internal_trigger();
     QMutexLocker lock(&mutex);
-    write(commandBuilder->build_command(CMD::SOFTTRIGGER, jetParams));
+    write(cmdBuilder->build(CMD::SOFTTRIGGER, jetParams));
 }
 
 void Controller::stop_continuous_jetting()
@@ -246,7 +241,7 @@ void Controller::enable_strobe()
     if (jetParams.fStrobeEnable != 1)
     {
         jetParams.fStrobeEnable = 1;
-        write(commandBuilder->build_command(CMD::STROBEENABLE, jetParams));
+        write(cmdBuilder->build(CMD::STROBEENABLE, jetParams));
     }
 }
 
@@ -256,7 +251,7 @@ void Controller::disable_strobe()
     if (jetParams.fStrobeEnable != 0)
     {
         jetParams.fStrobeEnable = 0;
-        write(commandBuilder->build_command(CMD::STROBEENABLE, jetParams));
+        write(cmdBuilder->build(CMD::STROBEENABLE, jetParams));
     }
 }
 
@@ -265,7 +260,7 @@ void Controller::set_strobe_delay(short strobeDelay_microseconds)
     if (jetParams.fStrobeDelay != strobeDelay_microseconds)
     {
         jetParams.fStrobeDelay = strobeDelay_microseconds;
-        write(commandBuilder->build_command(CMD::STROBEDELAY, jetParams));
+        write(cmdBuilder->build(CMD::STROBEDELAY, jetParams));
     }
 }
 
@@ -281,26 +276,30 @@ const Waveform Controller::get_jetting_waveform() const
     return jetParams.waveform;
 }
 
-void Controller::handle_serial_error(QSerialPort::SerialPortError serialPortError)
+void Controller::handle_serial_error(
+        QSerialPort::SerialPortError serialPortError)
 {
     if (serialPortError == QSerialPort::ReadError)
     {
         emit error(QObject::tr("Read error on port %1, error: %2")
-                            .arg(serialPort->portName(), serialPort->errorString()));
+                            .arg(serialPort->portName(),
+                                 serialPort->errorString()));
         disconnect_serial();
     }
 
     if (serialPortError == QSerialPort::OpenError)
     {
         emit error(QObject::tr("Error opening port %1, error: %2")
-                            .arg(serialPort->portName(), serialPort->errorString()));
+                            .arg(serialPort->portName(),
+                                 serialPort->errorString()));
         disconnect_serial();
     }
 
     if (serialPortError == QSerialPort::WriteError)
     {
         emit error(QObject::tr("Error writing to port %1, error: %2")
-                            .arg(serialPort->portName(), serialPort->errorString()));
+                            .arg(serialPort->portName(),
+                                 serialPort->errorString()));
         disconnect_serial();
     }
 }

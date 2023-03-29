@@ -37,3 +37,5 @@ void DataRecordPoller::poll_controller_async()
     emit read_done();
     // the gui thread gets bogged down if I handle this signal there...
 }
+
+#include "moc_datarecordpoller.cpp"

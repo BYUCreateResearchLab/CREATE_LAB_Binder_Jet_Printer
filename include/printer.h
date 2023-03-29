@@ -74,6 +74,8 @@
 #include <functional>
 #include <map>
 
+// TODO: get rid of these #defines and convert to
+// constants in a namespace or static members
 #define X_CNTS_PER_MM 1000
 #define Y_CNTS_PER_MM 800
 #define Z_CNTS_PER_MM 75745.7108f
@@ -107,43 +109,62 @@ enum class MotorType
     Servo, Servo_R, StepLow, StepLow_R, StepHigh, StepHigh_R, Servo2PB, Servo2PB_R
 };
 
+
 class Printer
 {
 public:
     Printer();
 
     // the computer ethernet port needs to be set to 192.168.42.10
-    char const *address = "192.168.42.100"; // IP address of motion controller
-    GCon g {0};                             // Handle for connection to Galil Motion Controller
+    const char * address {"192.168.42.100"}; // IP address of motion controller
+    GCon g {0}; // Handle for connection to Galil Motion Controller
     static float motor_type_value(MotorType motorType);
     const char * jetDriveCOMPort {"COM8"};
+
+    // TODO:
+    // printer should own the jet drive
+    // printer should own handles to the USB Camera
+    // printer should own GCon handles to the motion controller (threads?)
+    // Should there be separate classes for the DMC controller?
+    // printer should own any connected serial devices
+
+
+    // DMC4080 MCU; // what would this class do?
+    // Camera camera;
+    // JetDrive::Controller jDrive;
+    // HeatLamp heatLamp;
+    // PCD pressureController
+
 };
 
 struct RecoatSettings
 {
     // Should I be using unsigned vales here??
-    double recoatSpeed_mm_s{100};
-    double rollerTraverseSpeed_mm_s{3};
+    double recoatSpeed_mm_s {100};
+    double rollerTraverseSpeed_mm_s {3};
     // should this be another type? Maybe another enum?
-    int ultrasonicIntensityLevel{25};
-    int ultrasonicMode{0};
-    int layerHeight_microns{35};
-    bool isLevelRecoat{false};
+    int ultrasonicIntensityLevel {25};
+    int ultrasonicMode {0};
+    int layerHeight_microns {35};
+    bool isLevelRecoat {false};
 
-    int waitAfterHopperOn_millisecs{1000};
-    double yJogSpeedToHopper_mm_s{30};
+    int waitAfterHopperOn_millisecs {1000};
+    double yJogSpeedToHopper_mm_s {30};
     // these are relative positions... should they be absolute positions?
-    double recoatYAxisTravel{115};
-    double rollerYAxisTravel{172.5};
+    double recoatYAxisTravel {115};
+    double rollerYAxisTravel {172.5};
 
-    // These are not just recoat settings, but are values that are used when spreading a new layer
+    // These are not just recoat settings,
+    // but are values that are used when spreading a new layer
     // Decide where to put these
-    double xAxisDefaultAcceleration{};
-    double yAxisDefaultAcceleration{};
-    double zAxisDefaultAcceleration{};
+    double xAxisDefaultAcceleration {};
+    double yAxisDefaultAcceleration {};
+    double zAxisDefaultAcceleration {};
 };
 
-double calculate_acceleration_distance(double speed_mm_per_s, double acceleration_mm_per_s2);
+double calculate_acceleration_distance(
+        double speed_mm_per_s,
+        double acceleration_mm_per_s2);
 
 namespace CMD
 {
@@ -157,8 +178,11 @@ string create_gcmd(std::string_view command, Axis axis, int quantity);
 inline string to_ASCII_code(char charToConvert)
 { return "{^" + std::to_string(int(charToConvert)) + "}, "; }
 
+// TODO: A lot of these don't need to be functions
+// but I want to rebuild this anyway
 inline string GCmd() { return "GCmd,"; }
-inline string GCmd(std::string_view command) { return GCmd() + command.data() + "\n"; }
+inline string GCmd(std::string_view command)
+{ return GCmd() + command.data() + "\n"; }
 inline string GCmdInt() { return "GCmdInt,"; }
 inline string GMotionComplete() { return "GMotionComplete,"; }
 inline string JetDrive() { return "JetDrive,"; }
@@ -171,11 +195,15 @@ string set_default_controller_settings();
 string cmd_buf_to_dmc(const std::stringstream &s);
 string homing_sequence(bool homeZAxis);
 string move_xy_axes_to_default_position();
-string add_pvt_data_to_buffer(Axis axis, double relativePosition_mm, double velocity_mm, int time_counts);
+string add_pvt_data_to_buffer(Axis axis,
+                              double relativePosition_mm,
+                              double velocity_mm,
+                              int time_counts);
 string exit_pvt_mode(Axis axis);
 string begin_pvt_motion(Axis axis);
 string set_hopper_mode_and_intensity(int mode, int intensity);
-string set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing);
+string set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis,
+                                                      int dropletSpacing);
 string mist_layer(double traverseSpeed_mm_per_s);
 string spread_layer(const RecoatSettings &settings);
 
@@ -294,10 +322,24 @@ inline string display_message(const std::string &message)
 { return detail::Message() + message + "\n"; }
 
 inline string enable_gearing_for(Axis slaveAxis, Axis masterAxis)
-{ return detail::GCmd() + "GA" + detail::axis_string(slaveAxis) + "=" + detail::axis_string(masterAxis) + "\n"; }
+{
+    return detail::GCmd()
+            + "GA"
+            + detail::axis_string(slaveAxis)
+            + "="
+            + detail::axis_string(masterAxis)
+            + "\n";
+}
 
 inline string disable_gearing_for(Axis slaveAxis)
-{ return detail::GCmd() + "GR" + detail::axis_string(slaveAxis) + "=" + "0" + "\n"; }
+{
+    return detail::GCmd()
+            + "GR"
+            + detail::axis_string(slaveAxis)
+            + "="
+            + "0"
+            + "\n";
+}
 
 // === These trippoint commands don't work through gclib... ===
 // don't use unless uploading these commands to the controller directly
@@ -305,9 +347,12 @@ string at_time_samples(int samples);
 string at_time_milliseconds(int milliseconds);
 string after_absolute_position(Axis axis, double absolutePosition_mm);
 
-inline string set_reference_time() { return detail::GCmd() + "AT 0" + "\n"; }
-inline string after_motion(Axis axis) { return detail::GCmd() + "AM " + detail::axis_string(axis) + "\n";}
-inline string wait(int milliseconds) { return detail::GCmd() + "WT " + std::to_string(milliseconds) + "\n"; }
+inline string set_reference_time()
+{ return detail::GCmd() + "AT 0" + "\n"; }
+inline string after_motion(Axis axis)
+{ return detail::GCmd() + "AM " + detail::axis_string(axis) + "\n";}
+inline string wait(int milliseconds)
+{ return detail::GCmd() + "WT " + std::to_string(milliseconds) + "\n"; }
 // =====================================================================
 
 } // end CMD namespace

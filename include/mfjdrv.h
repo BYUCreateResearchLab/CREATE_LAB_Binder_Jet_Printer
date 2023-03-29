@@ -70,7 +70,7 @@ class CommandBuilder
 public:
 
     explicit CommandBuilder();
-    const QByteArray build_command(CMD command,
+    const QByteArray build(CMD command,
                                    Settings &m_jetParams);
 
 private:

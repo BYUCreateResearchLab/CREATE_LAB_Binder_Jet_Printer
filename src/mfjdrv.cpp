@@ -21,8 +21,9 @@ namespace JetDrive
 
 CommandBuilder::CommandBuilder() {}
 
-const QByteArray CommandBuilder::build_command(CMD command,
-                                               Settings &jetParams)
+const QByteArray CommandBuilder::build(
+        CMD command,
+        Settings &jetParams)
 {
     long LongFreq;
     int IntTime;

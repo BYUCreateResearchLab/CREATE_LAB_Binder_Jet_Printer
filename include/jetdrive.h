@@ -33,7 +33,8 @@ public:
 
     void set_waveform(const Waveform &waveform);
 
-    //Before sending the next command, the response packet must have been received.
+    // Before sending the next command,
+    // the response packet must have been received.
     // TODO: Implement a queue for commands that get popped off and sent when
     // the appropriate response has been received
     // use response_size(CMD) to get the appropriate of bytes to wait for
@@ -65,7 +66,7 @@ private:
 
 private:
     mutable QMutex mutex;
-    std::unique_ptr<CommandBuilder> commandBuilder;
+    std::unique_ptr<CommandBuilder> cmdBuilder;
     Settings jetParams;
 
     // Members to help with initialization

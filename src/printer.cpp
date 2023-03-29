@@ -7,16 +7,19 @@
 GReturn GCALL GProgramComplete(GCon g)
 {
     char pred[] = "_XQ=-1";
-       GReturn rc;
+    GReturn rc;
 
-       rc = GWaitForBool(g, pred, -1); // poll forever. Change this if a premature exit is desired.
-       if (rc != G_NO_ERROR)
-           return rc;
+    // poll forever. Change this if a premature exit is desired.
+    rc = GWaitForBool(g, pred, -1);
+    if (rc != G_NO_ERROR)
+        return rc;
 
-       return G_NO_ERROR;
+    return G_NO_ERROR;
 }
 
-double calculate_acceleration_distance(double speed_mm_per_s, double acceleration_mm_per_s2)
+double calculate_acceleration_distance(
+        double speed_mm_per_s,
+        double acceleration_mm_per_s2)
 {
     // dx = v0*t + .5*a*t^2
     double accelerationTime = (speed_mm_per_s/acceleration_mm_per_s2);
@@ -79,10 +82,10 @@ std::string CMD::set_default_controller_settings()
     // Controller Configuration
     s << GCmd("MO")          // Ensure motors are off for setup
 
-    // Controller Time Update Setting
+         // Controller Time Update Setting
       << GCmd("TM 500")      // Set the update time of the motion controller
 
-    // X Axis
+         // X Axis
       << GCmd("MTX=-1")      // Set motor type to reversed brushless
       << GCmd("CEX=10")      // Set main and aux encoder to reversed quadrature
       << GCmd("BMX=40000")   // Set magnetic pitch of linear motor
@@ -90,15 +93,15 @@ std::string CMD::set_default_controller_settings()
       << GCmd("AUX=9")       // Set current loop (based on inductance of motor)
       << GCmd("TLX=3")       // Set constant torque limit to 3V
       << GCmd("TKX=0")       // Disable peak torque setting for now
-    // Set PID Settings
-    // (NOTE: PID SETTINGS ARE OPTIMIZED FOR TM 500.
-    // NEED TO USE OTHER VALUES FOR TM 1000!)
+         // Set PID Settings
+         // (NOTE: PID SETTINGS ARE OPTIMIZED FOR TM 500.
+         // NEED TO USE OTHER VALUES FOR TM 1000!)
       << GCmd("KDX=1000")    // Set Derivative
       << GCmd("KPX=100")     // Set Proportional
       << GCmd("KIX=0.5")     // Set Integral
       << GCmd("PLX=177")     // Set low-pass filter
 
-    // Y Axis
+         // Y Axis
       << GCmd("MTY=1")       // Set motor type to standard brushless
       << GCmd("CEY=0")       // Set encoder to normal quadrature
       << GCmd("BMY=2000")    // Set magnetic pitch of rotary motor
@@ -106,20 +109,20 @@ std::string CMD::set_default_controller_settings()
       << GCmd("AUY=11")      // Set current loop (based on inductance of motor)
       << GCmd("TLY=6")       // Set constant torque limit to 6V
       << GCmd("TKY=0")       // Disable peak torque setting for now
-    // Set PID Settings
+         // Set PID Settings
       << GCmd("KDY=2000")    // Set Derivative
       << GCmd("KPY=100")     // Set Proportional
       << GCmd("KIY=1")       // Set Integral
       << GCmd("PLY=50")      // Set low-pass filter
 
-    // Z Axis
+         // Z Axis
       << GCmd("MTZ=-2.5")    // Stepper motor with active high step pulses, reversed direction
       << GCmd("CEZ=14")      // Set encoder to reversed quadrature
       << GCmd("AGZ=0")       // Set amplifier gain
       << GCmd("AUZ=9")       // Set current loop (based on inductance of motor)
-    // Note: There might be more settings especially for this axis I might want to add later
+         // Note: There might be more settings especially for this axis I might want to add later
 
-    // H Axis (Jetting Axis)
+         // H Axis (Jetting Axis)
       << GCmd("MTH=-2")      // Set jetting axis to be stepper motor with defualt low
       << GCmd("AGH=0")       // Set gain to lowest value
       << GCmd("LDH=3")       // Disable limit sensors for H axis
@@ -127,7 +130,7 @@ std::string CMD::set_default_controller_settings()
       << GCmd("ITH=1" )      // Minimize filters on step signals
       << GCmd("YAH=1")       // set step resolution to 1 full step per step
 
-    // Configure Extended I/O
+         // Configure Extended I/O
       << GCmd("CO 1")        // configures bank 2 as outputs on extended I/O (IO 17-24)
 
       << GCmd("CC 19200,0,1,0")  // AUX PORT FOR THE ULTRASONIC GENERATOR
@@ -139,7 +142,11 @@ std::string CMD::set_default_controller_settings()
     return s.str();
 }
 
-std::string CMD::add_pvt_data_to_buffer(Axis axis, double relativePosition_mm, double velocity_mm, int time_counts)
+std::string CMD::add_pvt_data_to_buffer(
+        Axis axis,
+        double relativePosition_mm,
+        double velocity_mm,
+        int time_counts)
 {
     std::string result;
     result += GCmd();
@@ -201,12 +208,13 @@ std::string CMD::set_hopper_mode_and_intensity(int mode, int intensity)
 {
     // modes A-H (int mode is index 0-7)
     // intensity 100%-30% (int intensity is index 0-7)
-    // "MG{P2} {^77}, {^48}, {^53}, {^13}{N}" is the correct command for "M05" or Mode: 'A' and Intensity: 50%
+    // "MG{P2} {^77}, {^48}, {^53}, {^13}{N}"
+    // is the correct command for "M05" or Mode: 'A' and Intensity: 50%
     return GCmd() + "MG{P2} "
-                  + to_ASCII_code('M')
-                  + to_ASCII_code('0' + mode) // converts int to char and then gets backs a string of the ASCII code to send as a command to the generator
-                  + to_ASCII_code('0' + intensity)
-                  + "{^13}{N}" + "\n";
+            + to_ASCII_code('M')
+            + to_ASCII_code('0' + mode)
+            + to_ASCII_code('0' + intensity)
+            + "{^13}{N}" + "\n";
 }
 
 std::string CMD::move_xy_axes_to_default_position()
@@ -246,8 +254,8 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
     s << begin_motion(Axis::Z);
     s << motion_complete(Axis::Z);
 
-
-    s << position_absolute(Axis::Y, startPosition_mm); // move y-axis to start misting position
+    // move y-axis to start misting position
+    s << position_absolute(Axis::Y, startPosition_mm);
     s << begin_motion(Axis::Y);
     s << motion_complete(Axis::Y);
 
@@ -255,7 +263,8 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
     s << sleep(sleepTime_ms); // wait
 
     s << set_speed(Axis::Y, traverseSpeed_mm_per_s); // set traverse speed
-    s << position_absolute(Axis::Y, endPosition_mm); // travel under mister and specified speed
+    // travel under mister and specified speed
+    s << position_absolute(Axis::Y, endPosition_mm);
     s << begin_motion(Axis::Y);
     s << motion_complete(Axis::Y);
 
@@ -276,10 +285,19 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
     return s.str();
 }
 
-std::string CMD::set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis, int dropletSpacing_um)
+std::string CMD::set_jetting_gearing_ratio_from_droplet_spacing(
+        Axis masterAxis,
+        int dropletSpacing_um)
 {
-    double gearingRatio = (1000.0 / ((double)dropletSpacing_um * mm2cnts(1, masterAxis)));
-    return {GCmd() + "GR" + detail::axis_string(Axis::Jet) + "=" + std::to_string(gearingRatio) + "\n"};
+    double gearingRatio = (
+                1000.0
+                / ((double)dropletSpacing_um * mm2cnts(1, masterAxis)));
+    return {GCmd()
+                + "GR"
+                + detail::axis_string(Axis::Jet)
+                + "="
+                + std::to_string(gearingRatio)
+                + "\n"};
 }
 
 std::string CMD::homing_sequence(bool homeZAxis)
@@ -303,10 +321,11 @@ std::string CMD::homing_sequence(bool homeZAxis)
         s << set_accleration(Axis::Z, 20);
         s << set_deceleration(Axis::Z, 20);
         s << set_limit_switch_deceleration(Axis::Z, 40);
-        s << set_jog(Axis::Z, -2);                       // jog to bottom (MAX SPEED of 5mm/s!)
-        s << disable_forward_software_limit(Axis::Z);    // turn off top software limit
+        // jog to bottom (MAX SPEED of 5mm/s!)
+        s << set_jog(Axis::Z, -2);
+        // turn off top software limit
+        s << disable_forward_software_limit(Axis::Z);
     }
-
 
     s << begin_motion(Axis::X);
     s << begin_motion(Axis::Y);
@@ -316,8 +335,9 @@ std::string CMD::homing_sequence(bool homeZAxis)
     s << motion_complete(Axis::X);
     s << motion_complete(Axis::Y);
 
-    // TODO: This is a temporary solution that depends on alignment of ballscrew and motor index pulse
-    //       find a better way to do this
+    // TODO: This is a temporary solution that depends on alignment
+    // of ballscrew and motor index pulse
+    // find a better way to do this
     // move y-axis forward a bit to avoid being right on top of the index pulse
     s << position_relative(Axis::Y, -2);
     s << set_speed(Axis::Y, 10);
@@ -343,9 +363,11 @@ std::string CMD::homing_sequence(bool homeZAxis)
 
     if (homeZAxis)
     {
-        s << set_accleration(Axis::Z, 10);        // slower acceleration for going back up
+        // slower acceleration for going back up
+        s << set_accleration(Axis::Z, 10);
         s << set_speed(Axis::Z, 2);
-        s << position_relative(Axis::Z, 13.5322); // TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
+        // TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
+        s << position_relative(Axis::Z, 13.5322);
     }
 
 
@@ -362,7 +384,8 @@ std::string CMD::homing_sequence(bool homeZAxis)
     s << define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
     s << define_position(Axis::Y, 0);
     s << define_position(Axis::Z, 0);
-    s << set_forward_software_limit(Axis::Z, 0); // set software limit to current position
+    // set software limit to current position
+    s << set_forward_software_limit(Axis::Z, 0);
 
     return s.str();
 }
@@ -392,10 +415,14 @@ std::string CMD::spread_layer(const RecoatSettings &settings)
     if (settings.isLevelRecoat) // move z-axis back up all the way
         s << position_relative(Axis::Z, zAxisOffsetUnderRoller);
     else // move up but a layer thickness down from original position
-        s << position_relative(Axis::Z, zAxisOffsetUnderRoller - (settings.layerHeight_microns / 1000.0));
+        s << position_relative(Axis::Z,
+                               zAxisOffsetUnderRoller
+                               - (settings.layerHeight_microns
+                                  / 1000.0));
 
     // set hopper settings
-    s << set_hopper_mode_and_intensity(settings.ultrasonicMode, settings.ultrasonicIntensityLevel);
+    s << set_hopper_mode_and_intensity(settings.ultrasonicMode,
+                                       settings.ultrasonicIntensityLevel);
 
     // move z-axis
     s << begin_motion(Axis::Z);
@@ -432,7 +459,10 @@ std::string CMD::spread_layer(const RecoatSettings &settings)
     return s.str();
 }
 
-std::string CMD::detail::create_gcmd(std::string_view command, Axis axis, int quantity)
+std::string CMD::detail::create_gcmd(
+        std::string_view command,
+        Axis axis,
+        int quantity)
 {
     std::string result;
     result += GCmd();

@@ -9,24 +9,25 @@ int main(int argc, char *argv[])
 {
     // initialize objects that will persist through the life of the program
     Printer printer;
-    QApplication a(argc, argv);
     PrintThread printerThread;
     printerThread.setup(&printer);
-    a.setStyle("fusion");
 
+    QApplication a(argc, argv);
+    a.setStyle("fusion");
     a.setPalette(dark_palette());
 
-    // Initialize the main window
     MainWindow w;
     w.setup(&printer, &printerThread);
-    w.setWindowState(Qt::WindowMaximized); // Set window to be maximized
+    w.setWindowState(Qt::WindowMaximized);
     w.show();
 
-    int ret{a.exec()}; // returns when application closes
+    int ret{a.exec()};
 
     return ret;
 }
 
+
+// Dark theme settings
 const QPalette dark_palette()
 {
     QColor darkGray(46, 47, 48);

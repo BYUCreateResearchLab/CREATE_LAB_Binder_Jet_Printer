@@ -49,11 +49,11 @@ signals:
 
 private:
     Printer *mPrinter {nullptr};
-    std::queue<std::string> mQueue;
-    QMutex mMutex;
-    QWaitCondition mCond;
+    std::queue<std::string> queue;
+    QMutex mutex;
+    QWaitCondition waitCondition;
     bool mQuit {false};
-    bool mRunning {true};
+    bool running {true};
 
     bool mPrintGCmds {false};
 };

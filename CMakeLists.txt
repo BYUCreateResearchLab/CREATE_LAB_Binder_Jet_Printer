@@ -37,6 +37,7 @@ set(HEADERS
     include/printhread.h
     include/svgview.h
     include/datarecordpoller.h
+    include/ginterrupthandler.h
 
 )
 
@@ -53,6 +54,7 @@ set(SOURCES
     src/printhread.cpp
     src/svgview.cpp
     src/datarecordpoller.cpp
+    src/ginterrupthandler.cpp
 
 )
 

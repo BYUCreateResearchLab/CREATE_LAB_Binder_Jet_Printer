@@ -4,8 +4,6 @@
 #include <QMainWindow>
 #include <fstream>
 
-#include "datarecordpoller.h"
-
 class Printer;
 class PrintThread;
 class LinePrintWidget;
@@ -16,6 +14,9 @@ class JettingWidget;
 class HighSpeedLineWidget;
 class DropletObservationWidget;
 namespace JetDrive { class Controller; }
+
+
+#include "ginterrupthandler.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,14 +29,14 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QMainWindow *parent = nullptr);
     ~MainWindow();
-    void setup(Printer *printerPtr, PrintThread *printerThread);
+    void setup(Printer *printerPtr_, PrintThread *printerThread_);
 
 private slots:
     // TODO: change slot names away from using "on_" convention and connect slots manually in .cpp file
-    void on_yPositive_pressed(); // used when +y button is pressed
-    void on_xPositive_pressed();
-    void on_yNegative_pressed();
-    void on_xNegative_pressed();
+    void y_up_button_pressed();
+    void x_right_button_pressed();
+    void y_down_button_pressed();
+    void x_left_button_pressed();
 
     void jog_released(); // executed when any jogging buttons above are released
 
@@ -60,7 +61,6 @@ private slots:
 
     void tab_was_changed(int index);
 
-    void stop_button_pressed();
     void stop_print_and_thread();
 
     void get_current_x_axis_position();
@@ -76,19 +76,20 @@ private:
     Ui::MainWindow *ui;
     void resizeEvent(QResizeEvent* event) override;
 
-    Printer *printer{nullptr};
-    PrintThread *printThread{nullptr};
-    JetDrive::Controller *jetDrive{nullptr};
-    LinePrintWidget *mLinePrintingWidget{nullptr};
-    QDockWidget *mDockWidget{nullptr};
-    OutputWindow *mOutputWindow{nullptr};
-    PowderSetupWidget *mPowderSetupWidget{nullptr};
+    Printer *printer {nullptr};
+    PrintThread *printThread {nullptr};
+    JetDrive::Controller *jetDrive {nullptr};
+    LinePrintWidget *linePrintingWidget {nullptr};
+    QDockWidget *dockWidget {nullptr};
+    OutputWindow *outputWindow {nullptr};
+    PowderSetupWidget *powderSetupWidget {nullptr};
+    JettingWidget *jettingWidget {nullptr};
+    HighSpeedLineWidget *highSpeedLineWidget {nullptr};
+    DropletObservationWidget *dropletObservationWidget {nullptr};
 
-    // Non-core modules
-    JettingWidget *mJettingWidget{nullptr};
-    HighSpeedLineWidget *mHighSpeedLineWidget{nullptr};
-    DropletObservationWidget *mDropletObservationWidget{nullptr};
 
-    std::ofstream m_logFile;
+    GInterruptHandler* interruptHandler {nullptr};
+
+    std::ofstream logFile;
 };
 #endif // MAINWINDOW_H

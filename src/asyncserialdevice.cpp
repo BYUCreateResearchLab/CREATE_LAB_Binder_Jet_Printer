@@ -32,7 +32,8 @@ void AsyncSerialDevice::write_next()
         // dequeue, store, and write the next message
         prevWrite = writeQueue.dequeue();
         serialPort->write(prevWrite);
-        // start timeout timer (expect a response from the device before the timer ends)
+        // start timeout timer
+        // (expect a response from the device before the timer ends)
         timer->start(readTimeout_ms);
     }
 
