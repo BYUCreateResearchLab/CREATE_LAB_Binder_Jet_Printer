@@ -51,9 +51,8 @@ DropletObservationWidget::DropletObservationWidget(JetDrive::Controller *jetDriv
     m_JettingWidget = new JettingWidget(m_JetDrive);
     QGridLayout *gridLayout = ui->frame->findChild<QGridLayout*>("gridLayout_frame");
     gridLayout->addWidget(m_JettingWidget, 23,0,1,3);
-
     m_cameraFrameRate = ui->cameraFPSSpinBox->value();
-    m_numFramesToCapture = int(ui->endTimeSpinBox->value() / ui->stepTimeSpinBox->value()) + 1;
+    m_numFramesToCapture = std::round((ui->endTimeSpinBox->value() - ui->startTimeSpinBox->value()) / ui->stepTimeSpinBox->value()) + 1;
     connect(ui->cameraFPSSpinBox, &QAbstractSpinBox::editingFinished, this, &DropletObservationWidget::framerate_changed);
     connect(ui->shutterAngleSpinBox, &QAbstractSpinBox::editingFinished, this, &DropletObservationWidget::exposure_changed);
     m_tempFileName = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/jetdroplet.avi";
@@ -292,7 +291,7 @@ void DropletObservationWidget::capture_video()
     isavi_SetFrameRate(m_aviID, videoFrameRate);
     isavi_StartAVI(m_aviID);
 
-    m_numFramesToCapture = int(ui->endTimeSpinBox->value() / ui->stepTimeSpinBox->value()) + 1;
+    m_numFramesToCapture = std::round((ui->endTimeSpinBox->value() - ui->startTimeSpinBox->value()) / ui->stepTimeSpinBox->value()) + 1;
     allow_widget_input(false);
     m_captureVideoWithSweep = true;
     start_strobe_sweep();
