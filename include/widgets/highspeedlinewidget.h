@@ -43,7 +43,7 @@ public:
 
 private:
     std::stringstream s_;
-    int cntsPerSec{1024};
+    int cntsPerSec{2048};
 };
 
 namespace Ui
