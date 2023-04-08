@@ -543,14 +543,26 @@ std::string HighSpeedLineCommandGenerator::generate_dmc_commands_for_printing_li
     // Line Print PVT Commands
     // PVT commands are in relative position coordinates
 
-    s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,    -print_speed_mm_per_s, accelTimeCnts);         // accelerate
-    s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity to trigger point
-    s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity
-    s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,     0,                    accelTimeCnts);         // decelerate
+    // need to add more pvt points if any sample times are greater than 2048
+    if (halfLinePrintTimeCnts < 2048) // data points are close together enough
+    {
+        s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,    -print_speed_mm_per_s, accelTimeCnts);         // accelerate
+        s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity to trigger point
+        s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/2.0), -print_speed_mm_per_s, halfLinePrintTimeCnts); // constant velocity
+        s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,     0,                    accelTimeCnts);         // decelerate
+    }
+    else
+    {
+        s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,    -print_speed_mm_per_s, accelTimeCnts);           // accelerate
+        s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/4.0), -print_speed_mm_per_s, halfLinePrintTimeCnts/2); // constant velocity
+        s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/4.0), -print_speed_mm_per_s, halfLinePrintTimeCnts/2); // constant velocity to trigger point
+        s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/4.0), -print_speed_mm_per_s, halfLinePrintTimeCnts/2); // constant velocity
+        s << CMD::add_pvt_data_to_buffer(printAxis, -(lineLength_mm/4.0), -print_speed_mm_per_s, halfLinePrintTimeCnts/2); // constant velocity
+        s << CMD::add_pvt_data_to_buffer(printAxis, -accelDistance_mm,     0,                    accelTimeCnts);           // decelerate
+    }
+
     s << CMD::exit_pvt_mode(printAxis);
     s << CMD::set_reference_time();
-
-
 
     double linePrintTime_ms = linePrintTime_s * 1000.0;
     double halfLinePrintTime_ms = linePrintTime_ms / 2.0;
