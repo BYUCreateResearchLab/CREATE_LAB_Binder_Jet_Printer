@@ -3,46 +3,29 @@
 #include <sstream>
 #include <cmath>
 #include <stdexcept>
+
 #include "pcd.h"
 #include "jetdrive.h"
-#include "printhread.h"
-
-GReturn GCALL GProgramComplete(GCon g)
-{
-    char pred[] = "_XQ=-1";
-    GReturn rc;
-
-    // poll forever. Change this if a premature exit is desired.
-    rc = GWaitForBool(g, pred, -1);
-    if (rc != G_NO_ERROR)
-        return rc;
-
-    return G_NO_ERROR;
-}
-
-double calculate_acceleration_distance(
-        double speed_mm_per_s,
-        double acceleration_mm_per_s2)
-{
-    // dx = v0*t + .5*a*t^2
-    double accelerationTime = (speed_mm_per_s/acceleration_mm_per_s2);
-    return 0.5 * acceleration_mm_per_s2 * std::pow(accelerationTime, 2);
-}
-
-using namespace CMD::detail;
+#include "dmc4080.h"
 
 Printer::Printer(QObject *parent) :
     QObject(parent),
-    printerThread ( new PrintThread(this) ),
+    mcu ( new DMC4080("192.168.42.100", this) ),
     jetDrive ( new JetDrive::Controller("COM8", this) ),
     pressureController ( new PCD::Controller("COM3", this) )
 {
-    printerThread->setup(this);
+
 }
 
 Printer::~Printer()
 {
+
 }
+
+
+
+
+using namespace CMD::detail;
 
 std::string CMD::detail::axis_string(Axis axis)
 {
@@ -516,6 +499,15 @@ std::string CMD::cmd_buf_to_dmc(const std::stringstream &s)
     }
 
     return returnString;
+}
+
+double calculate_acceleration_distance(
+        double speed_mm_per_s,
+        double acceleration_mm_per_s2)
+{
+    // dx = v0*t + .5*a*t^2
+    double accelerationTime = (speed_mm_per_s/acceleration_mm_per_s2);
+    return 0.5 * acceleration_mm_per_s2 * std::pow(accelerationTime, 2);
 }
 
 // ======================================

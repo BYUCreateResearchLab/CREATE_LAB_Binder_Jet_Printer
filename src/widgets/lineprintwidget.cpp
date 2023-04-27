@@ -8,6 +8,7 @@
 
 #include "printer.h"
 #include "printhread.h"
+#include "dmc4080.h"
 
 using namespace std;
 
@@ -306,10 +307,10 @@ void LinePrintWidget::print_lines_dmc()
     QByteArray ba = dmcLinePrintCode.toLocal8Bit();
     const char *dmcCodeC_Str = ba.data();
 
-    if (mPrinter->g)
+    if (mPrinter->mcu->g)
     {
         // upload program with up to full compression enabled on the preprocessor
-        if (GProgramDownload(mPrinter->g, dmcCodeC_Str, "--max 4") == G_NO_ERROR)
+        if (GProgramDownload(mPrinter->mcu->g, dmcCodeC_Str, "--max 4") == G_NO_ERROR)
             qDebug() << "Program Downloaded with compression level 4";
         else
         {

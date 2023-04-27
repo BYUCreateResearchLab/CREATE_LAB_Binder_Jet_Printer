@@ -76,8 +76,10 @@
 #include <QObject>
 
 class PrintThread;
+class GInterruptHandler;
 namespace PCD { class Controller; }
 namespace JetDrive { class Controller; }
+class DMC4080;
 
 // TODO: get rid of these #defines and convert to
 // constants in a namespace or static members
@@ -101,8 +103,6 @@ namespace JetDrive { class Controller; }
 
 #define HS_TTL_BIT 17 // pin 16
 #define MISTER_BIT 21 // pin 2
-
-GReturn GCALL GProgramComplete(GCon g);
 
 enum class Axis
 {
@@ -159,35 +159,18 @@ class Printer : public QObject
 public:
     explicit Printer(QObject *parent = nullptr);
     ~Printer();
+
     static float motor_type_value(MotorType motorType);
 
 public:
-    PrintThread *printerThread {nullptr};
 
-    // the computer ethernet port needs to be set to 192.168.42.10
-    const char *address {"192.168.42.100"}; // IP address of motion controller
-    GCon g {0}; // Handle for connection to Galil Motion Controller
-
+    DMC4080 *mcu {nullptr};
     JetDrive::Controller *jetDrive {nullptr};
     PCD::Controller *pressureController {nullptr};
 
 
-
-
-
     // TODO:
-    // printer should own the jet drive (DONE)
     // printer should own handles to the USB Camera
-    // printer should own GCon handles to the motion controller (threads?)
-    // Should there be separate classes for the DMC controller?
-    // printer should own any connected serial devices
-
-
-    // DMC4080 MCU; // what would this class do?
-    // Camera camera;
-    // JetDrive::Controller jDrive;
-    // HeatLamp heatLamp;
-    // PCD pressureController
 
 };
 

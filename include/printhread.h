@@ -13,7 +13,7 @@
 #include "gclib_errors.h"
 #include "gclib_record.h"
 
-class Printer;
+class DMC4080;
 
 // Runs commands for communicating with the Galil Motion Controller on a different thread
 // Look at https://www.youtube.com/watch?v=O1a5Z1ZIbSw for more info
@@ -31,7 +31,7 @@ class PrintThread : public QThread
 public:
     explicit PrintThread(QObject *parent = nullptr);
     ~PrintThread();
-    void setup(Printer *printer);
+    void setup(DMC4080 *printer);
     void execute_command(std::stringstream &ss);
     void stop();
     void print_gcmds(bool print);
@@ -48,7 +48,7 @@ signals:
     void connected_to_controller();
 
 private:
-    Printer *mPrinter {nullptr};
+    DMC4080 *mPrinter {nullptr};
     std::queue<std::string> queue;
     QMutex mutex;
     QWaitCondition waitCondition;

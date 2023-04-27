@@ -1,7 +1,25 @@
 #include "printhread.h"
-#include "printer.h"
+
+#include "dmc4080.h"
+#include "gclib.h"
+#include "gclibo.h"
+#include "gclib_errors.h"
+#include "gclib_record.h"
 
 #include <QDebug>
+
+GReturn GCALL GProgramComplete(GCon g)
+{
+    char pred[] = "_XQ=-1";
+    GReturn rc;
+
+    // poll forever. Change this if a premature exit is desired.
+    rc = GWaitForBool(g, pred, -1);
+    if (rc != G_NO_ERROR)
+        return rc;
+
+    return G_NO_ERROR;
+}
 
 PrintThread::PrintThread(QObject *parent) : QThread(parent)
 {
@@ -17,7 +35,7 @@ PrintThread::~PrintThread()
     wait();
 }
 
-void PrintThread::setup(Printer *printer)
+void PrintThread::setup(DMC4080 *printer)
 {
     mPrinter = printer;
 }

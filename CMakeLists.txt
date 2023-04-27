@@ -39,6 +39,7 @@ set(HEADERS
     include/datarecordpoller.h
     include/ginterrupthandler.h
     include/pcd.h
+    include/dmc4080.h
 
 )
 
@@ -57,6 +58,7 @@ set(SOURCES
     src/datarecordpoller.cpp
     src/ginterrupthandler.cpp
     src/pcd.cpp
+    src/dmc4080.cpp
 
 )
 

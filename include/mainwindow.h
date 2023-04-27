@@ -15,9 +15,6 @@ class HighSpeedLineWidget;
 class DropletObservationWidget;
 namespace JetDrive { class Controller; }
 
-
-#include "ginterrupthandler.h"
-
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -86,8 +83,6 @@ private:
     HighSpeedLineWidget *highSpeedLineWidget {nullptr};
     DropletObservationWidget *dropletObservationWidget {nullptr};
 
-
-    GInterruptHandler *interruptHandler {nullptr};
 
     std::ofstream logFile;
 };

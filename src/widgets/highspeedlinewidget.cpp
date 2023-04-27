@@ -6,6 +6,7 @@
 #include "printer.h"
 #include <sstream>
 #include <cmath>
+#include "dmc4080.h"
 
 HighSpeedLineWidget::HighSpeedLineWidget(Printer *printer, QWidget *parent) :
     PrinterWidget(printer, parent),
@@ -146,7 +147,7 @@ void HighSpeedLineWidget::update_print_axes(int index)
 void HighSpeedLineWidget::set_x_center()
 {
     int currentXPos;
-    GCmdI(mPrinter->g, "TPX", &currentXPos);
+    GCmdI(mPrinter->mcu->g, "TPX", &currentXPos);
     double currentXPos_mm = currentXPos / (double)X_CNTS_PER_MM;
     ui->buildBoxCenterXSpinBox->setValue(currentXPos_mm);
     update_print_settings();
@@ -155,7 +156,7 @@ void HighSpeedLineWidget::set_x_center()
 void HighSpeedLineWidget::set_y_center()
 {
     int currentYPos;
-    GCmdI(mPrinter->g, "TPY", &currentYPos);
+    GCmdI(mPrinter->mcu->g, "TPY", &currentYPos);
     double currentYPos_mm = currentYPos / (double)Y_CNTS_PER_MM;
     ui->buildBoxCenterYSpinBox->setValue(currentYPos_mm);
     update_print_settings();
@@ -177,9 +178,9 @@ void HighSpeedLineWidget::print_line()
 
     //qDebug().noquote() << commands;
 
-    if (mPrinter->g)
+    if (mPrinter->mcu->g)
     {
-        GProgramDownload(mPrinter->g, commands, "");
+        GProgramDownload(mPrinter->mcu->g, commands, "");
     }
     s << "GCmd," << "XQ" << "\n";
     s << "GProgramComplete," << "\n";
@@ -208,9 +209,9 @@ void HighSpeedLineWidget::view_flat()
     std::string temp = print->generate_dmc_commands_for_viewing_flat(currentLineToPrintIndex);
     const char *commands = temp.c_str();
 
-    if (mPrinter->g)
+    if (mPrinter->mcu->g)
     {
-        GProgramDownload(mPrinter->g, commands, "");
+        GProgramDownload(mPrinter->mcu->g, commands, "");
     }
     s << "GCmd," << "XQ" << "\n";
     s << "GProgramComplete," << "\n";

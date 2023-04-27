@@ -19,9 +19,11 @@
 #include "gclibo.h"
 #include "gclib_errors.h"
 #include "gclib_record.h"
+
 #include "jetdrive.h"
 #include "printer.h"
 #include "printhread.h"
+
 #include "printerwidget.h"
 #include "lineprintwidget.h"
 #include "outputwindow.h"
@@ -29,7 +31,10 @@
 #include "jettingwidget.h"
 #include "highspeedlinewidget.h"
 #include "dropletobservationwidget.h"
+
 #include "pcd.h"
+#include "ginterrupthandler.h"
+#include "dmc4080.h"
 
 MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     QMainWindow(parent),
@@ -76,17 +81,13 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     // disable all buttons that require a controller connection
     allow_user_input(false);
 
-
-    // this really should be owned by the printer
-    interruptHandler = new GInterruptHandler(this);
-
-    connect(interruptHandler,
+    connect(printer->mcu->interruptHandler,
             &GInterruptHandler::status,
             this,
             [](uchar status){ qDebug() << QString::fromStdString(interrupt_string((Interrupt)status)); });
 
     // don't use for now since it doesn't always close right
-    //interruptHandler->start();
+    //printer->mcu->interruptHandler->start();
 
 }
 
@@ -95,15 +96,15 @@ void MainWindow::setup()
 {
 
     // connect the output from the printer thread to the output window widget
-    connect(printer->printerThread,
+    connect(printer->mcu->printerThread,
             &PrintThread::response,
             outputWindow,
             &OutputWindow::print_string);
-    connect(printer->printerThread,
+    connect(printer->mcu->printerThread,
             &PrintThread::ended,
             this,
             &MainWindow::thread_ended);
-    connect(printer->printerThread,
+    connect(printer->mcu->printerThread,
             &PrintThread::connected_to_controller,
             this,
             &MainWindow::connected_to_motion_controller);
@@ -116,7 +117,7 @@ void MainWindow::setup()
         // connect signals and slots
         connect(printerWidgets[i],
                 &PrinterWidget::execute_command,
-                printer->printerThread,
+                printer->mcu->printerThread,
                 &PrintThread::execute_command);
         connect(printerWidgets[i],
                 &PrinterWidget::generate_printing_message_box,
@@ -177,7 +178,7 @@ void MainWindow::setup()
     connect(ui->stopMotionButton, &QAbstractButton::clicked,
             this, [this]()
     {
-        if (printer->g)
+        if (printer->mcu->g)
         {
             stop_print_and_thread();
             dropletObservationWidget->jetting_was_turned_off();
@@ -217,15 +218,7 @@ void MainWindow::setup()
 MainWindow::~MainWindow()
 {
     delete ui;
-    if (printer->g) // if there is an active connection to a controller
-    {
-        GCmd(printer->g, "ST");
-        GCmd(printer->g, "MO");    // Turn off the motors
-        GCmd(printer->g, "CB 18"); // stop roller 1
-        GCmd(printer->g, "CB 21"); // stop roller 2
-        GCmd(printer->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
-        GClose(printer->g); // Close the connection to the controller
-    }
+
     // log application close and close the file
     logFile << "Application closed at "
             << QDateTime::currentDateTime()
@@ -233,14 +226,11 @@ MainWindow::~MainWindow()
                .toStdString()
             << "\n";
     logFile.close();
-
-    // I need to actually handle this
-    interruptHandler->stop();
 }
 
 void MainWindow::on_connect_clicked()
 {
-    if (printer->g == 0) // if there is no connection to the motion controller
+    if (printer->mcu->g == 0) // if there is no connection to the motion controller
     {
         std::stringstream s;
 
@@ -250,7 +240,7 @@ void MainWindow::on_connect_clicked()
         s << CMD::homing_sequence(homeZAxis);
 
         allow_user_input(false);
-        printer->printerThread->execute_command(s);
+        printer->mcu->printerThread->execute_command(s);
 
         // Connect to serial devices
         printer->jetDrive->connect_to_jet_drive();
@@ -264,13 +254,13 @@ void MainWindow::on_connect_clicked()
     else // if there is already a connection
     {
         allow_user_input(false);
-        if (printer->g) // double check there is actually a connection
+        if (printer->mcu->g) // double check there is actually a connection
         {
-            GCmd(printer->g, "ST"); // stop motion
-            GCmd(printer->g, "MO"); // disable Motors
-            GClose(printer->g);     // close connection to the motion controller
+            GCmd(printer->mcu->g, "ST"); // stop motion
+            GCmd(printer->mcu->g, "MO"); // disable Motors
+            GClose(printer->mcu->g);     // close connection to the motion controller
         }
-        printer->g = 0;             // Reset connection handle
+        printer->mcu->g = 0;             // Reset connection handle
 
         printer->jetDrive->disconnect_serial();
 
@@ -317,7 +307,7 @@ void MainWindow::y_up_button_pressed()
     s << CMD::set_jog(Axis::Y, -ui->yVelocity->value());
     s << CMD::begin_motion(Axis::Y);
 
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 void MainWindow::x_right_button_pressed()
@@ -330,7 +320,7 @@ void MainWindow::x_right_button_pressed()
     s << CMD::set_jog(x, ui->xVelocity->value());
     s << CMD::begin_motion(x);
 
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 void MainWindow::jog_released()
@@ -343,7 +333,7 @@ void MainWindow::jog_released()
     s << CMD::motion_complete(Axis::Y);
     s << CMD::motion_complete(Axis::Z);
 
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 void MainWindow::y_down_button_pressed()
@@ -357,7 +347,7 @@ void MainWindow::y_down_button_pressed()
     s << CMD::begin_motion(y);
 
     // send off to thread to send to printer
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 void MainWindow::x_left_button_pressed()
@@ -370,7 +360,7 @@ void MainWindow::x_left_button_pressed()
     s << CMD::set_jog(x, -ui->xVelocity->value());
     s << CMD::begin_motion(x);
 
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 void MainWindow::on_xHome_clicked()
@@ -386,7 +376,7 @@ void MainWindow::on_xHome_clicked()
     s << CMD::motion_complete(x);
 
     allow_user_input(false);
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 void MainWindow::on_yHome_clicked()
@@ -402,7 +392,7 @@ void MainWindow::on_yHome_clicked()
     s << CMD::motion_complete(y);
 
     allow_user_input(false);
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 void MainWindow::on_zMax_clicked()
@@ -417,7 +407,7 @@ void MainWindow::on_zMax_clicked()
     s << CMD::motion_complete(z);
 
     allow_user_input(false);
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 void  MainWindow::on_zUp_clicked()
@@ -434,7 +424,7 @@ void  MainWindow::on_zUp_clicked()
 
 
     allow_user_input(false);
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 void  MainWindow::on_zDown_clicked()
@@ -450,7 +440,7 @@ void  MainWindow::on_zDown_clicked()
     s << CMD::motion_complete(z);
 
     allow_user_input(false);
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 void  MainWindow::on_zMin_clicked()
@@ -465,7 +455,7 @@ void  MainWindow::on_zMin_clicked()
     s << CMD::motion_complete(z);
 
     allow_user_input(false);
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 void MainWindow::on_activateRoller1_toggled(bool checked)
@@ -475,7 +465,7 @@ void MainWindow::on_activateRoller1_toggled(bool checked)
     if (checked == 1) s << CMD::enable_roller1();
     else              s << CMD::disable_roller1();
 
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 void MainWindow::print_to_output_window(QString s)
@@ -516,7 +506,7 @@ void MainWindow::on_removeBuildBox_clicked()
     s << CMD::motion_complete(Axis::Z);
 
     allow_user_input(false);
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 
@@ -556,27 +546,27 @@ void MainWindow::generate_printing_message_box(const std::string &message)
 
 void MainWindow::stop_print_and_thread()
 {
-    printer->printerThread->stop();
-    if (printer->g)
+    printer->mcu->printerThread->stop();
+    if (printer->mcu->g)
     {
         // Can't use CMD:: commands here...
         // work on a way to either send these through the thread
         // even though it is blocked or be able to strip CMD:: commands
         // of new line and beginning command type so I can use them here
-        GCmd(printer->g, "HX");    // Halt any running program
-        GCmd(printer->g, "ST");    // stop motion on all axes
-        GCmd(printer->g, "CB 18"); // stop roller 1
-        GCmd(printer->g, "CB 21"); // stop roller 2
-        GCmd(printer->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
+        GCmd(printer->mcu->g, "HX");    // Halt any running program
+        GCmd(printer->mcu->g, "ST");    // stop motion on all axes
+        GCmd(printer->mcu->g, "CB 18"); // stop roller 1
+        GCmd(printer->mcu->g, "CB 21"); // stop roller 2
+        GCmd(printer->mcu->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
     }
 }
 
 void MainWindow::get_current_x_axis_position()
 {
-    if (printer->g)
+    if (printer->mcu->g)
     {
         int currentXPos;
-        GCmdI(printer->g, "TPX", &currentXPos);
+        GCmdI(printer->mcu->g, "TPX", &currentXPos);
         double currentXPos_mm = currentXPos / (double)X_CNTS_PER_MM;
         print_to_output_window("Current X: "
                                + QString::number(currentXPos_mm)
@@ -586,10 +576,10 @@ void MainWindow::get_current_x_axis_position()
 
 void MainWindow::get_current_y_axis_position()
 {
-    if (printer->g)
+    if (printer->mcu->g)
     {
         int currentYPos;
-        GCmdI(printer->g, "TPY", &currentYPos);
+        GCmdI(printer->mcu->g, "TPY", &currentYPos);
         double currentYPos_mm = currentYPos / (double)Y_CNTS_PER_MM;
         print_to_output_window("Current Y: "
                                + QString::number(currentYPos_mm)
@@ -599,10 +589,10 @@ void MainWindow::get_current_y_axis_position()
 
 void MainWindow::get_current_z_axis_position()
 {
-    if (printer->g)
+    if (printer->mcu->g)
     {
         int currentZPos;
-        GCmdI(printer->g, "TPZ", &currentZPos);
+        GCmdI(printer->mcu->g, "TPZ", &currentZPos);
         double currentZPos_mm = currentZPos / (double)Z_CNTS_PER_MM;
         print_to_output_window("Current Z: "
                                + QString::number(currentZPos_mm)
@@ -622,7 +612,7 @@ void MainWindow::move_z_to_absolute_position()
     s << CMD::motion_complete(Axis::Z);
 
     allow_user_input(false);
-    printer->printerThread->execute_command(s);
+    printer->mcu->printerThread->execute_command(s);
 }
 
 void MainWindow::open_log_file()
