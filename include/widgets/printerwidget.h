@@ -17,10 +17,8 @@ class PrinterWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit PrinterWidget(QWidget *parent = nullptr);
+    explicit PrinterWidget(Printer *printer_, QWidget *parent = nullptr);
     virtual ~PrinterWidget();
-
-    void pass_printer_objects(Printer *printer, PrintThread *printThread);
 
 public slots:
     virtual void allow_widget_input(bool allowed) = 0; // =0 makes it so that every child must override this function to compile (don't put in slots in child, just public)

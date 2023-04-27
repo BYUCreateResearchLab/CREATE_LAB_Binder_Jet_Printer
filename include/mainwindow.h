@@ -27,9 +27,9 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QMainWindow *parent = nullptr);
+    MainWindow(Printer *printer_, QMainWindow *parent = nullptr);
     ~MainWindow();
-    void setup(Printer *printerPtr_, PrintThread *printerThread_);
+    void setup();
 
 private slots:
     // TODO: change slot names away from using "on_" convention and connect slots manually in .cpp file
@@ -77,8 +77,7 @@ private:
     void resizeEvent(QResizeEvent* event) override;
 
     Printer *printer {nullptr};
-    PrintThread *printThread {nullptr};
-    JetDrive::Controller *jetDrive {nullptr};
+
     LinePrintWidget *linePrintingWidget {nullptr};
     QDockWidget *dockWidget {nullptr};
     OutputWindow *outputWindow {nullptr};
@@ -88,7 +87,7 @@ private:
     DropletObservationWidget *dropletObservationWidget {nullptr};
 
 
-    GInterruptHandler* interruptHandler {nullptr};
+    GInterruptHandler *interruptHandler {nullptr};
 
     std::ofstream logFile;
 };

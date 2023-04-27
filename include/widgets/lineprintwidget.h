@@ -22,7 +22,7 @@ class LinePrintWidget : public PrinterWidget
     enum logType {Error, Debug, Status, Standard};
 
 public:
-    explicit LinePrintWidget(QWidget *parent = nullptr);
+    explicit LinePrintWidget(Printer *printer, QWidget *parent = nullptr);
     ~LinePrintWidget();
 
     void CheckCell(int row, int column);

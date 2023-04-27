@@ -7,7 +7,9 @@
 #include <sstream>
 #include <cmath>
 
-HighSpeedLineWidget::HighSpeedLineWidget(QWidget *parent) : PrinterWidget(parent), ui(new Ui::HighSpeedLineWidget)
+HighSpeedLineWidget::HighSpeedLineWidget(Printer *printer, QWidget *parent) :
+    PrinterWidget(printer, parent),
+    ui(new Ui::HighSpeedLineWidget)
 {
     ui->setupUi(this);
     setAccessibleName("High Speed Line Widget");
@@ -125,8 +127,8 @@ void HighSpeedLineWidget::update_print_settings()
         if (print->viewAxis == Axis::Y)
         {
             ui->SVGViewer->setup(print->buildBox.length, print->buildBox.thickness);
-            qDebug() << print->buildBox.length;
-            qDebug() << print->buildBox.thickness;
+            //qDebug() << print->buildBox.length;
+            //qDebug() << print->buildBox.thickness;
         }
         else
         {

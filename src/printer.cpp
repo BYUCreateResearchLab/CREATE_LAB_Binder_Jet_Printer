@@ -3,6 +3,9 @@
 #include <sstream>
 #include <cmath>
 #include <stdexcept>
+#include "pcd.h"
+#include "jetdrive.h"
+#include "printhread.h"
 
 GReturn GCALL GProgramComplete(GCon g)
 {
@@ -28,7 +31,18 @@ double calculate_acceleration_distance(
 
 using namespace CMD::detail;
 
-Printer::Printer() {}
+Printer::Printer(QObject *parent) :
+    QObject(parent),
+    printerThread ( new PrintThread(this) ),
+    jetDrive ( new JetDrive::Controller("COM8", this) ),
+    pressureController ( new PCD::Controller("COM3", this) )
+{
+    printerThread->setup(this);
+}
+
+Printer::~Printer()
+{
+}
 
 std::string CMD::detail::axis_string(Axis axis)
 {
@@ -535,3 +549,5 @@ std::stringstream& CommandGenerator::jog_axis(Axis axis, double speed_mm_s)
     s << CMD::begin_motion(axis);
     return s;
 }
+
+#include "moc_printer.cpp"

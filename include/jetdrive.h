@@ -23,9 +23,9 @@ public:
     };
     Q_ENUM(InitState)
 
-    explicit Controller(QObject *parent = nullptr);
+    explicit Controller(const QString &portName, QObject *parent = nullptr);
     ~Controller();
-    int connect_to_jet_drive(const QString &portName);
+    int connect_to_jet_drive();
     void disconnect_serial();
 
     const Settings get_jetting_parameters() const;

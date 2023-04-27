@@ -73,6 +73,11 @@
 #include <string_view>
 #include <functional>
 #include <map>
+#include <QObject>
+
+class PrintThread;
+namespace PCD { class Controller; }
+namespace JetDrive { class Controller; }
 
 // TODO: get rid of these #defines and convert to
 // constants in a namespace or static members
@@ -147,19 +152,31 @@ inline std::string interrupt_string(Interrupt interrupt)
     }
 }
 
-class Printer
+class Printer : public QObject
 {
+    Q_OBJECT
+
 public:
-    Printer();
+    explicit Printer(QObject *parent = nullptr);
+    ~Printer();
+    static float motor_type_value(MotorType motorType);
+
+public:
+    PrintThread *printerThread {nullptr};
 
     // the computer ethernet port needs to be set to 192.168.42.10
-    const char * address {"192.168.42.100"}; // IP address of motion controller
+    const char *address {"192.168.42.100"}; // IP address of motion controller
     GCon g {0}; // Handle for connection to Galil Motion Controller
-    static float motor_type_value(MotorType motorType);
-    const char * jetDriveCOMPort {"COM8"};
+
+    JetDrive::Controller *jetDrive {nullptr};
+    PCD::Controller *pressureController {nullptr};
+
+
+
+
 
     // TODO:
-    // printer should own the jet drive
+    // printer should own the jet drive (DONE)
     // printer should own handles to the USB Camera
     // printer should own GCon handles to the motion controller (threads?)
     // Should there be separate classes for the DMC controller?

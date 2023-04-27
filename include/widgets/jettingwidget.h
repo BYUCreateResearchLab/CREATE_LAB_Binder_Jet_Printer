@@ -15,7 +15,7 @@ class JettingWidget : public PrinterWidget
     Q_OBJECT
 
 public:
-    explicit JettingWidget(JetDrive::Controller *jetDrv, QWidget *parent = nullptr);
+    explicit JettingWidget(Printer *printer, QWidget *parent = nullptr);
     ~JettingWidget();
     void allow_widget_input(bool allowed) override;
     const JetDrive::Settings& get_jet_drive_settings();
@@ -30,7 +30,6 @@ private slots:
 
 private:
     Ui::JettingWidget *ui;
-    JetDrive::Controller *mJetDrive{nullptr};
     JetDrive::Settings m_jetSettings;
 
 };

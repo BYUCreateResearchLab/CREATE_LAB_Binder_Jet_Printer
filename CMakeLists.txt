@@ -38,6 +38,7 @@ set(HEADERS
     include/svgview.h
     include/datarecordpoller.h
     include/ginterrupthandler.h
+    include/pcd.h
 
 )
 
@@ -55,6 +56,7 @@ set(SOURCES
     src/svgview.cpp
     src/datarecordpoller.cpp
     src/ginterrupthandler.cpp
+    src/pcd.cpp
 
 )
 
@@ -66,6 +68,7 @@ set(WIDGET_HEADERS
     include/widgets/lineprintwidget.h
     include/widgets/highspeedlinewidget.h
     include/widgets/dropletobservationwidget.h
+    include/widgets/pressurecontrollerwidget.h
 
 )
 
@@ -77,6 +80,7 @@ set(WIDGET_SOURCES
     src/widgets/lineprintwidget.cpp
     src/widgets/powdersetupwidget.cpp
     src/widgets/dropletobservationwidget.cpp
+    src/widgets/pressurecontrollerwidget.cpp
 
 )
 
@@ -90,6 +94,7 @@ set(FORMS
     src/ui/powdersetupwidget.ui
     src/ui/dropletobservationwidget.ui
     src/ui/dropletanalyzerwidget.ui
+    src/ui/pressurecontrollerwidget.ui
 
 )
 

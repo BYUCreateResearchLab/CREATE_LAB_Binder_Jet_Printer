@@ -3,15 +3,14 @@
 
 #include "QDebug"
 
-JettingWidget::JettingWidget(JetDrive::Controller *jetDrv, QWidget *parent) :
-    PrinterWidget(parent),
-    ui(new Ui::JettingWidget),
-    mJetDrive(jetDrv)
+JettingWidget::JettingWidget(Printer *printer, QWidget *parent) :
+    PrinterWidget(printer, parent),
+    ui(new Ui::JettingWidget)
 {
     ui->setupUi(this);
     setAccessibleName("Jetting Widget");
     connect(ui->updateSettingsButton, &QPushButton::clicked, this, &JettingWidget::update_settings_clicked);
-    update_ui(mJetDrive->get_jetting_parameters());
+    update_ui(mPrinter->jetDrive->get_jetting_parameters());
     // can't call update_settings_clicked() here because it will try to send commands to the JetDrive which is not connected on startup...
 }
 
@@ -36,11 +35,11 @@ void JettingWidget::update_settings_clicked()
     // THE JETDRIVE MUST NOT BE JETTING WHEN THE WAVEFORM IS UPDATED, THIS CAN BREAK THE JETDRIVE
     // ensure that the jet drive is not jetting by setting to internal trigger, single jet and not sending any signals
     // then set back to external triger after the waveform is complete, so that if we were jetting it goes back to jetting
-    if (mJetDrive->is_connected())
+    if (mPrinter->jetDrive->is_connected())
     {
-        mJetDrive->set_internal_trigger();
-        mJetDrive->set_num_drops_per_trigger(1);
-        mJetDrive->set_single_jetting();        
+        mPrinter->jetDrive->set_internal_trigger();
+        mPrinter->jetDrive->set_num_drops_per_trigger(1);
+        mPrinter->jetDrive->set_single_jetting();
         JetDrive::Waveform waveform;
         waveform.fTRise = ui->riseTime1SpinBox->value();
         waveform.fTDwell = ui->dwellTimeSpinBox->value();
@@ -51,8 +50,8 @@ void JettingWidget::update_settings_clicked()
         waveform.fUDwell = ui->dwellVoltageSpinBox->value();
         waveform.fUEcho = ui->echoVoltageSpinBox->value();
 
-        mJetDrive->set_waveform(waveform);
-        mJetDrive->set_external_trigger(); // will start jetting again if we were jetting previously
+        mPrinter->jetDrive->set_waveform(waveform);
+        mPrinter->jetDrive->set_external_trigger(); // will start jetting again if we were jetting previously
     }
     else emit print_to_output_window("Waveform update error. JetDrive is not connected!");
 }

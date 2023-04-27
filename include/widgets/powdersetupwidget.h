@@ -15,7 +15,7 @@ class PowderSetupWidget : public PrinterWidget
     Q_OBJECT
 
 public:
-    explicit PowderSetupWidget(QWidget *parent = nullptr);
+    explicit PowderSetupWidget(Printer *printer, QWidget *parent = nullptr);
     ~PowderSetupWidget();
 
     void allow_widget_input(bool allowed) override;

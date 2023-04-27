@@ -10,8 +10,10 @@ class AsyncSerialDevice : public QObject
 {
     Q_OBJECT
 public:
-    explicit AsyncSerialDevice(QObject *parent = nullptr);
+    explicit AsyncSerialDevice(const QString& portName, QObject *parent = nullptr);
     bool is_connected() const;
+
+    void set_port_name(const QString &portName);
 
 signals:
     void response(const QString &s);
@@ -28,6 +30,7 @@ protected:
     QSerialPort *serialPort {nullptr};
     QTimer *timer {nullptr};
     QByteArray readData;
+    QString name {"Serial Device"};
 
 private:
 

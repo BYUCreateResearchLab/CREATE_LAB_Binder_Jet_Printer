@@ -11,7 +11,9 @@
 
 using namespace std;
 
-LinePrintWidget::LinePrintWidget(QWidget *parent) : PrinterWidget(parent), ui(new Ui::LinePrintWidget)
+LinePrintWidget::LinePrintWidget(Printer *printer, QWidget *parent) :
+    PrinterWidget(printer, parent),
+    ui(new Ui::LinePrintWidget)
 {
     ui->setupUi(this);
     setAccessibleName("Line Printing Widget");

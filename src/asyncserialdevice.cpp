@@ -1,10 +1,12 @@
 #include "asyncserialdevice.h"
 #include <QDebug>
 
-AsyncSerialDevice::AsyncSerialDevice(QObject *parent) : QObject(parent),
+AsyncSerialDevice::AsyncSerialDevice(const QString& portName, QObject *parent) :
+    QObject(parent),
     serialPort (new QSerialPort(this)),
     timer (new QTimer(this))
 {
+    serialPort->setPortName(portName);
     timer->setSingleShot(true);
 }
 
@@ -13,11 +15,16 @@ bool AsyncSerialDevice::is_connected() const
     return serialPort->isOpen();
 }
 
+void AsyncSerialDevice::set_port_name(const QString &portName)
+{
+    serialPort->setPortName(portName);
+}
+
 void AsyncSerialDevice::write(const QByteArray &data)
 {
     if (!serialPort->isOpen())
     {
-        emit error("Can't send command. JetDrive is not connected");
+        emit error(QString("Can't send command. %1 is not connected").arg(name));
         return;
     }
     writeQueue.enqueue(data);

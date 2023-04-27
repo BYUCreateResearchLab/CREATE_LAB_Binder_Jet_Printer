@@ -14,14 +14,15 @@
 #include "jetdrive.h"
 #include "dropletanalyzer.h"
 #include "dropletanalyzerwidget.h"
+#include "pressurecontrollerwidget.h"
+#include <QSpacerItem>
 
 #include <QDebug>
 #include <chrono>
 
-DropletObservationWidget::DropletObservationWidget(JetDrive::Controller *jetDrive, QWidget *parent) :
-    PrinterWidget(parent),
-    ui(new Ui::DropletObservationWidget),
-    m_JetDrive(jetDrive)
+DropletObservationWidget::DropletObservationWidget(Printer *printer, QWidget *parent) :
+    PrinterWidget(printer, parent),
+    ui(new Ui::DropletObservationWidget)
 {
     ui->setupUi(this);
 
@@ -48,9 +49,18 @@ DropletObservationWidget::DropletObservationWidget(JetDrive::Controller *jetDriv
         this->ui->detectImageScaleButton->setEnabled(true);
     });
 
-    m_JettingWidget = new JettingWidget(m_JetDrive);
     QGridLayout *gridLayout = ui->frame->findChild<QGridLayout*>("gridLayout_frame");
-    gridLayout->addWidget(m_JettingWidget, 23,0,1,3);
+
+    // add widgets to the right panel
+    m_JettingWidget = new JettingWidget(printer, this);
+    gridLayout->addWidget(m_JettingWidget, gridLayout->rowCount(),0,1,-1);
+
+    pressureControllerWidget = new PressureControllerWidget(printer, this);
+    gridLayout->addWidget(pressureControllerWidget, gridLayout->rowCount(),0,1,-1);
+
+    // add spacer at bottom (add item takes ownership)
+    gridLayout->addItem(new QSpacerItem(20,40,QSizePolicy::Minimum, QSizePolicy::Expanding), gridLayout->rowCount(),0,1,-1);
+
     m_cameraFrameRate = ui->cameraFPSSpinBox->value();
     m_numFramesToCapture = std::round((ui->endTimeSpinBox->value() - ui->startTimeSpinBox->value()) / ui->stepTimeSpinBox->value()) + 1;
     connect(ui->cameraFPSSpinBox, &QAbstractSpinBox::editingFinished, this, &DropletObservationWidget::framerate_changed);
@@ -63,7 +73,7 @@ DropletObservationWidget::DropletObservationWidget(JetDrive::Controller *jetDriv
     connect(m_JetVolumeTimer, &QTimer::timeout, this, &DropletObservationWidget::end_jet_timer);
 
     m_ProgressBarTimer = new QTimer(this);
-    connect(m_ProgressBarTimer, &QTimer::timeout, this, &DropletObservationWidget::update_progress_bar);
+    connect(m_ProgressBarTimer, &QTimer::timeout, this, &DropletObservationWidget::update_progress_bar);   
 
     ui->jetProgressBar->setMinimum(0);
     ui->jetProgressBar->setMaximum(m_minutesToJet * 60 * 1000);
@@ -434,7 +444,7 @@ void DropletObservationWidget::update_strobe_sweep_offset()
     if (m_currentStrobeOffset == -1) // if starting strobe sweep
     {
         m_currentStrobeOffset = ui->startTimeSpinBox->value();
-        m_JetDrive->set_strobe_delay(m_currentStrobeOffset);
+        mPrinter->jetDrive->set_strobe_delay(m_currentStrobeOffset);
         const int timeToStepThrough = (ui->endTimeSpinBox->value() - ui->startTimeSpinBox->value());
         ui->sweepProgressBar->setMaximum(timeToStepThrough);
         //emit print_to_output_window(QString::number(mCurrentStrobeOffset));
@@ -449,7 +459,7 @@ void DropletObservationWidget::update_strobe_sweep_offset()
     else // increment strobe sweep offset
     {
         m_currentStrobeOffset += ui->stepTimeSpinBox->value();
-        m_JetDrive->set_strobe_delay(m_currentStrobeOffset);
+        mPrinter->jetDrive->set_strobe_delay(m_currentStrobeOffset);
         // update progress bar
         ui->sweepProgressBar->setValue(m_currentStrobeOffset - ui->startTimeSpinBox->value());
     }

@@ -29,21 +29,20 @@
 #include "jettingwidget.h"
 #include "highspeedlinewidget.h"
 #include "dropletobservationwidget.h"
+#include "pcd.h"
 
-MainWindow::MainWindow(QMainWindow *parent)
-    : QMainWindow(parent),
-      ui(new Ui::MainWindow)
+MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
+    QMainWindow(parent),
+    ui(new Ui::MainWindow),
+    printer(printer_)
 {
     ui->setupUi(this);
 
-    // TODO: jetDrive should be owned by printer
-    jetDrive = new JetDrive::Controller(this);
-
     // set up widgets (parent is set when adding as a tab)
-    linePrintingWidget       = new LinePrintWidget();
-    powderSetupWidget        = new PowderSetupWidget();
-    highSpeedLineWidget      = new HighSpeedLineWidget();
-    dropletObservationWidget = new DropletObservationWidget(jetDrive);
+    linePrintingWidget       = new LinePrintWidget(printer);
+    powderSetupWidget        = new PowderSetupWidget(printer);
+    highSpeedLineWidget      = new HighSpeedLineWidget(printer);
+    dropletObservationWidget = new DropletObservationWidget(printer);
 
     // add widgets to tabs on the top bar (tab widget now owns)
     ui->tabWidget->addTab(powderSetupWidget, "Powder Setup");
@@ -86,42 +85,38 @@ MainWindow::MainWindow(QMainWindow *parent)
             this,
             [](uchar status){ qDebug() << QString::fromStdString(interrupt_string((Interrupt)status)); });
 
-    interruptHandler->start();
+    // don't use for now since it doesn't always close right
+    //interruptHandler->start();
 
 }
 
 // runs from main.cpp right after the object is initialized
-void MainWindow::setup(Printer *printerPtr_, PrintThread *printerThread_)
+void MainWindow::setup()
 {
-    // assign pointers to member variables
-    printer     = printerPtr_;
-    printThread = printerThread_;
 
     // connect the output from the printer thread to the output window widget
-    connect(printThread,
+    connect(printer->printerThread,
             &PrintThread::response,
             outputWindow,
             &OutputWindow::print_string);
-    connect(printThread,
+    connect(printer->printerThread,
             &PrintThread::ended,
             this,
             &MainWindow::thread_ended);
-    connect(printThread,
+    connect(printer->printerThread,
             &PrintThread::connected_to_controller,
             this,
             &MainWindow::connected_to_motion_controller);
 
-    // connect signals for each of the printer widgets
+    // connect signals for each of the printer widgets (this works recursively)
     QList<PrinterWidget*> printerWidgets = this->findChildren<PrinterWidget*>();
     for(int i{0}; i < printerWidgets.count(); ++i)
     {
-        // share pointers with widgets
-        printerWidgets[i]->pass_printer_objects(printer, printThread);
 
         // connect signals and slots
         connect(printerWidgets[i],
                 &PrinterWidget::execute_command,
-                printThread,
+                printer->printerThread,
                 &PrintThread::execute_command);
         connect(printerWidgets[i],
                 &PrinterWidget::generate_printing_message_box,
@@ -199,15 +194,22 @@ void MainWindow::setup(Printer *printerPtr_, PrintThread *printerThread_)
             this, &MainWindow::show_hide_droplet_analyzer_window);
 
     // connect response from jetDrive to output window
-    connect(jetDrive, &JetDrive::Controller::response, this,
+    connect(printer->jetDrive, &JetDrive::Controller::response, this,
             &MainWindow::print_to_output_window);
-    connect(jetDrive, &JetDrive::Controller::timeout, this,
+    connect(printer->jetDrive, &JetDrive::Controller::timeout, this,
             &MainWindow::print_to_output_window);
-    connect(jetDrive, &JetDrive::Controller::error, this,
+    connect(printer->jetDrive, &JetDrive::Controller::error, this,
             &MainWindow::print_to_output_window);
 
     connect(ui->connectToJetDriveButton, &QPushButton::pressed,
             this, &MainWindow::connect_to_jet_drive_button_pressed);
+
+
+    // connect response from pressure controller to output window
+    // TODO: Do I want these here?
+    connect(printer->pressureController, &PCD::Controller::response, this, &MainWindow::print_to_output_window);
+    connect(printer->pressureController, &PCD::Controller::timeout, this, &MainWindow::print_to_output_window);
+    connect(printer->pressureController, &PCD::Controller::error, this, &MainWindow::print_to_output_window);
 
 }
 
@@ -248,13 +250,14 @@ void MainWindow::on_connect_clicked()
         s << CMD::homing_sequence(homeZAxis);
 
         allow_user_input(false);
-        printThread->execute_command(s);
+        printer->printerThread->execute_command(s);
 
         // Connect to JetDrive
-        jetDrive->connect_to_jet_drive(printer->jetDriveCOMPort);
+        printer->jetDrive->connect_to_jet_drive();
 
 
-        interruptHandler->connect_to_controller(printer->address);
+        // this isn't ready yet
+        //interruptHandler->connect_to_controller(printer->address);
 
     }
     else // if there is already a connection
@@ -268,7 +271,7 @@ void MainWindow::on_connect_clicked()
         }
         printer->g = 0;             // Reset connection handle
 
-        jetDrive->disconnect_serial();
+        printer->jetDrive->disconnect_serial();
 
         // change button label text
         ui->connect->setText("\nConnect to Controller\n");
@@ -313,7 +316,7 @@ void MainWindow::y_up_button_pressed()
     s << CMD::set_jog(Axis::Y, -ui->yVelocity->value());
     s << CMD::begin_motion(Axis::Y);
 
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 void MainWindow::x_right_button_pressed()
@@ -326,7 +329,7 @@ void MainWindow::x_right_button_pressed()
     s << CMD::set_jog(x, ui->xVelocity->value());
     s << CMD::begin_motion(x);
 
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 void MainWindow::jog_released()
@@ -339,7 +342,7 @@ void MainWindow::jog_released()
     s << CMD::motion_complete(Axis::Y);
     s << CMD::motion_complete(Axis::Z);
 
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 void MainWindow::y_down_button_pressed()
@@ -353,7 +356,7 @@ void MainWindow::y_down_button_pressed()
     s << CMD::begin_motion(y);
 
     // send off to thread to send to printer
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 void MainWindow::x_left_button_pressed()
@@ -366,7 +369,7 @@ void MainWindow::x_left_button_pressed()
     s << CMD::set_jog(x, -ui->xVelocity->value());
     s << CMD::begin_motion(x);
 
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 void MainWindow::on_xHome_clicked()
@@ -382,7 +385,7 @@ void MainWindow::on_xHome_clicked()
     s << CMD::motion_complete(x);
 
     allow_user_input(false);
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 void MainWindow::on_yHome_clicked()
@@ -398,7 +401,7 @@ void MainWindow::on_yHome_clicked()
     s << CMD::motion_complete(y);
 
     allow_user_input(false);
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 void MainWindow::on_zMax_clicked()
@@ -413,7 +416,7 @@ void MainWindow::on_zMax_clicked()
     s << CMD::motion_complete(z);
 
     allow_user_input(false);
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 void  MainWindow::on_zUp_clicked()
@@ -430,7 +433,7 @@ void  MainWindow::on_zUp_clicked()
 
 
     allow_user_input(false);
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 void  MainWindow::on_zDown_clicked()
@@ -446,7 +449,7 @@ void  MainWindow::on_zDown_clicked()
     s << CMD::motion_complete(z);
 
     allow_user_input(false);
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 void  MainWindow::on_zMin_clicked()
@@ -461,7 +464,7 @@ void  MainWindow::on_zMin_clicked()
     s << CMD::motion_complete(z);
 
     allow_user_input(false);
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 void MainWindow::on_activateRoller1_toggled(bool checked)
@@ -471,7 +474,7 @@ void MainWindow::on_activateRoller1_toggled(bool checked)
     if (checked == 1) s << CMD::enable_roller1();
     else              s << CMD::disable_roller1();
 
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 void MainWindow::print_to_output_window(QString s)
@@ -512,7 +515,7 @@ void MainWindow::on_removeBuildBox_clicked()
     s << CMD::motion_complete(Axis::Z);
 
     allow_user_input(false);
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 
@@ -552,7 +555,7 @@ void MainWindow::generate_printing_message_box(const std::string &message)
 
 void MainWindow::stop_print_and_thread()
 {
-    printThread->stop();
+    printer->printerThread->stop();
     if (printer->g)
     {
         // Can't use CMD:: commands here...
@@ -618,7 +621,7 @@ void MainWindow::move_z_to_absolute_position()
     s << CMD::motion_complete(Axis::Z);
 
     allow_user_input(false);
-    printThread->execute_command(s);
+    printer->printerThread->execute_command(s);
 }
 
 void MainWindow::open_log_file()
@@ -640,7 +643,7 @@ void MainWindow::open_log_file()
 
 void MainWindow::connect_to_jet_drive_button_pressed()
 {
-    jetDrive->connect_to_jet_drive(printer->jetDriveCOMPort);
+    printer->jetDrive->connect_to_jet_drive();
 }
 
 void MainWindow::thread_ended()

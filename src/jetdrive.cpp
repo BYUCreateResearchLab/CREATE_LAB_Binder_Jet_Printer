@@ -6,10 +6,11 @@
 namespace JetDrive
 {
 
-Controller::Controller(QObject *parent) :
-    AsyncSerialDevice(parent),
+Controller::Controller(const QString &portName, QObject *parent) :
+    AsyncSerialDevice(portName, parent),
     cmdBuilder (std::make_unique<CommandBuilder>())
 {
+    name = "JetDrive";
     // connect timer for handling timeout errors
     connect(serialPort, &QSerialPort::readyRead,
             this, &Controller::handle_ready_read);
@@ -53,7 +54,7 @@ void Controller::handle_ready_read()
             // finish once all of the bytes have been written and read
             if (iX200 >= xCmd.size())
             {
-                emit response("Connected to JetDrive");
+                emit response(QString("Connected to %1").arg(name));
                 initState = INITIALIZED;
                 iX200 = 0;
             }
@@ -82,7 +83,7 @@ void Controller::handle_ready_read()
 void Controller::handle_timeout()
 {
     timer->stop();
-    emit error("Serial IO Timeout: No response from JetDrive");
+    emit error(QString("Serial IO Timeout: No response from %1").arg(name));
     emit error(readData);
     disconnect_serial();
 
@@ -112,27 +113,26 @@ void Controller::initialize_jet_drive()
     write(cmdBuilder->build(CMD::SOURCE, jetParams));       // 11.) Trigger Source
 }
 
-int Controller::connect_to_jet_drive(const QString &portName)
+int Controller::connect_to_jet_drive()
 {
     if (is_connected()) // return if already connected
     {
-        emit response("Already connected to JetDrive");
+        emit response(QString("Already connected to %1").arg(name));
         return 0;
     }
 
     clear_members();
-    serialPort->setPortName(portName);
 
     // attempt to open connection to serial port
     if (!serialPort->open(QIODevice::ReadWrite))
     {
-        emit error(QString("Can't open %1, error code %2")
-                   .arg(portName).arg(serialPort->error()));
+        emit error(QString("Can't open %1 on %2, error code %3")
+                   .arg(name, serialPort->portName(), QVariant::fromValue(serialPort->error()).toString()));
         return -1;
     }
 
     // wait after connection to initialize
-    emit response("Connecting to JetDrive");
+    emit response(QString("Connecting to %1").arg(name));
     QTimer::singleShot(500, this, &Controller::initialize_jet_drive);
     return 0;
 }
@@ -142,10 +142,10 @@ void Controller::disconnect_serial()
     clear_members();
     if (is_connected())
     {
-        emit response("Disconnecting JetDrive");
+        emit response(QString("Disconnecting %1").arg(name));
         serialPort->close();
     }
-    else emit response("JetDrive is already disconnected");
+    else emit response(QString("%1 is already disconnected").arg(name));
 }
 
 void Controller::clear_members()

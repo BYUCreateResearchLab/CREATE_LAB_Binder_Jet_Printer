@@ -1,19 +1,14 @@
 #include "printerwidget.h"
 
-PrinterWidget::PrinterWidget(QWidget *parent) : QWidget(parent)
+PrinterWidget::PrinterWidget(Printer *printer_, QWidget *parent) :
+    QWidget(parent),
+    mPrinter(printer_)
 {
-
 }
 
 PrinterWidget::~PrinterWidget()
 {
 
-}
-
-void PrinterWidget::pass_printer_objects(Printer *printer, PrintThread *printThread)
-{
-    mPrinter = printer;
-    mPrintThread = printThread;
 }
 
 #include "moc_printerwidget.cpp"

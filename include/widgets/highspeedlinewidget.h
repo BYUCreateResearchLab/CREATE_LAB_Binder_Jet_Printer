@@ -56,7 +56,7 @@ class HighSpeedLineWidget : public PrinterWidget
     Q_OBJECT
 
 public:
-    explicit HighSpeedLineWidget(QWidget *parent = nullptr);
+    explicit HighSpeedLineWidget(Printer *printer, QWidget *parent = nullptr);
     ~HighSpeedLineWidget();
     void allow_widget_input(bool allowed) override;
     void reset_preview_zoom();

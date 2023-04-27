@@ -7,7 +7,9 @@
 
 #include <QMessageBox>
 
-PowderSetupWidget::PowderSetupWidget(QWidget *parent) : PrinterWidget(parent), ui(new Ui::PowderSetupWidget)
+PowderSetupWidget::PowderSetupWidget(Printer *printer, QWidget *parent) :
+    PrinterWidget(printer, parent),
+    ui(new Ui::PowderSetupWidget)
 {
     ui->setupUi(this);
     connect(ui->levelRecoat, &QPushButton::clicked, this, &PowderSetupWidget::level_recoat_clicked);

@@ -1,27 +1,27 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include "printer.h"
-#include "printhread.h"
 
 const QPalette dark_palette();
 
 int main(int argc, char *argv[])
 {
     // initialize objects that will persist through the life of the program
-    Printer printer;
-    PrintThread printerThread;
-    printerThread.setup(&printer);
+    Printer *printer = new Printer();
 
     QApplication a(argc, argv);
     a.setStyle("fusion");
     a.setPalette(dark_palette());
 
-    MainWindow w;
-    w.setup(&printer, &printerThread);
-    w.setWindowState(Qt::WindowMaximized);
-    w.show();
+    MainWindow *w = new MainWindow(printer);
+    w->setup();
+    w->setWindowState(Qt::WindowMaximized);
+    w->show();
 
     int ret{a.exec()};
+
+    delete w;
+    delete printer;
 
     return ret;
 }
