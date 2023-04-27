@@ -35,12 +35,12 @@ public:
     int connect_to_pressure_controller();
     void disconnect_serial();
 
-    void initialize_pressure_controller();
     void update_set_point(double setPoint_PSIG);
     void purge();
     void stop_purge();
 
 private:
+    void initialize_pressure_controller();
 
     // consider making these virtual functions in the asyncserialdevice ??
     void handle_ready_read();

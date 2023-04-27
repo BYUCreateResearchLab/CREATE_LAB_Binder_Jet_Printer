@@ -252,8 +252,9 @@ void MainWindow::on_connect_clicked()
         allow_user_input(false);
         printer->printerThread->execute_command(s);
 
-        // Connect to JetDrive
+        // Connect to serial devices
         printer->jetDrive->connect_to_jet_drive();
+        printer->pressureController->connect_to_pressure_controller();
 
 
         // this isn't ready yet

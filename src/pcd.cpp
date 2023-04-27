@@ -14,6 +14,8 @@ Controller::Controller(const QString &portName, QObject *parent) :
     connect(serialPort, &QSerialPort::readyRead, this, &Controller::handle_ready_read);
     connect(timer, &QTimer::timeout, this, &Controller::handle_timeout);
     connect(serialPort, &QSerialPort::errorOccurred, this, &Controller::handle_serial_error);
+
+    serialPort->setBaudRate(QSerialPort::Baud19200);
 }
 
 Controller::~Controller()
@@ -30,10 +32,11 @@ void Controller::handle_ready_read()
     switch (initState)
     {
     case NOT_INITIALIZED:
-        if (QString(readData).remove("\r") == initString)
+        if (QString(readData).simplified() == initString)
         {
             readData.clear();
             initState = INITIALIZED;
+            emit response(QString("Connected to %1").arg(name));
             write_next();
         }
         else
@@ -54,7 +57,7 @@ void Controller::handle_ready_read()
 void Controller::handle_timeout()
 {
     timer->stop();
-    emit error("Serial IO Timeout: No response from pressure controller");
+    emit error(QString("Serial IO Timeout: No response from %1").arg(name));
     emit error(readData);
     disconnect_serial();
 }
@@ -63,7 +66,7 @@ int Controller::connect_to_pressure_controller()
 {
     if (is_connected()) // return if already connected
     {
-        emit response("Already connected to pressure controller");
+        emit response(QString("Already connected to %1").arg(name));
         return 0;
     }
 
@@ -78,8 +81,8 @@ int Controller::connect_to_pressure_controller()
     }
 
     // wait after connection to initialize
-    emit response("Connecting to pressure controller");
-    QTimer::singleShot(500, this, &Controller::initialize_pressure_controller);
+    emit response(QString("Connecting to %1").arg(name));
+    QTimer::singleShot(1500, this, &Controller::initialize_pressure_controller);
     return 0;
 }
 
@@ -88,11 +91,11 @@ void Controller::disconnect_serial()
     clear_members();
     if (is_connected())
     {
-        emit response("Disconnecting pressure controller");
+        emit response(QString("Disconnecting %1").arg(name));
         serialPort->close();
         timer->stop();
     }
-    else emit response("pressure controller is already disconnected");
+    else emit response(QString("%1 is already disconnected").arg(name));
 }
 
 void Controller::update_set_point(double setPoint_PSIG)
