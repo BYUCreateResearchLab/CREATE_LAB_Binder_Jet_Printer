@@ -10,7 +10,6 @@ PressureControllerWidget::PressureControllerWidget(Printer *printer, QWidget *pa
     setAccessibleName("Pressure Controller Widget");
 
     connect(ui->purgeButton, &QPushButton::clicked, this, &PressureControllerWidget::toggle_purge);
-    connect(ui->connectButton, &QPushButton::clicked, this, &PressureControllerWidget::connect_to_pressure_controller);
     connect(ui->setPressureButton, &QPushButton::clicked, this, &PressureControllerWidget::set_pressure);
 
     //mPrinter->pressureController->connect_to_pressure_controller();

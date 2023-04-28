@@ -91,129 +91,6 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
 
 }
 
-// runs from main.cpp right after the object is initialized
-void MainWindow::setup()
-{
-
-    // connect the output from the printer thread to the output window widget
-    connect(printer->mcu->printerThread,
-            &PrintThread::response,
-            outputWindow,
-            &OutputWindow::print_string);
-    connect(printer->mcu->printerThread,
-            &PrintThread::ended,
-            this,
-            &MainWindow::thread_ended);
-    connect(printer->mcu->printerThread,
-            &PrintThread::connected_to_controller,
-            this,
-            &MainWindow::connected_to_motion_controller);
-
-    // connect signals for each of the printer widgets (this works recursively)
-    QList<PrinterWidget*> printerWidgets = this->findChildren<PrinterWidget*>();
-    for(int i{0}; i < printerWidgets.count(); ++i)
-    {
-
-        // connect signals and slots
-        connect(printerWidgets[i],
-                &PrinterWidget::execute_command,
-                printer->mcu->printerThread,
-                &PrintThread::execute_command);
-        connect(printerWidgets[i],
-                &PrinterWidget::generate_printing_message_box,
-                this,
-                &MainWindow::generate_printing_message_box);
-        connect(printerWidgets[i],
-                &PrinterWidget::disable_user_input,
-                this,
-                [this]() {this->allow_user_input(false);});
-        connect(printerWidgets[i],
-                &PrinterWidget::print_to_output_window,
-                this,
-                &MainWindow::print_to_output_window);
-        connect(printerWidgets[i],
-                &PrinterWidget::stop_print_and_thread,
-                this,
-                &MainWindow::stop_print_and_thread);
-
-        connect(printerWidgets[i],
-                &PrinterWidget::jet_turned_on,
-                dropletObservationWidget,
-                &DropletObservationWidget::jetting_was_turned_on);
-        connect(printerWidgets[i],
-                &PrinterWidget::jet_turned_off,
-                dropletObservationWidget,
-                &DropletObservationWidget::jetting_was_turned_off);
-    }
-
-    // connect jog buttons
-    connect(ui->xRightButton, &QAbstractButton::pressed,
-            this, &MainWindow::x_right_button_pressed);
-    connect(ui->xLeftButton, &QAbstractButton::pressed,
-            this, &MainWindow::x_left_button_pressed);
-    connect(ui->yUpButton, &QAbstractButton::pressed,
-            this, &MainWindow::y_up_button_pressed);
-    connect(ui->yDownButton, &QAbstractButton::pressed,
-            this, &MainWindow::y_down_button_pressed);
-
-    connect(ui->xRightButton, &QAbstractButton::released,
-            this, &MainWindow::jog_released);
-    connect(ui->xLeftButton, &QAbstractButton::released,
-            this, &MainWindow::jog_released);
-    connect(ui->yUpButton, &QAbstractButton::released,
-            this, &MainWindow::jog_released);
-    connect(ui->yDownButton, &QAbstractButton::released,
-            this, &MainWindow::jog_released);
-
-    connect(ui->tabWidget, &QTabWidget::currentChanged,
-            this, &MainWindow::tab_was_changed);
-
-    connect(ui->getXAxisPosition, &QAbstractButton::clicked,
-            this, &MainWindow::get_current_x_axis_position);
-    connect(ui->getYAxisPosition, &QAbstractButton::clicked,
-            this, &MainWindow::get_current_y_axis_position);
-    connect(ui->getZAxisPosition, &QAbstractButton::clicked,
-            this, &MainWindow::get_current_z_axis_position);
-
-    connect(ui->stopMotionButton, &QAbstractButton::clicked,
-            this, [this]()
-    {
-        if (printer->mcu->g)
-        {
-            stop_print_and_thread();
-            dropletObservationWidget->jetting_was_turned_off();
-        }
-
-    });
-
-    connect(ui->zAbsoluteMoveButton, &QAbstractButton::clicked,
-            this, &MainWindow::move_z_to_absolute_position);
-
-
-
-    connect(ui->actionShow_Hide_Droplet_Tool, &QAction::triggered,
-            this, &MainWindow::show_hide_droplet_analyzer_window);
-
-    // connect response from jetDrive to output window
-    connect(printer->jetDrive, &JetDrive::Controller::response, this,
-            &MainWindow::print_to_output_window);
-    connect(printer->jetDrive, &JetDrive::Controller::timeout, this,
-            &MainWindow::print_to_output_window);
-    connect(printer->jetDrive, &JetDrive::Controller::error, this,
-            &MainWindow::print_to_output_window);
-
-    connect(ui->connectToJetDriveButton, &QPushButton::pressed,
-            this, &MainWindow::connect_to_jet_drive_button_pressed);
-
-
-    // connect response from pressure controller to output window
-    // TODO: Do I want these here?
-    connect(printer->pressureController, &PCD::Controller::response, this, &MainWindow::print_to_output_window);
-    connect(printer->pressureController, &PCD::Controller::timeout, this, &MainWindow::print_to_output_window);
-    connect(printer->pressureController, &PCD::Controller::error, this, &MainWindow::print_to_output_window);
-
-}
-
 // on application close
 MainWindow::~MainWindow()
 {
@@ -226,6 +103,81 @@ MainWindow::~MainWindow()
                .toStdString()
             << "\n";
     logFile.close();
+}
+
+// runs from main.cpp right after the object is initialized
+void MainWindow::setup()
+{
+
+    // connect the output from the printer thread to the output window widget
+    connect(printer->mcu->printerThread, &PrintThread::response, outputWindow, &OutputWindow::print_string);
+    connect(printer->mcu->printerThread, &PrintThread::ended, this, &MainWindow::thread_ended);
+    connect(printer->mcu->printerThread, &PrintThread::connected_to_controller, this, &MainWindow::connected_to_motion_controller);
+
+    // connect signals for each of the printer widgets (this works recursively)
+    QList<PrinterWidget*> printerWidgets = this->findChildren<PrinterWidget*>();
+    for(int i{0}; i < printerWidgets.count(); ++i)
+    {
+        // connect signals and slots
+        connect(printerWidgets[i], &PrinterWidget::execute_command, printer->mcu->printerThread, &PrintThread::execute_command);
+        connect(printerWidgets[i], &PrinterWidget::generate_printing_message_box, this, &MainWindow::generate_printing_message_box);
+        connect(printerWidgets[i], &PrinterWidget::disable_user_input, this, [this]() {this->allow_user_input(false);});
+        connect(printerWidgets[i], &PrinterWidget::print_to_output_window, this, &MainWindow::print_to_output_window);
+        connect(printerWidgets[i], &PrinterWidget::stop_print_and_thread, this, &MainWindow::stop_print_and_thread);
+
+        connect(printerWidgets[i], &PrinterWidget::jet_turned_on, dropletObservationWidget, &DropletObservationWidget::jetting_was_turned_on);
+        connect(printerWidgets[i], &PrinterWidget::jet_turned_off, dropletObservationWidget, &DropletObservationWidget::jetting_was_turned_off);
+    }
+
+    // connect jog buttons
+    connect(ui->xRightButton, &QAbstractButton::pressed, this, &MainWindow::x_right_button_pressed);
+    connect(ui->xLeftButton, &QAbstractButton::pressed, this, &MainWindow::x_left_button_pressed);
+    connect(ui->yUpButton, &QAbstractButton::pressed, this, &MainWindow::y_up_button_pressed);
+    connect(ui->yDownButton, &QAbstractButton::pressed, this, &MainWindow::y_down_button_pressed);
+
+    connect(ui->xRightButton, &QAbstractButton::released, this, &MainWindow::jog_released);
+    connect(ui->xLeftButton, &QAbstractButton::released, this, &MainWindow::jog_released);
+    connect(ui->yUpButton, &QAbstractButton::released, this, &MainWindow::jog_released);
+    connect(ui->yDownButton, &QAbstractButton::released, this, &MainWindow::jog_released);
+
+    connect(ui->tabWidget, &QTabWidget::currentChanged, this, &MainWindow::tab_was_changed);
+
+    connect(ui->getXAxisPosition, &QAbstractButton::clicked, this, &MainWindow::get_current_x_axis_position);
+    connect(ui->getYAxisPosition, &QAbstractButton::clicked, this, &MainWindow::get_current_y_axis_position);
+    connect(ui->getZAxisPosition, &QAbstractButton::clicked, this, &MainWindow::get_current_z_axis_position);
+
+    connect(ui->stopMotionButton, &QAbstractButton::clicked,
+            this, [this]()
+    {
+        if (printer->mcu->g)
+        {
+            stop_print_and_thread();
+            dropletObservationWidget->jetting_was_turned_off();
+        }
+
+    });
+
+    connect(ui->zAbsoluteMoveButton, &QAbstractButton::clicked, this, &MainWindow::move_z_to_absolute_position);
+
+
+
+    connect(ui->actionShow_Hide_Droplet_Tool, &QAction::triggered, this, &MainWindow::show_hide_droplet_analyzer_window);
+
+    // connect response from jetDrive to output window
+    connect(printer->jetDrive, &JetDrive::Controller::response, this, &MainWindow::print_to_output_window);
+    connect(printer->jetDrive, &JetDrive::Controller::timeout, this, &MainWindow::print_to_output_window);
+    connect(printer->jetDrive, &JetDrive::Controller::error, this, &MainWindow::print_to_output_window);
+
+    connect(ui->connectToJetDriveButton, &QPushButton::clicked, this, &MainWindow::connect_to_jet_drive_button_pressed);
+    connect(ui->connecttoPCDButton, &QPushButton::clicked, this, &MainWindow::connect_to_pressure_controller_button_pressed);
+    connect(ui->connectToMCUButton, &QPushButton::clicked, this, &MainWindow::connect_motion_controller_button_pressed);
+
+    // connect response from pressure controller to output window
+    // TODO: Do I want these here?
+    connect(printer->pressureController, &PCD::Controller::response, this, &MainWindow::print_to_output_window);
+    connect(printer->pressureController, &PCD::Controller::timeout, this, &MainWindow::print_to_output_window);
+    connect(printer->pressureController, &PCD::Controller::error, this, &MainWindow::print_to_output_window);
+
 }
 
 void MainWindow::on_connect_clicked()
@@ -265,7 +217,7 @@ void MainWindow::on_connect_clicked()
         printer->jetDrive->disconnect_serial();
 
         // change button label text
-        ui->connect->setText("\nConnect to Controller\n");
+        ui->connect->setText("\nConnect and Home Printer\n");
         ui->homeZAxisCheckBox->setEnabled(true);
     }
 }
@@ -635,6 +587,23 @@ void MainWindow::open_log_file()
 void MainWindow::connect_to_jet_drive_button_pressed()
 {
     printer->jetDrive->connect_to_jet_drive();
+}
+
+void MainWindow::connect_to_pressure_controller_button_pressed()
+{
+    printer->pressureController->connect_to_pressure_controller();
+}
+
+void MainWindow::connect_motion_controller_button_pressed()
+{
+    if (printer->mcu->g == 0) // if there is no connection to the motion controller
+    {
+        std::stringstream s;
+
+        s << CMD::open_connection_to_controller();
+        s << CMD::set_default_controller_settings();
+        printer->mcu->printerThread->execute_command(s);
+    }
 }
 
 void MainWindow::thread_ended()

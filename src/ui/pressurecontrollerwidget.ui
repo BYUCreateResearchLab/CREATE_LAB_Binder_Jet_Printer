@@ -50,28 +50,20 @@
       <enum>QFrame::Sunken</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="2">
-       <widget class="QLabel" name="PSIGLabel">
+      <item row="0" column="0" colspan="4">
+       <widget class="QLabel" name="label">
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
         <property name="text">
-         <string>PSIG</string>
+         <string>Pressure Controller</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="3">
-       <widget class="QPushButton" name="setPressureButton">
-        <property name="text">
-         <string>Set</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0" colspan="4">
-       <widget class="QPushButton" name="connectButton">
-        <property name="text">
-         <string>Connect to Pressure Controller</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0" colspan="4">
+      <item row="2" column="0" colspan="4">
        <widget class="QPushButton" name="purgeButton">
         <property name="text">
          <string>Purge</string>
@@ -84,7 +76,14 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item row="1" column="3">
+       <widget class="QPushButton" name="setPressureButton">
+        <property name="text">
+         <string>Set</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
        <widget class="QDoubleSpinBox" name="pressureSpinBox">
         <property name="layoutDirection">
          <enum>Qt::RightToLeft</enum>
@@ -106,23 +105,17 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="1" column="0">
        <widget class="QLabel" name="backPressureLabel">
         <property name="text">
          <string>Back Pressure</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="0" colspan="4">
-       <widget class="QLabel" name="label">
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-          <bold>true</bold>
-         </font>
-        </property>
+      <item row="1" column="2">
+       <widget class="QLabel" name="PSIGLabel">
         <property name="text">
-         <string>Pressure Controller</string>
+         <string>PSIG</string>
         </property>
        </widget>
       </item>
