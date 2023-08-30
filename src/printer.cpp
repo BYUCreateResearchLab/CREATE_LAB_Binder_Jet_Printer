@@ -234,7 +234,7 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
     const int yAxisTravelSpeed_mm_per_s = 60;
     const double startPosition_mm = -340;
     const double endPosition_mm = -154;
-    const int sleepTime_ms = 5000;
+    const int sleepTime_ms = 3000;
     const double zAxisOffsetUnderRoller{0.5};
 
     // setup
