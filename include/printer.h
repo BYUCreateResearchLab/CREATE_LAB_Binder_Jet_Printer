@@ -79,6 +79,7 @@ class PrintThread;
 class GInterruptHandler;
 namespace PCD { class Controller; }
 namespace JetDrive { class Controller; }
+namespace Mister { class Controller; }
 class DMC4080;
 
 // TODO: get rid of these #defines and convert to
@@ -167,6 +168,7 @@ public:
     DMC4080 *mcu {nullptr};
     JetDrive::Controller *jetDrive {nullptr};
     PCD::Controller *pressureController {nullptr};
+    Mister::Controller *mister {nullptr};
 
 
     // TODO:

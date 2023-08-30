@@ -8,7 +8,8 @@ inline void x_e(GReturn rc)
 }
 
 
-DataRecordPoller::DataRecordPoller(QObject *parent): QObject(parent)
+DataRecordPoller::DataRecordPoller(QObject *parent):
+    QObject(parent)
 {
     timer = new QTimer(this);
     //time = r.dmc4000.sample_number; //pull out the desired value

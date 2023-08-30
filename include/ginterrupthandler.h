@@ -1,5 +1,4 @@
-#ifndef GINTERRUPTHANDLER_H
-#define GINTERRUPTHANDLER_H
+#pragma once
 
 #include <QThread>
 #include <QMutex>
@@ -22,18 +21,15 @@ public:
     void connect_to_controller(std::string_view IPAddress);
     void stop();
 
-
-private:
+protected:
     void run() override;
 
 signals:
     void status(uchar status);
 
-private:
-    GCon g;
-    QMutex mutex;
-    QWaitCondition waitCondition;
-    bool mQuit {false};
+protected:
+    GCon g_;
+    QMutex mutex_;
+    QWaitCondition waitCondition_;
+    bool quit_ {false};
 };
-
-#endif // GINTERRUPTHANDLER_H

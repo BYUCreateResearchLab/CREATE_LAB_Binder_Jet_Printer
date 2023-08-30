@@ -1,15 +1,15 @@
-#include "pcd.h"
+#include "mister.h"
 
 #include <QSerialPort>
 #include <QDebug>
 
-namespace PCD
+namespace Mister
 {
 
 Controller::Controller(const QString &portName, QObject *parent) :
     AsyncSerialDevice(portName, parent)
 {
-    name = "Pressure Controller";
+    name = "Mister";
     // connect timer for handling timeout errors
     connect(serialPort, &QSerialPort::readyRead, this, &Controller::handle_ready_read);
     connect(timer, &QTimer::timeout, this, &Controller::handle_timeout);
@@ -50,7 +50,10 @@ void Controller::handle_ready_read()
         }
         break;
     case INITIALIZED:
-        // handle response from PCD here
+        // handle response from device here
+        // right now the response does nothing,
+        // just exists so we know the Arduino got the
+        // command and is ready for a new one
         write_next();
         break;
 
@@ -66,7 +69,7 @@ void Controller::handle_timeout()
     disconnect_serial();
 }
 
-int Controller::connect_to_pressure_controller()
+int Controller::connect_to_misters()
 {
     if (is_connected()) // return if already connected
     {
@@ -86,7 +89,7 @@ int Controller::connect_to_pressure_controller()
 
     // wait after connection to initialize
     emit response(QString("Connecting to %1").arg(name));
-    QTimer::singleShot(1500, this, &Controller::initialize_pressure_controller);
+    QTimer::singleShot(1500, this, &Controller::initialize_misters);
     return 0;
 }
 
@@ -102,25 +105,29 @@ void Controller::disconnect_serial()
     else emit response(QString("%1 is already disconnected").arg(name));
 }
 
-void Controller::update_set_point(double setPoint_PSIG)
-{
-    QString command =  QString("%1s%2\r").arg((char)UNIT_ID).arg(setPoint_PSIG);
-    write(command.toUtf8());
-}
-
-void Controller::purge()
-{
-    write(QString("%1\r").arg((char)PURGE_ON).toUtf8());
-}
-
-void Controller::stop_purge()
-{
-    write(QString("%1\r").arg((char)PURGE_OFF).toUtf8());
-}
-
-void Controller::initialize_pressure_controller()
+void Controller::initialize_misters()
 {
     write(QString("%1\r").arg((char)INIT).toUtf8());
+}
+
+void Controller::turn_on_misters()
+{
+    write(QString("%1\r").arg((char)MIST_ON).toUtf8());
+}
+
+void Controller::turn_off_misters()
+{
+    write(QString("%1\r").arg((char)MIST_OFF).toUtf8());
+}
+
+void Controller::turn_on_left_mister()
+{
+    write(QString("%1\r").arg((char)LEFT_ON).toUtf8());
+}
+
+void Controller::turn_on_right_mister()
+{
+    write(QString("%1\r").arg((char)RIGHT_ON).toUtf8());
 }
 
 void Controller::clear_members()
@@ -159,4 +166,4 @@ void Controller::handle_serial_error(
 
 }
 
-# include "moc_pcd.cpp"
+#include "moc_mister.cpp"

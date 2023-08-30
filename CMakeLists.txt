@@ -40,6 +40,7 @@ set(HEADERS
     include/ginterrupthandler.h
     include/pcd.h
     include/dmc4080.h
+    include/mister.h
 
 )
 
@@ -59,6 +60,7 @@ set(SOURCES
     src/ginterrupthandler.cpp
     src/pcd.cpp
     src/dmc4080.cpp
+    src/mister.cpp
 
 )
 

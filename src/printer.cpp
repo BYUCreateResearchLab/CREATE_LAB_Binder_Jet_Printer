@@ -7,12 +7,14 @@
 #include "pcd.h"
 #include "jetdrive.h"
 #include "dmc4080.h"
+#include "mister.h"
 
 Printer::Printer(QObject *parent) :
     QObject(parent),
     mcu ( new DMC4080("192.168.42.100", this) ),
     jetDrive ( new JetDrive::Controller("COM8", this) ),
-    pressureController ( new PCD::Controller("COM3", this) )
+    pressureController ( new PCD::Controller("COM3", this) ),
+    mister ( new Mister::Controller("COM4", this) )
 {
 
 }

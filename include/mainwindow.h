@@ -69,6 +69,7 @@ private slots:
 
     void connect_to_jet_drive_button_pressed();
     void connect_to_pressure_controller_button_pressed();
+    void connect_to_mister_button_pressed();
     void connect_motion_controller_button_pressed();
 
 private:

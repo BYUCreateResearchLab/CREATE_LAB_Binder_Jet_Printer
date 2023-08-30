@@ -35,6 +35,7 @@
 #include "pcd.h"
 #include "ginterrupthandler.h"
 #include "dmc4080.h"
+#include "mister.h"
 
 MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     QMainWindow(parent),
@@ -178,6 +179,10 @@ void MainWindow::setup()
     connect(printer->pressureController, &PCD::Controller::timeout, this, &MainWindow::print_to_output_window);
     connect(printer->pressureController, &PCD::Controller::error, this, &MainWindow::print_to_output_window);
 
+    connect(printer->mister, &PCD::Controller::response, this, &MainWindow::print_to_output_window);
+    connect(printer->mister, &PCD::Controller::timeout, this, &MainWindow::print_to_output_window);
+    connect(printer->mister, &PCD::Controller::error, this, &MainWindow::print_to_output_window);
+
 }
 
 void MainWindow::on_connect_clicked()
@@ -195,8 +200,10 @@ void MainWindow::on_connect_clicked()
         printer->mcu->printerThread->execute_command(s);
 
         // Connect to serial devices
+        // TODO: Move this into a method in Printer
         printer->jetDrive->connect_to_jet_drive();
         printer->pressureController->connect_to_pressure_controller();
+        printer->mister->connect_to_misters();
 
 
         // this isn't ready yet
@@ -215,6 +222,7 @@ void MainWindow::on_connect_clicked()
         printer->mcu->g = 0;             // Reset connection handle
 
         printer->jetDrive->disconnect_serial();
+        printer->pressureController->disconnect_serial();
 
         // change button label text
         ui->connect->setText("\nConnect and Home Printer\n");
@@ -592,6 +600,11 @@ void MainWindow::connect_to_jet_drive_button_pressed()
 void MainWindow::connect_to_pressure_controller_button_pressed()
 {
     printer->pressureController->connect_to_pressure_controller();
+}
+
+void MainWindow::connect_to_mister_button_pressed()
+{
+    printer->mister->connect_to_misters();
 }
 
 void MainWindow::connect_motion_controller_button_pressed()
