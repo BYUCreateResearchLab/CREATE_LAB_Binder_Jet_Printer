@@ -110,7 +110,9 @@ void PowderSetupWidget::allow_widget_input(bool allowed)
 void PowderSetupWidget::mist_layer()
 {
     std::stringstream s;
-    s << CMD::mist_layer(ui->mistTraverseSpeedSpinBox->value());
+    const double mistSpeed = ui->mistTraverseSpeedSpinBox->value();
+    const double mistDwellTime = int(1000.0 * ui->misterDwellTimeSpinBox->value());
+    s << CMD::mist_layer(mistSpeed, mistDwellTime);
 
     if (isMisting)
     {

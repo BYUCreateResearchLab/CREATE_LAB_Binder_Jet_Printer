@@ -203,7 +203,8 @@ void MainWindow::on_connect_clicked()
         // TODO: Move this into a method in Printer
         printer->jetDrive->connect_to_jet_drive();
         printer->pressureController->connect_to_pressure_controller();
-        printer->mister->connect_to_misters();
+        // temporarily turn off since this is not set up yet
+        //printer->mister->connect_to_misters();
 
 
         // this isn't ready yet

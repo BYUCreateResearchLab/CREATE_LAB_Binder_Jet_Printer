@@ -243,7 +243,7 @@ string begin_pvt_motion(Axis axis);
 string set_hopper_mode_and_intensity(int mode, int intensity);
 string set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis,
                                                       int dropletSpacing);
-string mist_layer(double traverseSpeed_mm_per_s);
+string mist_layer(double traverseSpeed_mm_per_s, int sleepTime_ms);
 string spread_layer(const RecoatSettings &settings);
 
 // Establish connection with motion controller

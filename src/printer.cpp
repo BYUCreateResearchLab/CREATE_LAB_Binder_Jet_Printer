@@ -229,14 +229,13 @@ std::string CMD::move_xy_axes_to_default_position()
     return s.str();
 }
 
-std::string CMD::mist_layer(double traverseSpeed_mm_per_s)
+std::string CMD::mist_layer(double traverseSpeed_mm_per_s, int sleepTime_ms)
 {
     std::stringstream s;
 
     const int yAxisTravelSpeed_mm_per_s = 60;
     const double startPosition_mm = -340;
     const double endPosition_mm = -154;
-    const int sleepTime_ms = 3000;
     const double zAxisOffsetUnderRoller{0.5};
 
     // setup
