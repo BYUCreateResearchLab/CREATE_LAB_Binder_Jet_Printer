@@ -291,7 +291,7 @@ void DropletAnalyzerWidget::load_video_button_pressed()
     if(!filename.isEmpty() && !filename.isNull())
     {
         // check to make sure file isn't huge and is a video file
-        const int maxFileSizeBytes = 50000000;
+        const int maxFileSizeBytes = 500000000;
         QFileInfo file(filename);
         if (file.size() > (maxFileSizeBytes) ||
            (file.suffix() != "avi" && file.suffix() != "mp4"))
