@@ -189,41 +189,15 @@ void MainWindow::on_connect_clicked()
 {
     if (printer->mcu->g == 0) // if there is no connection to the motion controller
     {
-        std::stringstream s;
-
-        s << CMD::open_connection_to_controller();
-        s << CMD::set_default_controller_settings();
-        const bool homeZAxis = ui->homeZAxisCheckBox->isChecked();
-        s << CMD::homing_sequence(homeZAxis);
-
+        //get connection settings / options from UI
+        bool homeZAxis = ui->homeZAxisCheckBox->isChecked();
         allow_user_input(false);
-        printer->mcu->printerThread->execute_command(s);
-
-        // Connect to serial devices
-        // TODO: Move this into a method in Printer
-        printer->jetDrive->connect_to_jet_drive();
-        printer->pressureController->connect_to_pressure_controller();
-        // temporarily turn off since this is not set up yet
-        //printer->mister->connect_to_misters();
-
-
-        // this isn't ready yet
-        //interruptHandler->connect_to_controller(printer->address);
-
+        printer->connect(homeZAxis);
     }
     else // if there is already a connection
     {
         allow_user_input(false);
-        if (printer->mcu->g) // double check there is actually a connection
-        {
-            GCmd(printer->mcu->g, "ST"); // stop motion
-            GCmd(printer->mcu->g, "MO"); // disable Motors
-            GClose(printer->mcu->g);     // close connection to the motion controller
-        }
-        printer->mcu->g = 0;             // Reset connection handle
-
-        printer->jetDrive->disconnect_serial();
-        printer->pressureController->disconnect_serial();
+        printer->disconnect();
 
         // change button label text
         ui->connect->setText("\nConnect and Home Printer\n");

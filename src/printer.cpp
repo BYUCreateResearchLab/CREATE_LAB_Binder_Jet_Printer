@@ -24,7 +24,25 @@ Printer::~Printer()
 
 }
 
+void Printer::connect(bool homeZAxis)
+{
+    mcu->connect_to_motion_controller(homeZAxis);
 
+    // connect to serial devices
+    jetDrive->connect_to_jet_drive();
+    pressureController->connect_to_pressure_controller();
+    // this isn't ready yet
+    //mister->connect_to_misters();
+}
+
+void Printer::disconnect()
+{
+    mcu->disconnect_controller();
+
+    jetDrive->disconnect_serial();
+    pressureController->disconnect_serial();
+    mister->disconnect_serial();
+}
 
 
 using namespace CMD::detail;

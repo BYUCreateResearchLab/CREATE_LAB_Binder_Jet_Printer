@@ -36,13 +36,15 @@ public:
     int connect_to_misters();
     void disconnect_serial();
 
-private:
-    void initialize_misters();
-
+    void send_command(CMD command);
     void turn_on_misters();
     void turn_off_misters();
     void turn_on_left_mister();
     void turn_on_right_mister();
+
+private:
+    void initialize_misters();
+
 
     // consider making these virtual functions in the asyncserialdevice ??
     void handle_ready_read();

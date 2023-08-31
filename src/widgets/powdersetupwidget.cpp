@@ -109,6 +109,28 @@ void PowderSetupWidget::allow_widget_input(bool allowed)
 
 void PowderSetupWidget::mist_layer()
 {
+    // write program for misting
+    //std::ostringstream s;
+    //const char* program = s.str().c_str();
+
+    // upload to controller
+//    if (mPrinter->mcu->g)
+//    {
+//        // upload program with up to full compression enabled on the preprocessor
+//        if (GProgramDownload(mPrinter->mcu->g, program, "--max 4") == G_NO_ERROR)
+//            qDebug() << "Program Downloaded with compression level 4";
+//        else
+//        {
+//            qDebug() << "Unexpected GProgramDownload() behaviour";
+//            return;
+//        }
+//    }
+
+
+    // run program
+
+
+
     std::stringstream s;
     const double mistSpeed = ui->mistTraverseSpeedSpinBox->value();
     const double mistDwellTime = int(1000.0 * ui->misterDwellTimeSpinBox->value());

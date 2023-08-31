@@ -105,29 +105,34 @@ void Controller::disconnect_serial()
     else emit response(QString("%1 is already disconnected").arg(name));
 }
 
+void Controller::send_command(CMD command)
+{
+    write(QString("%1\r").arg((char)command).toUtf8());
+}
+
 void Controller::initialize_misters()
 {
-    write(QString("%1\r").arg((char)INIT).toUtf8());
+    send_command(INIT);
 }
 
 void Controller::turn_on_misters()
 {
-    write(QString("%1\r").arg((char)MIST_ON).toUtf8());
+    send_command(MIST_ON);
 }
 
 void Controller::turn_off_misters()
 {
-    write(QString("%1\r").arg((char)MIST_OFF).toUtf8());
+    send_command(MIST_OFF);
 }
 
 void Controller::turn_on_left_mister()
 {
-    write(QString("%1\r").arg((char)LEFT_ON).toUtf8());
+    send_command(LEFT_ON);
 }
 
 void Controller::turn_on_right_mister()
 {
-    write(QString("%1\r").arg((char)RIGHT_ON).toUtf8());
+    send_command(RIGHT_ON);
 }
 
 void Controller::clear_members()

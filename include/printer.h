@@ -75,6 +75,8 @@
 #include <map>
 #include <QObject>
 
+#include "gmessagehandler.h"
+
 class PrintThread;
 class GInterruptHandler;
 namespace PCD { class Controller; }
@@ -113,6 +115,11 @@ enum class Axis
 enum class MotorType
 {
     Servo, Servo_R, StepLow, StepLow_R, StepHigh, StepHigh_R, Servo2PB, Servo2PB_R
+};
+
+enum class CMDDevice
+{
+    MISC, CAMERA, MISTER, HEAT_LAMP
 };
 
 enum Interrupt
@@ -160,6 +167,9 @@ class Printer : public QObject
 public:
     explicit Printer(QObject *parent = nullptr);
     ~Printer();
+
+    void connect(bool homeZAxis);
+    void disconnect();
 
     static float motor_type_value(MotorType motorType);
 

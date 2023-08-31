@@ -95,6 +95,7 @@ PRX = lDist + (2.0*accD)
 BGX
 // enable jetting after acceleration
 ADX = accD
+MG "123"
 BGH // begin jetting move (jog)
 // disable jetting after line printed
 ADX = jOffD
