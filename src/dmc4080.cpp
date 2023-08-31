@@ -10,11 +10,13 @@
 
 #include "printer.h"
 
+#include <QDebug>
+
 DMC4080::DMC4080(std::string_view address_, QObject *parent) :
     QObject(parent),
     address ( address_.data() ),
     printerThread ( new PrintThread(this) ),
-    interruptHandler ( new GInterruptHandler(this) ),
+    //interruptHandler ( new GInterruptHandler(this) ),
     messageHandler ( new GMessageHandler(this) )
 {
     printerThread->setup(this);
@@ -41,6 +43,12 @@ void DMC4080::connect_to_motion_controller(bool homeZAxis)
 
 void DMC4080::disconnect_controller()
 {
+    qDebug() << "disconnecting";
+    //interruptHandler->stop();
+    messageHandler->stop();
+    // this needs to go first
+    printerThread->stop();
+
     // TODO: don't write the raw commands directly, make API
     if (g) // double check there is actually a connection
     {
@@ -53,8 +61,12 @@ void DMC4080::disconnect_controller()
     }
     g = 0;             // Reset connection handle
 
-    interruptHandler->stop();
-    messageHandler->stop();
+
+    //messageHandler->terminate();
+
+    // wait for threads to quit
+    //messageHandler->wait();
+    //interruptHandler->wait();
 }
 
 #include "moc_dmc4080.cpp"

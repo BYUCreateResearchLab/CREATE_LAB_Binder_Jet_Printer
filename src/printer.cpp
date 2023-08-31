@@ -21,7 +21,7 @@ Printer::Printer(QObject *parent) :
 
 Printer::~Printer()
 {
-
+    disconnect_printer();
 }
 
 void Printer::connect(bool homeZAxis)
@@ -35,7 +35,7 @@ void Printer::connect(bool homeZAxis)
     //mister->connect_to_misters();
 }
 
-void Printer::disconnect()
+void Printer::disconnect_printer()
 {
     mcu->disconnect_controller();
 

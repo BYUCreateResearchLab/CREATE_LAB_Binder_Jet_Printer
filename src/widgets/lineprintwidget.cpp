@@ -302,7 +302,7 @@ void LinePrintWidget::print_lines_old()
 
 void LinePrintWidget::print_lines_dmc()
 {
-    std::ostringstream s;
+    std::stringstream s;
 
     QByteArray ba = dmcLinePrintCode.toLocal8Bit();
     const char *dmcCodeC_Str = ba.data();

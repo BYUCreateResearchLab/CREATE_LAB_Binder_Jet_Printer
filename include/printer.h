@@ -169,7 +169,7 @@ public:
     ~Printer();
 
     void connect(bool homeZAxis);
-    void disconnect();
+    void disconnect_printer();
 
     static float motor_type_value(MotorType motorType);
 

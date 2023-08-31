@@ -2,11 +2,13 @@
 #include <QApplication>
 #include "printer.h"
 
+#include "QDebug"
+
 const QPalette dark_palette();
 
 int main(int argc, char *argv[])
 {
-    std::unique_ptr<Printer> printer = std::make_unique<Printer>();
+    auto printer = std::make_unique<Printer>();
 
     QApplication a(argc, argv);
     a.setStyle("fusion");

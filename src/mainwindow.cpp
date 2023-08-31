@@ -82,10 +82,10 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     // disable all buttons that require a controller connection
     allow_user_input(false);
 
-    connect(printer->mcu->interruptHandler,
-            &GInterruptHandler::status,
-            this,
-            [](uchar status){ qDebug() << QString::fromStdString(interrupt_string((Interrupt)status)); });
+//    connect(printer->mcu->interruptHandler,
+//            &GInterruptHandler::status,
+//            this,
+//            [](uchar status){ qDebug() << QString::fromStdString(interrupt_string((Interrupt)status)); });
 
     // don't use for now since it doesn't always close right
     //printer->mcu->interruptHandler->start();
@@ -95,6 +95,8 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
 // on application close
 MainWindow::~MainWindow()
 {
+    printer->disconnect_printer();
+
     delete ui;
 
     // log application close and close the file
@@ -197,7 +199,7 @@ void MainWindow::on_connect_clicked()
     else // if there is already a connection
     {
         allow_user_input(false);
-        printer->disconnect();
+        printer->disconnect_printer();
 
         // change button label text
         ui->connect->setText("\nConnect and Home Printer\n");

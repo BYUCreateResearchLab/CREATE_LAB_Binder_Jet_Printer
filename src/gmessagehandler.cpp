@@ -11,13 +11,17 @@ GMessageHandler::GMessageHandler(QObject *parent):
 }
 
 GMessageHandler::~GMessageHandler()
-{
+{  
+    qDebug() << "ending handler";
     stop();
     wait();
+    qDebug() << "destroyed";
 }
 
 void GMessageHandler::connect_to_controller(std::string_view IPAddress)
 {
+    quit_ = false;
+
     std::string stringIn = IPAddress.data();
     stringIn += " --subscribe MG";
 
@@ -32,9 +36,7 @@ void GMessageHandler::connect_to_controller(std::string_view IPAddress)
     //GTimeout(g_, 250);
     GTimeout(g_, 0); // set timeout to 0 for non-blocking read
 
-    mutex_.lock();
-    waitCondition_.wakeOne();
-    mutex_.unlock();
+    start();
 }
 
 void GMessageHandler::stop()
@@ -46,22 +48,27 @@ void GMessageHandler::stop()
 
 void GMessageHandler::run()
 {
+
     GReturn rc;
+
+    qDebug() << "start message handler";
+
     char buf[1024]; //read buffer
-    mutex_.lock();
-    // wait until the motion controller is connected
-    waitCondition_.wait(&mutex_);
-    // Once the thread is woken
+
     while (true)
     {
-        //QMutexLocker(&mutex_);
         mutex_.lock();
-        if (quit_) break;
+        if (quit_)
+        {
+            mutex_.unlock();
+            break;
+        }
         mutex_.unlock();
 
-        if (rc = GMessage(g_, buf, sizeof(buf)) == G_GCLIB_NON_BLOCKING_READ_EMPTY)
+        if ((rc = GMessage(g_, buf, sizeof(buf))) == G_GCLIB_NON_BLOCKING_READ_EMPTY)
         {
             QThread::msleep(sleepTime_ms_);
+            // could also use usleep
             continue;
         }
 
@@ -72,11 +79,12 @@ void GMessageHandler::run()
         }
 
         // handle the message here
-        qDebug() << QByteArray(buf, sizeof(buf)) << '\n';
+        qDebug() << QByteArray(buf, 5) << '\n';
     }
-    mutex_.unlock();
 
     qDebug() << "Quit";
+    GClose(g_);
+    g_ = 0;
 }
 
 #include "moc_gmessagehandler.cpp"
