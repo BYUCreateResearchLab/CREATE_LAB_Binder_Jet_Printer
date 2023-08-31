@@ -26,6 +26,7 @@ protected:
 
 signals:
     void error();
+    void command(QString cmd);
 
 protected:
     GCon g_;

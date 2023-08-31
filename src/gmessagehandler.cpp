@@ -32,6 +32,8 @@ void GMessageHandler::connect_to_controller(std::string_view IPAddress)
         return;
     }
 
+    GCmd(g_, "TR0"); // Make sure trace is off
+
     // could also put up in the GOpen function but it cant connect to the controller very fast (crashses with low timeout)
     //GTimeout(g_, 250);
     GTimeout(g_, 0); // set timeout to 0 for non-blocking read
@@ -49,11 +51,14 @@ void GMessageHandler::stop()
 void GMessageHandler::run()
 {
 
-    GReturn rc;
+    GReturn rc = 0;
+    int b = 0; //iterator for buf
+    int m = 0; //iterator for message
 
     qDebug() << "start message handler";
 
-    char buf[1024]; //read buffer
+    char buf[G_SMALL_BUFFER]; //read buffer
+    char message[G_SMALL_BUFFER];
 
     while (true)
     {
@@ -65,21 +70,48 @@ void GMessageHandler::run()
         }
         mutex_.unlock();
 
-        if ((rc = GMessage(g_, buf, sizeof(buf))) == G_GCLIB_NON_BLOCKING_READ_EMPTY)
+        //While still receiving messages
+        while ((rc = GMessage(g_, buf, G_SMALL_BUFFER)) == G_NO_ERROR)
         {
-            QThread::msleep(sleepTime_ms_);
-            // could also use usleep
-            continue;
+            b = 0; //reset buffer index
+
+            while (buf[b] != '\0') //While message characters are in the buffer
+            {
+                message[m] = buf[b]; //Copy chars from buffer to message
+
+                //If the message ends in "\r\n" its ready to be terminated
+                if (m > 0 && message[m] == '\n' && message[m - 1] == '\r')
+                {
+                    message[m + 1] = '\0'; //Null terminate the message
+
+                    // handle the complete message here
+                    emit command(QString(message));
+
+                    m = 0;  //Reset message index
+                }
+                else
+                {
+                    m++; //Increment message index
+                }
+
+                b++; //Increment buf index
+            }
         }
 
-        if (rc != G_NO_ERROR)
-        {
-            emit error();
-            qDebug() << "GMessage read error";
-        }
+        QThread::msleep(sleepTime_ms_);
 
-        // handle the message here
-        qDebug() << QByteArray(buf, 5) << '\n';
+//        if ((rc = GMessage(g_, buf, sizeof(buf))) == G_GCLIB_NON_BLOCKING_READ_EMPTY)
+//        {
+//            QThread::msleep(sleepTime_ms_);
+//            // could also use usleep
+//            continue;
+//        }
+
+//        if (rc != G_NO_ERROR)
+//        {
+//            emit error();
+//            qDebug() << "GMessage read error";
+//        }
     }
 
     qDebug() << "Quit";

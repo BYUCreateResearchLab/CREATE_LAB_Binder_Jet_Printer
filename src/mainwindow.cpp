@@ -87,6 +87,8 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
 //            this,
 //            [](uchar status){ qDebug() << QString::fromStdString(interrupt_string((Interrupt)status)); });
 
+    connect(printer->mcu->messageHandler, &GMessageHandler::command, this, &MainWindow::print_to_output_window);
+
     // don't use for now since it doesn't always close right
     //printer->mcu->interruptHandler->start();
 
