@@ -38,6 +38,7 @@ set(HEADERS
     include/svgview.h
     include/datarecordpoller.h
     include/ginterrupthandler.h
+    include/gmessagepoller.h
     include/gmessagehandler.h
     include/pcd.h
     include/dmc4080.h
@@ -58,6 +59,7 @@ set(SOURCES
     src/svgview.cpp
     src/datarecordpoller.cpp
     src/ginterrupthandler.cpp
+    src/gmessagepoller.cpp
     src/gmessagehandler.cpp
     src/pcd.cpp
     src/dmc4080.cpp

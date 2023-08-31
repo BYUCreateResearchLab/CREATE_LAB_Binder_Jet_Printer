@@ -17,7 +17,7 @@ DMC4080::DMC4080(std::string_view address_, QObject *parent) :
     address ( address_.data() ),
     printerThread ( new PrintThread(this) ),
     //interruptHandler ( new GInterruptHandler(this) ),
-    messageHandler ( new GMessageHandler(this) )
+    messagePoller ( new GMessagePoller(this) )
 {
     printerThread->setup(this);
 }
@@ -38,14 +38,14 @@ void DMC4080::connect_to_motion_controller(bool homeZAxis)
     printerThread->execute_command(s);
 
     // subscribe to messages
-    messageHandler->connect_to_controller(address);
+    messagePoller->connect_to_controller(address);
 }
 
 void DMC4080::disconnect_controller()
 {
     qDebug() << "disconnecting";
     //interruptHandler->stop();
-    messageHandler->stop();
+    messagePoller->stop();
     // this needs to go first
     printerThread->stop();
 

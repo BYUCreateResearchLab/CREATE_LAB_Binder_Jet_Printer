@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <string_view>
+#include "gmessagepoller.h"
 #include "gmessagehandler.h"
 
 class PrintThread;
@@ -25,7 +26,7 @@ public:
     PrintThread *printerThread {nullptr};
     //GInterruptHandler *interruptHandler {nullptr};
 
-    GMessageHandler *messageHandler {nullptr};
+    GMessagePoller *messagePoller {nullptr};
 
     GCon g {0}; // Handle for connection to Galil Motion Controller
 
