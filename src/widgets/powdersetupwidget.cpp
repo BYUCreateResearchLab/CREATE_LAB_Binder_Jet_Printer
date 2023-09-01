@@ -4,8 +4,10 @@
 #include <sstream>
 
 #include "printer.h"
+#include "dmc4080.h"
 
 #include <QMessageBox>
+#include <QDebug>
 
 PowderSetupWidget::PowderSetupWidget(Printer *printer, QWidget *parent) :
     PrinterWidget(printer, parent),
@@ -129,22 +131,35 @@ void PowderSetupWidget::mist_layer()
 
     // run program
 
-
-
     std::stringstream s;
+    s << "GCmd,#BEGIN\n";
     const double mistSpeed = ui->mistTraverseSpeedSpinBox->value();
     const double mistDwellTime = int(1000.0 * ui->misterDwellTimeSpinBox->value());
     s << CMD::mist_layer(mistSpeed, mistDwellTime);
 
-    if (isMisting)
+    auto program = CMD::cmd_buf_to_dmc(s).c_str();
+    qDebug().noquote() << program;
+
+    if (mPrinter->mcu->g)
     {
-        isMisting = false;
-        s << CMD::clear_bit(MISTER_BIT);
-        ui->toggleMisterButton->setText("Turn On Mister");
+        // upload program with up to full compression enabled on the preprocessor
+        if (GProgramDownload(mPrinter->mcu->g, program, "--max 4") == G_NO_ERROR)
+            qDebug() << "Program Downloaded with compression level 4";
+        else
+        {
+            qDebug() << "Unexpected GProgramDownload() behaviour";
+            return;
+        }
     }
+
+    s.clear();
+
+    s << "GCmd," << "XQ #BEGIN" << "\n";
+    s << "GProgramComplete," << "\n";
+    s << CMD::display_message("Print Complete");
+
     emit disable_user_input();
     emit execute_command(s);
-    emit generate_printing_message_box("Misting Layer");
 }
 
 void PowderSetupWidget::toggle_mister_clicked()

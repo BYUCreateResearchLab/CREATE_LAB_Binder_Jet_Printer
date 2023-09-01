@@ -82,11 +82,6 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     // disable all buttons that require a controller connection
     allow_user_input(false);
 
-//    connect(printer->mcu->interruptHandler,
-//            &GInterruptHandler::status,
-//            this,
-//            [](uchar status){ qDebug() << QString::fromStdString(interrupt_string((Interrupt)status)); });
-
     connect(printer->mcu->messagePoller, &GMessagePoller::message, this, &MainWindow::print_to_output_window);
     connect(printer->mcu->messagePoller, &GMessagePoller::message, this, [](QString message){qDebug() << message.toUtf8();});
 

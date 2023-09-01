@@ -62,8 +62,7 @@
  * 00000001 = 1  = bank 2 set as outputs
  */
 
-#ifndef PRINTER_H
-#define PRINTER_H
+#pragma once
 #include "gclib.h"
 #include "gclibo.h"
 #include "gclib_errors.h"
@@ -74,8 +73,6 @@
 #include <functional>
 #include <map>
 #include <QObject>
-
-#include "gmessagehandler.h"
 
 class PrintThread;
 class GInterruptHandler;
@@ -365,6 +362,11 @@ inline string disable_hopper()
 inline string disable_forward_software_limit(Axis axis)
 { return detail::create_gcmd("FL", axis, 2147483647); }
 
+inline string message(const std::string& text)
+{
+    return detail::GCmd() + "MG " + "\"" + text + "\"" + "\n";
+}
+
 // this command does not support newlines or commas right now...
 // either will cause the print to fail...
 inline string display_message(const std::string &message)
@@ -399,7 +401,7 @@ string after_absolute_position(Axis axis, double absolutePosition_mm);
 inline string set_reference_time()
 { return detail::GCmd() + "AT 0" + "\n"; }
 inline string after_motion(Axis axis)
-{ return detail::GCmd() + "AM " + detail::axis_string(axis) + "\n";}
+{ return detail::GCmd() + "AM" + detail::axis_string(axis) + "\n";}
 inline string wait(int milliseconds)
 { return detail::GCmd() + "WT " + std::to_string(milliseconds) + "\n"; }
 // =====================================================================
@@ -437,5 +439,3 @@ private:
     AxisSettings yAxisSettings;
     AxisSettings zAxisSettings;
 };
-
-#endif // PRINTER_H

@@ -257,8 +257,8 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s, int sleepTime_ms)
     const double zAxisOffsetUnderRoller{0.5};
 
     // setup
-    s << display_message("Misting layer");
-    s << clear_bit(MISTER_BIT); // just make sure that the mister is off
+    s << message("Misting layer");
+    s << message("MIST_OFF"); // just make sure that the mister is off
     s << set_accleration(Axis::Y, 600);
     s << set_deceleration(Axis::Y, 600);
     s << set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
@@ -268,23 +268,23 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s, int sleepTime_ms)
     s << set_speed(Axis::Z, 2);
     s << position_relative(Axis::Z, -zAxisOffsetUnderRoller);
     s << begin_motion(Axis::Z);
-    s << motion_complete(Axis::Z);
+    s << after_motion(Axis::Z);
 
     // move y-axis to start misting position
     s << position_absolute(Axis::Y, startPosition_mm);
     s << begin_motion(Axis::Y);
-    s << motion_complete(Axis::Y);
+    s << after_motion(Axis::Y);
 
-    s << set_bit(MISTER_BIT); // turn on mister
-    s << sleep(sleepTime_ms); // wait
+    s << message("MIST_ON");
+    s << wait(sleepTime_ms); // wait
 
     s << set_speed(Axis::Y, traverseSpeed_mm_per_s); // set traverse speed
     // travel under mister and specified speed
     s << position_absolute(Axis::Y, endPosition_mm);
     s << begin_motion(Axis::Y);
-    s << motion_complete(Axis::Y);
+    s << after_motion(Axis::Y);
 
-    s << clear_bit(MISTER_BIT); // turn off mister
+    s << message("MIST_OFF");
 
     // move z-axis back up
     s << position_relative(Axis::Z, zAxisOffsetUnderRoller);
@@ -294,9 +294,9 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s, int sleepTime_ms)
     s << set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
     s << position_absolute(Axis::Y, -50);
     s << begin_motion(Axis::Y);
-    s << motion_complete(Axis::Y);
-    s << motion_complete(Axis::Z);
-    s << display_message("Misting complete");
+    s << after_motion(Axis::Y);
+    s << after_motion(Axis::Z);
+    s << message("Misting complete");
 
     return s.str();
 }

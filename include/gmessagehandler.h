@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QObject>
+#include "printer.h"
 
 class GMessageHandler : public QObject
 {
@@ -8,5 +8,9 @@ class GMessageHandler : public QObject
 public:
     explicit GMessageHandler(QObject *parent = nullptr);
 
+public slots:
+    void handle_message(QString message);
 
+protected:
+    Printer *printer {nullptr};
 };
