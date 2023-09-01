@@ -81,7 +81,7 @@ void GMessagePoller::run()
                 //If the message ends in "\r\n" its ready to be terminated
                 if (m > 0 && messageBuf[m] == '\n' && messageBuf[m - 1] == '\r')
                 {
-                    messageBuf[m + 1] = '\0'; //Null terminate the message
+                    messageBuf[m - 1] = '\0'; //Null terminate the message (strip \r\n)
 
                     // handle the complete message here
                     emit message(QString(messageBuf));

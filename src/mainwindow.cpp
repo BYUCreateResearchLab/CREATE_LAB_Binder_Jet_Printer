@@ -88,6 +88,7 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
 //            [](uchar status){ qDebug() << QString::fromStdString(interrupt_string((Interrupt)status)); });
 
     connect(printer->mcu->messagePoller, &GMessagePoller::message, this, &MainWindow::print_to_output_window);
+    connect(printer->mcu->messagePoller, &GMessagePoller::message, this, [](QString message){qDebug() << message.toUtf8();});
 
     // don't use for now since it doesn't always close right
     //printer->mcu->interruptHandler->start();
@@ -588,6 +589,7 @@ void MainWindow::connect_to_mister_button_pressed()
 
 void MainWindow::connect_motion_controller_button_pressed()
 {
+    // TODO: make this use connect functions from mcu
     if (printer->mcu->g == 0) // if there is no connection to the motion controller
     {
         std::stringstream s;
@@ -595,6 +597,9 @@ void MainWindow::connect_motion_controller_button_pressed()
         s << CMD::open_connection_to_controller();
         s << CMD::set_default_controller_settings();
         printer->mcu->printerThread->execute_command(s);
+
+        // subscribe to messages
+        printer->mcu->messagePoller->connect_to_controller(printer->mcu->address);
     }
 }
 
