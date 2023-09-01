@@ -258,7 +258,7 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s, int sleepTime_ms)
 
     // setup
     s << message("Misting layer");
-    s << message("MIST_OFF"); // just make sure that the mister is off
+    s << message("CMD MIST_OFF"); // just make sure that the mister is off
     s << set_accleration(Axis::Y, 600);
     s << set_deceleration(Axis::Y, 600);
     s << set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
@@ -275,7 +275,7 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s, int sleepTime_ms)
     s << begin_motion(Axis::Y);
     s << after_motion(Axis::Y);
 
-    s << message("MIST_ON");
+    s << message("CMD MIST_ON");
     s << wait(sleepTime_ms); // wait
 
     s << set_speed(Axis::Y, traverseSpeed_mm_per_s); // set traverse speed
@@ -284,7 +284,7 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s, int sleepTime_ms)
     s << begin_motion(Axis::Y);
     s << after_motion(Axis::Y);
 
-    s << message("MIST_OFF");
+    s << message("CMD MIST_OFF");
 
     // move z-axis back up
     s << position_relative(Axis::Z, zAxisOffsetUnderRoller);

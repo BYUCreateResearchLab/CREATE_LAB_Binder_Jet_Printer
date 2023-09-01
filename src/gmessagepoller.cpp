@@ -32,9 +32,6 @@ void GMessagePoller::connect_to_controller(std::string_view IPAddress)
     }
 
     GCmd(g_, "TR0"); // Make sure trace is off
-
-    // could also put up in the GOpen function but it cant connect to the controller very fast (crashses with low timeout)
-    //GTimeout(g_, 250);
     GTimeout(g_, 0); // set timeout to 0 for non-blocking read
 
     start();

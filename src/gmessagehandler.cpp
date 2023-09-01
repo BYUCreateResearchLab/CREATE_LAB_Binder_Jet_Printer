@@ -1,22 +1,25 @@
 #include "gmessagehandler.h"
 
 #include "mister.h"
+#include <QDebug>
 
-GMessageHandler::GMessageHandler(QObject *parent) :
-    QObject(parent)
+GMessageHandler::GMessageHandler(Printer* printer, QObject *parent) :
+    QObject(parent),
+    printer_(printer)
 {
 
 }
 
 void GMessageHandler::handle_message(QString message)
 {
-    if (message == "MIST_ON")
+    // TODO: get rid of magic strings
+    if (message == "CMD MIST_ON")
     {
-        //printer->mister->turn_on_misters();
+        printer_->mister->turn_on_misters();
     }
-    else if (message == "MIST_OFF")
+    else if (message == "CMD MIST_OFF")
     {
-        //printer->mister->turn_off_misters();
+        printer_->mister->turn_off_misters();
     }
 
     // TODO: I need a way to respond back to the motion controller

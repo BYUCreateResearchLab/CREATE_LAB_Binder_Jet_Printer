@@ -3,12 +3,14 @@
 
 #include <QMainWindow>
 #include <fstream>
+#include "gmessagehandler.h"
 
 class Printer;
 class PrintThread;
 class LinePrintWidget;
 class OutputWindow;
 class PowderSetupWidget;
+class QMessageBox;
 
 class JettingWidget;
 class HighSpeedLineWidget;
@@ -85,6 +87,10 @@ private:
     JettingWidget *jettingWidget {nullptr};
     HighSpeedLineWidget *highSpeedLineWidget {nullptr};
     DropletObservationWidget *dropletObservationWidget {nullptr};
+
+    QMessageBox *messageBox {nullptr};
+    // TODO: should this go somewhere else?
+    GMessageHandler *messageHandler {nullptr};
 
 
     std::ofstream logFile;

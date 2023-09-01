@@ -111,34 +111,15 @@ void PowderSetupWidget::allow_widget_input(bool allowed)
 
 void PowderSetupWidget::mist_layer()
 {
-    // write program for misting
-    //std::ostringstream s;
-    //const char* program = s.str().c_str();
-
-    // upload to controller
-//    if (mPrinter->mcu->g)
-//    {
-//        // upload program with up to full compression enabled on the preprocessor
-//        if (GProgramDownload(mPrinter->mcu->g, program, "--max 4") == G_NO_ERROR)
-//            qDebug() << "Program Downloaded with compression level 4";
-//        else
-//        {
-//            qDebug() << "Unexpected GProgramDownload() behaviour";
-//            return;
-//        }
-//    }
-
-
-    // run program
-
     std::stringstream s;
     s << "GCmd,#BEGIN\n";
     const double mistSpeed = ui->mistTraverseSpeedSpinBox->value();
     const double mistDwellTime = int(1000.0 * ui->misterDwellTimeSpinBox->value());
     s << CMD::mist_layer(mistSpeed, mistDwellTime);
 
-    auto program = CMD::cmd_buf_to_dmc(s).c_str();
-    qDebug().noquote() << program;
+    auto programString = CMD::cmd_buf_to_dmc(s);
+    programString += "EN;"; // Controller doesn't like an empty line at the end
+    const char* program = programString.c_str();
 
     if (mPrinter->mcu->g)
     {
@@ -160,6 +141,7 @@ void PowderSetupWidget::mist_layer()
 
     emit disable_user_input();
     emit execute_command(s);
+    emit generate_printing_message_box("Layer misting is in progress.");
 }
 
 void PowderSetupWidget::toggle_mister_clicked()

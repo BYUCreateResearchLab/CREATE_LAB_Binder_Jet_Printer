@@ -83,10 +83,18 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     allow_user_input(false);
 
     connect(printer->mcu->messagePoller, &GMessagePoller::message, this, &MainWindow::print_to_output_window);
-    connect(printer->mcu->messagePoller, &GMessagePoller::message, this, [](QString message){qDebug() << message.toUtf8();});
 
-    // don't use for now since it doesn't always close right
-    //printer->mcu->interruptHandler->start();
+    // print message box
+    messageBox = new QMessageBox(this);
+    messageBox->setInformativeText("Click cancel to stop");
+    messageBox->setStandardButtons(QMessageBox::Cancel);
+    messageBox->setDefaultButton(QMessageBox::Cancel);
+
+    connect(printer->mcu->printerThread, &PrintThread::ended, messageBox, &QMessageBox::close);
+    connect(messageBox, &QMessageBox::rejected, this, &MainWindow::stop_print_and_thread);
+
+    messageHandler = new GMessageHandler(printer, this);
+    connect(printer->mcu->messagePoller, &GMessagePoller::message, messageHandler, &GMessageHandler::handle_message);
 
 }
 
@@ -461,22 +469,8 @@ void MainWindow::show_hide_droplet_analyzer_window()
 
 void MainWindow::generate_printing_message_box(const std::string &message)
 {
-    // This could be a way to do this in the future...
-    //QProgressDialog *progressDialog = new QProgressDialog(this);
-    //progressDialog->setLabelText("testing");
-    //progressDialog->open();
-
-    QMessageBox msgBox;
-    msgBox.setText(QString::fromStdString(message));
-    msgBox.setInformativeText("Click cancel to stop");
-    msgBox.setStandardButtons(QMessageBox::Cancel);
-    msgBox.setDefaultButton(QMessageBox::Cancel);
-    int ret = msgBox.exec();
-    switch (ret)
-    {
-    case QMessageBox::Cancel: stop_print_and_thread(); break;
-    default: break;
-    }
+    messageBox->setText(QString::fromStdString(message));
+    messageBox->open();
 }
 
 void MainWindow::stop_print_and_thread()
