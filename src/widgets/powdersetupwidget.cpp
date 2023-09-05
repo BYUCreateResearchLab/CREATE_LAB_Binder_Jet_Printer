@@ -5,6 +5,7 @@
 
 #include "printer.h"
 #include "dmc4080.h"
+#include "mister.h"
 
 #include <QMessageBox>
 #include <QDebug>
@@ -146,20 +147,19 @@ void PowderSetupWidget::mist_layer()
 
 void PowderSetupWidget::toggle_mister_clicked()
 {
-    std::stringstream s;
+    // TODO: state machine?
     if (isMisting)
     {
+        mPrinter->mister->turn_off_misters();
         ui->toggleMisterButton->setText("Turn On Mister");
-        s << CMD::clear_bit(MISTER_BIT);
         isMisting = false;
     }
     else
     {
+        mPrinter->mister->turn_on_misters();
         ui->toggleMisterButton->setText("Turn Off Mister");
-        s << CMD::set_bit(MISTER_BIT);
         isMisting = true;
     }
-    emit execute_command(s);
 }
 
 void PowderSetupWidget::cure_layer_pressed()

@@ -180,6 +180,7 @@ void MainWindow::setup()
     connect(ui->connectToJetDriveButton, &QPushButton::clicked, this, &MainWindow::connect_to_jet_drive_button_pressed);
     connect(ui->connecttoPCDButton, &QPushButton::clicked, this, &MainWindow::connect_to_pressure_controller_button_pressed);
     connect(ui->connectToMCUButton, &QPushButton::clicked, this, &MainWindow::connect_motion_controller_button_pressed);
+    connect(ui->connectToMisterButton, &QPushButton::clicked, this, [=]{printer->mister->connect_to_misters();});
 
     // connect response from pressure controller to output window
     // TODO: Do I want these here?

@@ -58,7 +58,7 @@ private:
 
     // Members to help with initialization
     InitState initState {NOT_INITIALIZED};
-    const QString initString = "Mister";
+    const QString initString = "MISTER";
 };
 
 }

@@ -102,7 +102,7 @@ class DMC4080;
 #define HEAT_LAMP_BIT 24 // pin 3
 
 #define HS_TTL_BIT 17 // pin 16
-#define MISTER_BIT 21 // pin 2
+//#define MISTER_BIT 21 // pin 2
 
 enum class Axis
 {

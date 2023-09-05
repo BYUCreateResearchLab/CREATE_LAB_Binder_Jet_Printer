@@ -31,8 +31,7 @@ void Printer::connect(bool homeZAxis)
     // connect to serial devices
     jetDrive->connect_to_jet_drive();
     pressureController->connect_to_pressure_controller();
-    // this isn't ready yet
-    //mister->connect_to_misters();
+    mister->connect_to_misters();
 }
 
 void Printer::disconnect_printer()
