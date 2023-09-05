@@ -340,13 +340,15 @@ void DropletObservationWidget::move_towards_middle()
 
 void DropletObservationWidget::jet_for_three_minutes()
 {
+    auto jettingFrequency = ui->jettingFreqSpinBox->value();
+
     if (!m_isJettingFor3Minutes)
     {
         std::stringstream s;
         if (!m_isJetting)
         {
             s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
-            s << CMD::set_jog(Axis::Jet, 1024);             // set to jet at 1024hz
+            s << CMD::set_jog(Axis::Jet, jettingFrequency);
             s << CMD::begin_motion(Axis::Jet);
             emit execute_command(s);
             jetting_was_turned_on();
@@ -467,12 +469,14 @@ void DropletObservationWidget::update_strobe_sweep_offset()
 
 void DropletObservationWidget::trigger_jet_clicked()
 {
+    auto jettingFrequency = ui->jettingFreqSpinBox->value();
+
     std::stringstream s;
     if (!m_isJetting)
     {
         s << CMD::servo_here(Axis::Jet);
         s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
-        s << CMD::set_jog(Axis::Jet, 1024);             // set to jet at 1024hz
+        s << CMD::set_jog(Axis::Jet, jettingFrequency);
         s << CMD::begin_motion(Axis::Jet);
         jetting_was_turned_on();
         ui->jetForMinutesButton->setEnabled(false);

@@ -330,7 +330,7 @@ void LinePrintWidget::print_lines_dmc()
 
     s << "GProgramComplete," << "\n";
     s << CMD::stop_motion(Axis::Jet); // stop jetting to set new jog speed
-    s << CMD::set_jog(Axis::Jet, 1024); // jet at 1024hz while waiting
+    s << CMD::set_jog(Axis::Jet, table.data.back().jettingFreq.value); // jet at last frequency
     s << CMD::begin_motion(Axis::Jet);
 
     s << CMD::display_message("Print Complete");

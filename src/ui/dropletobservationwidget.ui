@@ -42,7 +42,7 @@
       <enum>QFrame::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_frame" columnstretch="0,0,0">
-      <item row="16" column="0">
+      <item row="17" column="0">
        <widget class="QPushButton" name="takeVideoButton">
         <property name="font">
          <font>
@@ -60,14 +60,43 @@ Capture Video
         </property>
        </widget>
       </item>
-      <item row="2" column="0" colspan="3">
-       <widget class="QPushButton" name="jetForMinutesButton">
+      <item row="1" column="2">
+       <widget class="QPushButton" name="TriggerJetButton">
+        <property name="font">
+         <font>
+          <bold>false</bold>
+          <underline>false</underline>
+         </font>
+        </property>
         <property name="text">
-         <string>Jet for 3 Minutes</string>
+         <string>
+Trigger Jet
+</string>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
-      <item row="16" column="2">
+      <item row="1" column="1">
+       <widget class="QPushButton" name="moveToCameraButton">
+        <property name="font">
+         <font>
+          <bold>false</bold>
+          <underline>false</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>
+Move Nozzle -&gt; Camera
+</string>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="17" column="2">
        <widget class="QPushButton" name="SaveVideoButton">
         <property name="font">
          <font>
@@ -85,7 +114,26 @@ Save Captured Video
         </property>
        </widget>
       </item>
-      <item row="9" column="0" colspan="3">
+      <item row="1" column="0">
+       <widget class="QPushButton" name="moveToMiddleButton">
+        <property name="text">
+         <string>
+Move Nozzle To Middle
+</string>
+        </property>
+       </widget>
+      </item>
+      <item row="18" column="0" colspan="3">
+       <widget class="QPushButton" name="openAnalyzerWindowButton">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Open Droplet Analyzer Window</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0" colspan="3">
        <widget class="QFrame" name="cameraSettingsFrame">
         <property name="enabled">
          <bool>true</bool>
@@ -274,8 +322,25 @@ Save Captured Video
         </layout>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QPushButton" name="moveToCameraButton">
+      <item row="3" column="0" colspan="3">
+       <widget class="QPushButton" name="jetForMinutesButton">
+        <property name="text">
+         <string>Jet for 3 Minutes</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="3">
+       <widget class="QProgressBar" name="jetProgressBar">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="3">
+       <widget class="QPushButton" name="connectButton">
         <property name="font">
          <font>
           <bold>false</bold>
@@ -284,7 +349,7 @@ Save Captured Video
         </property>
         <property name="text">
          <string>
-Move Nozzle -&gt; Camera
+Connect to Camera
 </string>
         </property>
         <property name="flat">
@@ -292,7 +357,19 @@ Move Nozzle -&gt; Camera
         </property>
        </widget>
       </item>
-      <item row="15" column="0" colspan="3">
+      <item row="17" column="1">
+       <widget class="QPushButton" name="getDropletVelocityButton">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>
+Get Droplet Velocity
+</string>
+        </property>
+       </widget>
+      </item>
+      <item row="16" column="0" colspan="3">
        <widget class="QFrame" name="sweepFrame">
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
@@ -478,80 +555,48 @@ Move Nozzle -&gt; Camera
         </layout>
        </widget>
       </item>
-      <item row="17" column="0" colspan="3">
-       <widget class="QPushButton" name="openAnalyzerWindowButton">
-        <property name="enabled">
-         <bool>false</bool>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_11">
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
         </property>
         <property name="text">
-         <string>Open Droplet Analyzer Window</string>
+         <string>Jetting Frequency</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
-      <item row="3" column="0" colspan="3">
-       <widget class="QProgressBar" name="jetProgressBar">
-        <property name="enabled">
-         <bool>true</bool>
+      <item row="2" column="2">
+       <widget class="QLabel" name="label_14">
+        <property name="text">
+         <string>Hz</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSpinBox" name="jettingFreqSpinBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::RightToLeft</enum>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
         </property>
         <property name="value">
-         <number>0</number>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QPushButton" name="moveToMiddleButton">
-        <property name="text">
-         <string>
-Move Nozzle To Middle
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="16" column="1">
-       <widget class="QPushButton" name="getDropletVelocityButton">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>
-Get Droplet Velocity
-</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QPushButton" name="TriggerJetButton">
-        <property name="font">
-         <font>
-          <bold>false</bold>
-          <underline>false</underline>
-         </font>
-        </property>
-        <property name="text">
-         <string>
-Trigger Jet
-</string>
-        </property>
-        <property name="flat">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0" colspan="3">
-       <widget class="QPushButton" name="connectButton">
-        <property name="font">
-         <font>
-          <bold>false</bold>
-          <underline>false</underline>
-         </font>
-        </property>
-        <property name="text">
-         <string>
-Connect to Camera
-</string>
-        </property>
-        <property name="flat">
-         <bool>false</bool>
+         <number>1024</number>
         </property>
        </widget>
       </item>
