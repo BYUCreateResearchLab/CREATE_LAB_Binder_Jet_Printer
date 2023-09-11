@@ -238,7 +238,8 @@ void DropletAnalyzer::rotate_data_by_angle(double angle_rad)
 
 void DropletAnalyzer::calculate_droplet_velocity()
 {
-    LinearAnalysis::FitLine fitLine = LinearAnalysis::find_fit_line(m_trackingData.t, m_trackingData.y);
+    //LinearAnalysis::FitLine fitLine = LinearAnalysis::find_fit_line(m_trackingData.t, m_trackingData.y);
+    LinearAnalysis::FitLine fitLine = LinearAnalysis::find_fit_line_ransac(m_trackingData.t, m_trackingData.y, RANSACIters, RANSACThreshold);
     m_trackingData.velocity_m_s = fitLine.slope;
     m_trackingData.intercept = fitLine.intercept;
 }

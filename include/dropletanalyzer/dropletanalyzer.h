@@ -128,6 +128,9 @@ private:
    std::optional<JetDrive::Settings> m_jetSettings;
 
    std::unique_ptr<QThread> m_thread;
+
+   int RANSACIters = 100;
+   double RANSACThreshold = 5.0;
 };
 
 #endif // DROPLETANALYZER_H
