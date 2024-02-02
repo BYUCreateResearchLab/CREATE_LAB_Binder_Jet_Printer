@@ -47,11 +47,32 @@ void PrintThread::stop()
     mutex.unlock();
 }
 
+void PrintThread::pause()
+{
+    mutex.lock();
+    paused = true;
+    mutex.unlock();
+}
+
+void PrintThread::resume()
+{
+    mutex.lock();
+    paused = false;
+    mutex.unlock();
+    waitCondition.wakeAll();
+}
+
 void PrintThread::print_gcmds(bool print)
 {
     mutex.lock();
     mPrintGCmds = print;
     mutex.unlock();
+}
+
+bool PrintThread::is_paused()
+{
+    const QMutexLocker locker(&mutex);
+    return paused;
 }
 
 void PrintThread::execute_command(std::stringstream &ss)
@@ -89,6 +110,11 @@ void PrintThread::run()
     {
         while (queue.size() > 0)
         {
+            if (paused) // pause until resume is called
+            {
+                QMutexLocker locker(&mutex);
+                waitCondition.wait(&mutex);
+            }
             if (!running) // If the queue is externally stopped
             {
                 clear_queue();

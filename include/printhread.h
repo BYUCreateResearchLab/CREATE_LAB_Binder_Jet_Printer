@@ -34,7 +34,10 @@ public:
     void setup(DMC4080 *printer);
     void execute_command(std::stringstream &ss);
     void stop();
+    void pause();
+    void resume();
     void print_gcmds(bool print);
+    bool is_paused();
 
 private:
     void run() override;
@@ -54,6 +57,7 @@ private:
     QWaitCondition waitCondition;
     bool mQuit {false};
     bool running {true};
+    bool paused {false};
 
     bool mPrintGCmds {false};
 };

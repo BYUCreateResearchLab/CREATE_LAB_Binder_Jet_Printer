@@ -44,6 +44,7 @@ LinePrintWidget::LinePrintWidget(Printer *printer, QWidget *parent) :
 
     connect(ui->stopPrintButton, &QAbstractButton::clicked, this, &LinePrintWidget::stop_print_button_pressed);
     connect(ui->startPrint, &QAbstractButton::clicked, this, &LinePrintWidget::print_lines_dmc);
+    connect(ui->pausePrintButton, &QAbstractButton::clicked, this, &LinePrintWidget::pause_print_button_pressed);
 
     // get dmc code from QRC
     dmcLinePrintCode = read_dmc_code(":/src/dmc/Line_Print.dmc");
@@ -335,11 +336,14 @@ void LinePrintWidget::print_lines_dmc()
 
     s << CMD::display_message("Print Complete");
 
+    qDebug().noquote() << QString::fromStdString(s.str());
+
     emit disable_user_input();
     emit jet_turned_on(); // jet is turned on once print is complete
     emit execute_command(s);
     printIsRunning_ = true;
     ui->stopPrintButton->setEnabled(true);
+    ui->pausePrintButton->setEnabled(true);
     connect(mPrintThread, &PrintThread::ended, this, &LinePrintWidget::when_line_print_completed);
 
     return;
@@ -350,6 +354,7 @@ void LinePrintWidget::when_line_print_completed()
     disconnect(mPrintThread, &PrintThread::ended, this, &LinePrintWidget::when_line_print_completed);
     printIsRunning_ = false;
     ui->stopPrintButton->setEnabled(false);
+    ui->pausePrintButton->setEnabled(false);
 }
 
 void LinePrintWidget::stop_print_button_pressed()
@@ -358,8 +363,22 @@ void LinePrintWidget::stop_print_button_pressed()
     {
         emit stop_print_and_thread();
         emit jet_turned_off();
+        if (mPrintThread->is_paused()) {mPrintThread->resume();}
         ui->stopPrintButton->setEnabled(false);
         printIsRunning_ = false;
+    }
+}
+
+void LinePrintWidget::pause_print_button_pressed()
+{
+    if (!mPrintThread->is_paused())
+    {
+        mPrintThread->pause();
+        ui->pausePrintButton->setText("Resume Print");
+    }
+    else
+    {
+        mPrintThread->resume();
     }
 }
 
