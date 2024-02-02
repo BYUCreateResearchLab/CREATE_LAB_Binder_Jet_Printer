@@ -48,7 +48,6 @@ private slots:
     void print_lines_dmc();
     void when_line_print_completed();
     void stop_print_button_pressed();
-    void pause_print_button_pressed();
     QString read_dmc_code(QString filename);
 
 private:

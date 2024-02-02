@@ -433,16 +433,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pausePrintButton">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Pause Print</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="stopPrintButton">
        <property name="enabled">
         <bool>false</bool>
