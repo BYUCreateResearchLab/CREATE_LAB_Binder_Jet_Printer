@@ -91,7 +91,7 @@ private:
     int m_numCapturedFrames{0};   // Keeps track of the current number of frames captured during video capture
     int m_currentStrobeOffset{-1}; // -1 means that a strobe sweep hasn't started
 
-    int m_AOIWidth{680};
+    int m_AOIWidth{1024}; // width of droplet camera image (native resolution is 2048 x 2048)
 
     bool m_isJetting {false};
     bool m_cameraIsConnected {false};

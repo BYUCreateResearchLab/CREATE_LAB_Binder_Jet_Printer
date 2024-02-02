@@ -235,7 +235,7 @@ void DropletObservationWidget::set_settings()
 {
     // QRect(x1,y1,x2,y2)
     // TODO: get rid of magic numbers
-    m_Camera->aoi.setRect(QRect(680, 0, m_AOIWidth, 2048)); // AOIwidth must be a multiple of 8 for AVI capture
+    m_Camera->aoi.setRect(QRect(0, 0, m_AOIWidth, 2048)); // AOIwidth must be a multiple of 8 for AVI capture
     double fps(m_cameraFrameRate);
     //double exposure_milliseconds{0}; // 0 sets the max possible exposure
     double newFPS{-1.0};
