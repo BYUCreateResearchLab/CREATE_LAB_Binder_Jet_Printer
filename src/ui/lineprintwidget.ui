@@ -18,7 +18,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="0,0,0,0,0,0,0,0,0,0,0,0,0">
+    <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
      <property name="spacing">
       <number>6</number>
      </property>
@@ -168,6 +168,29 @@
      </item>
      <item>
       <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="useJDriveFreqCheckBox">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When enabled, JetDrive sets the frequency. Printer only sends one pulse to the JetDrive when it should start printing, and it drops the correct number of drops at the specified frequency. This allows for the printer to print at any frequency at an interval of 1us inter-arrival time instead of factors and multiples of 512 that the motion controller supports.&lt;/p&gt;&lt;p&gt;NOTE: the maximum number of drops the JetDrive can drop from one pulse is 999. I know this will give someone problems so I'm sorry&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Use JDrive Frequency</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>

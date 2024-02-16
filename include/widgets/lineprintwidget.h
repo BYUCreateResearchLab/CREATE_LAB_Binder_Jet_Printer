@@ -76,6 +76,7 @@ private:
     QPen lineTravelPen = QPen(Qt::red, 0.1, Qt::DashLine, Qt::RoundCap);
 
     QString dmcLinePrintCode;
+    QString dmcLinePrintCode_JetFreq;
 
 };
 

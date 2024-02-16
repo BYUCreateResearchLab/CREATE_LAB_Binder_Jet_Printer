@@ -47,6 +47,7 @@ LinePrintWidget::LinePrintWidget(Printer *printer, QWidget *parent) :
 
     // get dmc code from QRC
     dmcLinePrintCode = read_dmc_code(":/src/dmc/Line_Print.dmc");
+    dmcLinePrintCode_JetFreq = read_dmc_code(":/src/dmc/Line_Print_Jet_Freq.dmc");
 }
 
 LinePrintWidget::~LinePrintWidget()
@@ -304,7 +305,15 @@ void LinePrintWidget::print_lines_dmc()
 {
     std::stringstream s;
 
-    QByteArray ba = dmcLinePrintCode.toLocal8Bit();
+    QByteArray ba;
+    if (ui->useJDriveFreqCheckBox->isChecked())
+    {
+        ba = dmcLinePrintCode_JetFreq.toLocal8Bit();
+    }
+    else
+    {
+        ba = dmcLinePrintCode.toLocal8Bit();
+    }
     const char *dmcCodeC_Str = ba.data();
 
     if (mPrinter->mcu->g)

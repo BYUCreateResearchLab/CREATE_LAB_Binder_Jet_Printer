@@ -1,0 +1,123 @@
+## Line printing DMC program on the BJ system
+## Jacob Lawrence
+// the lines above (two lines of ## with a space after) are needed
+//     for preprocessor features to work
+##option "--min 4"
+// force max compression
+REM****************************************************************************
+// NOTES:
+// labels can be up to 7 characters
+// variables can be up to 8 characters
+REM****************************************************************************
+#AUTO
+BXX=2
+BXY=2
+EN
+#BEGIN
+// Define variables
+yCnt = 800;  // encoder counts per mm for the y-axis
+xCnt = 1000; // encoder counts per mm for the x-axis
+DM Data[11]; // reserve array for getting info on line set to print
+// Note that array names are limited to 6 characters
+//      when they are going to be passed to a subroutine.
+JS #fill("Data", 0);     // fill Data array with 0's
+// Wait for PC to set begin bit (Data[0])
+#DATA_WT
+#LOOP
+WT 100
+begin = Data[0]; // get begin bit from PC
+JP #LOOP, begin=0; // loop while waiting for begin bit
+// end program if the computer sets the first value in the array to 2
+// continue if the computer sets the first value to 1
+JP #STOP, begin=2
+JS #PRINT
+Data[0] = 0; // reinitialize begin bit
+// loop back to DATA_WT ot await next input from computer
+// have the computer look for this value set to 0 to know when to act next
+JP #DATA_WT
+//****************************************************************************
+#STOP
+// move to default position
+MG "CMD JET_FREQ 1024"; // reset jetting frequency
+MG "CMD JET_NDROPS 1"; // reset num drops
+SPX = 60 * xCnt
+PAX = 150 * xCnt
+JGY = 40 * yCnt
+BGXY
+AM
+// have the computer tell the nozzle to start jetting again
+// End routine here
+EN
+//****************************************************************************
+#PRINT // print sequence
+// place array data in variables
+strtX = Data[1];  // X Axis start position (counts)
+strtY = Data[2];  // Y Axis start position (counts)
+numLs = Data[3];  // number of lines to print (#)
+lSpce = Data[4];  // line spacing (counts)
+lDist = Data[5];  // length of line to print (counts)
+dSpce = Data[6];  // jetting droplet spacing (counts)
+jetHz = Data[7];  // jetting frequency (Hz)
+pVelc = Data[8];  // print speed (counts/sec)
+pAccl = Data[9];  // print acceleration (counts/sec^2)
+index = Data[10]; // index for which line is being printing (#)
+
+// calculate number of drops per line
+dropCnt = lDist / dSpce
+
+MG "CMD JET_FREQ", jetHz{Z5.0}; // send command to set jetting frequency
+MG "CMD JET_NDROPS", dropCnt{Z3.0}; // send command to set number of drops to jet
+
+// print logic goes here
+
+// set accelerations and decelerations
+ACX = pAccl
+DCX = pAccl
+ACY = 400 * yCnt
+DCY = 400 * yCnt
+
+// configure jetting
+SHH
+ACH = 1073740800
+DCH = 1073740800
+// calculate acceleration distance
+accT = pVelc / pAccl // acceleration time 
+accD = accT * accT * pAccl * 0.5 // acceleration dist (in counts)
+REM****************************************************************************
+// for each line to be printed in the set
+// precalculate variables for SPEED!
+jOffD = accD + lDist; // distance after move start to turn off jetting
+#PRNTL 
+SPX = 80 * xCnt
+SPY = 60 * yCnt
+// move to initial start position
+PAX = (strtX - accD)
+PAY = strtY
+BGXY
+AM
+// print line
+WT 100 // wait for 100 ms before printing the line
+SPX = pVelc // set print speed
+//JGH = jetHz // set jetting frequency
+PRH = 1 // only give one pulse to jetDrive
+PRX = lDist + (2.0*accD)
+BGX
+// enable jetting after acceleration
+ADX = accD
+BGH // begin jetting move (jog)
+// disable jetting after line printed
+// ADX = jOffD
+// STH // stop jetting
+AM
+strtY = strtY + lSpce
+index = index+1
+JP #PRNTL, index<numLs // jump to next line or end
+EN // end subroutine
+//*****************************************************************************
+#fill;                      // simple subroutine to fill array with values
+^c= 0;                      // use local scope ^c for iterator
+#fill_h;                    // fill loop
+^a[^c]= ^b;                 // set each value of the array
+^c= ^c+1
+JP #fill_h,(^c<^a[-1]);     // keep setting array values for length of array
+EN

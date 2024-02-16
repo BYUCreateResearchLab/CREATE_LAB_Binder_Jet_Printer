@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>src/dmc/Line_Print.dmc</file>
+        <file>src/dmc/Line_Print_Jet_Freq.dmc</file>
     </qresource>
 </RCC>
