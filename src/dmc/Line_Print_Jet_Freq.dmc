@@ -2,7 +2,7 @@
 ## Jacob Lawrence
 // the lines above (two lines of ## with a space after) are needed
 //     for preprocessor features to work
-##option "--min 4"
+// ##option "--min 4"
 // force max compression
 REM****************************************************************************
 // NOTES:
@@ -93,7 +93,7 @@ MG "CMD JET_FREQ", jetHz{Z5.0}; // send command to set jetting frequency
 SPX = 80 * xCnt
 SPY = 60 * yCnt
 // move to initial start position
-PAX = (strtX - accD)
+PAX = strtX
 PAY = strtY
 BGXY
 AM
@@ -101,27 +101,24 @@ AM
 WT 100 // wait for 100 ms before printing the line
 PRH = 1 // only give one pulse to jetDrive
 
-cntsPSEC = 2048; // counts per second (get from controller??)
-//    P      V      T
-dropLow = 20;
-dropHigh = 30;
-vi = dropLow * jetHz / 1000 * xCnt;
-vf = dropHigh * jetHz / 1000 * xCnt;
-tf = lDist / (0.5 * (vf - vi));
-PVX = accD, vi, accT * cntsPSEC;
-PVX = lDist, vf, tf * cntsPSEC;
-PVX = accD, 0, accT * cntsPSEC;
-PVX = ,,0;
-AT 0
-BTX
-AT accT
-BGH // begin jetting move
+// dropLow = 20;
+dropHigh = dSpce
+vi = 0
+vf = dropHigh * jetHz / 1000;
+acVal = @RND[(((vf*vf) - (vi*vi)) / (2 * (lDist))) * xCnt * xCnt];
 
+MG "acVal", acVal{Z10.0};
+ACX = acVal;
+JGX = pVelc
+BGXH
+ADX = lDist
+STX
 
 AM
 strtY = strtY + lSpce
 index = index+1
 pri = pri - priSpace
+ACX = pAccl
 JP #PRNTL, index<numLs // jump to next line or end
 EN // end subroutine
 //*****************************************************************************
