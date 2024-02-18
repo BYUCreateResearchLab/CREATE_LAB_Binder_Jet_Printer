@@ -50,23 +50,23 @@ AM
 EN
 //****************************************************************************
 #PRINT // print sequence
-minPRI = 0.125;
-maxPRI = 2.0;
 // place array data in variables
 strtX = Data[1];  // X Axis start position (counts)
 strtY = Data[2];  // Y Axis start position (counts)
-numLs = 30
+numLs = Data[3];  // number of lines to print (#)
 lSpce = Data[4];  // line spacing (counts)
 lDist = Data[5];  // length of line to print (counts)
 dSpce = Data[6];  // jetting droplet spacing (counts)
-// jetHz = 1.0 / maxPRI * 1000.0;  // jetting frequency (Hz)
+jetHz = Data[7];  // jetting frequency (Hz)
 pVelc = Data[8];  // print speed (counts/sec)
 pAccl = Data[9];  // print acceleration (counts/sec^2)
 index = Data[10]; // index for which line is being printing (#)
 
-MG "CMD JET_NDROPS 999"; // send command to set number of drops to jet
-priSpace = (maxPRI - minPRI) / (numLs - 1)
-pri = maxPRI
+// calculate number of drops per line
+dropCnt = lDist / dSpce
+
+MG "CMD JET_FREQ", jetHz{Z5.0}; // send command to set jetting frequency
+MG "CMD JET_NDROPS", dropCnt{Z3.0}; // send command to set number of drops to jet
 
 // print logic goes here
 
@@ -87,9 +87,7 @@ REM****************************************************************************
 // for each line to be printed in the set
 // precalculate variables for SPEED!
 jOffD = accD + lDist; // distance after move start to turn off jetting
-#PRNTL
-jetHz = 1.0 / pri * 1000.0; // calculate jetting frequency
-MG "CMD JET_FREQ", jetHz{Z5.0}; // send command to set jetting frequency 
+#PRNTL 
 SPX = 80 * xCnt
 SPY = 60 * yCnt
 // move to initial start position
@@ -99,29 +97,20 @@ BGXY
 AM
 // print line
 WT 100 // wait for 100 ms before printing the line
+SPX = pVelc // set print speed
+//JGH = jetHz // set jetting frequency
 PRH = 1 // only give one pulse to jetDrive
-
-cntsPSEC = 2048; // counts per second (get from controller??)
-//    P      V      T
-dropLow = 20;
-dropHigh = 30;
-vi = dropLow * jetHz / 1000 * xCnt;
-vf = dropHigh * jetHz / 1000 * xCnt;
-tf = lDist / (0.5 * (vf - vi));
-PVX = accD, vi, accT * cntsPSEC;
-PVX = lDist, vf, tf * cntsPSEC;
-PVX = accD, 0, accT * cntsPSEC;
-PVX = ,,0;
-AT 0
-BTX
-AT accT
-BGH // begin jetting move
-
-
+PRX = lDist + (2.0*accD)
+BGX
+// enable jetting after acceleration
+ADX = accD
+BGH // begin jetting move (jog)
+// disable jetting after line printed
+// ADX = jOffD
+// STH // stop jetting
 AM
 strtY = strtY + lSpce
 index = index+1
-pri = pri - priSpace
 JP #PRNTL, index<numLs // jump to next line or end
 EN // end subroutine
 //*****************************************************************************
