@@ -319,8 +319,7 @@ void LinePrintWidget::print_lines_dmc()
     if (mPrinter->mcu->g)
     {
         // upload program with up to full compression enabled on the preprocessor
-//        if (GProgramDownload(mPrinter->mcu->g, dmcCodeC_Str, "--max 4") == G_NO_ERROR)
-        if (GProgramDownload(mPrinter->mcu->g, dmcCodeC_Str, "--max 1") == G_NO_ERROR)
+        if (GProgramDownload(mPrinter->mcu->g, dmcCodeC_Str, "--max 4") == G_NO_ERROR)
             qDebug() << "Program Downloaded with compression level 4";
         else
         {

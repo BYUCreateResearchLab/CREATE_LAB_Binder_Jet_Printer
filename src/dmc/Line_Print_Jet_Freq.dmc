@@ -2,7 +2,7 @@
 ## Jacob Lawrence
 // the lines above (two lines of ## with a space after) are needed
 //     for preprocessor features to work
-// ##option "--min 4"
+##option "--min 4"
 // force max compression
 REM****************************************************************************
 // NOTES:
@@ -55,12 +55,13 @@ maxPRI = 2.0;
 // place array data in variables
 strtX = Data[1];  // X Axis start position (counts)
 strtY = Data[2];  // Y Axis start position (counts)
-numLs = 30
+numLs = Data[3];  // number of lines to print
 lSpce = Data[4];  // line spacing (counts)
 lDist = Data[5];  // length of line to print (counts)
-dSpce = Data[6];  // jetting droplet spacing (counts)
+dSpceH = Data[6];  // jetting droplet spacing (counts)
+dSpceL = Data[7] * xCnt;  // Low droplet spacing (counts)
 // jetHz = 1.0 / maxPRI * 1000.0;  // jetting frequency (Hz)
-pVelc = Data[8];  // print speed (counts/sec)
+//pVelc = Data[8];  // print speed (counts/sec)
 pAccl = Data[9];  // print acceleration (counts/sec^2)
 index = Data[10]; // index for which line is being printing (#)
 
@@ -81,38 +82,45 @@ SHH
 ACH = 1073740800
 DCH = 1073740800
 // calculate acceleration distance
-accT = pVelc / pAccl // acceleration time 
-accD = accT * accT * pAccl * 0.5 // acceleration dist (in counts)
 REM****************************************************************************
 // for each line to be printed in the set
-// precalculate variables for SPEED!
-jOffD = accD + lDist; // distance after move start to turn off jetting
 #PRNTL
 jetHz = 1.0 / pri * 1000.0; // calculate jetting frequency
 MG "CMD JET_FREQ", jetHz{Z5.0}; // send command to set jetting frequency 
+
+vi = dSpceL * jetHz / 1000 * xCnt; // counts/s
+vf = dSpceH * jetHz / 1000 * xCnt; // counts/s
+
+vAVG = (vi + vf) / 2; // counts/s
+vDIF = vf - vi; // counts/s
+
+tPrint = lDist / vAVG; // time to print line (in seconds)
+acVal = vDIF / tPrint; // acceleration distance (counts/s^2)
+tTot = vf / acVal; // total time to print line (in seconds)
+accT = tTot - tPrint; // time to accelerate (in seconds)
+accD = 0.5 * acVal * accT * accT; // acceleration distance (in counts)
+
 SPX = 80 * xCnt
 SPY = 60 * yCnt
 // move to initial start position
-PAX = strtX
+PAX = (strtX - accD) // offset by acceleration distance
 PAY = strtY
 BGXY
 AM
 // print line
-WT 100 // wait for 100 ms before printing the line
+WT 500 // wait for 500 ms before printing the line
 PRH = 1 // only give one pulse to jetDrive
 
-// dropLow = 20;
-dropHigh = dSpce
-vi = 0
-vf = dropHigh * jetHz / 1000;
-acVal = @RND[(((vf*vf) - (vi*vi)) / (2 * (lDist))) * xCnt * xCnt];
-
 MG "acVal", acVal{Z10.0};
-ACX = acVal;
-JGX = pVelc
-BGXH
-ADX = lDist
-STX
+ACX = @RND[acVal];
+JGX = vf
+BGX
+
+ADX = accD
+BGH // start jet after accelerating up to speed
+
+ADX = accD + lDist
+STX // stop after printing line
 
 AM
 strtY = strtY + lSpce
