@@ -58,14 +58,14 @@ strtY = Data[2];  // Y Axis start position (counts)
 numLs = Data[3];  // number of lines to print
 lSpce = Data[4];  // line spacing (counts)
 lDist = Data[5];  // length of line to print (counts)
-dSpceH = Data[6];  // jetting droplet spacing (counts)
-dSpceL = Data[7] * xCnt;  // Low droplet spacing (counts)
+dSpceH = Data[6];  // jetting droplet spacing (um)
+dSpceL = Data[7];  // Low droplet spacing (um)
 // jetHz = 1.0 / maxPRI * 1000.0;  // jetting frequency (Hz)
 //pVelc = Data[8];  // print speed (counts/sec)
 pAccl = Data[9];  // print acceleration (counts/sec^2)
 index = Data[10]; // index for which line is being printing (#)
 
-MG "CMD JET_NDROPS 999"; // send command to set number of drops to jet
+MG "CMD JET_NDROPS 400"; // send command to set number of drops to jet
 priSpace = (maxPRI - minPRI) / (numLs - 1)
 pri = maxPRI
 
