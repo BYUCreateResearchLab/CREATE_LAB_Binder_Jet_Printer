@@ -50,24 +50,23 @@ AM
 EN
 //****************************************************************************
 #PRINT // print sequence
-minFreq = 500;
-maxFreq = 8000;
 // place array data in variables
 strtX = Data[1];  // X Axis start position (counts)
 strtY = Data[2];  // Y Axis start position (counts)
-numLs = Data[3];  // number of lines to print
+numLs = Data[3];  // number of lines to print (#)
 lSpce = Data[4];  // line spacing (counts)
 lDist = Data[5];  // length of line to print (counts)
-dSpceH = Data[6];  // jetting droplet spacing (um)
-dSpceL = Data[7];  // Low droplet spacing (um) (using jetFreq spot)
-// jetHz = 1.0 / maxPRI * 1000.0;  // jetting frequency (Hz)
-//pVelc = Data[8];  // print speed (counts/sec)
+dSpce = Data[6];  // jetting droplet spacing (counts)
+jetHz = Data[7];  // jetting frequency (Hz)
+pVelc = Data[8];  // print speed (counts/sec)
 pAccl = Data[9];  // print acceleration (counts/sec^2)
 index = Data[10]; // index for which line is being printing (#)
 
-MG "CMD JET_NDROPS 999"; // send command to set number of drops to jet
-freqSpce = (maxFreq - minFreq) / (numLs - 1)
-jetHz = minFreq
+// calculate number of drops per line
+dropCnt = lDist / dSpce
+
+MG "CMD JET_FREQ", jetHz{Z5.0}; // send command to set jetting frequency
+MG "CMD JET_NDROPS", dropCnt{Z3.0}; // send command to set number of drops to jet
 
 // print logic goes here
 
@@ -82,72 +81,36 @@ SHH
 ACH = 1073740800
 DCH = 1073740800
 // calculate acceleration distance
+accT = pVelc / pAccl // acceleration time 
+accD = accT * accT * pAccl * 0.5 // acceleration dist (in counts)
 REM****************************************************************************
 // for each line to be printed in the set
-#PRNTL
-MG "CMD JET_FREQ", jetHz{Z5.0}; // send command to set jetting frequency 
-
-vi = dSpceL * jetHz / 1000 * xCnt; // counts/s
-vf = dSpceH * jetHz / 1000 * xCnt; // counts/s
-
-vAVG = (vi + vf) / 2.0; // counts/s
-vDIF = vf - vi; // counts/s
-
-tPrint = lDist / vAVG; // time to print line (in seconds)
-acVal = vDIF / tPrint; // acceleration distance (counts/s^2)
-tTot = vf / acVal; // total time to print line (in seconds)
-accT = tTot - tPrint; // time to accelerate (in seconds)
-accD = 0.5 * acVal * accT * accT; // acceleration distance (in counts)
-
+// precalculate variables for SPEED!
+jOffD = accD + lDist; // distance after move start to turn off jetting
+#PRNTL 
 SPX = 80 * xCnt
 SPY = 60 * yCnt
 // move to initial start position
-PAX = (strtX - accD) // offset by acceleration distance
+PAX = (strtX - accD)
 PAY = strtY
 BGXY
 AM
 // print line
-WT 500 // wait for 500 ms before printing the line
+WT 100 // wait for 100 ms before printing the line
+SPX = pVelc // set print speed
+//JGH = jetHz // set jetting frequency
 PRH = 1 // only give one pulse to jetDrive
-
-toSAMP = 1000.0 / (_TM/1024)
-updR = 100 // update rate
-numSegs = @INT[tTot * toSAMP / updR] + 1 // add an extra segment for safety
-tUpd = updR / toSAMP // seconds per segment
-n = 0
-pPrev = 0 // counts
-#fillp // fill PVT data
-tCur = n*tUpd
-pNew = 0.5 * acVal * tCur * tCur // counts
-v = acVal * tCur // counts/s
-dx = pNew - pPrev // counts
-PAX = dx, v, updR
-pPrev = pNew
-n = n + 1
-JP #fillp, n<numSegs
-
-// slow to stop
-tDec = v / pAccl // time to decelerate
-distD = 0.5 * (v + 0) * tDec // samples
-tDSamp = @INT[tDec * toSAMP]
-IF(tDSamp>2048); // set max sample size of 2048
-    tDSamp = 2048;
-ENDIF
-PAX = distD, 0, tDSamp
-
-// end PVT
-PAX = 0,0,0
-
-AT 0 // set reference time
-BTX;
-AT @INT[accT * 1000] // wait to start printing (s -> milliseconds)
-BGH // start jetting
-
-
+PRX = lDist + (2.0*accD)
+BGX
+// enable jetting after acceleration
+ADX = accD
+BGH // begin jetting move (jog)
+// disable jetting after line printed
+// ADX = jOffD
+// STH // stop jetting
 AM
 strtY = strtY + lSpce
-index = index+1 // increment index
-jetHz = jetHz + freqSpce // increment jetting frequency
+index = index+1
 JP #PRNTL, index<numLs // jump to next line or end
 EN // end subroutine
 //*****************************************************************************
