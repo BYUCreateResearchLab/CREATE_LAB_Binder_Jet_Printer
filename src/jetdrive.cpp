@@ -208,7 +208,7 @@ void Controller::set_external_trigger()
     if (jetParams.fSource != 1)
     {
         jetParams.fSource = 1;
-        write(cmdBuilder->build(CMD::CONTMODE, jetParams));
+        write(cmdBuilder->build(CMD::SOURCE, jetParams));
     }
 }
 
@@ -218,7 +218,7 @@ void Controller::set_internal_trigger()
     if (jetParams.fSource != 0)
     {
         jetParams.fSource = 0;
-        write(cmdBuilder->build(CMD::CONTMODE, jetParams));
+        write(cmdBuilder->build(CMD::SOURCE, jetParams));
     }
 }
 
