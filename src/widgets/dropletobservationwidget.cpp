@@ -41,6 +41,7 @@ DropletObservationWidget::DropletObservationWidget(Printer *printer, QWidget *pa
     connect(ui->sweepButton, &QPushButton::clicked, this, &DropletObservationWidget::start_strobe_sweep);
     connect(ui->TriggerJetButton, &QPushButton::clicked, this, &DropletObservationWidget::trigger_jet_clicked);
     connect(ui->jetForMinutesButton, &QPushButton::clicked, this, &DropletObservationWidget::jet_for_three_minutes);
+    connect(ui->jetWithJetDriveButton, &QPushButton::clicked, this, &DropletObservationWidget::jet_with_jet_drive_button_clicked);
 
     // enable buttons for droplet analysis after video capture has completed
     connect(this, &DropletObservationWidget::video_capture_complete, this, [this](){
@@ -384,6 +385,23 @@ void DropletObservationWidget::update_progress_bar()
 {
     int progress = m_JetVolumeTimer->interval() - m_JetVolumeTimer->remainingTime();
     ui->jetProgressBar->setValue(progress);
+}
+
+void DropletObservationWidget::jet_with_jet_drive_button_clicked()
+{
+    if (ui->jetWithJetDriveButton->isChecked())
+    {
+        ui->jetWithJetDriveButton->setText("Stop Jetting");
+        mPrinter->jetDrive->set_num_drops_per_trigger(1); // set num drops 1
+        mPrinter->jetDrive->set_continuous_mode_frequency(ui->jettingFreqSpinBox->value()); // set frequency
+        mPrinter->jetDrive->start_continuous_jetting(); // sets continuous, internal, and sends soft trigger
+    }
+    else
+    {
+        ui->jetWithJetDriveButton->setText("Jet with JetDrive Continuous");
+        mPrinter->jetDrive->stop_continuous_jetting();
+        mPrinter->jetDrive->set_external_trigger(); // set external trigger
+    }
 }
 
 void DropletObservationWidget::start_strobe_sweep()

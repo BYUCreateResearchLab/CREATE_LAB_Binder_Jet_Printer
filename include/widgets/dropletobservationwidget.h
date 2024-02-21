@@ -65,6 +65,7 @@ private slots:
     void jet_for_three_minutes();
     void end_jet_timer();
     void update_progress_bar();
+    void jet_with_jet_drive_button_clicked();
 
 private:
     Ui::DropletObservationWidget *ui;
