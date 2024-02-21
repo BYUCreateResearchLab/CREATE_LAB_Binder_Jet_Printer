@@ -345,15 +345,20 @@ void DropletObservationWidget::jet_for_three_minutes()
 
     if (!m_isJettingFor3Minutes)
     {
-        std::stringstream s;
-        if (!m_isJetting)
-        {
-            s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
-            s << CMD::set_jog(Axis::Jet, jettingFrequency);
-            s << CMD::begin_motion(Axis::Jet);
-            emit execute_command(s);
-            jetting_was_turned_on();
-        }
+//        std::stringstream s;
+//        if (!m_isJetting)
+//        {
+//            s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
+//            s << CMD::set_jog(Axis::Jet, jettingFrequency);
+//            s << CMD::begin_motion(Axis::Jet);
+//            emit execute_command(s);
+//            jetting_was_turned_on();
+//        }
+
+        ui->jetWithJetDriveButton->setText("Stop Jetting");
+        mPrinter->jetDrive->set_num_drops_per_trigger(1); // set num drops 1
+        mPrinter->jetDrive->set_continuous_mode_frequency(ui->jettingFreqSpinBox->value()); // set frequency
+        mPrinter->jetDrive->start_continuous_jetting(); // sets continuous, internal, and sends soft trigger
 
         emit print_to_output_window("Starting 3 minute timer");
         m_isJettingFor3Minutes = true;
@@ -367,11 +372,18 @@ void DropletObservationWidget::jet_for_three_minutes()
 
 void DropletObservationWidget::end_jet_timer()
 {
-    std::stringstream s;
-    s << CMD::stop_motion(Axis::Jet);
-    emit execute_command(s);
-    jetting_was_turned_off();
+//    std::stringstream s;
+//    s << CMD::stop_motion(Axis::Jet);
+//    emit execute_command(s);
+//    jetting_was_turned_off();
 
+    ui->jetWithJetDriveButton->setText("Jet with JetDrive Continuous");
+    mPrinter->jetDrive->stop_continuous_jetting();
+    mPrinter->jetDrive->set_external_trigger(); // set external trigger
+
+
+
+    ui->jetWithJetDriveButton->setEnabled(true);
     ui->TriggerJetButton->setEnabled(true);
     m_JetVolumeTimer->stop();
     m_ProgressBarTimer->stop();

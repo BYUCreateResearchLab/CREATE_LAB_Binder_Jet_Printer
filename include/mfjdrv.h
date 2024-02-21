@@ -45,13 +45,13 @@ enum class CMD
     POLLSTATUS   = 0x02,
     DROPS        = 0x03,
     CONTMODE     = 0x04,
-    FREQUENCY    = 0x05,
+    FREQUENCY    = 0x05, // don't use
     PULSE        = 0x06,
     STROBEDIV    = 0x07,
     SOURCE       = 0x08,
     SOFTTRIGGER  = 0x09,
     STROBEENABLE = 0x10,
-    LOWFREQ      = 0x11,
+    LOWFREQ      = 0x11, // don't use
     FULLFREQ     = 0x12,
     STROBEDELAY  = 0x13,
     DUMPINPUT    = 0x60,
