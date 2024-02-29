@@ -3,6 +3,7 @@
 #include "mister.h"
 #include "jetdrive.h"
 #include <QDebug>
+#include <QRegularExpression>
 
 GMessageHandler::GMessageHandler(Printer* printer, QObject *parent) :
     QObject(parent),
@@ -55,7 +56,9 @@ void GMessageHandler::handle_message(QString message)
     else if (message.contains("CMD MICRO_CAP"))
     {
         int startIndex = message.indexOf("MICRO_CAP") + strlen("MICRO_CAP") + 1; // +1 to skip the space
-        QString valueString = message.mid(startIndex, 2);
+        QString valueString = message.mid(startIndex);
+        valueString.remove(QRegularExpression("\\s")); // remove spaces
+        valueString.remove(QRegularExpression("[\\n\\r]")); // remove new lines and carriage returns
         emit capture_microscope_image(valueString);
     }
 

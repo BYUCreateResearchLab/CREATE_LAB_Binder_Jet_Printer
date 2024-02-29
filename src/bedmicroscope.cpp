@@ -43,3 +43,9 @@ QImage BedMicroscope::get_frame()
         return image;
     }
 }
+
+void BedMicroscope::save_image(const QString &filename)
+{
+    get_frame();
+    cv::imwrite(filename.toStdString(), frame);
+}

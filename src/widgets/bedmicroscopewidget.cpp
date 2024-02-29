@@ -198,10 +198,13 @@ void BedMicroscopeWidget::capture_images()
     s << "BG XY;\n"; // start motion
     s << "AM XY;\n"; // after motion complete
     s << "WT 100;\n"; // wait for 0.1 seconds
-    s << "MG \"CMD MICRO_CAP \" {^(97+nx)}, (ny+1){Z1.0}\n"; // request image
+    s << "nxStr = (97+nx)*$1000000;\n";
+    s << "MG \"CMD MICRO_CAP \", nxStr{S1}, (ny+1){Z2.0}\n"; // request image
+//    s << "MG \"CMD MICRO_CAP \" {^(97+nx)}, (ny+1){Z1.0}\n"; // request image
     s << "WT 1000;\n"; // wait for 1 second
     s << "nx = nx + 1\n";
     s << "JP #loopX, (nx < " << ui->numXSpinBox->value() << ");\n";
+    s << "nx = 0;\n"; // reset x variable
     s << "ny = ny + 1\n";
     s << "JP #loopY, (ny < " << ui->numYSpinBox->value() << ");\n";
     s << "EN;\n";
@@ -218,10 +221,11 @@ void BedMicroscopeWidget::capture_images()
         int xPos = CMD::detail::mm2cnts(ui->xStartPositionSpinBox->value() + (i * ui->xSpacingSpinBox->value()), Axis::X);
         s << "xPos[" << i << "] = " << xPos << ";\n";
     }
+    s << "\n";
     // populate y-values
     for (int i = 0; i < ui->numYSpinBox->value(); ++i)
     {
-        int yPos = CMD::detail::mm2cnts(ui->yStartPositionSpinBox->value() - (i * ui->ySpacingSpinBox->value()), Axis::Y);
+        int yPos = CMD::detail::mm2cnts(ui->yStartPositionSpinBox->value() + (i * ui->ySpacingSpinBox->value()), Axis::Y);
         s << "yPos[" << i << "] = " << yPos << ";\n";
     }
     s << "EN;\n"; // end subroutine
@@ -253,7 +257,8 @@ void BedMicroscopeWidget::export_image(const QString &position)
 {
     int bedID = ui->bedIDSpinBox->value();
     QString fileName = QString("%1/%2_%3.png").arg(saveFolderPath).arg(QString::number(bedID).rightJustified(3, '0')).arg(position);
-    ui->imageDisplay->saveCurrentFrame(fileName);
+    mPrinter->bedMicroscope->save_image(fileName);
+//    ui->imageDisplay->saveCurrentFrame(fileName);
 }
 
 #include "bedmicroscopewidget.moc"

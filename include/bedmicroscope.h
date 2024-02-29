@@ -16,6 +16,7 @@ public:
     void disconnect_camera();
     QImage get_frame();
     bool is_connected() { return cap.isOpened(); }
+    void save_image(const QString& filename);
 
 
 private:
