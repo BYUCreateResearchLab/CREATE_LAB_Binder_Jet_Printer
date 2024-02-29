@@ -31,6 +31,7 @@
 #include "jettingwidget.h"
 #include "highspeedlinewidget.h"
 #include "dropletobservationwidget.h"
+#include "bedmicroscopewidget.h"
 
 #include "pcd.h"
 #include "ginterrupthandler.h"
@@ -49,12 +50,14 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     powderSetupWidget        = new PowderSetupWidget(printer);
     highSpeedLineWidget      = new HighSpeedLineWidget(printer);
     dropletObservationWidget = new DropletObservationWidget(printer);
+    bedMicroscopeWidget      = new BedMicroscopeWidget(printer);
 
     // add widgets to tabs on the top bar (tab widget now owns)
     ui->tabWidget->addTab(powderSetupWidget, "Powder Setup");
     ui->tabWidget->addTab(linePrintingWidget, "Line Printing");
     ui->tabWidget->addTab(highSpeedLineWidget, "High-Speed Line Printing");
     ui->tabWidget->addTab(dropletObservationWidget, "Jetting");
+    ui->tabWidget->addTab(bedMicroscopeWidget, "Bed Imaging");
 
     // set fill background for all tab widgets
     for (int i{0}; i < ui->tabWidget->count(); ++i)
@@ -95,6 +98,9 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
 
     messageHandler = new GMessageHandler(printer, this);
     connect(printer->mcu->messagePoller, &GMessagePoller::message, messageHandler, &GMessageHandler::handle_message);
+
+    // export image when printer requests
+    connect(messageHandler, &GMessageHandler::capture_microscope_image, bedMicroscopeWidget, &BedMicroscopeWidget::export_image);
 
 }
 

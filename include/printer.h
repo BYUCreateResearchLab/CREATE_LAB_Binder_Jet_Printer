@@ -80,6 +80,7 @@ namespace PCD { class Controller; }
 namespace JetDrive { class Controller; }
 namespace Mister { class Controller; }
 class DMC4080;
+class BedMicroscope;
 
 // TODO: get rid of these #defines and convert to
 // constants in a namespace or static members
@@ -176,6 +177,7 @@ public:
     JetDrive::Controller *jetDrive {nullptr};
     PCD::Controller *pressureController {nullptr};
     Mister::Controller *mister {nullptr};
+    BedMicroscope *bedMicroscope {nullptr};
 
 
     // TODO:

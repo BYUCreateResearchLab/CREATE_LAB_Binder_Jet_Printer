@@ -43,6 +43,7 @@ set(HEADERS
     include/pcd.h
     include/dmc4080.h
     include/mister.h
+    include/bedmicroscope.h
 )
 
 set(SOURCES
@@ -64,6 +65,7 @@ set(SOURCES
     src/pcd.cpp
     src/dmc4080.cpp
     src/mister.cpp
+    src/bedmicroscope.cpp
 
 )
 
@@ -76,6 +78,7 @@ set(WIDGET_HEADERS
     include/widgets/highspeedlinewidget.h
     include/widgets/dropletobservationwidget.h
     include/widgets/pressurecontrollerwidget.h
+    include/widgets/bedmicroscopewidget.h
 
 )
 
@@ -88,6 +91,7 @@ set(WIDGET_SOURCES
     src/widgets/powdersetupwidget.cpp
     src/widgets/dropletobservationwidget.cpp
     src/widgets/pressurecontrollerwidget.cpp
+    src/widgets/bedmicroscopewidget.cpp
 
 )
 
@@ -102,6 +106,7 @@ set(FORMS
     src/ui/dropletobservationwidget.ui
     src/ui/dropletanalyzerwidget.ui
     src/ui/pressurecontrollerwidget.ui
+    src/ui/bedmicroscopewidget.ui
 
 )
 

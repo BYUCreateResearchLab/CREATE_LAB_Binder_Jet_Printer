@@ -52,6 +52,12 @@ void GMessageHandler::handle_message(QString message)
             qDebug() << "Unable to extract value from received string. CMD JET_NDROPS";
         }
     }
+    else if (message.contains("CMD MICRO_CAP"))
+    {
+        int startIndex = message.indexOf("MICRO_CAP") + strlen("MICRO_CAP") + 1; // +1 to skip the space
+        QString valueString = message.mid(startIndex, 2);
+        emit capture_microscope_image(valueString);
+    }
 
 
     // TODO: I need a way to respond back to the motion controller
