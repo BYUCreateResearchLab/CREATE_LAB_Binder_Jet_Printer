@@ -63,8 +63,8 @@ private:
 
 
     // TODO: put these somewhere better soon!
-    double Printer2NozzleOffsetX{-12.7};
-    double Printer2NozzleOffsetY{-177.75};
+    double Printer2NozzleOffsetX{-12.48};
+    double Printer2NozzleOffsetY{-182.484};
 
 
     std::vector<logType> activeLogTypes = {logType::Error, logType::Status, logType::Standard, logType::Debug};

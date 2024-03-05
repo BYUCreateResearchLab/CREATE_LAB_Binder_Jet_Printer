@@ -197,7 +197,7 @@ void BedMicroscopeWidget::capture_images()
     s << "PAX = xPos[nx];\n"; // move to x position
     s << "BG XY;\n"; // start motion
     s << "AM XY;\n"; // after motion complete
-    s << "WT 100;\n"; // wait for 0.1 seconds
+    s << "WT 500;\n"; // wait for 0.5 seconds
     s << "nxStr = (97+nx)*$1000000;\n";
     s << "MG \"CMD MICRO_CAP \", nxStr{S1}, (ny+1){Z2.0}\n"; // request image
 //    s << "MG \"CMD MICRO_CAP \" {^(97+nx)}, (ny+1){Z1.0}\n"; // request image
