@@ -184,9 +184,9 @@ void BedMicroscopeWidget::capture_images()
 
     s << "#BEGIN;\n";
     s << "JS #store;\n"; // initialize arrays
-    s << "SP " << CMD::detail::mm2cnts(50, Axis::X) << ", " << CMD::detail::mm2cnts(50, Axis::Y) << "\n"; // set speed
-    s << "AC " << CMD::detail::mm2cnts(5000, Axis::X) << ", " << CMD::detail::mm2cnts(5000, Axis::Y) << "\n"; // set acceleration
-    s << "DC " << CMD::detail::mm2cnts(5000, Axis::X) << ", " << CMD::detail::mm2cnts(5000, Axis::Y) << "\n"; // set deceleration
+    s << "SP " << CMD::detail::mm2cnts(50, Axis::X) << ", " << CMD::detail::mm2cnts(30, Axis::Y) << "\n"; // set speed
+    s << "AC " << CMD::detail::mm2cnts(5000, Axis::X) << ", " << CMD::detail::mm2cnts(1000, Axis::Y) << "\n"; // set acceleration
+    s << "DC " << CMD::detail::mm2cnts(5000, Axis::X) << ", " << CMD::detail::mm2cnts(1000, Axis::Y) << "\n"; // set deceleration
     s << "\n";
     s << "nx = 0;\n";
     s << "ny = 0;\n";
