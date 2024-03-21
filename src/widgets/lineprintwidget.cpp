@@ -9,6 +9,7 @@
 #include "printer.h"
 #include "printhread.h"
 #include "dmc4080.h"
+#include "jetdrive.h"
 
 using namespace std;
 
@@ -293,7 +294,6 @@ void LinePrintWidget::print_lines_old()
     //qDebug() << "This took:" << QString::number(timeSpan) << " milliseconds";
 
     emit disable_user_input();
-    emit jet_turned_on(); // jet is turned on once print is complete
     emit execute_command(s);
     printIsRunning_ = true;
     ui->stopPrintButton->setEnabled(true);
@@ -338,14 +338,22 @@ void LinePrintWidget::print_lines_dmc()
     s << line_set_arrays_dmc();
 
     s << "GProgramComplete," << "\n";
+
+    // TODO: make this so that the droplet analyzer widget decides how jet
     s << CMD::stop_motion(Axis::Jet); // stop jetting to set new jog speed
     s << CMD::set_jog(Axis::Jet, table.data.back().jettingFreq.value); // jet at last frequency
     s << CMD::begin_motion(Axis::Jet);
 
     s << CMD::display_message("Print Complete");
 
+    // turn off droplet observation jetting before starting
+    emit stop_continuous_jetting();
+
+    // Ensure that jet drive is set on external trigger for printing
+    mPrinter->jetDrive->stop_continuous_jetting();
+    mPrinter->jetDrive->set_external_trigger(); // set external trigger
+
     emit disable_user_input();
-    emit jet_turned_on(); // jet is turned on once print is complete
     emit execute_command(s);
     printIsRunning_ = true;
     ui->stopPrintButton->setEnabled(true);
@@ -359,6 +367,9 @@ void LinePrintWidget::when_line_print_completed()
     disconnect(mPrintThread, &PrintThread::ended, this, &LinePrintWidget::when_line_print_completed);
     printIsRunning_ = false;
     ui->stopPrintButton->setEnabled(false);
+
+    // tell droplet observation widget to start jetting
+    emit start_continuous_jetting();
 }
 
 void LinePrintWidget::stop_print_button_pressed()
@@ -366,7 +377,6 @@ void LinePrintWidget::stop_print_button_pressed()
     if (printIsRunning_)
     {
         emit stop_print_and_thread();
-        emit jet_turned_off();
         ui->stopPrintButton->setEnabled(false);
         printIsRunning_ = false;
     }

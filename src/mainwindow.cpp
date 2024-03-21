@@ -140,8 +140,8 @@ void MainWindow::setup()
         connect(printerWidgets[i], &PrinterWidget::print_to_output_window, this, &MainWindow::print_to_output_window);
         connect(printerWidgets[i], &PrinterWidget::stop_print_and_thread, this, &MainWindow::stop_print_and_thread);
 
-        connect(printerWidgets[i], &PrinterWidget::jet_turned_on, dropletObservationWidget, &DropletObservationWidget::jetting_was_turned_on);
-        connect(printerWidgets[i], &PrinterWidget::jet_turned_off, dropletObservationWidget, &DropletObservationWidget::jetting_was_turned_off);
+        connect(printerWidgets[i], &PrinterWidget::start_continuous_jetting, dropletObservationWidget, &DropletObservationWidget::start_jetting);
+        connect(printerWidgets[i], &PrinterWidget::stop_continuous_jetting, dropletObservationWidget, &DropletObservationWidget::stop_jetting);
     }
 
     // connect jog buttons
@@ -167,7 +167,7 @@ void MainWindow::setup()
         if (printer->mcu->g)
         {
             stop_print_and_thread();
-            dropletObservationWidget->jetting_was_turned_off();
+            dropletObservationWidget->stop_jetting();
         }
 
     });

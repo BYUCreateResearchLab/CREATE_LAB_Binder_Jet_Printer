@@ -195,7 +195,6 @@ void HighSpeedLineWidget::print_line()
     allow_user_to_change_parameters(false);
 
     emit execute_command(s);
-    emit jet_turned_on();
     emit disable_user_input();
     ui->stopPrintButton->setEnabled(true);
     printIsRunning_ = true;
@@ -220,7 +219,6 @@ void HighSpeedLineWidget::view_flat()
     emit print_to_output_window(QString::fromStdString(linePrintMessage));
 
     emit execute_command(s);
-    emit jet_turned_on();
     //emit disable_user_input();
     //ui->stopPrintButton->setEnabled(true);
     //printIsRunning_ = true;
@@ -252,7 +250,6 @@ void HighSpeedLineWidget::stop_printing()
     {
         disconnect(mPrintThread, &PrintThread::ended, this, &HighSpeedLineWidget::when_line_print_completed);
         emit stop_print_and_thread();
-        emit jet_turned_off();
         emit print_to_output_window("Print Stopped");
 
         printIsRunning_ = false;

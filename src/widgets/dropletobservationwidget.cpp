@@ -39,9 +39,9 @@ DropletObservationWidget::DropletObservationWidget(Printer *printer, QWidget *pa
     connect(ui->moveToCameraButton, &QPushButton::clicked, this, &DropletObservationWidget::move_to_jetting_window);
     connect(ui->moveToMiddleButton, &QPushButton::clicked, this, &DropletObservationWidget::move_towards_middle);
     connect(ui->sweepButton, &QPushButton::clicked, this, &DropletObservationWidget::start_strobe_sweep);
+
     connect(ui->TriggerJetButton, &QPushButton::clicked, this, &DropletObservationWidget::trigger_jet_clicked);
     connect(ui->jetForMinutesButton, &QPushButton::clicked, this, &DropletObservationWidget::jet_for_three_minutes);
-    connect(ui->jetWithJetDriveButton, &QPushButton::clicked, this, &DropletObservationWidget::jet_with_jet_drive_button_clicked);
 
     // enable buttons for droplet analysis after video capture has completed
     connect(this, &DropletObservationWidget::video_capture_complete, this, [this](){
@@ -118,18 +118,6 @@ void DropletObservationWidget::allow_widget_input(bool allowed)
     ui->frame->setEnabled(allowed);
 }
 
-void DropletObservationWidget::jetting_was_turned_on()
-{
-    m_isJetting = true;
-    ui->TriggerJetButton->setText("\nStop Jetting\n");
-}
-
-void DropletObservationWidget::jetting_was_turned_off()
-{
-    m_isJetting = false;
-    ui->TriggerJetButton->setText("\nTrigger Jet\n");
-}
-
 void DropletObservationWidget::show_droplet_analyzer_widget(bool loadTempVideo)
 {
     if (loadTempVideo)
@@ -163,6 +151,51 @@ void DropletObservationWidget::calculate_droplet_velocity()
 bool DropletObservationWidget::is_droplet_anlyzer_window_visible() const
 {
     return !m_analyzerWindow.get()->isHidden();
+}
+
+void DropletObservationWidget::start_jetting()
+{
+    auto jettingFrequency = ui->jettingFreqSpinBox->value();
+    if (ui->useJetDriveTriggerCheckBox->isChecked())
+    {
+        mPrinter->jetDrive->set_num_drops_per_trigger(1); // set num drops 1
+        mPrinter->jetDrive->set_continuous_mode_frequency(jettingFrequency); // set frequency
+        mPrinter->jetDrive->start_continuous_jetting(); // sets continuous, internal, and sends soft trigger
+    }
+    else // use external trigger
+    {
+        std::stringstream s;
+        s << CMD::servo_here(Axis::Jet);
+        s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
+        s << CMD::set_jog(Axis::Jet, jettingFrequency);
+        s << CMD::begin_motion(Axis::Jet);
+        emit execute_command(s);
+    }
+
+    m_isJetting = true;
+    ui->TriggerJetButton->setText("\nStop Jetting\n");
+    ui->useJetDriveTriggerCheckBox->setEnabled(false);
+    ui->jetForMinutesButton->setEnabled(false);
+}
+
+void DropletObservationWidget::stop_jetting()
+{
+    if (ui->useJetDriveTriggerCheckBox->isChecked())
+    {
+        mPrinter->jetDrive->stop_continuous_jetting();
+        mPrinter->jetDrive->set_external_trigger(); // set external trigger
+    }
+    else // use external trigger
+    {
+        std::stringstream s;
+        s << CMD::stop_motion(Axis::Jet);
+        emit execute_command(s);
+    }
+
+    m_isJetting = false;
+    ui->TriggerJetButton->setText("\nStart Jetting\n");
+    ui->useJetDriveTriggerCheckBox->setEnabled(true);
+    ui->jetForMinutesButton->setEnabled(true);
 }
 
 void DropletObservationWidget::connect_to_camera()
@@ -345,20 +378,7 @@ void DropletObservationWidget::jet_for_three_minutes()
 
     if (!m_isJettingFor3Minutes)
     {
-//        std::stringstream s;
-//        if (!m_isJetting)
-//        {
-//            s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
-//            s << CMD::set_jog(Axis::Jet, jettingFrequency);
-//            s << CMD::begin_motion(Axis::Jet);
-//            emit execute_command(s);
-//            jetting_was_turned_on();
-//        }
-
-        ui->jetWithJetDriveButton->setText("Stop Jetting");
-        mPrinter->jetDrive->set_num_drops_per_trigger(1); // set num drops 1
-        mPrinter->jetDrive->set_continuous_mode_frequency(ui->jettingFreqSpinBox->value()); // set frequency
-        mPrinter->jetDrive->start_continuous_jetting(); // sets continuous, internal, and sends soft trigger
+        start_jetting();
 
         emit print_to_output_window("Starting 3 minute timer");
         m_isJettingFor3Minutes = true;
@@ -372,18 +392,8 @@ void DropletObservationWidget::jet_for_three_minutes()
 
 void DropletObservationWidget::end_jet_timer()
 {
-//    std::stringstream s;
-//    s << CMD::stop_motion(Axis::Jet);
-//    emit execute_command(s);
-//    jetting_was_turned_off();
+    stop_jetting();
 
-    ui->jetWithJetDriveButton->setText("Jet with JetDrive Continuous");
-    mPrinter->jetDrive->stop_continuous_jetting();
-    mPrinter->jetDrive->set_external_trigger(); // set external trigger
-
-
-
-    ui->jetWithJetDriveButton->setEnabled(true);
     ui->TriggerJetButton->setEnabled(true);
     m_JetVolumeTimer->stop();
     m_ProgressBarTimer->stop();
@@ -397,23 +407,6 @@ void DropletObservationWidget::update_progress_bar()
 {
     int progress = m_JetVolumeTimer->interval() - m_JetVolumeTimer->remainingTime();
     ui->jetProgressBar->setValue(progress);
-}
-
-void DropletObservationWidget::jet_with_jet_drive_button_clicked()
-{
-    if (ui->jetWithJetDriveButton->isChecked())
-    {
-        ui->jetWithJetDriveButton->setText("Stop Jetting");
-        mPrinter->jetDrive->set_num_drops_per_trigger(1); // set num drops 1
-        mPrinter->jetDrive->set_continuous_mode_frequency(ui->jettingFreqSpinBox->value()); // set frequency
-        mPrinter->jetDrive->start_continuous_jetting(); // sets continuous, internal, and sends soft trigger
-    }
-    else
-    {
-        ui->jetWithJetDriveButton->setText("Jet with JetDrive Continuous");
-        mPrinter->jetDrive->stop_continuous_jetting();
-        mPrinter->jetDrive->set_external_trigger(); // set external trigger
-    }
 }
 
 void DropletObservationWidget::start_strobe_sweep()
@@ -499,26 +492,8 @@ void DropletObservationWidget::update_strobe_sweep_offset()
 
 void DropletObservationWidget::trigger_jet_clicked()
 {
-    auto jettingFrequency = ui->jettingFreqSpinBox->value();
-
-    std::stringstream s;
-    if (!m_isJetting)
-    {
-        s << CMD::servo_here(Axis::Jet);
-        s << CMD::set_accleration(Axis::Jet, 20000000); // set acceleration really high
-        s << CMD::set_jog(Axis::Jet, jettingFrequency);
-        s << CMD::begin_motion(Axis::Jet);
-        jetting_was_turned_on();
-        ui->jetForMinutesButton->setEnabled(false);
-    }
-    else
-    {
-        s << CMD::stop_motion(Axis::Jet);
-        jetting_was_turned_off();
-        ui->jetForMinutesButton->setEnabled(true);
-    }
-
-    emit execute_command(s);
+    if (!m_isJetting) { start_jetting(); }
+    else { stop_jetting(); }
 }
 
 void DropletObservationWidget::framerate_changed()

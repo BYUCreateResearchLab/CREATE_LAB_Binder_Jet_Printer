@@ -29,8 +29,9 @@ signals:
     void stop_print_and_thread();
     void disable_user_input();
     void print_to_output_window(QString s);
-    void jet_turned_on();
-    void jet_turned_off();
+
+    void start_continuous_jetting();
+    void stop_continuous_jetting();
 
 protected:
     PrintThread *mPrintThread{nullptr};

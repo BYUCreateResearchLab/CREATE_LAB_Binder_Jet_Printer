@@ -34,8 +34,8 @@ public:
     bool is_droplet_anlyzer_window_visible() const;
 
 public slots:
-    void jetting_was_turned_on();
-    void jetting_was_turned_off();
+    void start_jetting();
+    void stop_jetting();
 
     void show_droplet_analyzer_widget(bool loadTempVideo = false);
     void hide_droplet_analyzer_widget();
@@ -65,7 +65,6 @@ private slots:
     void jet_for_three_minutes();
     void end_jet_timer();
     void update_progress_bar();
-    void jet_with_jet_drive_button_clicked();
 
 private:
     Ui::DropletObservationWidget *ui;
