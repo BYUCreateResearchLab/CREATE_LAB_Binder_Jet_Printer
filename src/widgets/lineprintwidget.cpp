@@ -304,6 +304,7 @@ void LinePrintWidget::print_lines_old()
 void LinePrintWidget::print_lines_dmc()
 {
     // turn off droplet observation jetting before starting
+    // is this the thing causing problems (I need it though)
     emit stop_continuous_jetting();
 
     std::stringstream s;

@@ -149,10 +149,21 @@ LinePrintData::LinePrintData()
 
 void LinePrintData::addRows(int numSets=1)
 {
-    for (int i=0; i<numSets; i++)
+    if (data.size() == 0)
     {
-       data.push_back(LineSet());
+        for (int i=0; i<numSets; i++)
+        {
+            data.push_back(LineSet());
+        }
     }
+    else
+    {
+        for (int i=0; i<numSets; i++)
+        {
+            data.push_back(data.back());
+        }
+    }
+
 }
 
 void LinePrintData::removeRows(int numSets=1)

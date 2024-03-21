@@ -12,6 +12,7 @@
 #include "cameralist.h"
 #include "printer.h"
 #include "jetdrive.h"
+#include "dmc4080.h"
 #include "dropletanalyzer.h"
 #include "dropletanalyzerwidget.h"
 #include "pressurecontrollerwidget.h"
@@ -187,9 +188,7 @@ void DropletObservationWidget::stop_jetting()
     }
     else // use external trigger
     {
-        std::stringstream s;
-        s << CMD::stop_motion(Axis::Jet);
-        emit execute_command(s);
+        GCmd(mPrinter->mcu->g, "STH");
     }
 
     m_isJetting = false;
