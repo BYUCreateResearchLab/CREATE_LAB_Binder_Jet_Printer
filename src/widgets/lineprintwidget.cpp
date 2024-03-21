@@ -303,6 +303,9 @@ void LinePrintWidget::print_lines_old()
 
 void LinePrintWidget::print_lines_dmc()
 {
+    // turn off droplet observation jetting before starting
+    emit stop_continuous_jetting();
+
     std::stringstream s;
 
     QByteArray ba;
@@ -339,19 +342,7 @@ void LinePrintWidget::print_lines_dmc()
 
     s << "GProgramComplete," << "\n";
 
-    // TODO: make this so that the droplet analyzer widget decides how jet
-    s << CMD::stop_motion(Axis::Jet); // stop jetting to set new jog speed
-    s << CMD::set_jog(Axis::Jet, table.data.back().jettingFreq.value); // jet at last frequency
-    s << CMD::begin_motion(Axis::Jet);
-
     s << CMD::display_message("Print Complete");
-
-    // turn off droplet observation jetting before starting
-    emit stop_continuous_jetting();
-
-    // Ensure that jet drive is set on external trigger for printing
-    mPrinter->jetDrive->stop_continuous_jetting();
-    mPrinter->jetDrive->set_external_trigger(); // set external trigger
 
     emit disable_user_input();
     emit execute_command(s);
