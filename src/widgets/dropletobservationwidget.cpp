@@ -188,7 +188,14 @@ void DropletObservationWidget::stop_jetting()
     }
     else // use external trigger
     {
-        GCmd(mPrinter->mcu->g, "STH");
+        if (mPrinter->mcu->g)
+        {
+            GCmd(mPrinter->mcu->g, "STH");
+        }
+        else
+        {
+            emit print_to_output_window("Motion controller not connected!");
+        }
     }
 
     m_isJetting = false;
@@ -378,6 +385,7 @@ void DropletObservationWidget::jet_for_three_minutes()
     if (!m_isJettingFor3Minutes)
     {
         start_jetting();
+        ui->jetForMinutesButton->setEnabled(true);
 
         emit print_to_output_window("Starting 3 minute timer");
         m_isJettingFor3Minutes = true;
