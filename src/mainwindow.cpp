@@ -23,6 +23,7 @@
 #include "jetdrive.h"
 #include "printer.h"
 #include "printhread.h"
+#include "mjdriver.h"
 
 #include "printerwidget.h"
 #include "lineprintwidget.h"
@@ -32,6 +33,7 @@
 #include "highspeedlinewidget.h"
 #include "dropletobservationwidget.h"
 #include "bedmicroscopewidget.h"
+#include "mjprintheadwidget.h"
 
 #include "pcd.h"
 #include "ginterrupthandler.h"
@@ -51,6 +53,7 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     highSpeedLineWidget      = new HighSpeedLineWidget(printer);
     dropletObservationWidget = new DropletObservationWidget(printer);
     bedMicroscopeWidget      = new BedMicroscopeWidget(printer);
+    mjPrintheadWidget        = new MJPrintheadWidget(printer);
 
     // add widgets to tabs on the top bar (tab widget now owns)
     ui->tabWidget->addTab(powderSetupWidget, "Powder Setup");
@@ -58,6 +61,7 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     ui->tabWidget->addTab(highSpeedLineWidget, "High-Speed Line Printing");
     ui->tabWidget->addTab(dropletObservationWidget, "Jetting");
     ui->tabWidget->addTab(bedMicroscopeWidget, "Bed Imaging");
+    ui->tabWidget->addTab(mjPrintheadWidget, "MJ Printhead");
 
     // set fill background for all tab widgets
     for (int i{0}; i < ui->tabWidget->count(); ++i)
@@ -194,10 +198,13 @@ void MainWindow::setup()
     connect(printer->pressureController, &PCD::Controller::timeout, this, &MainWindow::print_to_output_window);
     connect(printer->pressureController, &PCD::Controller::error, this, &MainWindow::print_to_output_window);
 
-    connect(printer->mister, &PCD::Controller::response, this, &MainWindow::print_to_output_window);
-    connect(printer->mister, &PCD::Controller::timeout, this, &MainWindow::print_to_output_window);
-    connect(printer->mister, &PCD::Controller::error, this, &MainWindow::print_to_output_window);
+    connect(printer->mister, &Mister::Controller::response, this, &MainWindow::print_to_output_window);
+    connect(printer->mister, &Mister::Controller::timeout, this, &MainWindow::print_to_output_window);
+    connect(printer->mister, &Mister::Controller::error, this, &MainWindow::print_to_output_window);
 
+    connect(printer->mjController, &Added_Scientific::Controller::response, this, &MainWindow::print_to_output_window);
+    connect(printer->mjController, &Added_Scientific::Controller::timeout, this, &MainWindow::print_to_output_window);
+    connect(printer->mjController, &Added_Scientific::Controller::error, this, &MainWindow::print_to_output_window);
 }
 
 void MainWindow::on_connect_clicked()
@@ -485,7 +492,8 @@ void MainWindow::stop_print_and_thread()
     printer->mcu->printerThread->stop();
     if (printer->mcu->g)
     {
-        // Can't use CMD:: commands here...
+        // TODO: Can't use CMD:: commands here... Fix this when CMD::
+        //       commands are changed to just be dmc commands
         // work on a way to either send these through the thread
         // even though it is blocked or be able to strip CMD:: commands
         // of new line and beginning command type so I can use them here

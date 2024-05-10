@@ -1,21 +1,26 @@
-#include "mister.h"
+#include "mjdriver.h"
 
 #include <QSerialPort>
 #include <QDebug>
 
-namespace Mister
+#include <opencv2/opencv.hpp>
+#include <nlohmann/json.hpp>
+
+namespace Added_Scientific
 {
+
+using json = nlohmann::json;
 
 Controller::Controller(const QString &portName, QObject *parent) :
     AsyncSerialDevice(portName, parent)
 {
-    name = "Mister";
+    name = "MJ_Controller";
     // connect timer for handling timeout errors
     connect(serialPort, &QSerialPort::readyRead, this, &Controller::handle_ready_read);
     connect(timer, &QTimer::timeout, this, &Controller::handle_timeout);
     connect(serialPort, &QSerialPort::errorOccurred, this, &Controller::handle_serial_error);
 
-    serialPort->setBaudRate(QSerialPort::Baud19200);
+    serialPort->setBaudRate(1'000'000); // 1 million baud rate.
 }
 
 Controller::~Controller()
@@ -25,41 +30,39 @@ Controller::~Controller()
 
 void Controller::handle_ready_read()
 {
-    auto inData = serialPort->readAll();
-    readData.append(inData);
-    QString responseString = QString(readData).simplified();
-
-    if (!inData.contains("\r")) {return;}
-    switch (initState)
+    // look at DataRecievedHandler in "MJ Driver Board/Software/DriverBoardDropwatcher/Form1.cs"
+    while (serialPort->bytesAvailable())
     {
-    case NOT_INITIALIZED:
-        if (responseString == initString)
-        {
-            readData.clear();
-            initState = INITIALIZED;
-            emit response(QString("Connected to %1").arg(name));
-            write_next();
-        }
-        else
-        {
-            emit error(QString("Unexpected response from device."
-                               " Expected %1 from device but got %2")
-                       .arg(initString)
-                       .arg(responseString));
-            disconnect_serial();
-        }
-        break;
-    case INITIALIZED:
-        // handle response from device here
-        // right now the response does nothing,
-        // just exists so we know the Arduino got the
-        // command and is ready for a new one
-        readData.clear();
-        write_next();
-        break;
-
-    default: break;
+        auto inData = serialPort->readAll();
+        readData.append(inData);
     }
+
+    if (readData[0] == '{')
+    {
+        json j;
+        try
+        {
+            j = json::parse(readData.toStdString());
+            // handle the json here
+            emit response( QString::fromStdString(j.dump(4)) ); // this probably doesn't need to be here and clogs the output window
+
+        }
+        catch (const nlohmann::json::parse_error &e)
+        {
+            QString errorMessage = "Failed to parse JSON: ";
+            errorMessage += e.what();
+            emit error(errorMessage);
+        }
+
+    }
+
+    else
+    {
+        emit response(QString(readData));
+    }
+
+    readData.clear();
+    write_next();
 }
 
 void Controller::handle_timeout()
@@ -70,12 +73,19 @@ void Controller::handle_timeout()
     disconnect_serial();
 }
 
-int Controller::connect_to_misters()
+// writes to serial device, adding a LF character ('\n')
+// the controller expects LF after every command
+void Controller::write_line(const QByteArray &data)
+{
+    write(data + "\n");
+}
+
+void Controller::connect_board()
 {
     if (is_connected()) // return if already connected
     {
         emit response(QString("Already connected to %1").arg(name));
-        return 0;
+        return;
     }
 
     clear_members();
@@ -85,13 +95,12 @@ int Controller::connect_to_misters()
     {
         emit error(QString("Can't open %1 on %2, error code %3")
                    .arg(name, serialPort->portName(), QVariant::fromValue(serialPort->error()).toString()));
-        return -1;
+        return;
     }
 
-    // wait after connection to initialize
-    emit response(QString("Connecting to %1").arg(name));
-    QTimer::singleShot(1500, this, &Controller::initialize_misters);
-    return 0;
+    // connection is open
+    emit response(QString("Connected to %1").arg(name));
+    return;
 }
 
 void Controller::disconnect_serial()
@@ -106,39 +115,67 @@ void Controller::disconnect_serial()
     else emit response(QString("%1 is already disconnected").arg(name));
 }
 
-void Controller::send_command(CMD command)
+void Controller::power_on()
 {
-    write(QString("%1\r").arg((char)command).toUtf8());
+    write_line("O");
 }
 
-void Controller::initialize_misters()
+void Controller::power_off()
 {
-    send_command(INIT);
+    write_line("F");
 }
 
-void Controller::turn_on_misters()
+void Controller::report_status()
 {
-    send_command(MIST_ON);
+    write_line("b");
 }
 
-void Controller::turn_off_misters()
+void Controller::set_printing_frequency(int frequency)
 {
-    send_command(MIST_OFF);
+    if (frequency <= 0) return;
+    QString command = QString("p %1").arg(frequency);
+    write_line(command.toUtf8());
 }
 
-void Controller::turn_on_left_mister()
+void Controller::set_head_voltage(HeadIndex idx, double voltage)
 {
-    send_command(LEFT_ON);
+    // only allow voltage between 15-36 V
+    if ((voltage < 15.0) || (voltage > 36.0)) return;
+    QString command = "v ";
+    command += QString::number(static_cast<int>(idx));
+    command += " ";
+    command += QString::number(voltage, 'f', 2); // floating with 2 decimals of precision
+    write_line(command.toUtf8());
 }
 
-void Controller::turn_on_right_mister()
+void Controller::mode_select(Mode mode)
 {
-    send_command(RIGHT_ON);
+    QString command = QString("M %1").arg(static_cast<int>(mode));
+    write_line(command.toUtf8());
+}
+
+void Controller::soft_reset_board()
+{
+    write_line("r");
+}
+
+void Controller::report_current_position()
+{
+    write_line(">");
+}
+
+void Controller::request_status_of_all_heads()
+{
+    write_line("B");
+}
+
+void Controller::clear_all_heads_of_data()
+{
+    write_line("C");
 }
 
 void Controller::clear_members()
 {
-    initState = InitState::NOT_INITIALIZED;
     clear_command_queue();
 }
 
@@ -170,6 +207,8 @@ void Controller::handle_serial_error(
     }
 }
 
-}
 
-#include "moc_mister.cpp"
+
+} // namespace Added_Scientific
+
+#include "moc_mjdriver.cpp"

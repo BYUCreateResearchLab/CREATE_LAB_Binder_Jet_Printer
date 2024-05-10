@@ -9,6 +9,7 @@
 #include "dmc4080.h"
 #include "mister.h"
 #include "bedmicroscope.h"
+#include "mjdriver.h"
 
 Printer::Printer(QObject *parent) :
     QObject(parent),
@@ -16,9 +17,12 @@ Printer::Printer(QObject *parent) :
     jetDrive ( new JetDrive::Controller("COM8", this) ),
     pressureController ( new PCD::Controller("COM3", this) ),
     mister ( new Mister::Controller("COM4", this) ),
-    bedMicroscope ( new BedMicroscope(this) )
+    bedMicroscope ( new BedMicroscope(this) ),
+    mjController ( new Added_Scientific::Controller("COM5", this) )
 {
-
+//    using Added_Scientific::Controller::HeadIndex;
+//    mjController->set_head_voltage(HeadIndex::HEAD1, 25);
+    mjController->mode_select(Added_Scientific::Controller::Mode::MOTION_ENCODER);
 }
 
 Printer::~Printer()

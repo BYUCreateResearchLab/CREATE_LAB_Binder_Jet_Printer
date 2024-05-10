@@ -12,6 +12,7 @@ class OutputWindow;
 class PowderSetupWidget;
 class QMessageBox;
 class BedMicroscopeWidget;
+class MJPrintheadWidget;
 
 class JettingWidget;
 class HighSpeedLineWidget;
@@ -89,6 +90,7 @@ private:
     HighSpeedLineWidget *highSpeedLineWidget {nullptr};
     DropletObservationWidget *dropletObservationWidget {nullptr};
     BedMicroscopeWidget *bedMicroscopeWidget {nullptr};
+    MJPrintheadWidget *mjPrintheadWidget {nullptr};
 
     QMessageBox *messageBox {nullptr};
     // TODO: should this go somewhere else?

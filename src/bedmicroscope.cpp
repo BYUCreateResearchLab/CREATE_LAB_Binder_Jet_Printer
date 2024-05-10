@@ -116,3 +116,5 @@ void BedMicroscope::save_image(const QString &filename)
     get_frame();
     cv::imwrite(filename.toStdString(), meanFrame);
 }
+
+#include "moc_bedmicroscope.cpp"

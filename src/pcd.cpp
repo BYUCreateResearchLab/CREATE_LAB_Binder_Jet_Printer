@@ -51,6 +51,7 @@ void Controller::handle_ready_read()
         break;
     case INITIALIZED:
         // handle response from PCD here
+        readData.clear();
         write_next();
         break;
 

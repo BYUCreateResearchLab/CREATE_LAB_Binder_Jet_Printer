@@ -262,3 +262,4 @@ void BedMicroscopeWidget::export_image(const QString &position)
 }
 
 #include "bedmicroscopewidget.moc"
+#include "moc_bedmicroscopewidget.cpp"

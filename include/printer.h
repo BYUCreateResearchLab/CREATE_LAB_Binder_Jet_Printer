@@ -79,6 +79,7 @@ class GInterruptHandler;
 namespace PCD { class Controller; }
 namespace JetDrive { class Controller; }
 namespace Mister { class Controller; }
+namespace Added_Scientific { class Controller; }
 class DMC4080;
 class BedMicroscope;
 
@@ -178,6 +179,7 @@ public:
     PCD::Controller *pressureController {nullptr};
     Mister::Controller *mister {nullptr};
     BedMicroscope *bedMicroscope {nullptr};
+    Added_Scientific::Controller *mjController {nullptr};
 
 
     // TODO:

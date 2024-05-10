@@ -48,3 +48,5 @@ void PressureControllerWidget::toggle_purge()
         ui->purgeButton->setText("Purge");
     }
 }
+
+#include "moc_pressurecontrollerwidget.cpp"

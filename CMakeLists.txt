@@ -44,6 +44,8 @@ set(HEADERS
     include/dmc4080.h
     include/mister.h
     include/bedmicroscope.h
+    include/mjdriver.h
+
 )
 
 set(SOURCES
@@ -66,6 +68,7 @@ set(SOURCES
     src/dmc4080.cpp
     src/mister.cpp
     src/bedmicroscope.cpp
+    src/mjdriver.cpp
 
 )
 
@@ -79,6 +82,7 @@ set(WIDGET_HEADERS
     include/widgets/dropletobservationwidget.h
     include/widgets/pressurecontrollerwidget.h
     include/widgets/bedmicroscopewidget.h
+    include/widgets/mjprintheadwidget.h
 
 )
 
@@ -92,6 +96,7 @@ set(WIDGET_SOURCES
     src/widgets/dropletobservationwidget.cpp
     src/widgets/pressurecontrollerwidget.cpp
     src/widgets/bedmicroscopewidget.cpp
+    src/widgets/mjprintheadwidget.cpp
 
 )
 
@@ -107,6 +112,7 @@ set(FORMS
     src/ui/dropletanalyzerwidget.ui
     src/ui/pressurecontrollerwidget.ui
     src/ui/bedmicroscopewidget.ui
+    src/ui/mjprintheadwidget.ui
 
 )
 
