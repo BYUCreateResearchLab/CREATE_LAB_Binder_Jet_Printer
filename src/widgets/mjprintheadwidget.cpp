@@ -20,6 +20,7 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->powerToggleButton, &QPushButton::clicked, this, &MJPrintheadWidget::powerTogglePressed);
     connect(ui->getStatusButton, &QPushButton::clicked, this, [this]{mPrinter->mjController->report_status();});
     connect(ui->getPositionButton, &QPushButton::clicked, this, &MJPrintheadWidget::getPositionPressed);
+    connect(ui->setVoltageSpinBox, &QSpinBox::editingFinished, this, &MJPrintheadWidget::voltageChanged);
 
     connect(mPrinter->mjController, &AsyncSerialDevice::response, this, &MJPrintheadWidget::write_to_response_window);
 }
@@ -76,6 +77,12 @@ void MJPrintheadWidget::frequencyChanged()
 {
     int freq = ui->setFreqSpinBox->value();
     mPrinter->mjController->set_printing_frequency(freq);
+}
+
+void MJPrintheadWidget::voltageChanged()
+{
+    double volt = ui->setVoltageSpinBox->value();
+    mPrinter->mjController->set_head_voltage(Added_Scientific::Controller::HEAD1, volt);
 }
 
 void MJPrintheadWidget::write_to_response_window(const QString &text)

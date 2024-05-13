@@ -31,6 +31,8 @@ protected:
 
     void frequencyChanged();
 
+    void voltageChanged();
+
     void write_to_response_window(const QString &text);
 
 private:
