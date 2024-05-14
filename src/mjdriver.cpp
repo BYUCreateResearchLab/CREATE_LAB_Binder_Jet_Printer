@@ -164,6 +164,11 @@ void Controller::report_current_position()
     write_line(">");
 }
 
+void Controller::report_head_temps()
+{
+    write_line("t");
+}
+
 void Controller::request_status_of_all_heads()
 {
     write_line("B");

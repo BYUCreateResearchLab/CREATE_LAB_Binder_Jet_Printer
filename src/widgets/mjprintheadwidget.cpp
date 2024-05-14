@@ -21,6 +21,7 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->getStatusButton, &QPushButton::clicked, this, [this]{mPrinter->mjController->report_status();});
     connect(ui->getPositionButton, &QPushButton::clicked, this, &MJPrintheadWidget::getPositionPressed);
     connect(ui->setVoltageSpinBox, &QSpinBox::editingFinished, this, &MJPrintheadWidget::voltageChanged);
+    connect(ui->getHeadTempButton, &QPushButton::clicked, this, &MJPrintheadWidget::getHeadTempsPressed);
 
     connect(mPrinter->mjController, &AsyncSerialDevice::response, this, &MJPrintheadWidget::write_to_response_window);
 }
@@ -62,6 +63,11 @@ void MJPrintheadWidget::powerTogglePressed()
 void MJPrintheadWidget::getPositionPressed()
 {
     mPrinter->mjController->report_current_position();
+}
+
+void MJPrintheadWidget::getHeadTempsPressed()
+{
+    mPrinter->mjController->report_head_temps();
 }
 
 void MJPrintheadWidget::send_command(const QString &command)

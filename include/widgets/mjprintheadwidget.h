@@ -26,6 +26,7 @@ protected:
     void command_entered();
     void powerTogglePressed();
     void getPositionPressed();
+    void getHeadTempsPressed();
 
     void send_command(const QString &command);
 

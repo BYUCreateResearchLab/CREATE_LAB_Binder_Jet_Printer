@@ -49,6 +49,7 @@ public:
     void mode_select(Mode mode);
     void soft_reset_board();
     void report_current_position();
+    void report_head_temps();
 
     void request_status_of_all_heads();
 
