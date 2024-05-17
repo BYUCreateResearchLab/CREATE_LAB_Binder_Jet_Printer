@@ -23,6 +23,7 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->setVoltageSpinBox, &QSpinBox::editingFinished, this, &MJPrintheadWidget::voltageChanged);
     connect(ui->getHeadTempButton, &QPushButton::clicked, this, &MJPrintheadWidget::getHeadTempsPressed);
     connect(ui->setStartSpinBox, &QSpinBox::editingFinished, this, &MJPrintheadWidget::absoluteStartChanged);
+    connect(ui->imageFileLineEdit, &QLineEdit::returnPressed, this, &MJPrintheadWidget::file_name_entered);
 
     connect(mPrinter->mjController, &AsyncSerialDevice::response, this, &MJPrintheadWidget::write_to_response_window);
 }
@@ -51,6 +52,17 @@ void MJPrintheadWidget::command_entered()
 {
     QString command = ui->inputLineEdit->text();
     send_command(command);
+}
+
+void MJPrintheadWidget::file_name_entered()
+{
+    QString file = ui->imageFileLineEdit->text();
+    send_image_data(file);
+}
+
+void MJPrintheadWidget::send_image_data(const QString &file)
+{
+    // Placeholder for function to collect data from image and send over USB to board
 }
 
 void MJPrintheadWidget::powerTogglePressed()

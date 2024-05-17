@@ -27,6 +27,8 @@ protected:
     void powerTogglePressed();
     void getPositionPressed();
     void getHeadTempsPressed();
+    void file_name_entered();
+    void send_image_data(const QString &file);
 
     void send_command(const QString &command);
 
