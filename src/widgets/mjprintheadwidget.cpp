@@ -22,6 +22,7 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->getPositionButton, &QPushButton::clicked, this, &MJPrintheadWidget::getPositionPressed);
     connect(ui->setVoltageSpinBox, &QSpinBox::editingFinished, this, &MJPrintheadWidget::voltageChanged);
     connect(ui->getHeadTempButton, &QPushButton::clicked, this, &MJPrintheadWidget::getHeadTempsPressed);
+    connect(ui->setStartSpinBox, &QSpinBox::editingFinished, this, &MJPrintheadWidget::absoluteStartChanged);
 
     connect(mPrinter->mjController, &AsyncSerialDevice::response, this, &MJPrintheadWidget::write_to_response_window);
 }
@@ -89,6 +90,12 @@ void MJPrintheadWidget::voltageChanged()
 {
     double volt = ui->setVoltageSpinBox->value();
     mPrinter->mjController->set_head_voltage(Added_Scientific::Controller::HEAD1, volt);
+}
+
+void MJPrintheadWidget::absoluteStartChanged()
+{
+    double steps = ui->setStartSpinBox->value();
+    mPrinter->mjController->set_absolute_start(steps);
 }
 
 void MJPrintheadWidget::write_to_response_window(const QString &text)

@@ -34,6 +34,8 @@ protected:
 
     void voltageChanged();
 
+    void absoluteStartChanged();
+
     void write_to_response_window(const QString &text);
 
 private:

@@ -44,6 +44,7 @@ public:
     void power_off();
 
     void report_status();
+    void set_absolute_start(int steps);
     void set_printing_frequency(int frequency);
     void set_head_voltage(HeadIndex idx, double voltage);
     void mode_select(Mode mode);
