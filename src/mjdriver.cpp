@@ -2,6 +2,11 @@
 
 #include <QSerialPort>
 #include <QDebug>
+#include <QFile>
+#include <QTextStream>
+#include <QByteArray>
+#include <QTime>
+#include <QCoreApplication>
 
 #include <opencv2/opencv.hpp>
 #include <nlohmann/json.hpp>
@@ -159,6 +164,62 @@ void Controller::mode_select(Mode mode)
 {
     QString command = QString("M %1").arg(static_cast<int>(mode));
     write_line(command.toUtf8());
+}
+
+void Controller::read_image_data(const QString &filename)
+{
+    const QString directory = "C:\\Users\\CB140LAB\\Desktop\\Noah\\";
+    QString filePath = directory + filename;
+
+    QFile file(filePath);
+
+    // Open file in read only mode
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug() << "Could not open file " << filePath;
+        return;
+    }
+
+    // Read file content
+    QTextStream in(&file);
+    QString fileContent = in.readAll();
+
+    // Close file
+    file.close();
+
+    convert_image_data(1, fileContent, 0);
+}
+
+void Controller::convert_image_data(int headIdx, const QString &fileContent, int whiteSpace)
+{
+    QByteArray imageData;
+    imageData.append(87);
+    imageData.append(100 + headIdx);
+
+    int sumofval = 0;
+    int copnt = 0;
+    int lastval = 0;
+
+    // Pre-image whitespace
+    for (int i = 0; i < whiteSpace; ++i)
+    {
+        for (int byt = 0; byt < 16; ++byt)
+        {
+            char curByte = 0;
+            imageData.append(curByte);
+            lastval = curByte;
+            sumofval = static_cast<int>(lastval);
+            copnt += 1;
+        }
+    }
+
+    // Convert file to binary
+    const QByteArray pixelData = fileContent.toUtf8();
+}
+
+void Controller::send_image_data(const QString &filecontent)
+{
+
 }
 
 void Controller::soft_reset_board()

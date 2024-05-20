@@ -56,13 +56,8 @@ void MJPrintheadWidget::command_entered()
 
 void MJPrintheadWidget::file_name_entered()
 {
-    QString file = ui->imageFileLineEdit->text();
-    send_image_data(file);
-}
-
-void MJPrintheadWidget::send_image_data(const QString &file)
-{
-    // Placeholder for function to collect data from image and send over USB to board
+    QString filename = ui->imageFileLineEdit->text();
+    mPrinter->mjController->read_image_data(filename);
 }
 
 void MJPrintheadWidget::powerTogglePressed()
