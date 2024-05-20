@@ -57,7 +57,24 @@ void MJPrintheadWidget::command_entered()
 void MJPrintheadWidget::file_name_entered()
 {
     QString filename = ui->imageFileLineEdit->text();
-    mPrinter->mjController->read_image_data(filename);
+    read_in_file(filename);
+}
+
+void MJPrintheadWidget::read_in_file(const QString &filename)
+{
+    const QString directory = "C:\\Users\\CB140LAB\\Desktop\\Noah\\";
+    QString filePath = directory + filename;
+
+    QImage image(filePath);
+
+    if (image.isNull())
+    {
+        write_to_response_window("Failed to load image from" + filePath);
+        return;
+    }
+
+    mPrinter->mjController->convert_image(1, image, 0);
+
 }
 
 void MJPrintheadWidget::powerTogglePressed()
