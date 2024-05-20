@@ -7,6 +7,7 @@
 #include <QByteArray>
 #include <QTime>
 #include <QCoreApplication>
+#include <QImage>
 
 #include <opencv2/opencv.hpp>
 #include <nlohmann/json.hpp>
@@ -166,36 +167,22 @@ void Controller::mode_select(Mode mode)
     write_line(command.toUtf8());
 }
 
-void Controller::read_image_data(const QString &filename)
+void Controller::convert_image(int headIdx, const QImage &image, int whiteSpace)
 {
-    const QString directory = "C:\\Users\\CB140LAB\\Desktop\\Noah\\";
-    QString filePath = directory + filename;
+    // Convert image to grayscale if needed
+    image.convertToFormat(QImage::Format_Grayscale8);
 
-    QFile file(filePath);
+    // Get image properties
+    int width = image.width();
+    int height = image.height();
+    const uchar *pixelData = image.bits();
 
-    // Open file in read only mode
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        qDebug() << "Could not open file " << filePath;
-        return;
-    }
-
-    // Read file content
-    QTextStream in(&file);
-    QString fileContent = in.readAll();
-
-    // Close file
-    file.close();
-
-    convert_image_data(1, fileContent, 0);
-}
-
-void Controller::convert_image_data(int headIdx, const QString &fileContent, int whiteSpace)
-{
+    // Array to store data
     QByteArray imageData;
-    imageData.append(87);
+    imageData.append(87); // Sends 'W' command first
     imageData.append(100 + headIdx);
 
+    // Keep track of sum and count
     int sumofval = 0;
     int copnt = 0;
     int lastval = 0;
@@ -208,18 +195,38 @@ void Controller::convert_image_data(int headIdx, const QString &fileContent, int
             char curByte = 0;
             imageData.append(curByte);
             lastval = curByte;
-            sumofval = static_cast<int>(lastval);
+            sumofval += static_cast<int>(lastval);
             copnt += 1;
         }
     }
 
-    // Convert file to binary
-    const QByteArray pixelData = fileContent.toUtf8();
+    // Convert image to binary string
+    for (int i = 0; i < width; ++i)
+    {
+        for (int byt = 0; byt < 16; ++byt)
+        {
+            char curByte = 0;
+            for (int bit = 0; bit < 8; ++bit)
+            {
+                int j = byt*8 + bit;
+                if (j < height && (255 - pixelData[i * height + j]) > 0)
+                {
+                    curByte += 1 << (7 - bit);
+                }
+            }
+            imageData.append(curByte);
+            lastval = curByte;
+            sumofval += static_cast<int>(lastval);
+            copnt += 1;
+        }
+    }
+
+    send_image_data(imageData);
 }
 
-void Controller::send_image_data(const QString &filecontent)
+void Controller::send_image_data(const QByteArray &imageData)
 {
-
+    write(imageData);
 }
 
 void Controller::soft_reset_board()
