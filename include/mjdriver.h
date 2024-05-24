@@ -51,8 +51,8 @@ public:
     void soft_reset_board();
     void report_current_position();
     void report_head_temps();
-    void convert_image(int headIdx, const QImage &image, int whiteSpace);
-    void send_image_data(const QByteArray &imageData);
+    QByteArray convert_image(int headIdx, const QImage &image, int whiteSpace);
+    void send_image_data(int headIdx, const QImage &image, int whiteSpace);
 
     void request_status_of_all_heads();
 

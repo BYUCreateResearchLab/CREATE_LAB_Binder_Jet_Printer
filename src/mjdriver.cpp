@@ -167,7 +167,7 @@ void Controller::mode_select(Mode mode)
     write_line(command.toUtf8());
 }
 
-void Controller::convert_image(int headIdx, const QImage &image, int whiteSpace)
+QByteArray Controller::convert_image(int headIdx, const QImage &image, int whiteSpace)
 {
     // Convert image to grayscale if needed
     image.convertToFormat(QImage::Format_Grayscale8);
@@ -221,11 +221,12 @@ void Controller::convert_image(int headIdx, const QImage &image, int whiteSpace)
         }
     }
 
-    send_image_data(imageData);
+    return imageData;
 }
 
-void Controller::send_image_data(const QByteArray &imageData)
+void Controller::send_image_data(int headIdx, const QImage &image, int whiteSpace)
 {
+    QByteArray imageData = convert_image(headIdx, image, whiteSpace);
     write(imageData);
 }
 
