@@ -183,9 +183,9 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
     imageData.append(100 + headIdx);
 
     // Keep track of sum and count
-    int sumofval = 0;
-    int copnt = 0;
-    int lastval = 0;
+    long long sumofval = 0;
+    long long copnt = 0;
+    long long lastval = 0;
 
     // Pre-image whitespace
     for (int i = 0; i < whiteSpace; ++i)
@@ -195,7 +195,7 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
             char curByte = 0;
             imageData.append(curByte);
             lastval = curByte;
-            sumofval += lastval;
+            sumofval += static_cast<int>(lastval);
             copnt += 1;
         }
     }
@@ -216,10 +216,12 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
             }
             imageData.append(curByte);
             lastval = curByte;
-            sumofval += lastval;
+            sumofval += static_cast<int>(lastval);
             copnt += 1;
         }
     }
+
+    emit response(QString("lastval = %1, sumofval = %2, copnt = %3").arg(lastval).arg(sumofval).arg(copnt));
 
     return imageData;
 }
