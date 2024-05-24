@@ -69,11 +69,11 @@ void MJPrintheadWidget::read_in_file(const QString &filename)
 
     if (image.isNull())
     {
-        write_to_response_window("Failed to load image from" + filePath);
+        mPrinter->mjController->emit response(QString("Failed to load image from" + filePath));
         return;
     }
 
-    mPrinter->mjController->convert_image(1, image, 0);
+    mPrinter->mjController->send_image_data(1, image, 0);
 
 }
 

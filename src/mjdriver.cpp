@@ -195,7 +195,7 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
             char curByte = 0;
             imageData.append(curByte);
             lastval = curByte;
-            sumofval += static_cast<int>(lastval);
+            sumofval += lastval;
             copnt += 1;
         }
     }
@@ -216,7 +216,7 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
             }
             imageData.append(curByte);
             lastval = curByte;
-            sumofval += static_cast<int>(lastval);
+            sumofval += lastval;
             copnt += 1;
         }
     }
