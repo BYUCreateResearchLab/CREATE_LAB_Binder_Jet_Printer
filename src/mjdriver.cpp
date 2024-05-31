@@ -192,7 +192,7 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
     {
         for (int byt = 0; byt < 16; ++byt)
         {
-            char curByte = 0;
+            unsigned char curByte = 0;
             imageData.append(curByte);
             lastval = curByte;
             sumofval += static_cast<int>(lastval);
@@ -205,7 +205,7 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
     {
         for (int byt = 0; byt < 16; ++byt)
         {
-            char curByte = 0;
+            unsigned char curByte = 0;
             for (int bit = 0; bit < 8; ++bit)
             {
                 int j = byt*8 + bit;
