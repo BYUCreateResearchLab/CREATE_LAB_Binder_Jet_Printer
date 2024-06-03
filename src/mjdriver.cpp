@@ -167,10 +167,16 @@ void Controller::mode_select(Mode mode)
     write_line(command.toUtf8());
 }
 
-QByteArray Controller::convert_image(int headIdx, const QImage &image, int whiteSpace)
+QByteArray Controller::convert_image(int headIdx, const QImage &image, int whiteSpace, int desiredWidth, int desiredHeight)
 {
     // Convert image to grayscale if needed
     image.convertToFormat(QImage::Format_Grayscale8);
+
+    // Size image according to inputs
+    desiredWidth = 200*desiredWidth; // Xaar 128/80 pL is 200 DPI
+    desiredHeight = 200*desiredHeight;
+
+    QImage resizedImage = image.scaled(desiredWidth, desiredHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
     // Get image properties
     int width = image.width();
@@ -226,9 +232,9 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
     return imageData;
 }
 
-void Controller::send_image_data(int headIdx, const QImage &image, int whiteSpace)
+void Controller::send_image_data(int headIdx, const QImage &image, int whiteSpace, int desiredWidth, int desiredHeight)
 {
-    QByteArray imageData = convert_image(headIdx, image, whiteSpace);
+    QByteArray imageData = convert_image(headIdx, image, whiteSpace, desiredWidth, desiredHeight);
     write(imageData);
 }
 

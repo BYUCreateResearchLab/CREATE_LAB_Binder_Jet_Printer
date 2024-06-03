@@ -73,7 +73,7 @@ void MJPrintheadWidget::read_in_file(const QString &filename)
         return;
     }
 
-    mPrinter->mjController->send_image_data(1, image, 0);
+    mPrinter->mjController->send_image_data(1, image, 0, 5, 2);
 
 }
 
