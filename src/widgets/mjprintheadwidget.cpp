@@ -2,6 +2,8 @@
 #include "ui_mjprintheadwidget.h"
 
 #include "mjdriver.h"
+#include "printer.h"
+#include "mainwindow.h"
 
 #include <QLineEdit>
 
@@ -24,6 +26,7 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->getHeadTempButton, &QPushButton::clicked, this, &MJPrintheadWidget::getHeadTempsPressed);
     connect(ui->setStartSpinBox, &QSpinBox::editingFinished, this, &MJPrintheadWidget::absoluteStartChanged);
     connect(ui->imageFileLineEdit, &QLineEdit::returnPressed, this, &MJPrintheadWidget::file_name_entered);
+    connect(ui->homePrinterButton, &QPushButton::clicked, this, &MJPrintheadWidget::homePrinterPressed);
 
     connect(mPrinter->mjController, &AsyncSerialDevice::response, this, &MJPrintheadWidget::write_to_response_window);
 }
@@ -73,7 +76,7 @@ void MJPrintheadWidget::read_in_file(const QString &filename)
         return;
     }
 
-    mPrinter->mjController->send_image_data(1, image, 0, 5, 2);
+    mPrinter->mjController->send_image_data(1, image, 0, 2, 5);
 
 }
 
@@ -128,4 +131,11 @@ void MJPrintheadWidget::write_to_response_window(const QString &text)
 //    ui->responseTextEdit->moveCursor(QTextCursor::End);
 //    ui->responseTextEdit->insertPlainText(text);
 //    ui->responseTextEdit->moveCursor(QTextCursor::End);
+}
+
+void MJPrintheadWidget::homePrinterPressed()
+{
+// reference functions from mainwindow.cpp/printer.h to home the printer
+    MainWindow(on_xHome_clicked());
+    MainWindow(on_yHome_clicked());
 }

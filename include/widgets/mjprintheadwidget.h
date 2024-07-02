@@ -16,7 +16,6 @@ class MJPrintheadWidget : public PrinterWidget
 public:
     explicit MJPrintheadWidget(Printer *printer, QWidget *parent = nullptr);
     ~MJPrintheadWidget();
-
     void allow_widget_input(bool allowed) override;
 
 
@@ -40,6 +39,7 @@ protected:
     void absoluteStartChanged();
 
     void write_to_response_window(const QString &text);
+    void homePrinterPressed();
 
 private:
     Ui::MJPrintheadWidget *ui;
