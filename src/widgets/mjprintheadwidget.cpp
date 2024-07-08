@@ -4,6 +4,7 @@
 #include "mjdriver.h"
 #include "printer.h"
 #include "mainwindow.h"
+#include "dmc4080.h"
 
 #include <QLineEdit>
 
@@ -27,6 +28,9 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->setStartSpinBox, &QSpinBox::editingFinished, this, &MJPrintheadWidget::absoluteStartChanged);
     connect(ui->imageFileLineEdit, &QLineEdit::returnPressed, this, &MJPrintheadWidget::file_name_entered);
     connect(ui->homePrinterButton, &QPushButton::clicked, this, &MJPrintheadWidget::homePrinterPressed);
+    connect(ui->setupBasicPrintButton, &QPushButton::clicked, this, &MJPrintheadWidget::setupBasicPrintPressed);
+    connect(ui->startBasicPrintButton, &QPushButton::clicked, this, &MJPrintheadWidget::startBasicPrintPressed);
+    connect(ui->moveToPrintPosButton, &QPushButton::clicked, this, &MJPrintheadWidget::moveToPrintPosPressed);
 
     connect(mPrinter->mjController, &AsyncSerialDevice::response, this, &MJPrintheadWidget::write_to_response_window);
 }
@@ -136,6 +140,68 @@ void MJPrintheadWidget::write_to_response_window(const QString &text)
 void MJPrintheadWidget::homePrinterPressed()
 {
 // reference functions from mainwindow.cpp/printer.h to home the printer
-    MainWindow(on_xHome_clicked());
-    MainWindow(on_yHome_clicked());
+}
+
+void MJPrintheadWidget::moveToPrintPosPressed()
+{
+    // Determine new printhead offsets compared to single nozzle
+    int x_offset = 12;
+    int y_offset = 12;
+
+    // Set Print start coordinates
+    int printStartX = 0;
+    int printStartY = 0;
+
+    std::stringstream s;
+
+    s << CMD::set_accleration(Axis::Y, 400);
+    s << CMD::set_deceleration(Axis::Y, 400);
+    s << CMD::set_accleration(Axis::X, 400);
+    s << CMD::set_deceleration(Axis::X, 400);
+
+    s << CMD::set_speed(Axis::Y, 60);
+    s << CMD::set_speed(Axis::X, 80);
+
+    s << CMD::position_absolute(Axis::X, printStartX + x_offset);
+    s << CMD::position_absolute(Axis::Y, printStartY + y_offset);
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::begin_motion(Axis::Y);
+    s << CMD::motion_complete(Axis::X);
+    s << CMD::motion_complete(Axis::Y);
+
+    emit execute_command(s);
+}
+
+void MJPrintheadWidget::setupBasicPrintPressed()
+{
+    // Put printhead into external drop watching mode ("M 2")
+    mPrinter->mjController->external_dropwatch_mode();
+    // Enable all nozzles to print for the first test ("I 1")
+    // mPrinter->mjController->enable_all_nozzles();
+    // Set Print Frequency to around 1000 Hz
+    mPrinter->mjController->set_printing_frequency(1000);
+}
+
+void MJPrintheadWidget::startBasicPrintPressed()
+{
+    int printEndX = 0;
+    int printSpeed = 80;
+
+    // Move printer left a few cm to print lines
+    std::stringstream s;
+
+    s << CMD::set_accleration(Axis::X, 400);
+    s << CMD::set_deceleration(Axis::X, 400);
+
+    s << CMD::set_speed(Axis::X, printSpeed);
+    s << CMD::position_absolute(Axis::X, printEndX);
+    s << CMD::begin_motion(Axis::X);
+
+    s << CMD::motion_complete(Axis::X);
+
+    // Enable all nozzles and start them jetting
+    mPrinter->mjController->enable_all_nozzles();
+
+    emit execute_command(s);
+
 }

@@ -40,6 +40,9 @@ protected:
 
     void write_to_response_window(const QString &text);
     void homePrinterPressed();
+    void setupBasicPrintPressed();
+    void startBasicPrintPressed();
+    void moveToPrintPosPressed();
 
 private:
     Ui::MJPrintheadWidget *ui;

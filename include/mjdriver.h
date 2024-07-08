@@ -57,6 +57,8 @@ public:
     void request_status_of_all_heads();
 
     void clear_all_heads_of_data();
+    void enable_all_nozzles();
+    void external_dropwatch_mode();
 
 
     void write_line(const QByteArray &data); // this should really be protected, but is public for testing

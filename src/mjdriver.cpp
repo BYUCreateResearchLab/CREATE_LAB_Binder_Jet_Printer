@@ -258,6 +258,16 @@ void Controller::request_status_of_all_heads()
     write_line("B");
 }
 
+void Controller::enable_all_nozzles()
+{
+    write_line("I 1");
+}
+
+void Controller::external_dropwatch_mode()
+{
+    write_line("M 2");
+}
+
 void Controller::clear_all_heads_of_data()
 {
     write_line("C");
