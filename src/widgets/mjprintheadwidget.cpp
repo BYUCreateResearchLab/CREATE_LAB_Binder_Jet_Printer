@@ -140,6 +140,24 @@ void MJPrintheadWidget::write_to_response_window(const QString &text)
 void MJPrintheadWidget::homePrinterPressed()
 {
 // reference functions from mainwindow.cpp/printer.h to home the printer
+    std::stringstream s;
+
+    s << CMD::set_accleration(Axis::Y, 400);
+    s << CMD::set_deceleration(Axis::Y, 400);
+    s << CMD::set_accleration(Axis::X, 400);
+    s << CMD::set_deceleration(Axis::X, 400);
+
+    s << CMD::set_speed(Axis::Y, 60);
+    s << CMD::set_speed(Axis::X, 80);
+
+    s << CMD::position_absolute(Axis::X, 0);
+    s << CMD::position_absolute(Axis::Y, 0);
+    s << CMD::begin_motion(Axis::X);
+    s << CMD::begin_motion(Axis::Y);
+    s << CMD::motion_complete(Axis::X);
+    s << CMD::motion_complete(Axis::Y);
+
+    emit execute_command(s);
 }
 
 void MJPrintheadWidget::moveToPrintPosPressed()
@@ -184,7 +202,7 @@ void MJPrintheadWidget::setupBasicPrintPressed()
 
 void MJPrintheadWidget::startBasicPrintPressed()
 {
-    int printEndX = 0;
+    int printEndX = 4;
     int printSpeed = 80;
 
     // Move printer left a few cm to print lines
@@ -203,5 +221,9 @@ void MJPrintheadWidget::startBasicPrintPressed()
     mPrinter->mjController->enable_all_nozzles();
 
     emit execute_command(s);
+
+    // Turn off nozzles jetting -> will this work? or will the program jump right to this as
+    // commands are being executed?
+    mPrinter->mjController->clear_nozzles();
 
 }

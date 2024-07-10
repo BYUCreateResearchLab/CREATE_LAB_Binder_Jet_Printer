@@ -263,6 +263,11 @@ void Controller::enable_all_nozzles()
     write_line("I 1");
 }
 
+void Controller::clear_nozzles()
+{
+    write_line("C");
+}
+
 void Controller::external_dropwatch_mode()
 {
     write_line("M 2");

@@ -58,6 +58,7 @@ public:
 
     void clear_all_heads_of_data();
     void enable_all_nozzles();
+    void clear_nozzles();
     void external_dropwatch_mode();
 
 
