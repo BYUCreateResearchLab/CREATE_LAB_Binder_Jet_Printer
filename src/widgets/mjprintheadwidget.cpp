@@ -34,6 +34,7 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->moveToPrintPosButton, &QPushButton::clicked, this, &MJPrintheadWidget::moveToPrintPosPressed);
     connect(ui->stopPrintingButton, &QPushButton::clicked, this, &MJPrintheadWidget::stopPrintingPressed);
     connect(ui->testPrintButton, &QPushButton::clicked, this, &MJPrintheadWidget::testPrintPressed);
+    connect(ui->testJetButton, &QPushButton::clicked, this, &MJPrintheadWidget::testJetPressed);
 
     connect(mPrinter->mjController, &AsyncSerialDevice::response, this, &MJPrintheadWidget::write_to_response_window);
 }
@@ -241,8 +242,8 @@ void MJPrintheadWidget::testPrintPressed()
     // Set printing parameters
     Axis nonPrintAxis = Axis::Y;
     Axis printAxis = Axis::X;
-    int printSpeed = 80;
-    int printStartX = 75;
+    int printSpeed = 60;
+    int printStartX = 45;
     int printFreq = 1024; // Hz
     int imageLength = 1532; // Number of columns to jet
 
@@ -263,7 +264,7 @@ void MJPrintheadWidget::testPrintPressed()
     s << CMD::set_accleration(nonPrintAxis, 600);
     s << CMD::set_deceleration(nonPrintAxis, 600);
     s << CMD::set_speed(nonPrintAxis, 60);
-    s << CMD::position_absolute(nonPrintAxis, -55);
+    s << CMD::position_absolute(nonPrintAxis, -80);
     s << CMD::begin_motion(nonPrintAxis);
     s << CMD::after_motion(nonPrintAxis);
 
@@ -271,14 +272,14 @@ void MJPrintheadWidget::testPrintPressed()
     s << CMD::set_accleration(printAxis, 600);
     s << CMD::set_deceleration(printAxis, 600);
     s << CMD::set_speed(printAxis, 60);
-    s << CMD::position_absolute(printAxis, 45);
+    s << CMD::position_absolute(printAxis, printStartX);
     s << CMD::begin_motion(printAxis);
     s << CMD::after_motion(printAxis);
 
     // Start the print
     s << CMD::set_speed(printAxis, printSpeed);
     s << CMD::position_absolute(printAxis, printStartX + (imageLength/printFreq)*printSpeed);
-    s << CMD::start_MJ_print();
+    s << CMD::start_MJ_print(); // For some reason, the printhead isn't receiving the signal to start jetting...
     s << CMD::start_MJ_dir();
     s << CMD::begin_motion(printAxis);
     s << CMD::after_motion(printAxis);
@@ -301,4 +302,25 @@ void MJPrintheadWidget::testPrintPressed()
     c << CMD::disable_MJ_dir();
 
     emit execute_command(c);
+
+    mPrinter->mjController->power_off();
+}
+
+void MJPrintheadWidget::testJetPressed()
+{
+    // Set printhead to correct state for printing
+    mPrinter->mjController->set_printing_frequency(1024);
+    mPrinter->mjController->power_on();
+    mPrinter->mjController->write_line("M 3");
+    mPrinter->mjController->set_absolute_start(1);
+
+    // Send image to printhead
+    const QString filename = "mono_logo.bmp";
+    read_in_file(filename);
+
+    std::stringstream s;
+
+    s << CMD::start_MJ_print();
+    s << CMD::start_MJ_dir();
+    emit execute_command(s);
 }

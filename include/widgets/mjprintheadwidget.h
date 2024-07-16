@@ -45,6 +45,7 @@ protected:
     void moveToPrintPosPressed();
     void stopPrintingPressed();
     void testPrintPressed();
+    void testJetPressed();
 
 private:
     Ui::MJPrintheadWidget *ui;
