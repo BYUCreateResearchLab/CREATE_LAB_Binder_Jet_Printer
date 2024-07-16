@@ -43,6 +43,8 @@ protected:
     void setupBasicPrintPressed();
     void startBasicPrintPressed();
     void moveToPrintPosPressed();
+    void stopPrintingPressed();
+    void testPrintPressed();
 
 private:
     Ui::MJPrintheadWidget *ui;

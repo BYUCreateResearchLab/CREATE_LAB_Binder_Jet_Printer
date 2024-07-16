@@ -14,19 +14,6 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="10" column="0">
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
    <item row="5" column="0">
     <widget class="QFrame" name="frame">
      <property name="frameShape">
@@ -188,10 +175,10 @@
      </layout>
     </widget>
    </item>
-   <item row="6" column="0">
-    <widget class="QPushButton" name="homePrinterButton">
+   <item row="8" column="0">
+    <widget class="QPushButton" name="setupBasicPrintButton">
      <property name="text">
-      <string>Home Printer</string>
+      <string>Setup for Basic Print</string>
      </property>
     </widget>
    </item>
@@ -222,10 +209,37 @@
      </property>
     </widget>
    </item>
-   <item row="8" column="0">
-    <widget class="QPushButton" name="setupBasicPrintButton">
+   <item row="10" column="0">
+    <widget class="QPushButton" name="stopPrintingButton">
      <property name="text">
-      <string>Setup for Basic Print</string>
+      <string>Stop Printing</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QPushButton" name="homePrinterButton">
+     <property name="text">
+      <string>Home Printer</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="11" column="0">
+    <widget class="QPushButton" name="testPrintButton">
+     <property name="text">
+      <string>TEST PRINT</string>
      </property>
     </widget>
    </item>

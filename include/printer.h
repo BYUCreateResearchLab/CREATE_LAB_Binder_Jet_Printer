@@ -106,6 +106,9 @@ class BedMicroscope;
 #define HS_TTL_BIT 17 // pin 16
 //#define MISTER_BIT 21 // pin 2
 
+#define MJ_START_BIT 38 // pin 9
+#define MJ_DIR_BIT 36 // pin 8
+
 enum class Axis
 {
     X, Y, Z, Jet
@@ -354,6 +357,12 @@ inline string disable_roller1() { return clear_bit(ROLLER_1_BIT); }
 
 inline string enable_roller2() { return set_bit(ROLLER_2_BIT); }
 inline string disable_roller2() { return clear_bit(ROLLER_2_BIT); }
+
+inline string start_MJ_print() { return set_bit(MJ_START_BIT); }
+inline string disable_MJ_start() { return clear_bit(MJ_START_BIT); }
+
+inline string start_MJ_dir() { return set_bit(MJ_DIR_BIT); }
+inline string disable_MJ_dir() { return clear_bit(MJ_DIR_BIT); }
 
 // 'U1' sent to the generator over serial port 2. 49 is the ASCII code for '1'
 // TODO: Try "MG{P2} U1\r"

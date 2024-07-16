@@ -7,6 +7,7 @@
 #include "dmc4080.h"
 
 #include <QLineEdit>
+#include <QDebug>
 
 MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     PrinterWidget(printer, parent),
@@ -31,6 +32,8 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->setupBasicPrintButton, &QPushButton::clicked, this, &MJPrintheadWidget::setupBasicPrintPressed);
     connect(ui->startBasicPrintButton, &QPushButton::clicked, this, &MJPrintheadWidget::startBasicPrintPressed);
     connect(ui->moveToPrintPosButton, &QPushButton::clicked, this, &MJPrintheadWidget::moveToPrintPosPressed);
+    connect(ui->stopPrintingButton, &QPushButton::clicked, this, &MJPrintheadWidget::stopPrintingPressed);
+    connect(ui->testPrintButton, &QPushButton::clicked, this, &MJPrintheadWidget::testPrintPressed);
 
     connect(mPrinter->mjController, &AsyncSerialDevice::response, this, &MJPrintheadWidget::write_to_response_window);
 }
@@ -224,6 +227,78 @@ void MJPrintheadWidget::startBasicPrintPressed()
 
     // Turn off nozzles jetting -> will this work? or will the program jump right to this as
     // commands are being executed?
-    mPrinter->mjController->clear_nozzles();
+    // mPrinter->mjController->clear_nozzles();
 
+}
+
+void MJPrintheadWidget::stopPrintingPressed()
+{
+    mPrinter->mjController->clear_nozzles();
+}
+
+void MJPrintheadWidget::testPrintPressed()
+{
+    // Set printing parameters
+    Axis nonPrintAxis = Axis::Y;
+    Axis printAxis = Axis::X;
+    int printSpeed = 80;
+    int printStartX = 75;
+    int printFreq = 1024; // Hz
+    int imageLength = 1532; // Number of columns to jet
+
+    // Set printhead to correct state for printing
+    mPrinter->mjController->set_printing_frequency(printFreq);
+    mPrinter->mjController->write_line("M 3");
+    mPrinter->mjController->power_on();
+    mPrinter->mjController->set_absolute_start(1);
+
+    // Send image to printhead
+    const QString filename = "mono_logo.bmp";
+    read_in_file(filename);
+
+    // Create program to move printer into position and complete print
+    std::stringstream s;
+
+    // Move Y axis into position
+    s << CMD::set_accleration(nonPrintAxis, 600);
+    s << CMD::set_deceleration(nonPrintAxis, 600);
+    s << CMD::set_speed(nonPrintAxis, 60);
+    s << CMD::position_absolute(nonPrintAxis, -55);
+    s << CMD::begin_motion(nonPrintAxis);
+    s << CMD::after_motion(nonPrintAxis);
+
+    // Move X axis into position
+    s << CMD::set_accleration(printAxis, 600);
+    s << CMD::set_deceleration(printAxis, 600);
+    s << CMD::set_speed(printAxis, 60);
+    s << CMD::position_absolute(printAxis, 45);
+    s << CMD::begin_motion(printAxis);
+    s << CMD::after_motion(printAxis);
+
+    // Start the print
+    s << CMD::set_speed(printAxis, printSpeed);
+    s << CMD::position_absolute(printAxis, printStartX + (imageLength/printFreq)*printSpeed);
+    s << CMD::start_MJ_print();
+    s << CMD::start_MJ_dir();
+    s << CMD::begin_motion(printAxis);
+    s << CMD::after_motion(printAxis);
+
+    // Compile into program for printer to run
+    std::string returnString = CMD::cmd_buf_to_dmc(s);
+    const char *commands = returnString.c_str();
+
+    qDebug().noquote() << commands;
+
+    if (mPrinter->mcu->g)
+    {
+        GProgramDownload(mPrinter->mcu->g, commands, "");
+    }
+
+    std::stringstream c;
+    c << "GCmd," << "XQ" << "\n";
+    c << "GProgramComplete," << "\n";
+    c << CMD::disable_MJ_start();
+    c << CMD::disable_MJ_dir();
+
+    emit execute_command(c);
 }
