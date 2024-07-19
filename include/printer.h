@@ -106,8 +106,8 @@ class BedMicroscope;
 #define HS_TTL_BIT 17 // pin 16
 //#define MISTER_BIT 21 // pin 2
 
-#define MJ_START_BIT 38 // pin 9
-#define MJ_DIR_BIT 36 // pin 8
+#define MJ_START_BIT 23 // pin 18
+#define MJ_DIR_BIT 22 // pin 32
 
 enum class Axis
 {
