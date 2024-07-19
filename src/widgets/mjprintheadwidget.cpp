@@ -249,8 +249,8 @@ void MJPrintheadWidget::testPrintPressed()
 
     // Set printhead to correct state for printing
     mPrinter->mjController->set_printing_frequency(printFreq);
-    mPrinter->mjController->write_line("M 3");
     mPrinter->mjController->power_on();
+    mPrinter->mjController->write_line("M 3");
     mPrinter->mjController->set_absolute_start(1);
 
     // Send image to printhead
