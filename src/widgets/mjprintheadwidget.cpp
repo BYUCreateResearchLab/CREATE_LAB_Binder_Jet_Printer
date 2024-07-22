@@ -8,6 +8,8 @@
 
 #include <QLineEdit>
 #include <QDebug>
+#include <sstream>
+#include <cmath>
 
 MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     PrinterWidget(printer, parent),
@@ -80,7 +82,7 @@ void MJPrintheadWidget::read_in_file(const QString &filename)
 
     if (image.isNull())
     {
-        mPrinter->mjController->emit response(QString("Failed to load image from" + filePath));
+        mPrinter->mjController->response(QString("Failed to load image from" + filePath));
         return;
     }
 
@@ -290,10 +292,19 @@ void MJPrintheadWidget::testPrintPressed()
 
     qDebug().noquote() << commands;
 
-    if (mPrinter->mcu->g)
-    {
-        GProgramDownload(mPrinter->mcu->g, commands, "");
-    }
+//    if (mPrinter->mcu->g)
+//    {
+//        GProgramDownload(mPrinter->mcu->g, commands, "");
+//    }
+
+    int errorCode = 0;
+        if (mPrinter->mcu->g) {
+            errorCode = GProgramDownload(mPrinter->mcu->g, commands, "");
+            if (errorCode != 0) {
+                qDebug() << "GProgramDownload error:" << errorCode;
+                return;
+            }
+        }
 
     std::stringstream c;
     c << "GCmd," << "XQ" << "\n";
