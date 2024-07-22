@@ -82,11 +82,11 @@ void MJPrintheadWidget::read_in_file(const QString &filename)
 
     if (image.isNull())
     {
-        mPrinter->mjController->response(QString("Failed to load image from" + filePath));
+        mPrinter->mjController->emit response(QString("Failed to load image from" + filePath));
         return;
     }
 
-    mPrinter->mjController->send_image_data(1, image, 0, 2, 5);
+    mPrinter->mjController->send_image_data(1, image, 0);
 
 }
 
@@ -250,10 +250,10 @@ void MJPrintheadWidget::testPrintPressed()
     int imageLength = 1532; // Number of columns to jet
 
     // Set printhead to correct state for printing
-    mPrinter->mjController->set_printing_frequency(printFreq);
-    mPrinter->mjController->power_on();
-    mPrinter->mjController->write_line("M 3");
-    mPrinter->mjController->set_absolute_start(1);
+//    mPrinter->mjController->set_printing_frequency(printFreq);
+//    mPrinter->mjController->power_on();
+//    mPrinter->mjController->write_line("M 3");
+//    mPrinter->mjController->set_absolute_start(1);
 
     // Send image to printhead
     const QString filename = "mono_logo.bmp";
@@ -292,29 +292,29 @@ void MJPrintheadWidget::testPrintPressed()
 
     qDebug().noquote() << commands;
 
-//    if (mPrinter->mcu->g)
-//    {
-//        GProgramDownload(mPrinter->mcu->g, commands, "");
-//    }
+    if (mPrinter->mcu->g)
+    {
+        GProgramDownload(mPrinter->mcu->g, commands, "");
+    }
 
-    int errorCode = 0;
-        if (mPrinter->mcu->g) {
-            errorCode = GProgramDownload(mPrinter->mcu->g, commands, "");
-            if (errorCode != 0) {
-                qDebug() << "GProgramDownload error:" << errorCode;
-                return;
-            }
-        }
+//    int errorCode = 0;
+//        if (mPrinter->mcu->g) {
+//            errorCode = GProgramDownload(mPrinter->mcu->g, commands, "");
+//            if (errorCode != 0) {
+//                qDebug() << "GProgramDownload error:" << errorCode;
+//                return;
+//            }
+//        }
 
     std::stringstream c;
     c << "GCmd," << "XQ" << "\n";
     c << "GProgramComplete," << "\n";
-    c << CMD::disable_MJ_start();
-    c << CMD::disable_MJ_dir();
+//    c << CMD::disable_MJ_start();
+//    c << CMD::disable_MJ_dir();
 
     emit execute_command(c);
 
-    mPrinter->mjController->power_off();
+//    mPrinter->mjController->power_off();
 }
 
 void MJPrintheadWidget::testJetPressed()
