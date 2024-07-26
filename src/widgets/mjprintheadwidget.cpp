@@ -244,16 +244,22 @@ void MJPrintheadWidget::testPrintPressed()
     // Set printing parameters
     Axis nonPrintAxis = Axis::Y;
     Axis printAxis = Axis::X;
-    int printSpeed = 60;
+    int printSpeed = 80;
     int printStartX = 45;
     int printFreq = 1024; // Hz
     int imageLength = 1532; // Number of columns to jet
 
     // Set printhead to correct state for printing
-//    mPrinter->mjController->set_printing_frequency(printFreq);
-//    mPrinter->mjController->power_on();
-//    mPrinter->mjController->write_line("M 3");
-//    mPrinter->mjController->set_absolute_start(1);
+    mPrinter->mjController->set_printing_frequency(printFreq);
+
+    // Check if power is already on; if not, turn it on
+    if (!ui->powerToggleButton->isChecked())
+    {
+        mPrinter->mjController->power_on();
+    }
+
+    mPrinter->mjController->write_line("M 3");
+    mPrinter->mjController->set_absolute_start(1);
 
     // Send image to printhead
     const QString filename = "mono_logo.bmp";
@@ -266,7 +272,7 @@ void MJPrintheadWidget::testPrintPressed()
     s << CMD::set_accleration(nonPrintAxis, 600);
     s << CMD::set_deceleration(nonPrintAxis, 600);
     s << CMD::set_speed(nonPrintAxis, 60);
-    s << CMD::position_absolute(nonPrintAxis, -80);
+    s << CMD::position_absolute(nonPrintAxis, -60);
     s << CMD::begin_motion(nonPrintAxis);
     s << CMD::after_motion(nonPrintAxis);
 
@@ -285,6 +291,10 @@ void MJPrintheadWidget::testPrintPressed()
     s << CMD::start_MJ_dir();
     s << CMD::begin_motion(printAxis);
     s << CMD::after_motion(printAxis);
+
+    // clear bits for print start
+    s << CMD::disable_MJ_dir();
+    s << CMD::disable_MJ_start();
 
     // Compile into program for printer to run
     std::string returnString = CMD::cmd_buf_to_dmc(s);
@@ -309,10 +319,10 @@ void MJPrintheadWidget::testPrintPressed()
     std::stringstream c;
     c << "GCmd," << "XQ" << "\n";
     c << "GProgramComplete," << "\n";
-//    c << CMD::disable_MJ_start();
-//    c << CMD::disable_MJ_dir();
 
     emit execute_command(c);
+
+    mPrinter->mjController->clear_nozzles();
 
 //    mPrinter->mjController->power_off();
 }
