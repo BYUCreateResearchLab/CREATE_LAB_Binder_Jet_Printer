@@ -272,7 +272,7 @@ void MJPrintheadWidget::testPrintPressed()
     s << CMD::set_accleration(nonPrintAxis, 600);
     s << CMD::set_deceleration(nonPrintAxis, 600);
     s << CMD::set_speed(nonPrintAxis, 60);
-    s << CMD::position_absolute(nonPrintAxis, -60);
+    s << CMD::position_absolute(nonPrintAxis, -80);
     s << CMD::begin_motion(nonPrintAxis);
     s << CMD::after_motion(nonPrintAxis);
 
@@ -322,7 +322,7 @@ void MJPrintheadWidget::testPrintPressed()
 
     emit execute_command(c);
 
-    mPrinter->mjController->clear_nozzles();
+    // mPrinter->mjController->clear_nozzles();
 
 //    mPrinter->mjController->power_off();
 }
