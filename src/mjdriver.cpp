@@ -170,12 +170,12 @@ void Controller::mode_select(Mode mode)
 QByteArray Controller::convert_image(int headIdx, const QImage &image, int whiteSpace)
 {
     // Convert image to grayscale if needed
-    image.convertToFormat(QImage::Format_Grayscale8);
+    QImage grayimage = image.convertToFormat(QImage::Format_Grayscale8);
 
     // Get image properties
-    int width = image.width();
-    int height = image.height();
-    const uchar *pixelData = image.bits();
+    int width = grayimage.width();
+    int height = grayimage.height();
+    const uchar *pixelData = grayimage.bits();
 
     // Array to store data
     QByteArray imageData;
