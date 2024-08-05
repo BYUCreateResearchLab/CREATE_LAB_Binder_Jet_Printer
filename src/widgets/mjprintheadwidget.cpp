@@ -215,7 +215,7 @@ void MJPrintheadWidget::testPrintPressed()
     // Start the print
     s << CMD::set_speed(printAxis, printSpeed);
     s << CMD::position_absolute(printAxis, printStartX + (imageLength/printFreq)*printSpeed);
-    s << CMD::start_MJ_print(); // For some reason, the printhead isn't receiving the signal to start jetting...
+    s << CMD::start_MJ_print();
     s << CMD::start_MJ_dir();
     s << CMD::begin_motion(printAxis);
     s << CMD::after_motion(printAxis);
@@ -250,7 +250,7 @@ void MJPrintheadWidget::testPrintPressed()
 
     emit execute_command(c);
 
-    mPrinter->mjController->clear_nozzles();
+    // mPrinter->mjController->clear_nozzles();
 
 //    mPrinter->mjController->power_off();
 }

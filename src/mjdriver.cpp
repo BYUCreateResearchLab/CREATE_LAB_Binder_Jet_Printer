@@ -212,7 +212,7 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
             for (int bit = 0; bit < 8; ++bit)
             {
                 int j = byt*8 + bit;
-                if (j < height && (255 - pixelData[i * height + j]) > 0)
+                if (j < height && (255 - pixelData[j * height + i]) > 0)
                 {
                     curByte += 1 << (7 - bit);
                 }
