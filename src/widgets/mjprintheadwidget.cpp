@@ -34,6 +34,7 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->testPrintButton, &QPushButton::clicked, this, &MJPrintheadWidget::testPrintPressed);
     connect(ui->testJetButton, &QPushButton::clicked, this, &MJPrintheadWidget::testJetPressed);
     connect(ui->createBitmapButton, &QPushButton::clicked, this, &MJPrintheadWidget::createBitmapPressed);
+    connect(ui->singleNozzlePushButton, &QPushButton::clicked, this, &MJPrintheadWidget::singleNozzlePressed);
 
     connect(mPrinter->mjController, &AsyncSerialDevice::response, this, &MJPrintheadWidget::write_to_response_window);
 }
@@ -281,4 +282,17 @@ void MJPrintheadWidget::createBitmapPressed()
     int numLines = ui->numLinesSpinBox->value();
     int width = ui->pixelWidthSpinBox->value();
     mPrinter->mjController->create_bitmap_lines(numLines, width);
+}
+
+void MJPrintheadWidget::singleNozzlePressed()
+{
+    // Change to drop watching mode
+    mPrinter->mjController->write_line("M 2");
+
+    // Tell which nozzles to use from spin box
+    QString nozzleNum = ui->nozzleNumSpinBox->text();
+    QByteArray command = "n 1 ";
+    command.append(nozzleNum);
+    QByteArray com = command;
+    mPrinter->mjController->write_line(command);
 }

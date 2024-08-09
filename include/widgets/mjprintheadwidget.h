@@ -44,6 +44,8 @@ protected:
     void testPrintPressed();
     void testJetPressed();
     void createBitmapPressed();
+    void singleNozzlePressed();
+
 
 private:
     Ui::MJPrintheadWidget *ui;
