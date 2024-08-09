@@ -53,6 +53,9 @@ public:
     void report_head_temps();
     QByteArray convert_image(int headIdx, const QImage &image, int whiteSpace);
     void send_image_data(int headIdx, const QImage &image, int whiteSpace);
+    void reconstructed_bitmap(const QByteArray &imageData, int width, int height);
+
+    void create_bitmap_lines(int numLines, int width);
 
     void request_status_of_all_heads();
 

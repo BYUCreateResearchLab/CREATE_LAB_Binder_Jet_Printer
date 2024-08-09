@@ -33,6 +33,7 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->stopPrintingButton, &QPushButton::clicked, this, &MJPrintheadWidget::stopPrintingPressed);
     connect(ui->testPrintButton, &QPushButton::clicked, this, &MJPrintheadWidget::testPrintPressed);
     connect(ui->testJetButton, &QPushButton::clicked, this, &MJPrintheadWidget::testJetPressed);
+    connect(ui->createBitmapButton, &QPushButton::clicked, this, &MJPrintheadWidget::createBitmapPressed);
 
     connect(mPrinter->mjController, &AsyncSerialDevice::response, this, &MJPrintheadWidget::write_to_response_window);
 }
@@ -172,9 +173,10 @@ void MJPrintheadWidget::testPrintPressed()
     // Set printing parameters
     Axis nonPrintAxis = Axis::Y;
     Axis printAxis = Axis::X;
-    int printSpeed = 80;
-    int printStartX = 45;
-    int printFreq = 1024; // Hz
+    int printSpeed = 100;
+    int printStartX = 35;
+    int printStartY = -ui->testPrintYPosSpinBox->value();
+    int printFreq = 1000; // Hz
     int imageLength = 1532; // Number of columns to jet
 
     // Set printhead to correct state for printing
@@ -200,7 +202,7 @@ void MJPrintheadWidget::testPrintPressed()
     s << CMD::set_accleration(nonPrintAxis, 600);
     s << CMD::set_deceleration(nonPrintAxis, 600);
     s << CMD::set_speed(nonPrintAxis, 60);
-    s << CMD::position_absolute(nonPrintAxis, -80);
+    s << CMD::position_absolute(nonPrintAxis, printStartY);
     s << CMD::begin_motion(nonPrintAxis);
     s << CMD::after_motion(nonPrintAxis);
 
@@ -272,4 +274,11 @@ void MJPrintheadWidget::testJetPressed()
     s << CMD::start_MJ_print();
     s << CMD::start_MJ_dir();
     emit execute_command(s);
+}
+
+void MJPrintheadWidget::createBitmapPressed()
+{
+    int numLines = ui->numLinesSpinBox->value();
+    int width = ui->pixelWidthSpinBox->value();
+    mPrinter->mjController->create_bitmap_lines(numLines, width);
 }

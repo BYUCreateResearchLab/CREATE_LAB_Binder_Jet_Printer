@@ -8,6 +8,8 @@
 #include <QTime>
 #include <QCoreApplication>
 #include <QImage>
+#include <QBitmap>
+#include <QPainter>
 
 #include <opencv2/opencv.hpp>
 #include <nlohmann/json.hpp>
@@ -175,7 +177,21 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
     // Get image properties
     int width = grayimage.width();
     int height = grayimage.height();
+    emit response(QString("Height = %1, Width = %2").arg(height).arg(width)); // for debugging
     const uchar *pixelData = grayimage.bits();
+
+    // Array to store pixel values
+    std::vector<float> processedPixels(width * height);
+
+    // Normalize pixel values between 0 and 1
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            int index = y * width + x;
+            processedPixels[index] = (255.0f - pixelData[index]) / 255.0f;
+        }
+    }
 
     // Array to store data
     QByteArray imageData;
@@ -212,7 +228,7 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
             for (int bit = 0; bit < 8; ++bit)
             {
                 int j = byt*8 + bit;
-                if (j < height && (255 - pixelData[j * height + i]) > 0)
+                if (j < height && processedPixels[j * width + i] > 0.5f)
                 {
                     curByte += 1 << (7 - bit);
                 }
@@ -225,15 +241,94 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
         }
     }
 
+    // Check image is correct by reconstructing and saving it to view
+    reconstructed_bitmap(imageData, width, height);
+
     emit response(QString("lastval = %1, sumofval = %2, copnt = %3").arg(lastval).arg(sumofval).arg(copnt));
 
     return imageData;
+}
+
+void Controller::reconstructed_bitmap(const QByteArray &imageData, int width, int height)
+{
+    // Skip first two bytes
+    int startIdx = 2;
+
+    // Create empty bitmap
+    QBitmap newBitmap(width, height);
+    newBitmap.clear();
+
+    QPainter painter(&newBitmap);
+    painter.setPen(Qt::black);
+
+    // Reconstruct image
+    for (int i = 0; i < width; ++i)
+    {
+        for (int byt = 0; byt < 16; ++byt)
+        {
+            if (startIdx >= imageData.size()) break;
+            unsigned char curByte = static_cast<unsigned char>(imageData[startIdx++]);
+            for (int bit = 0; bit < 8; ++bit)
+            {
+                int j = byt*8 + bit;
+                if (j < height)
+                {
+                    bool pixelOn = (curByte & (1 << (7 - bit))) != 0;
+                    if (pixelOn) painter.drawPoint(i,j);
+                }
+            }
+        }
+    }
+
+    painter.end();
+
+    // Convert to QImage for saving
+    QImage image = newBitmap.toImage();
+
+    // save to file library
+    QString filePath = "C:\\Users\\CB140LAB\\Desktop\\Noah\\newBitmap.bmp";
+    image.save(filePath);
+
+    emit response(QString("Bitmap reconstructed and saved"));
 }
 
 void Controller::send_image_data(int headIdx, const QImage &image, int whiteSpace)
 {
     QByteArray imageData = convert_image(headIdx, image, whiteSpace);
     write(imageData);
+}
+
+void Controller::create_bitmap_lines(int numLines, int width)
+{
+    // Define the height of the bitmap
+    const int height = 128;
+
+    // Create an empty QBitmap
+    QBitmap bitmap(width, height);
+    bitmap.clear(); // Start with a white bitmap
+
+    QPainter painter(&bitmap);
+    painter.setPen(Qt::black);
+
+    // Calculate the spacing between black lines
+    int spacing = height / (numLines);
+
+    // Draw black lines
+    for (int i = 0; i < numLines; ++i) {
+        int y = i * spacing;
+        painter.drawLine(0, y, width, y);
+    }
+
+    painter.end();
+
+    // Convert QBitmap to QImage for saving
+    QImage image = bitmap.toImage();
+
+    // Save the image to the specified file path
+    QString filePath = "C:\\Users\\CB140LAB\\Desktop\\Noah\\currentBitmap.bmp";
+    image.save(filePath);
+
+    emit response(QString("Bitmap created and saved as currentBitmap.bmp"));
 }
 
 void Controller::soft_reset_board()

@@ -43,6 +43,7 @@ protected:
     void stopPrintingPressed();
     void testPrintPressed();
     void testJetPressed();
+    void createBitmapPressed();
 
 private:
     Ui::MJPrintheadWidget *ui;
