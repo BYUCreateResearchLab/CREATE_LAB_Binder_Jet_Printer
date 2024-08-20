@@ -39,7 +39,6 @@ protected:
     void absoluteStartChanged();
 
     void write_to_response_window(const QString &text);
-    void homePrinterPressed();
     void stopPrintingPressed();
     void testPrintPressed();
     void testJetPressed();

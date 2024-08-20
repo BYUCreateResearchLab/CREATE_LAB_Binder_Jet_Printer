@@ -29,7 +29,6 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->getHeadTempButton, &QPushButton::clicked, this, &MJPrintheadWidget::getHeadTempsPressed);
     connect(ui->setStartSpinBox, &QSpinBox::editingFinished, this, &MJPrintheadWidget::absoluteStartChanged);
     connect(ui->imageFileLineEdit, &QLineEdit::returnPressed, this, &MJPrintheadWidget::file_name_entered);
-    connect(ui->homePrinterButton, &QPushButton::clicked, this, &MJPrintheadWidget::homePrinterPressed);
     connect(ui->stopPrintingButton, &QPushButton::clicked, this, &MJPrintheadWidget::stopPrintingPressed);
     connect(ui->testPrintButton, &QPushButton::clicked, this, &MJPrintheadWidget::testPrintPressed);
     connect(ui->testJetButton, &QPushButton::clicked, this, &MJPrintheadWidget::testJetPressed);
@@ -141,29 +140,6 @@ void MJPrintheadWidget::write_to_response_window(const QString &text)
 //    ui->responseTextEdit->moveCursor(QTextCursor::End);
 }
 
-void MJPrintheadWidget::homePrinterPressed()
-{
-// reference functions from mainwindow.cpp/printer.h to home the printer
-    std::stringstream s;
-
-    s << CMD::set_accleration(Axis::Y, 400);
-    s << CMD::set_deceleration(Axis::Y, 400);
-    s << CMD::set_accleration(Axis::X, 400);
-    s << CMD::set_deceleration(Axis::X, 400);
-
-    s << CMD::set_speed(Axis::Y, 60);
-    s << CMD::set_speed(Axis::X, 80);
-
-    s << CMD::position_absolute(Axis::X, 0);
-    s << CMD::position_absolute(Axis::Y, 0);
-    s << CMD::begin_motion(Axis::X);
-    s << CMD::begin_motion(Axis::Y);
-    s << CMD::motion_complete(Axis::X);
-    s << CMD::motion_complete(Axis::Y);
-
-    emit execute_command(s);
-}
-
 void MJPrintheadWidget::stopPrintingPressed()
 {
     mPrinter->mjController->clear_nozzles();
@@ -177,7 +153,7 @@ void MJPrintheadWidget::testPrintPressed()
     int printSpeed = 100;
     int printStartX = 35;
     int printStartY = -ui->testPrintYPosSpinBox->value();
-    int printFreq = 1000; // Hz
+    int printFreq = 1532; // Hz
     int imageLength = 1532; // Number of columns to jet
 
     // Set printhead to correct state for printing
@@ -193,7 +169,7 @@ void MJPrintheadWidget::testPrintPressed()
     mPrinter->mjController->set_absolute_start(1);
 
     // Send image to printhead
-    const QString filename = "mono_logo.bmp";
+    const QString filename = "currentBitmap.bmp";
     read_in_file(filename);
 
     // Create program to move printer into position and complete print

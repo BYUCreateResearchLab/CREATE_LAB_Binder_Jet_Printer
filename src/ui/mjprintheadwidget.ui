@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>888</width>
-    <height>627</height>
+    <width>951</width>
+    <height>810</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -43,13 +43,6 @@
           <width>300</width>
           <height>0</height>
          </size>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="2">
-       <widget class="QPushButton" name="homePrinterButton">
-        <property name="text">
-         <string>Home Printer</string>
         </property>
        </widget>
       </item>
@@ -144,13 +137,6 @@
         </property>
        </widget>
       </item>
-      <item row="10" column="1">
-       <widget class="QPushButton" name="stopPrintingButton">
-        <property name="text">
-         <string>Stop Printing</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="0">
        <widget class="QPushButton" name="connectButton">
         <property name="text">
@@ -227,6 +213,13 @@
         </property>
         <property name="value">
          <number>1000</number>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="1" colspan="2">
+       <widget class="QPushButton" name="stopPrintingButton">
+        <property name="text">
+         <string>Stop Printing</string>
         </property>
        </widget>
       </item>
