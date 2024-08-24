@@ -56,6 +56,9 @@ public:
     void reconstructed_bitmap(const QByteArray &imageData, int width, int height);
 
     void create_bitmap_lines(int numLines, int width);
+    void createBitmapTestLines(int numberOfLines,  int lineSpacing, int dropletSpacing, int frequency, int lineLength, int number);
+    void createBitmapSet(int numberOfLines,int lineSpacing,int dropletSpacing,int frequency,int lineLength, int frequencyChange, int dropletSpacingChange);
+    void outputMessage(QString message);
 
     void request_status_of_all_heads();
 

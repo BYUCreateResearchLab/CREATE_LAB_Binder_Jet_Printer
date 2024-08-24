@@ -9,6 +9,11 @@
 #include <QLineEdit>
 #include <QDebug>
 #include <sstream>
+#include <QCoreApplication>
+#include <QDir>
+#include <QFile>
+#include <QDataStream>
+
 
 MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     PrinterWidget(printer, parent),
@@ -34,8 +39,9 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->testJetButton, &QPushButton::clicked, this, &MJPrintheadWidget::testJetPressed);
     connect(ui->createBitmapButton, &QPushButton::clicked, this, &MJPrintheadWidget::createBitmapPressed);
     connect(ui->singleNozzlePushButton, &QPushButton::clicked, this, &MJPrintheadWidget::singleNozzlePressed);
-
+    connect(ui->createTestBitmaps, &QPushButton::clicked, this, &MJPrintheadWidget::createTestBitmapsPressed);
     connect(mPrinter->mjController, &AsyncSerialDevice::response, this, &MJPrintheadWidget::write_to_response_window);
+    connect(ui->printVariableTestPrint, &QPushButton::clicked, this, &MJPrintheadWidget::variableTestPrintPressed);
 }
 
 MJPrintheadWidget::~MJPrintheadWidget()
@@ -153,8 +159,8 @@ void MJPrintheadWidget::testPrintPressed()
     int printSpeed = 100;
     int printStartX = 35;
     int printStartY = -ui->testPrintYPosSpinBox->value();
-    int printFreq = 1532; // Hz
-    int imageLength = 1532; // Number of columns to jet
+    int printFreq = 1521; // Hz
+    int imageLength = 1521; // Number of columns to jet
 
     // Set printhead to correct state for printing
     mPrinter->mjController->set_printing_frequency(printFreq);
@@ -271,4 +277,168 @@ void MJPrintheadWidget::singleNozzlePressed()
     command.append(nozzleNum);
     QByteArray com = command;
     mPrinter->mjController->write_line(command);
+}
+
+void MJPrintheadWidget::createTestBitmapsPressed()
+{
+    int numberOfLines = ui ->numberOfLines->value();
+    int lineSpacing = ui ->initialYSpacing->value();
+    int frequencyChange = ui ->frequencyChange->value();
+    int frequency = ui->initialFrequency->value();
+    int lineLength = ui->lineLength->value();
+    int dropletSpacing = ui->dropletSpacing->value();
+    int dropletSpacingChange = ui->dropletSpacingChange->value();
+
+    mPrinter->mjController->createBitmapSet(numberOfLines, lineSpacing, dropletSpacing, frequency, lineLength, frequencyChange, dropletSpacingChange);
+}
+
+void MJPrintheadWidget::variableTestPrintPressed(){
+    mPrinter->mjController->outputMessage(QString("Entered Variable Test Print Pressed"));              //testing !!!!!!
+
+    // Define the directory path
+    QString directoryPath = "C:\\Users\\CB140LAB\\Desktop\\Noah\\BitmapTestFolder";
+    // Create a QDir object with the directory path
+    QDir dir(directoryPath);
+    // Get a list of all files in the directory (excluding directories)
+    QStringList fileNames = dir.entryList(QDir::Files);
+
+    for(int i = 0; i < fileNames.size(); i++){
+        QString fileName = fileNames[i];
+        mPrinter->mjController->outputMessage(fileName);                                            //testing !!!!!!
+
+        //Loads Image (could also include a third argument with the folder if we want multiple folder locations)
+        QString fullPath = QString("%1\\%2").arg(directoryPath, fileName);
+        QImage image (fullPath);
+
+        //Error catching for Image
+        if(image.isNull()){
+            mPrinter->mjController->outputMessage(QString("Failed to load image: ") + fullPath );
+            continue;
+        }
+
+        //Pulling information from fileName
+        QString frequencyStr = fileName.mid(fileName.length() -8, 4);
+        QString speedStr = fileName.mid(fileName.length() - 14, 5);
+        QString rowStr = fileName.at(0);
+        QString colStr = fileName.at(1);
+
+        bool ok;
+        //Conversion from strings to Int or Double for actual use
+        int frequency = frequencyStr.toInt(&ok);
+        if (!ok) {
+            mPrinter->mjController->outputMessage(QString("Failed to convert frequency from: ") + frequencyStr);
+            continue;  // Skip to the next file
+        }
+        double speed = speedStr.toDouble(&ok);
+        if (!ok) {
+            mPrinter->mjController->outputMessage(QString("Failed to convert speed from: ") + speedStr);
+            continue;  // Skip to the next file
+        }
+        int row = rowStr.toInt(&ok);
+        if (!ok) {
+            mPrinter->mjController->outputMessage(QString("Failed to convert row from: ") + rowStr);
+            continue;  // Skip to the next file
+        }
+        int col = colStr.toInt(&ok);
+        if (!ok) {
+            mPrinter->mjController->outputMessage(QString("Failed to convert col from: ") + colStr);
+            continue;  // Skip to the next file
+        }
+
+        int width = image.width();
+
+        // Set printing parameters
+
+        int printSpeed = speed;
+        int printStartX = 35 + (10 * col);                                       //!!!          35 and 70 are really just guestimates
+        int printStartY = 70 + (17.6 * row);                                     //!!!       17.6 is a rough estimate of the length of the printhead
+        int printFreq = frequency; // Hz
+        int imageLength = width; // Number of columns to jet
+
+        printBMPatLocation(printStartX, printStartY, printFreq, printSpeed, imageLength, fileName);
+    }
+    mPrinter->mjController->outputMessage(QString("END OF CODE 1"));
+}
+
+void MJPrintheadWidget::printBMPatLocation(int xLocation, int yLocation, int frequency, double printSpeed, int imageWidth, QString fileName){
+    mPrinter->mjController->outputMessage(QString("ENTERED 2ND FUNCTION"));         //TESTING !!!!!!
+
+    Axis nonPrintAxis = Axis::Y;
+    Axis printAxis = Axis::X;
+
+    //Showing Paramaters /*  */
+    mPrinter->mjController->outputMessage(QString("Parameters: "));
+    mPrinter->mjController->outputMessage(QString("Start X: %1").arg(xLocation));
+    mPrinter->mjController->outputMessage(QString("Start Y: %1").arg(yLocation));
+    mPrinter->mjController->outputMessage(QString("Frequency: %1").arg(frequency));
+    mPrinter->mjController->outputMessage(QString("Speed: %1").arg(printSpeed));
+    mPrinter->mjController->outputMessage(QString("Image Width: %1").arg(imageWidth));
+
+    // Set printhead to correct state for printing
+    mPrinter->mjController->set_printing_frequency(frequency);
+    mPrinter->mjController->power_on();
+    mPrinter->mjController->write_line("M 3");
+    mPrinter->mjController->set_absolute_start(1);
+
+    // Send image to printhead
+    QString fileNameWFolder = QString("BitmapTestFolder\\") + fileName;         //This could be better done instead of hardcoded
+    read_in_file(fileNameWFolder);
+
+    // Create program to move printer into position and complete print
+    std::stringstream s;
+
+    // Move Y axis into position
+    s << CMD::set_accleration(nonPrintAxis, 600);
+    s << CMD::set_deceleration(nonPrintAxis, 600);
+    s << CMD::set_speed(nonPrintAxis, 60);
+    s << CMD::position_absolute(nonPrintAxis, yLocation);
+    s << CMD::begin_motion(nonPrintAxis);
+    s << CMD::after_motion(nonPrintAxis);
+
+    // Move X axis into position
+    s << CMD::set_accleration(printAxis, 600);
+    s << CMD::set_deceleration(printAxis, 600);
+    s << CMD::set_speed(printAxis, 60);
+    s << CMD::position_absolute(printAxis, xLocation);
+    s << CMD::begin_motion(printAxis);
+    s << CMD::after_motion(printAxis);
+
+    // Start the print
+    s << CMD::set_speed(printAxis, printSpeed);
+    s << CMD::position_absolute(printAxis, xLocation + (imageWidth/frequency)*printSpeed);
+    s << CMD::start_MJ_print();
+    s << CMD::start_MJ_dir();
+    s << CMD::begin_motion(printAxis);
+    s << CMD::after_motion(printAxis);
+
+    // clear bits for print start
+    s << CMD::disable_MJ_dir();
+    s << CMD::disable_MJ_start();
+
+    // S Value Debugging
+    /*
+        CMD::string str = s.str();
+        QString sStr = QString::fromStdString(str);
+        mPrinter->mjController->outputMessage(sStr);
+        */
+
+    // Compile into program for printer to run
+    std::string returnString = CMD::cmd_buf_to_dmc(s);
+    const char *commands = returnString.c_str();
+    qDebug().noquote() << commands;
+
+    if (mPrinter->mcu->g)
+    {
+        GProgramDownload(mPrinter->mcu->g, commands, "");
+    }
+
+    std::stringstream c;
+    c << "GCmd," << "XQ" << "\n";
+    c << "GProgramComplete," << "\n";
+
+    emit execute_command(c);
+
+    // mPrinter->mjController->clear_nozzles();
+
+    //    mPrinter->mjController->power_off();
 }

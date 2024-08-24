@@ -45,6 +45,10 @@ protected:
     void createBitmapPressed();
     void singleNozzlePressed();
 
+    void createTestBitmapsPressed();
+    void variableTestPrintPressed();
+    void printBMPatLocation(int xLocation, int yLocation, int frequency, double printSpeed, int imageWidth, QString fileLocation);
+
 
 private:
     Ui::MJPrintheadWidget *ui;

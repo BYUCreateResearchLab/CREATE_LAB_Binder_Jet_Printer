@@ -10,6 +10,7 @@
 #include <QImage>
 #include <QBitmap>
 #include <QPainter>
+#include <format>
 
 #include <opencv2/opencv.hpp>
 #include <nlohmann/json.hpp>
@@ -329,6 +330,72 @@ void Controller::create_bitmap_lines(int numLines, int width)
     image.save(filePath);
 
     emit response(QString("Bitmap created and saved as currentBitmap.bmp"));
+}
+
+void Controller::createBitmapTestLines(int numberOfLines,  int lineSpacing, int dropletSpacing, int frequency, int lineLength, int number)
+{
+    int bedWidth = 100; //mm
+    int yCoord = 0;
+    int xCoordS = 0;
+    double dropSpacing = dropletSpacing;
+    int xCoordF = lineLength / (dropSpacing / 1000);
+
+    if(numberOfLines > 128 || numberOfLines * lineSpacing > 128){
+        emit response(QString("Too many lines!"));
+            return;
+    }
+
+    //speed/frequency = spacing (in the x)
+    //  (mm/s) / (1/s) = mm
+
+    double printSpeed = (dropSpacing / 1000) * frequency;    //(uM * Freq) -> MM/S
+
+    // Define the height of the bitmap
+    const int height = 128;
+
+    // Create an empty QBitmap
+    QBitmap bitmap(xCoordF, height);
+    bitmap.clear(); // Start with a white bitmap
+
+    QPainter painter(&bitmap);
+    painter.setPen(Qt::black);
+
+        //VISUAL X SPACING                          (1 row)
+        for(int i = 0; i < numberOfLines; i++){
+            painter.drawLine(xCoordS, yCoord, xCoordF, yCoord);
+            yCoord = yCoord + lineSpacing;
+        }
+
+    painter.end();
+
+    //QString formattedSpeed = QString::number(printSpeed, 'd', 1);
+    QString formattedSpeed = QString("%1").arg(QString::number(printSpeed, 'f', 1), 5, QChar('0'));
+    QString formattedNumber = QString("%1").arg(number, 2, 10, QChar('0'));
+    QString formattedFrequency = QString("%1").arg(frequency, 4, 10, QChar('0'));
+
+    // Convert QBitmap to QImage for saving
+    QImage image = bitmap.toImage();
+    QString filePath = QString("C:\\Users\\CB140LAB\\Desktop\\Noah\\BitmapTestFolder\\%1testBitmap_%2_%3.bmp").arg(formattedNumber, formattedSpeed, formattedFrequency);
+    image.save(filePath);
+
+    emit response(QString("Bitmap created and saved as %1testBitMap_%2_%3.bmp").arg(formattedNumber, formattedSpeed, formattedFrequency));
+}
+
+void Controller::createBitmapSet(int numberOfLines,int lineSpacing,int dropletSpacing,int frequency,int lineLength, int frequencyChange, int dropletSpacingChange){
+    //6 rows by 10 columns
+    int counter = 0;
+    for(int i = 0; i < 6; i++){
+        int tempDropletSpacing = dropletSpacing + (dropletSpacingChange * i);
+        for(int j = 0; j < 10; j++){
+            int tempFrequency = frequency + (frequencyChange * j);
+            createBitmapTestLines(numberOfLines, lineSpacing, tempDropletSpacing, tempFrequency, lineLength, counter);
+            counter++;
+        }
+    }
+}
+
+void Controller::outputMessage(QString message){
+    emit response(message);
 }
 
 void Controller::soft_reset_board()
