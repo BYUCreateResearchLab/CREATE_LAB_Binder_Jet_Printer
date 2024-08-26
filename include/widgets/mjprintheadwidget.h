@@ -47,7 +47,7 @@ protected:
 
     void createTestBitmapsPressed();
     void variableTestPrintPressed();
-    void printBMPatLocation(int xLocation, int yLocation, int frequency, double printSpeed, int imageWidth, QString fileLocation);
+    void printBMPatLocation(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileLocation);
 
 
 private:

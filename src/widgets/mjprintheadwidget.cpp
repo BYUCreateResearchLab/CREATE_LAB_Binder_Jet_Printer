@@ -159,7 +159,7 @@ void MJPrintheadWidget::testPrintPressed()
     int printSpeed = 100;
     int printStartX = 35;
     int printStartY = -ui->testPrintYPosSpinBox->value();
-    int printFreq = 1521; // Hz
+    double printFreq = 1521; // Hz
     int imageLength = 1521; // Number of columns to jet
 
     // Set printhead to correct state for printing
@@ -302,7 +302,7 @@ void MJPrintheadWidget::variableTestPrintPressed(){
     // Get a list of all files in the directory (excluding directories)
     QStringList fileNames = dir.entryList(QDir::Files);
 
-    for(int i = 0; i < fileNames.size(); i++){
+    for(int i = 0; i < 1; i++){ //fileNames.size();
         QString fileName = fileNames[i];
         mPrinter->mjController->outputMessage(fileName);                                            //testing !!!!!!
 
@@ -349,18 +349,21 @@ void MJPrintheadWidget::variableTestPrintPressed(){
 
         // Set printing parameters
 
-        int printSpeed = speed;
-        int printStartX = 35 + (10 * col);                                       //!!!          35 and 70 are really just guestimates
-        int printStartY = 70 + (17.6 * row);                                     //!!!       17.6 is a rough estimate of the length of the printhead
-        int printFreq = frequency; // Hz
+        double printSpeed = speed;
+        double printStartX = 35 + (10 * col);                                       //!!!          35 and 70 are really just guestimates
+        double printStartY = 70 + (17.6 * row);                                     //!!!       17.6 is a rough estimate of the length of the printhead
+        double printFreq = frequency; // Hz
         int imageLength = width; // Number of columns to jet
 
+        //double timeToPrint = static_cast<double>(imageLength) / printSpeed; //time in seconds
+
         printBMPatLocation(printStartX, printStartY, printFreq, printSpeed, imageLength, fileName);
+
     }
     mPrinter->mjController->outputMessage(QString("END OF CODE 1"));
 }
 
-void MJPrintheadWidget::printBMPatLocation(int xLocation, int yLocation, int frequency, double printSpeed, int imageWidth, QString fileName){
+void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName){
     mPrinter->mjController->outputMessage(QString("ENTERED 2ND FUNCTION"));         //TESTING !!!!!!
 
     Axis nonPrintAxis = Axis::Y;
