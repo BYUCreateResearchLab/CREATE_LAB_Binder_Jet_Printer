@@ -15,8 +15,14 @@ class OutputWindow : public QWidget
 public:
     explicit OutputWindow(QWidget *parent, std::ofstream& logFile);
     ~OutputWindow();
+
+signals:
+    void windowText(QString text);
+
 public slots:
     void print_string(QString s);
+    QString getOutputText();
+
 
 private slots:
     void clear_text();
