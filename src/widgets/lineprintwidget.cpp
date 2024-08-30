@@ -350,8 +350,7 @@ void LinePrintWidget::print_lines_dmc()
     printIsRunning_ = true;
     ui->stopPrintButton->setEnabled(true);
     connect(mPrintThread, &PrintThread::ended, this, &LinePrintWidget::when_line_print_completed);
-    // goes to the printthread  (run) command until "emit ended()" then runs
-    // when line print completed()
+
     return;
 }
 

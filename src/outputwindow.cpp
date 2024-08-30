@@ -1,5 +1,4 @@
 #include "outputwindow.h"
-//#include "mjprintheadwidget.h"
 #include "ui_outputwindow.h"
 #include <QDateTime>
 
@@ -7,7 +6,6 @@ void OutputWindow::print_string(QString s)
 {
     // output to window
     ui->mOutputText->appendPlainText(s);
-    emit windowText(s);
 
     // write to log
     auto currentTime = QDateTime::currentDateTime()
@@ -39,10 +37,6 @@ OutputWindow::~OutputWindow()
 void OutputWindow::clear_text()
 {
     ui->mOutputText->clear();
-}
-
-QString OutputWindow::getOutputText(){
-    return ui->mOutputText->toPlainText();
 }
 
 #include "moc_outputwindow.cpp"

@@ -5,7 +5,6 @@
 
 #include "printerwidget.h"
 
-
 namespace Ui {
 class MJPrintheadWidget;
 }
@@ -18,9 +17,6 @@ public:
     explicit MJPrintheadWidget(Printer *printer, QWidget *parent = nullptr);
     ~MJPrintheadWidget();
     void allow_widget_input(bool allowed) override;
-
-public slots:
-    void windowText(QString text);
 
 
 protected:
@@ -52,8 +48,7 @@ protected:
     void createTestBitmapsPressed();
     void variableTestPrintPressed();
     void printBMPatLocation(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileLocation);
-    void whenCompleted();
-    bool isPrintComplete();
+
 
 private:
     Ui::MJPrintheadWidget *ui;

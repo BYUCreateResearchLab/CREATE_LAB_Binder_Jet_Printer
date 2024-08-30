@@ -165,31 +165,6 @@ void PrintThread::run()
                         //emit response("ERROR: not connected to controller!");
                     }
                 }
-                else if (commandType == "PrintBMPSet"){
-                    if (mPrinter->g){
-                        int val{};
-                        constexpr int sleepTime_ms = 100;
-                        //safety to let the program break out of the loop eventually
-                        constexpr int breakLoopTime_sec = 500; //about 8 min
-                        constexpr int maxLoop{(breakLoopTime_sec * 1000) / sleepTime_ms};
-                        int counter{0};
-                        do{
-                            GCmdI(mPrinter->g, "Data[0]=?", &val);
-                            GSleep(sleepTime_ms);
-                            counter++;
-                        }
-                        while (val != 0 && counter < maxLoop && running);
-
-                        if(running){
-                            e(GArrayDownload(mPrinter->g, "Data", G_BOUNDS, G_BOUNDS, commandString.c_str()));
-                        }
-                    }
-                    else{
-                     //emit response("ERROR: not connected to controller!");
-                    }
-
-
-                }
                 else if (commandType == "GMotionComplete")
                 {
                     //emit response(QString::fromStdString(commandType) + QString::fromStdString(": ") + QString::fromStdString(commandString));

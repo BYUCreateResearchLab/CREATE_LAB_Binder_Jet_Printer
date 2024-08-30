@@ -1,6 +1,5 @@
 #include "mjprintheadwidget.h"
 #include "ui_mjprintheadwidget.h"
-#include "ui_outputwindow.h"
 
 #include "mjdriver.h"
 #include "printer.h"
@@ -22,6 +21,7 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
 {
     ui->setupUi(this);
     setAccessibleName("Multi-Jet Printhead Widget");
+
     connect(ui->connectButton, &QPushButton::clicked, this, &MJPrintheadWidget::connect_to_printhead);
     connect(ui->clearButton, &QPushButton::clicked, this, &MJPrintheadWidget::clear_response_text);
     connect(ui->inputLineEdit, &QLineEdit::returnPressed, this, &MJPrintheadWidget::command_entered);
@@ -209,9 +209,6 @@ void MJPrintheadWidget::testPrintPressed()
     s << CMD::disable_MJ_dir();
     s << CMD::disable_MJ_start();
 
-    // Verify Print Complete
-    s << CMD::display_message("Print Complete");
-
     // Compile into program for printer to run
     std::string returnString = CMD::cmd_buf_to_dmc(s);
     const char *commands = returnString.c_str();
@@ -237,7 +234,7 @@ void MJPrintheadWidget::testPrintPressed()
     c << "GProgramComplete," << "\n";
 
     emit execute_command(c);
-    return;
+
     // mPrinter->mjController->clear_nozzles();
 
 //    mPrinter->mjController->power_off();
@@ -305,8 +302,7 @@ void MJPrintheadWidget::variableTestPrintPressed(){
     // Get a list of all files in the directory (excluding directories)
     QStringList fileNames = dir.entryList(QDir::Files);
 
-
-    for(int i = 0; i < fileNames.size(); i++){ //fileNames.size();
+    for(int i = 0; i < 1; i++){ //fileNames.size();
         QString fileName = fileNames[i];
         mPrinter->mjController->outputMessage(fileName);                                            //testing !!!!!!
 
@@ -363,26 +359,15 @@ void MJPrintheadWidget::variableTestPrintPressed(){
 
         printBMPatLocation(printStartX, printStartY, printFreq, printSpeed, imageLength, fileName);
 
-        while(!isPrintComplete()){
-            QThread::msleep(100);
-        }
-
     }
-
-
-    return;
-}
-
-bool MJPrintheadWidget::isPrintComplete(){
-    QString output = "";
-    return false;
+    mPrinter->mjController->outputMessage(QString("END OF CODE 1"));
 }
 
 void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName){
+    mPrinter->mjController->outputMessage(QString("ENTERED 2ND FUNCTION"));         //TESTING !!!!!!
+
     Axis nonPrintAxis = Axis::Y;
     Axis printAxis = Axis::X;
-
-
 
     //Showing Paramaters /*  */
     mPrinter->mjController->outputMessage(QString("Parameters: "));
@@ -392,28 +377,24 @@ void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, d
     mPrinter->mjController->outputMessage(QString("Speed: %1").arg(printSpeed));
     mPrinter->mjController->outputMessage(QString("Image Width: %1").arg(imageWidth));
 
-    mPrinter->mjController->set_printing_frequency(frequency);
-
     // Set printhead to correct state for printing
+    mPrinter->mjController->set_printing_frequency(frequency);
     mPrinter->mjController->power_on();
     mPrinter->mjController->write_line("M 3");
     mPrinter->mjController->set_absolute_start(1);
 
     // Send image to printhead
-    QString fileNameWFolder = QString("BitmapTestFolder\\") + fileName;
+    QString fileNameWFolder = QString("BitmapTestFolder\\") + fileName;         //This could be better done instead of hardcoded
     read_in_file(fileNameWFolder);
 
     // Create program to move printer into position and complete print
     std::stringstream s;
-    //executing/verifying code
-    s << "GCmd," << "XQ #BEGIN" << "\n";
-    //s << "PrintBMPSet,";
 
     // Move Y axis into position
     s << CMD::set_accleration(nonPrintAxis, 600);
     s << CMD::set_deceleration(nonPrintAxis, 600);
     s << CMD::set_speed(nonPrintAxis, 60);
-    s << CMD::position_absolute(nonPrintAxis, yLocation);   //LOOK
+    s << CMD::position_absolute(nonPrintAxis, yLocation);
     s << CMD::begin_motion(nonPrintAxis);
     s << CMD::after_motion(nonPrintAxis);
 
@@ -444,13 +425,9 @@ void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, d
         mPrinter->mjController->outputMessage(sStr);
         */
 
-    // Verify Print Complete
-    s << CMD::display_message("Print Complete");
-
     // Compile into program for printer to run
     std::string returnString = CMD::cmd_buf_to_dmc(s);
     const char *commands = returnString.c_str();
-
     qDebug().noquote() << commands;
 
     if (mPrinter->mcu->g)
@@ -459,8 +436,9 @@ void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, d
     }
 
     std::stringstream c;
-     c << "GCmd," << "XQ" << "\n";
-     c << "GProgramComplete," << "\n";
+    c << "GCmd," << "XQ" << "\n";
+    c << "GProgramComplete," << "\n";
+
     emit execute_command(c);
 
     // mPrinter->mjController->clear_nozzles();
