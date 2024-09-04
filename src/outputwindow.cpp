@@ -1,11 +1,23 @@
 #include "outputwindow.h"
 #include "ui_outputwindow.h"
 #include <QDateTime>
+//#include "globals.h"
+
+bool printComplete = false;
 
 void OutputWindow::print_string(QString s)
 {
     // output to window
     ui->mOutputText->appendPlainText(s);
+
+    // check print completion status
+    if(s.contains(QString("Print Complete"))){
+        printComplete = true;
+        ui->mOutputText->appendPlainText(QString("!!!!!!!!!"));
+    }
+    else{
+        printComplete = false;
+    }
 
     // write to log
     auto currentTime = QDateTime::currentDateTime()

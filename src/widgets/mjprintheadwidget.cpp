@@ -5,6 +5,7 @@
 #include "printer.h"
 #include "mainwindow.h"
 #include "dmc4080.h"
+#include "outputwindow.h"
 
 #include <QLineEdit>
 #include <QDebug>
@@ -209,6 +210,8 @@ void MJPrintheadWidget::testPrintPressed()
     s << CMD::disable_MJ_dir();
     s << CMD::disable_MJ_start();
 
+    s << CMD::display_message("Print Complete");
+
     // Compile into program for printer to run
     std::string returnString = CMD::cmd_buf_to_dmc(s);
     const char *commands = returnString.c_str();
@@ -294,7 +297,6 @@ void MJPrintheadWidget::createTestBitmapsPressed()
 
 void MJPrintheadWidget::variableTestPrintPressed(){
     mPrinter->mjController->outputMessage(QString("Entered Variable Test Print Pressed"));              //testing !!!!!!
-
     // Define the directory path
     QString directoryPath = "C:\\Users\\CB140LAB\\Desktop\\Noah\\BitmapTestFolder";
     // Create a QDir object with the directory path
@@ -302,8 +304,20 @@ void MJPrintheadWidget::variableTestPrintPressed(){
     // Get a list of all files in the directory (excluding directories)
     QStringList fileNames = dir.entryList(QDir::Files);
 
-    for(int i = 0; i < 1; i++){ //fileNames.size();
+
+    QString length = QString::number(fileNames.size());
+    mPrinter->mjController->outputMessage(QString("File Length: ") + length);
+
+    // Check if power is already on; if not, turn it on
+    if (!ui->powerToggleButton->isChecked())
+    {
+        mPrinter->mjController->power_on();
+    }
+
+    for(int i = 0; i < fileNames.size(); i++){ //fileNames.size();
+        printComplete = false;
         QString fileName = fileNames[i];
+        mPrinter->mjController->outputMessage(QString("\n"));                                            //testing !!!!!!
         mPrinter->mjController->outputMessage(fileName);                                            //testing !!!!!!
 
         //Loads Image (could also include a third argument with the folder if we want multiple folder locations)
@@ -355,31 +369,33 @@ void MJPrintheadWidget::variableTestPrintPressed(){
         double printFreq = frequency; // Hz
         int imageLength = width; // Number of columns to jet
 
-        //double timeToPrint = static_cast<double>(imageLength) / printSpeed; //time in seconds
-
         printBMPatLocation(printStartX, printStartY, printFreq, printSpeed, imageLength, fileName);
 
+        while (!printComplete) {
+            QCoreApplication::processEvents(); // This allows the event loop to continue processing events while waiting
+        }
+        mPrinter->mjController->clear_all_heads_of_data();
     }
-    mPrinter->mjController->outputMessage(QString("END OF CODE 1"));
 }
 
 void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName){
-    mPrinter->mjController->outputMessage(QString("ENTERED 2ND FUNCTION"));         //TESTING !!!!!!
-
     Axis nonPrintAxis = Axis::Y;
     Axis printAxis = Axis::X;
 
-    //Showing Paramaters /*  */
+    //Showing Paramaters
+    /*
     mPrinter->mjController->outputMessage(QString("Parameters: "));
     mPrinter->mjController->outputMessage(QString("Start X: %1").arg(xLocation));
     mPrinter->mjController->outputMessage(QString("Start Y: %1").arg(yLocation));
     mPrinter->mjController->outputMessage(QString("Frequency: %1").arg(frequency));
     mPrinter->mjController->outputMessage(QString("Speed: %1").arg(printSpeed));
     mPrinter->mjController->outputMessage(QString("Image Width: %1").arg(imageWidth));
+    */
+
+    // Set print frequency
+    mPrinter->mjController->set_printing_frequency(frequency);
 
     // Set printhead to correct state for printing
-    mPrinter->mjController->set_printing_frequency(frequency);
-    mPrinter->mjController->power_on();
     mPrinter->mjController->write_line("M 3");
     mPrinter->mjController->set_absolute_start(1);
 
@@ -394,7 +410,7 @@ void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, d
     s << CMD::set_accleration(nonPrintAxis, 600);
     s << CMD::set_deceleration(nonPrintAxis, 600);
     s << CMD::set_speed(nonPrintAxis, 60);
-    s << CMD::position_absolute(nonPrintAxis, yLocation);
+    s << CMD::position_absolute(nonPrintAxis, yLocation * -1);
     s << CMD::begin_motion(nonPrintAxis);
     s << CMD::after_motion(nonPrintAxis);
 
@@ -418,6 +434,8 @@ void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, d
     s << CMD::disable_MJ_dir();
     s << CMD::disable_MJ_start();
 
+    //s << CMD::message("Print Complete");
+    s << CMD::display_message("Print Complete");
     // S Value Debugging
     /*
         CMD::string str = s.str();
@@ -440,8 +458,4 @@ void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, d
     c << "GProgramComplete," << "\n";
 
     emit execute_command(c);
-
-    // mPrinter->mjController->clear_nozzles();
-
-    //    mPrinter->mjController->power_off();
 }

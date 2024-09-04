@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <fstream>
 
+extern bool printComplete;
+
 namespace Ui {
 class OutputWindow;
 }

@@ -2,6 +2,7 @@
 #include <QApplication>
 #include "printer.h"
 
+
 #include "QDebug"
 
 const QPalette dark_palette();

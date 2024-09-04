@@ -76,7 +76,6 @@ protected:
     void handle_ready_read();
     void handle_timeout();
 
-
     void clear_members();
     void handle_serial_error(QSerialPort::SerialPortError serialPortError);
 };
