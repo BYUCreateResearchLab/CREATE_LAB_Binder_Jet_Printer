@@ -5,6 +5,7 @@
 #include <fstream>
 
 extern bool printComplete;
+extern bool atLocation;
 
 namespace Ui {
 class OutputWindow;

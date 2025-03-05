@@ -334,13 +334,16 @@ void Controller::create_bitmap_lines(int numLines, int width)
 
 void Controller::createBitmapTestLines(int numberOfLines,  int lineSpacing, int dropletSpacing, int frequency, int lineLength, int number)
 {
+    int numNozzles = 128;
     int bedWidth = 100; //mm
-    int yCoord = 0;
+    int gap = (numNozzles - (numberOfLines * lineSpacing)) / 2;
+    int yCoord = gap;
     int xCoordS = 0;
     double dropSpacing = dropletSpacing;
     int xCoordF = lineLength / (dropSpacing / 1000);
 
-    if(numberOfLines > 128 || numberOfLines * lineSpacing > 128){
+
+    if(numberOfLines > numNozzles-gap*2 || numberOfLines * lineSpacing > numNozzles-gap*2){
         emit response(QString("Too many lines!"));
             return;
     }

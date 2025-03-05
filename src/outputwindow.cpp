@@ -4,27 +4,29 @@
 //#include "globals.h"
 
 bool printComplete = false;
+bool atLocation = false;
 
-void OutputWindow::print_string(QString s)
+void OutputWindow::print_string(QString outS)
 {
     // output to window
-    ui->mOutputText->appendPlainText(s);
+    ui->mOutputText->appendPlainText(outS);
 
     // check print completion status
-    if(s.contains(QString("Print Complete"))){
+    if(outS.contains(QString("Print Complete"))){
         printComplete = true;
-        ui->mOutputText->appendPlainText(QString("!!!!!!!!!"));
     }
-    else{
-        printComplete = false;
+
+    // check if at location status
+    if(outS.contains(QString("Arrived at Location"))){
+        atLocation = true;
     }
 
     // write to log
     auto currentTime = QDateTime::currentDateTime()
             .toString("hh:mm:ss")
             .toStdString();
-    m_logFile << s.toStdString();
-    if (s.trimmed().isEmpty()) m_logFile << "\n";
+    m_logFile << outS.toStdString();
+    if (outS.trimmed().isEmpty()) m_logFile << "\n";
     else m_logFile << " | " << currentTime << "\n";
 }
 

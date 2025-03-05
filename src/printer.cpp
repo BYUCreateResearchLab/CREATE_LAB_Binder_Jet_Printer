@@ -95,6 +95,36 @@ float Printer::motor_type_value(MotorType motorType)
     }
 }
 
+/*
+std::string CMD::axis_calibration(){
+    using CMD::detail::GCmd;
+
+    std::stringstream s;
+
+    // Controller Configuration
+
+    s << GCmd("BAY")                // Set the update time of the motion controller
+
+      // Y Axis Calibration
+      << GCmd("BMY=2000")           // Set magnetic pitch of rotary motor
+      << GCmd("BIY=-1")             // Set estimated commutation based on current hall state
+      << GCmd("BCY")                // Commutation Calibration
+      << GCmd("hall=_QHY")          // Store initial hall sensor state
+      << GCmd("SHY")                // Enable amplifier
+      << GCmd("JGY=-1600")          // Slow jog so commutation angle is set precisely at next hall transition
+      << GCmd("BGY")                // Begin jogging motion
+      << GCmd("#hall")              // Wait for hall sensor transition
+      << GCmd("WT2")                // Wait for 2 ms
+      << GCmd("JP#hall,_QHY=hall")  // Store hall state
+      << GCmd("STY")                // Stop motion
+      << GCmd("AMY")                // Acknowledge motion complete
+      << GCmd("EN")                 // End command sequence
+        ;
+
+    return s.str();
+}
+*/
+
 std::string CMD::set_default_controller_settings()
 {
     using CMD::detail::GCmd;
@@ -163,6 +193,7 @@ std::string CMD::set_default_controller_settings()
 
     return s.str();
 }
+
 
 std::string CMD::add_pvt_data_to_buffer(
         Axis axis,
@@ -360,7 +391,7 @@ std::string CMD::homing_sequence(bool homeZAxis)
     // of ballscrew and motor index pulse
     // find a better way to do this
     // move y-axis forward a bit to avoid being right on top of the index pulse
-    s << position_relative(Axis::Y, -2);
+    s << position_relative(Axis::Y, -10);
     s << set_speed(Axis::Y, 10);
     s << begin_motion(Axis::Y);
     s << motion_complete(Axis::Y);

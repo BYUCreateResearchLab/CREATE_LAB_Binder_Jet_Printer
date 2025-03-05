@@ -245,6 +245,7 @@ inline string GOpen() { return "GOpen"; }
 }
 
 string set_default_controller_settings();
+// string axis_calibration();
 string cmd_buf_to_dmc(const std::stringstream &s);
 string homing_sequence(bool homeZAxis);
 string move_xy_axes_to_default_position();
