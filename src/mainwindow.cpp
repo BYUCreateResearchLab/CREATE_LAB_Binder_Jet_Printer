@@ -367,35 +367,71 @@ void MainWindow::on_zMax_clicked()
     printer->mcu->printerThread->execute_command(s);
 }
 
-void  MainWindow::on_zUp_clicked()
+void MainWindow::on_zUp_clicked()
 {
     std::stringstream s;
     Axis z {Axis::Z};
-    //                                              convert from microns
-    s << CMD::position_relative(z, ui->zStepSize->value() / 1000.0);
+
+    // 1. Get the desired movement distance from the UI
+    double stepValue_microns = ui->zStepSize->value();
+    double stepValue_mm = stepValue_microns / 1000.0;
+
+    // 2. Add the relative move command to the buffer (positive value for moving up)
+    s << CMD::position_relative(z, stepValue_mm);
     s << CMD::set_accleration(z, 10);
     s << CMD::set_deceleration(z, 10);
     s << CMD::set_speed(z, 1.5); // max speed of 5 mm/s!
     s << CMD::begin_motion(z);
     s << CMD::motion_complete(z);
 
+    // 3. Get the starting position BEFORE the move
+    int startPos_counts;
+    GCmdI(printer->mcu->g, "TPZ", &startPos_counts); // Gets position in raw counts
 
+    // 4. Calculate the start and predicted end positions in mm
+    double startPos_mm = startPos_counts / (double)Z_CNTS_PER_MM;
+    double predictedEndPos_mm = startPos_mm + stepValue_mm; // Add because we are moving up
+
+    // 5. Create a clear display message
+    std::string message = "Z: " + std::to_string(startPos_mm) + " -> " + std::to_string(predictedEndPos_mm) + " mm";
+    s << CMD::display_message(message);
+
+    // 6. Execute all buffered commands
     allow_user_input(false);
     printer->mcu->printerThread->execute_command(s);
 }
 
-void  MainWindow::on_zDown_clicked()
+void MainWindow::on_zDown_clicked()
 {
     std::stringstream s;
     Axis z {Axis::Z};
-    //                                              convert from microns
-    s << CMD::position_relative(z, -ui->zStepSize->value() / 1000.0);
+
+    // 1. Get the desired movement distance from the UI
+    double stepValue_microns = ui->zStepSize->value();
+    double stepValue_mm = stepValue_microns / 1000.0;
+
+    // 2. Add the relative move command to the buffer
+    //    (Note the negative sign for moving down)
+    s << CMD::position_relative(z, -stepValue_mm);
     s << CMD::set_accleration(z, 10);
     s << CMD::set_deceleration(z, 10);
     s << CMD::set_speed(z, 1.5); // max speed of 5 mm/s!
     s << CMD::begin_motion(z);
     s << CMD::motion_complete(z);
 
+    // 3. Get the starting position BEFORE the move
+    int startPos_counts;
+    GCmdI(printer->mcu->g, "TPZ", &startPos_counts); // Gets position in raw counts
+
+    // 4. Calculate the start and predicted end positions in mm
+    double startPos_mm = startPos_counts / (double)Z_CNTS_PER_MM;
+    double predictedEndPos_mm = startPos_mm - stepValue_mm; // Subtract because we are moving down
+
+    // 5. Create a clear display message
+    std::string message = "Z: " + std::to_string(startPos_mm) + " -> " + std::to_string(predictedEndPos_mm) + " mm (" + std::to_string(stepValue_mm) + "mm)";
+    s << CMD::display_message(message);
+
+    // 6. Execute all buffered commands
     allow_user_input(false);
     printer->mcu->printerThread->execute_command(s);
 }

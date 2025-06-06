@@ -1,7 +1,6 @@
 #include "outputwindow.h"
 #include "ui_outputwindow.h"
 #include <QDateTime>
-//#include "globals.h"
 
 bool printComplete = false;
 bool atLocation = false;

@@ -157,12 +157,14 @@ void Controller::set_head_voltage(HeadIndex idx, double voltage)
     write_line(command.toUtf8());
 }
 
-void Controller::set_absolute_start(int steps)
+void Controller::set_absolute_start(double steps)
 {
     if (steps <= 0) return;
     QString command = QString(", %1").arg(steps);
     write_line(command.toUtf8());
 }
+
+
 
 void Controller::mode_select(Mode mode)
 {

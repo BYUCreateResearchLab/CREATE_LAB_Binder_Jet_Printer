@@ -165,78 +165,85 @@ void MJPrintheadWidget::stopPrintingPressed()
 
 void MJPrintheadWidget::testPrintPressed()
 {
-    printComplete = false;
-    // Set printing parameters
-    Axis nonPrintAxis = Axis::Y;
-    Axis printAxis = Axis::X;
-    int printSpeed = 100;
-    int printStartX = 35;
-    int printStartY = -ui->testPrintYPosSpinBox->value();
-    double printFreq = 1521; // Hz
-    int imageLength = 1521; // Number of columns to jet
+    // --- 1. Set Printing Parameters ---
+    double printSpeed = 10;
+    double truePrintStartX = 65;
+    double printStartY = -65;
+    double printFreq = 1000; // Hz
+    double imageLength = 1000; // Number of columns to jet
+    double accelerationSpeed = 1000;       // CHANGE THIS: it is low so that we can see the backup distance
 
-    // Set printhead to correct state for printing
+    // --- 2.0 Calculate Distances & Coordinates
+    double safetyVal = 1200.0;     // TODO: this value will usually be aroun 2 but for testing it is increased
+    double backUpDistance = (pow(printSpeed,2.0) / (2.0 * accelerationSpeed)) * safetyVal;
+    double backUpDistanceEnc = backUpDistance * X_CNTS_PER_MM;
+    double backedUpStartX = truePrintStartX - backUpDistance;
+
+    // The final X-Coordinate after accelerating, printing, and decelerating
+    double printDistance = (imageLength / printFreq) * printSpeed;
+    double endTargetMM = backedUpStartX + backUpDistance + printDistance + backUpDistance;
+
+
+    // Log calcaulted values for debugging
+    mPrinter->mjController->outputMessage(QString("--- Test Print Initiated ---"));
+    mPrinter->mjController->outputMessage(QString("True Start (mm): %1").arg(truePrintStartX));
+    mPrinter->mjController->outputMessage(QString("Backed-up Start (mm): %1").arg(backedUpStartX));
+    mPrinter->mjController->outputMessage(QString("End Target (mm): %1").arg(endTargetMM));
+    mPrinter->mjController->outputMessage(QString("Backup Distance (mm): %1").arg(backUpDistance));
+    mPrinter->mjController->outputMessage(QString("Trigger Distance (counts): %1").arg(backUpDistanceEnc));
+    mPrinter->mjController->outputMessage(QString(""));
+
+    // --- 3. Go to the TRUE Start Location & Print a Verification Line
+    verifyPrintStartAlignment(truePrintStartX, printStartY);
+
+    // Move from the true start to the backed-up position
+    mPrinter->mjController->outputMessage(QString("Moving back to the acceleration start"));
+    moveToLocation(backedUpStartX, printStartY, QString("Moved to Backed-Up Start"));
+
+    // Wait until the head is in the backed-up position before proceeding
+    while( !atLocation){
+        QCoreApplication::processEvents();
+    }
+    atLocation = false;
+    GSleep(100);
+
+    // --- 4. Prepare & Execute the Main Print Job
+    mPrinter->mjController->outputMessage(QString("Starting main print job..."));
+
+    // Set print frequency & mode
+    mPrinter->mjController->write_line("M 4");
     mPrinter->mjController->set_printing_frequency(printFreq);
 
-    // Check if power is already on; if not, turn it on
-    if (!ui->powerToggleButton->isChecked())
-    {
-        mPrinter->mjController->power_on();
-    }
-
-    mPrinter->mjController->write_line("M 3");
-    mPrinter->mjController->set_absolute_start(1);
-
-    // Send image to printhead
+    // Send main image to printhead
     const QString filename = "currentBitmap.bmp";
     read_in_file(filename);
 
-    verifyPrintStartAlignment(printStartX, printStartY);
+    // Set the controller to begin jetting after moving the required encoder steps
+    GSleep(100);
+    mPrinter->mjController->set_absolute_start(-backUpDistance);
+    mPrinter->mjController->outputMessage(QString("backUpDistanceEnc: %1").arg(backUpDistanceEnc));
+    mPrinter->mjController->report_current_position();  //  !!!TODO: investigate the use of this
+
+    /*
+    MAIN BREAK LOOK HERE!!!
+
+    this is where you left off. the encoder count is not being reset for some reason at line 223. why? who knows.
+    */
+
+
+    // BEGINS THE PRINT PROCESS from the backed-up location
+    printComplete = false;
+    printEnc(accelerationSpeed, printSpeed, endTargetMM, QString("Test Print Main Motion Complete"));
 
     while (!printComplete) {
+        mPrinter->mjController->report_current_position();  //  !!!TODO: investigate the use of this 6/6
+        GSleep(100);    // !!!TODO: is this needed with the print function thing 6/6
         QCoreApplication::processEvents();  // This allows the event loop to continue processing events while waiting
     }
     printComplete = false;
     GSleep(80);
 
-    // Create program to move printer into position and complete print
-    std::stringstream s;
-
-
-
-    // Start the print
-    s << CMD::set_speed(printAxis, printSpeed);
-    s << CMD::position_absolute(printAxis, printStartX + (imageLength/printFreq)*printSpeed);
-    s << CMD::start_MJ_print();
-    s << CMD::start_MJ_dir();
-    s << CMD::begin_motion(printAxis);
-    s << CMD::after_motion(printAxis);
-
-    // clear bits for print start
-    s << CMD::disable_MJ_dir();
-    s << CMD::disable_MJ_start();
-
-    s << CMD::display_message("Print Complete");
-
-    // Compile into program for printer to run
-    std::string returnString = CMD::cmd_buf_to_dmc(s);
-    const char *commands = returnString.c_str();
-
-    qDebug().noquote() << commands;
-
-    if (mPrinter->mcu->g)
-    {
-        GProgramDownload(mPrinter->mcu->g, commands, "");
-    }
-
-    std::stringstream c_testPrint;
-    c_testPrint << "GCmd," << "XQ" << "\n";
-    c_testPrint << "GProgramComplete," << "\n";
-
-    emit execute_command(c_testPrint);
-
-
-
+    mPrinter->mjController->outputMessage(QString("--- Test Print Finished ---"));
 }
 
 void MJPrintheadWidget::testJetPressed()
@@ -245,7 +252,7 @@ void MJPrintheadWidget::testJetPressed()
     double xLocation = 50;
     double yLocation = 90;
     double frequency = 1500;
-    double printSpeed = 125;
+    double printSpeed = 10;        // TESTING: this used to be 125
 
 
     int imageWidth = 1532;
@@ -310,7 +317,6 @@ void MJPrintheadWidget::variableTestPrintPressed(){
     mPrinter->mjController->outputMessage(QString("\n"));
 
     for(int i = 0; i < fileNames.size(); i++){ //fileNames.size();
-        printComplete = false;
         QString fileName = fileNames[i];
         mPrinter->mjController->outputMessage(QString("\n"));                                            //testing !!!!!!
         mPrinter->mjController->outputMessage(fileName);                                            //testing !!!!!!
@@ -361,11 +367,13 @@ void MJPrintheadWidget::variableTestPrintPressed(){
         double printSpeed = speed;
         // TODO: undo my hardcoding
         double printStartX = 35 + (10 * col);                                       //!!!          35 and 70 are really just guestimates
-        double printStartY = 30 + (17.6 * row);                                     //!!!       17.6 is a rough estimate of the length of the printhead
+        double printStartY = 30 + (17.6 * row) * -1.0;                                     //!!!       17.6 is a rough estimate of the length of the printhead
 
         double printFreq = frequency; // Hz
         int imageLength = width; // Number of columns to jet
         QString fileNameWFolder = "BitmapTestFolder\\" + fileName;
+
+        atLocation = false;
 
         if(encFlag){
             printBMPatLocationEncoder(printStartX, printStartY, printFreq, printSpeed, imageLength, fileNameWFolder);
@@ -374,15 +382,8 @@ void MJPrintheadWidget::variableTestPrintPressed(){
             printBMPatLocation(printStartX, printStartY, printFreq, printSpeed, imageLength, fileNameWFolder);
         }
 
-        while (!printComplete) {
-            QCoreApplication::processEvents(); // This allows the event loop to continue processing events while waiting
-            // mPrinter->mjController->outputMessage(QString("Made it to while loop"));
-            // emit disable_user_input();
-            // ui->stopPrintingButton->setEnabled(true);
-        }
-        printComplete = false;
-        GSleep(80);
-        // mPrinter->mjController->clear_all_heads_of_data();
+        GSleep(100);
+
     }
     encFlag = false;
 }
@@ -418,30 +419,13 @@ void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, d
 
     read_in_file(fileName);
 
-    // Create program to move printer into position and complete print
-    // Do we need to clear the s variable each time? (doesn't seem like it)
-    std::stringstream s_cmd;
+    // Finds the target end position in milimeters (mm)
+    double endTargetMM = xLocation + (imageWidth/frequency)*printSpeed;
 
-/*
-    // Move Y axis into position
-    s_cmd<< CMD::set_accleration(nonPrintAxis, 600);
-    s_cmd<< CMD::set_deceleration(nonPrintAxis, 600);
-    s_cmd<< CMD::set_speed(nonPrintAxis, 60);
-    s_cmd<< CMD::position_absolute(nonPrintAxis, yLocation * -1);
-    s_cmd<< CMD::begin_motion(nonPrintAxis);
-    s_cmd<< CMD::after_motion(nonPrintAxis);
+    // MOVES TO THE START LOCATION
+    moveToLocation(xLocation, yLocation, QString("Print BMP Start Location"));
 
-    // Move X axis_cmdinto position
-    s_cmd<< CMD::set_accleration(printAxis, 600);
-    s_cmd<< CMD::set_deceleration(printAxis, 600);
-    s_cmd<< CMD::set_speed(printAxis, 60);
-    s_cmd<< CMD::position_absolute(printAxis, xLocation);
-    s_cmd<< CMD::begin_motion(printAxis);
-    s_cmd<< CMD::after_motion(printAxis);
-*/
-
-    moveToLocation(xLocation, yLocation);
-
+    // Waits to arrive at the start location
     while (!atLocation) {
         QCoreApplication::processEvents(); // This allows the event loop to continue processing events while waiting
         // mPrinter->mjController->outputMessage(QString("Made it to while loop"));
@@ -451,48 +435,21 @@ void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, d
     atLocation = false;
     GSleep(80);
 
-    double endTargetMM = xLocation + (imageWidth/frequency)*printSpeed;
-
+    // BEGINS THE PRINT PROCESS
     print(accelerationSpeed, printSpeed, endTargetMM, QString("Print BMP @ Location End"));
-    /*
-    // Start the print
-    s_cmd<< CMD::set_accleration(printAxis, accelerationSpeed); // Added by Noah 9/11 -> do we need to customize the acceleration based on parameters?
-    s_cmd<< CMD::set_deceleration(printAxis, accelerationSpeed);
-    s_cmd<< CMD::set_speed(printAxis, printSpeed);
-    s_cmd<< CMD::position_absolute(printAxis, endTargetMM);
-    s_cmd<< CMD::start_MJ_print();
-    s_cmd<< CMD::start_MJ_dir();
-    s_cmd<< CMD::begin_motion(printAxis);
-    s_cmd<< CMD::after_motion(printAxis);
 
-    // clear bits_cmdfor print start
-    s_cmd<< CMD::disable_MJ_dir();
-    s_cmd<< CMD::disable_MJ_start();
-
-    s_cmd << CMD::display_message("Print Complete");                                // Added to trigger the flag
-
-    // Compile into program for printer to run
-    std::string returnStr = CMD::cmd_buf_to_dmc(s_cmd);
-    const char *cmds = returnStr.c_str();
-    qDebug().noquote() << cmds;
-
-    if (mPrinter->mcu->g)
-    {
-        GProgramDownload(mPrinter->mcu->g, cmds, "");
+    while (!printComplete) {
+        QCoreApplication::processEvents();  // This allows the event loop to continue processing events while waiting
     }
+    printComplete = false;
+    GSleep(80);
 
-    // Do we need to clear the c variable every time? (doesn't seem like it)
-    std::stringstream c_cmd;
-    c_cmd << "GCmd," << "XQ" << "\n";
-    c_cmd << "GProgramComplete," << "\n";
-
-    emit execute_command(c_cmd);
-    */
 }
 
-void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName){
-    mPrinter->mjController->outputMessage(QString("Entered printBMPatLocationEncoder!!"));
-
+// SAVED ORIGINAL PRINT PROCESS FOR QUICK REFERENCE
+/*
+void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName){
+    Axis nonPrintAxis = Axis::Y;
     Axis printAxis = Axis::X;
 
     double accelerationSpeed = 5000;
@@ -513,53 +470,19 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     mPrinter->mjController->outputMessage(QString("Speed: %1").arg(printSpeed));
     mPrinter->mjController->outputMessage(QString("Image Width: %1").arg(imageWidth));
 
-    // Finds the necessary distance to back up the x-axis to allow for proper time and distance to reach the required velocity
-    double backUpDistance = (pow(printSpeed,2.0) / (2.0 * accelerationSpeed)) * 6.0;
-
-    // Converts the backUpDistance in "mm" to encoder steps
-    double safetyVal = 1.5;
-    double EncConvVal = X_CNTS_PER_MM;         //X_CNTS_PER_MM = 1000 supposedly
-    double backUpdistanceEnc = backUpDistance * EncConvVal * safetyVal;
-
-    // Adjusts the x-axis start location to allow for a speed up period
-    xLocation -= backUpDistance;
-
     // Set print frequency and mode
-    mPrinter->mjController->write_line("M 4");
+    mPrinter->mjController->write_line("M 3");
     mPrinter->mjController->set_printing_frequency(frequency);
 
-    // Begins jetting after that many encoder steps have passed
-    mPrinter->mjController->set_absolute_start(backUpdistanceEnc);
-
-    // TODO: currently how the system is set up it will zero the encoder before it begins its motion to the actual start position. fix this
-    // option 1: account for that movement in the "backUpDistanceEnc" variable to include not only the backUpDistance but also any required movement to get there
-    // option 2: have two separate commands that are sent one after another.
-    //              command 1: move to start position and report that it did it
-    //              command 2: reset values and run the set_absolute_start command then begin the print pass
-
+    // Set printhead to correct state for printing
+    mPrinter->mjController->set_absolute_start(1);
 
     read_in_file(fileName);
 
     // Create program to move printer into position and complete print
+    // Do we need to clear the s variable each time? (doesn't seem like it)
     std::stringstream s_cmd;
-    s_cmd.str(""); // Set the content of the stream to an empty string
-    s_cmd.clear(); // Clear any error flags
 
-    mPrinter->mjController->outputMessage(QString("XStart: " + QString::number(xLocation)));
-    mPrinter->mjController->outputMessage(QString("YStart: " + QString::number(yLocation)));
-
-    moveToLocation(xLocation, yLocation);
-
-    while (!atLocation) {
-        QCoreApplication::processEvents(); // This allows the event loop to continue processing events while waiting
-        // mPrinter->mjController->outputMessage(QString("Made it to while loop"));
-        // emit disable_user_input();
-        // ui->stopPrintingButton->setEnabled(true);
-    }
-    atLocation = false;
-    GSleep(80);
-
-    /*                                                          // replaced by the moveToLocation function. done to separate the moving to start position step and actual print step for encoder counting
     // Move Y axis into position
     s_cmd<< CMD::set_accleration(nonPrintAxis, 600);
     s_cmd<< CMD::set_deceleration(nonPrintAxis, 600);
@@ -568,41 +491,32 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     s_cmd<< CMD::begin_motion(nonPrintAxis);
     s_cmd<< CMD::after_motion(nonPrintAxis);
 
-    // Move X axis into position
+    // Move X axis_cmdinto position
     s_cmd<< CMD::set_accleration(printAxis, 600);
     s_cmd<< CMD::set_deceleration(printAxis, 600);
     s_cmd<< CMD::set_speed(printAxis, 60);
     s_cmd<< CMD::position_absolute(printAxis, xLocation);
     s_cmd<< CMD::begin_motion(printAxis);
     s_cmd<< CMD::after_motion(printAxis);
-    */
 
-    double endTargetMM = xLocation + (imageWidth/frequency)*printSpeed + (backUpDistance);
-    //printEnc(accelerationSpeed, printSpeed, totalEncoderCount, QString("Printed BMP @ Location ENCODER"));
 
-    // REPLACED BY THE PRINTENC FUNCTION.
+    double endTargetMM = xLocation + (imageWidth/frequency)*printSpeed;
+
     // Start the print
     s_cmd<< CMD::set_accleration(printAxis, accelerationSpeed); // Added by Noah 9/11 -> do we need to customize the acceleration based on parameters?
     s_cmd<< CMD::set_deceleration(printAxis, accelerationSpeed);
     s_cmd<< CMD::set_speed(printAxis, printSpeed);
     s_cmd<< CMD::position_absolute(printAxis, endTargetMM);
-    // s_cmd<< CMD::start_MJ_print();        // this was added to force the printer to start by sending a fake step signal to the printhead. this should be taken care of by the encoder connection
-    // s_cmd<< CMD::start_MJ_dir();          // also added to take care of the start time through a fake step signal to the printhead
+    s_cmd<< CMD::start_MJ_print();
+    s_cmd<< CMD::start_MJ_dir();
     s_cmd<< CMD::begin_motion(printAxis);
     s_cmd<< CMD::after_motion(printAxis);
 
     // clear bits_cmdfor print start
-    // s_cmd<< CMD::disable_MJ_dir();       // remenant of the step input
-    // s_cmd<< CMD::disable_MJ_start();     // remenant of the step input
+    s_cmd<< CMD::disable_MJ_dir();
+    s_cmd<< CMD::disable_MJ_start();
 
     s_cmd << CMD::display_message("Print Complete");                                // Added to trigger the flag
-
-    // S Value Debugging
-
-        //CMD::string str = s.str();
-        //QString sStr = QString::fromStdString(str);
-        //mPrinter->mjController->outputMessage(sStr);
-
 
     // Compile into program for printer to run
     std::string returnStr = CMD::cmd_buf_to_dmc(s_cmd);
@@ -622,22 +536,104 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     emit execute_command(c_cmd);
 
 }
+*/
+
+void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName){
+    mPrinter->mjController->outputMessage(QString("Entered printBMPatLocationEncoder!!"));
+
+    // --- 1. Motion & Print Parameters ---
+    Axis printAxis = Axis::X;
+    double accelerationSpeed = 3000;
+    double safetyFactor = 2.0;      // typically probably 2 but
+    double encoderCountsPerMM  = X_CNTS_PER_MM;
+
+    // --- 2. Calculate Distances & Coordinates ---
+    // Calcaulte distance needed to accelerate to target print speed
+    double backUpDistance = (pow(printSpeed,2.0) / (2.0 * accelerationSpeed)) * safetyFactor;
+
+    // Calculate the dsitance th eprinthead will travel while jetting
+    double printDistance = (static_cast<double>(imageWidth) / frequency) * printSpeed;
+
+    // Convert the backUpDistance from mm to encoder steps for the trigger
+    double backUpDistanceEnc = backUpDistance * encoderCountsPerMM;
+
+    // Determine the start and end poitns of the physical motion
+    double trueStartX = xLocation;
+    double backedUpStartX = trueStartX - backUpDistance;
+
+    // Determine final target position with room for acceleration, printing, and decelleration
+    double endTargetMM = backedUpStartX + backUpDistance + printDistance + backUpDistance;
+
+    // --- 3. Log Calculated values for Debugging ---
+
+    //Showing Paramaters
+    mPrinter->mjController->outputMessage(QString("File name: %1").arg(fileName));
+    mPrinter->mjController->outputMessage(QString("Parameters: X=%1, Y=%2, Freq=%3, Speed=%4").arg(xLocation).arg(yLocation).arg(frequency).arg(printSpeed));
+    mPrinter->mjController->outputMessage(QString("Calculated True Start (mm): %1").arg(trueStartX));
+    mPrinter->mjController->outputMessage(QString("Calculated Backed-up Start (mm): %1").arg(backedUpStartX));
+    mPrinter->mjController->outputMessage(QString("Calculated End Target (mm): %1").arg(endTargetMM));
+    mPrinter->mjController->outputMessage(QString("Calculated Trigger Distance (encoder counts): %1").arg(backUpDistanceEnc));
+
+    // --- 4. Configure Printhead and Load Data ---
+    mPrinter->mjController->write_line("M 4");
+    mPrinter->mjController->set_printing_frequency(frequency);
+    read_in_file(fileName);
+
+    // --- 5. Move to Backed-Up Starting Position
+    moveToLocation(backedUpStartX, yLocation, QString("move to Encoder Start Complete"));
+
+    // Wait until the movement is physically complete
+    while (!atLocation) {
+        QCoreApplication::processEvents();
+    }
+    atLocation = false; // Reset flag for the next operation
+    GSleep(100);
+
+    // --- 6. Set Encoder Trigger and Execute Print ---
+    // Tell the controller to start jetting after moving 'backUpDistanceEnc' steps from the start
+    mPrinter->mjController->set_absolute_start(-backUpDistanceEnc); // !!!TODO: made negative because encoder is read negative??? 6/6
+
+    printComplete = false;  // Reset the print completion flag
+
+    // Begin the print motion from 'backUpStartX' to 'endTargetMM'
+    printEnc(accelerationSpeed, printSpeed, endTargetMM, QString("Encoder Print Motion Complete"));
+
+    while (!printComplete) {
+        QCoreApplication::processEvents();
+    }
+    printComplete = false;  // Reset flag for the next operation
+    GSleep(100);
+
+    mPrinter->mjController->outputMessage(QString("--- Encoder Print Finished ---"));
+
+}
 
 void MJPrintheadWidget::verifyPrintStartAlignment(double xStart, double yStart){
-    mPrinter->mjController->outputMessage(QString("Verifying Start Location"));
+    mPrinter->mjController->outputMessage(QString("verifyPrintStartAlignment()"));
 
-
-    Axis printAxis = Axis::X;
     double accelerationSpeed = 1000; // it won't actually move
 
-    moveToLocation(xStart, yStart);
+    // MOVES TO THE START LOCATION
+    moveToLocation(xStart, yStart, QString("Test Print True Location"));
 
-    // Set print frequency and mode
-    mPrinter->mjController->write_line("M_4");
+    // Waits to arrive at the start location
+    while (!atLocation) {
+        QCoreApplication::processEvents(); // This allows the event loop to continue processing events while waiting
+        // mPrinter->mjController->outputMessage(QString("Made it to while loop"));
+        // emit disable_user_input();
+        // ui->stopPrintingButton->setEnabled(true);
+    }
+    atLocation = false;
+    GSleep(80);
+
+    mPrinter->mjController->outputMessage(QString("verifyPrintStartAlignment: post arrival FLAG"));
+
+
+    mPrinter->mjController->write_line("M 4");
     mPrinter->mjController->set_printing_frequency(1000);
 
-    // Set printhead to correct state for printing
-    mPrinter->mjController->set_absolute_start(1);
+    // Set printhead to print after 1 encoder tick
+    mPrinter->mjController->set_absolute_start(-1); // !!!TODO: madde negative bc encoder is read negative 6/6
 
     // Send image to printhead
     const QString fileName = "LocationVerification.bmp";
@@ -646,37 +642,20 @@ void MJPrintheadWidget::verifyPrintStartAlignment(double xStart, double yStart){
     // Create program to print
     std::stringstream s_cmd;
 
-    //ALREADY AT LOCATION
+    printEnc(accelerationSpeed, 10, xStart + 1.0, QString("Alignment Complete"));
 
-    // Start print
-    s_cmd<< CMD::set_accleration(printAxis, accelerationSpeed);
-    s_cmd<< CMD::set_deceleration(printAxis, accelerationSpeed);
-    s_cmd<< CMD::set_speed(printAxis, 100);
-    s_cmd<< CMD::position_absolute(printAxis, (xStart + 2.0));
-    s_cmd<< CMD::start_MJ_print();
-    s_cmd<< CMD::start_MJ_dir();
-    s_cmd<< CMD::begin_motion(printAxis);
-    s_cmd<< CMD::after_motion(printAxis);
+    while (!printComplete) {
+        QCoreApplication::processEvents();  // This allows the event loop to continue processing events while waiting
+    }
+    printComplete = false;
+    GSleep(80);
 
-    // clear bits_cmdfor print start
-    s_cmd<< CMD::disable_MJ_dir();
-    s_cmd<< CMD::disable_MJ_start();
-
-    //s_cmd<< CMD::message("Print Complete");
-    s_cmd << CMD::display_message("Print Complete");
-    s_cmd << CMD::display_message("Alignemnt Complete");
-    // S Value Debugging
-
-    // Compile into program for printer to run
-    std::string returnStr = CMD::cmd_buf_to_dmc(s_cmd);
-    const char *cmds = returnStr.c_str();
-    qDebug().noquote() << cmds;
 }
 
-void MJPrintheadWidget::moveToLocation(double xLocation, double yLocation){
+void MJPrintheadWidget::moveToLocation(double xLocation, double yLocation, QString endMessage){
     atLocation = false;
 
-    mPrinter->mjController->outputMessage(QString("Entered moveToLocation!!"));
+    mPrinter->mjController->outputMessage(QString("moveToLocation()"));
     mPrinter->mjController->outputMessage(QString("XLocation = " + QString::number(xLocation)));
     mPrinter->mjController->outputMessage(QString("YLocation = " + QString::number(yLocation)));
 
@@ -684,16 +663,15 @@ void MJPrintheadWidget::moveToLocation(double xLocation, double yLocation){
     Axis nonPrintAxis = Axis::Y;
     Axis printAxis = Axis::X;
 
-
     std::stringstream s_cmdMove;
     s_cmdMove.str(""); // Set the content of the stream to an empty string
     s_cmdMove.clear(); // Clear any error flags
 
     // Move Y axis into position
-    s_cmdMove<< CMD::set_accleration(nonPrintAxis, 600);
-    s_cmdMove<< CMD::set_deceleration(nonPrintAxis, 600);
+    s_cmdMove<< CMD::set_accleration(nonPrintAxis, 800);
+    s_cmdMove<< CMD::set_deceleration(nonPrintAxis, 800);
     s_cmdMove<< CMD::set_speed(nonPrintAxis, 60);
-    s_cmdMove<< CMD::position_absolute(nonPrintAxis, yLocation * -1.0);
+    s_cmdMove<< CMD::position_absolute(nonPrintAxis, yLocation);
     s_cmdMove<< CMD::begin_motion(nonPrintAxis);
     s_cmdMove<< CMD::after_motion(nonPrintAxis);
 
@@ -709,8 +687,7 @@ void MJPrintheadWidget::moveToLocation(double xLocation, double yLocation){
 
     // Verification that it has moved
     s_cmdMove << CMD::display_message("Arrived at Location");
-
-
+    mPrinter->mjController->outputMessage(QString("End Message %1").arg(endMessage));       // Sends any message to signal completion of the specific task
 
     // Compile into program for printer to run
     std::string returnStr = CMD::cmd_buf_to_dmc(s_cmdMove);
@@ -728,9 +705,11 @@ void MJPrintheadWidget::moveToLocation(double xLocation, double yLocation){
     c_cmdMove << "GProgramComplete," << "\n";
 
     emit execute_command(c_cmdMove);
+
 }
 
 void MJPrintheadWidget::print(double acceleration, double speed, double endTargetMM, QString endMessage){
+    printComplete = false;
     Axis printAxis = Axis::X;
 
     // Create program to move printer into position and complete print
@@ -786,6 +765,8 @@ void MJPrintheadWidget::print(double acceleration, double speed, double endTarge
 void MJPrintheadWidget::printEnc(double acceleration, double speed, double endTargetMM, QString endMessage){
     Axis printAxis = Axis::X;
 
+    mPrinter->mjController->outputMessage(QString("inside printEnc()"));
+
     // Create program to move printer into position and complete print
     std::stringstream s_cmd;
     s_cmd.str(""); // Set the content of the stream to an empty string
@@ -802,14 +783,6 @@ void MJPrintheadWidget::printEnc(double acceleration, double speed, double endTa
     //s_cmd<< CMD::message("Print Complete");
     s_cmd << CMD::display_message("Print Complete");                                    // Sends "Print Complete" message to trigger flag and signal completion
     mPrinter->mjController->outputMessage(QString("End Message %1").arg(endMessage));   // Sends any message to signal completion of the specific task
-
-
-    // S Value Debugging
-    /*
-        CMD::string str = s.str();
-        QString sStr = QString::fromStdString(str);
-        mPrinter->mjController->outputMessage(sStr);
-        */
 
     // Compile into program for printer to run
     std::string returnStr = CMD::cmd_buf_to_dmc(s_cmd);
@@ -830,19 +803,89 @@ void MJPrintheadWidget::printEnc(double acceleration, double speed, double endTa
 
 void MJPrintheadWidget::purgeNozzles()
 {
+    // --- 1. Define purge parameters ---
+    double truePurgeStartX = 10.0;
+    double purgeY = 10.0;
+    double purgeDistance = 5.0;
+    double purgeSpeed = 10.0;
+    double acceleration = 1000.0;
+    double purgeFreq = 1000.0;
+    QString purgeBitmap = "purge.bmp";
+
+    mPrinter->mjController->outputMessage(QString("--- Encoder Purge Sequence Initiated ---"));
+
+    // Verify power is on
+    if (!ui->powerToggleButton->isChecked())
+    {
+        mPrinter->mjController->power_on();
+        GSleep(100);
+    }
+
+    // --- 2. Calculate the Distances & Coordinates (we will ignore acceleration ramp up) ---
+    double backUpDistance = 1.0;
+    double backUpDistanceEnc = backUpDistance * X_CNTS_PER_MM;
+    double backedUpStartX = truePurgeStartX - backUpDistance;
+
+    // Calcaulte the final target position for the entire motion
+    double endTargetMM = backedUpStartX + backUpDistance + purgeDistance + backUpDistance;
+
+    // --- 3. Configure the Printhead for Encoder-Based Printing ---
+    mPrinter->mjController->write_line("M 4");
+    mPrinter->mjController->set_printing_frequency(purgeFreq);
+
+    // Load in the purge bitmap
+    read_in_file(purgeBitmap);
+
+    // Log the calculated values for debugging
+    /*
+    mPrinter->mjController->outputMessage(QString("True Start (mm): %1").arg(truePurgeStartX));
+    mPrinter->mjController->outputMessage(QString("Backed-up Start (mm): %1").arg(backedUpStartX));
+    mPrinter->mjController->outputMessage(QString("End Target (mm): %1").arg(endTargetMM));
+    mPrinter->mjController->outputMessage(QString("Trigger Distance (counts): %1").arg(backUpDistanceEnc));
+    */
+
+    // --- 4. Move to the backed-up starting position
+    mPrinter->mjController->outputMessage(QString("Moving to purge acceleration start location..."));
+    moveToLocation(backedUpStartX, purgeY, "Arrived at Backed-Up Purge Location");
+
+    // Wait until the move is complete
+    while (!atLocation) {
+        QCoreApplication::processEvents();
+    }
+    atLocation = false; // Reset the flag for the next action
+
+    // --- 5. Set the encoder trigger and execute the purge ---
+    // Tell the controller to start jetting after moving 'backUpDistanceEnc' steps
+    mPrinter->mjController->set_absolute_start(-1); // !!!TODO: madde negative bc encoder is read negative 6/6
+
+    mPrinter->mjController->outputMessage(QString("Executing encoder-based purge..."));
+
+    printComplete = false; // Reset the flag
+    // Use the ENCODER print helper function
+    printEnc(acceleration, purgeSpeed, endTargetMM, "Encoder Purge Motion Complete");
+
+    // Wait until the purge print is complete
+    while (!printComplete) {
+        QCoreApplication::processEvents();
+    }
+    printComplete = false; // Reset the flag
+    GSleep(80);
+
+    mPrinter->mjController->outputMessage(QString("--- Encoder Purge Sequence Finished ---"));
+
+    /*
     Axis nonPrintAxis = Axis::Y;
     Axis printAxis = Axis::X;
 
     double accelerationSpeed = 1000;
 
     // Set print frequency and mode
-    mPrinter->mjController->write_line("M 3");
+    mPrinter->mjController->write_line("M 4");
     mPrinter->mjController->set_printing_frequency(1000);
 
     // Set printhead to correct state for printing
     mPrinter->mjController->set_absolute_start(1);
 
-    // Send image to printhead (made a const 9/11)
     const QString fileNameFolder = QString("purge.bmp");         //This could be better done instead of hardcoded
     read_in_file(fileNameFolder);
 
@@ -856,7 +899,7 @@ void MJPrintheadWidget::purgeNozzles()
     s_cmd<< CMD::set_accleration(nonPrintAxis, 600);
     s_cmd<< CMD::set_deceleration(nonPrintAxis, 600);
     s_cmd<< CMD::set_speed(nonPrintAxis, 60);
-    s_cmd<< CMD::position_absolute(nonPrintAxis, 0);
+    s_cmd<< CMD::position_absolute(nonPrintAxis, 10);
     s_cmd<< CMD::begin_motion(nonPrintAxis);
     s_cmd<< CMD::after_motion(nonPrintAxis);
 
@@ -864,7 +907,7 @@ void MJPrintheadWidget::purgeNozzles()
     s_cmd<< CMD::set_accleration(printAxis, 600);
     s_cmd<< CMD::set_deceleration(printAxis, 600);
     s_cmd<< CMD::set_speed(printAxis, 60);
-    s_cmd<< CMD::position_absolute(printAxis, 0);
+    s_cmd<< CMD::position_absolute(printAxis, 10);
     s_cmd<< CMD::begin_motion(printAxis);
     s_cmd<< CMD::after_motion(printAxis);
 
@@ -872,7 +915,7 @@ void MJPrintheadWidget::purgeNozzles()
     s_cmd<< CMD::set_accleration(printAxis, accelerationSpeed);
     s_cmd<< CMD::set_deceleration(printAxis, accelerationSpeed);
     s_cmd<< CMD::set_speed(printAxis, 100);
-    s_cmd<< CMD::position_absolute(printAxis, 1);
+    s_cmd<< CMD::position_absolute(printAxis, 11);
     s_cmd<< CMD::start_MJ_print();
     s_cmd<< CMD::start_MJ_dir();
     s_cmd<< CMD::begin_motion(printAxis);
@@ -884,12 +927,7 @@ void MJPrintheadWidget::purgeNozzles()
 
     //s_cmd<< CMD::message("Print Complete");
     s_cmd << CMD::display_message("Print Complete");
-    // S Value Debugging
-    /*
-        CMD::string str = s.str();
-        QString sStr = QString::fromStdString(str);
-        mPrinter->mjController->outputMessage(sStr);
-        */
+
 
     // Compile into program for printer to run
     std::string returnStr = CMD::cmd_buf_to_dmc(s_cmd);
@@ -907,6 +945,7 @@ void MJPrintheadWidget::purgeNozzles()
     c_cmd << "GProgramComplete," << "\n";
 
     emit execute_command(c_cmd);
+*/
 }
 
 void MJPrintheadWidget::testNozzles()

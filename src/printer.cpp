@@ -13,14 +13,14 @@
 
 Printer::Printer(QObject *parent) :
     QObject(parent),
-    mcu ( new DMC4080("192.168.42.100", this) ),
+    mcu ( new DMC4080("192.168.42.100", this) ),    // changed this from 192.168.42.100
     jetDrive ( new JetDrive::Controller("COM8", this) ),
     pressureController ( new PCD::Controller("COM3", this) ),
     mister ( new Mister::Controller("COM4", this) ),
     bedMicroscope ( new BedMicroscope(this) ),
     mjController ( new Added_Scientific::Controller("COM5", this) )
 {
-//    using Added_Scientific::Controller::HeadIndex;
+//    using Added_Scientific::Controller::HeadIndex;------------------------------------------------
 //    mjController->set_head_voltage(HeadIndex::HEAD1, 25);
     mjController->mode_select(Added_Scientific::Controller::Mode::MOTION_ENCODER);
 }
@@ -391,7 +391,7 @@ std::string CMD::homing_sequence(bool homeZAxis)
     // of ballscrew and motor index pulse
     // find a better way to do this
     // move y-axis forward a bit to avoid being right on top of the index pulse
-    s << position_relative(Axis::Y, -10);
+    s << position_relative(Axis::Y, -5);
     s << set_speed(Axis::Y, 10);
     s << begin_motion(Axis::Y);
     s << motion_complete(Axis::Y);

@@ -49,7 +49,7 @@ protected:
     void variableTestPrintPressed();
     void printBMPatLocation(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileLocation);
     void printBMPatLocationEncoder(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName);
-    void moveToLocation(double xLocation, double yLocation);
+    void moveToLocation(double xLocation, double yLocation, QString endMessage);
     void print(double acceleration, double speed, double endTargetMM, QString endMessage);
     void printEnc(double acceleration, double speed, double endTargetMM, QString endMessage);
     void verifyPrintStartAlignment(double xStart, double yStart);
