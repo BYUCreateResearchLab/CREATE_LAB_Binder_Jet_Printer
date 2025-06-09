@@ -16,6 +16,7 @@
 #include <QDataStream>
 #include <QThread>
 #include <cmath>
+#include <QTimer>
 
 
 
@@ -25,6 +26,12 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
 {
     ui->setupUi(this);
     setAccessibleName("Multi-Jet Printhead Widget");
+
+    // timer setuip
+    m_positionTimer = new QTimer(this);
+    m_positionTimer->setInterval(100);
+    connect(m_positionTimer, &QTimer::timeout, this, &MJPrintheadWidget::requestEncoderPosition);
+
 
     connect(ui->connectButton, &QPushButton::clicked, this, &MJPrintheadWidget::connect_to_printhead);
     connect(ui->clearButton, &QPushButton::clicked, this, &MJPrintheadWidget::clear_response_text);
@@ -52,12 +59,17 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     });
     connect(ui->purgeNozzlesButton, &QPushButton::clicked, this, &MJPrintheadWidget::purgeNozzles);
     connect(ui->testNozzlesButton, &QPushButton::clicked, this, &MJPrintheadWidget::testNozzles);
+    connect(ui->zeroEncoder, &QPushButton::clicked, this, &MJPrintheadWidget::zeroEncoder);
+    connect(ui->startStopDisplay, &QPushButton::clicked, this, &MJPrintheadWidget::onStartStopDisplayClicked);
+    connect(ui->moveNozzle, &QPushButton::clicked, this, &MJPrintheadWidget::moveNozzleOffPlate);
+
     //connect(ui->verifyStartLocation, &QPushButton::clicked, this, &MJPrintheadWidget::verifyPrintStartAlignment);
 }
 
 
 MJPrintheadWidget::~MJPrintheadWidget()
 {
+    m_positionTimer->stop();
     delete ui;
 }
 
@@ -74,6 +86,45 @@ void MJPrintheadWidget::connect_to_printhead()
 void MJPrintheadWidget::clear_response_text()
 {
     ui->responseTextEdit->clear();
+}
+
+void MJPrintheadWidget::zeroEncoder()
+{
+    mPrinter->mjController->set_absolute_start(1);
+}
+
+void MJPrintheadWidget::requestEncoderPosition()
+{
+    if(mPrinter->mjController->is_connected()){
+        mPrinter->mjController->report_current_position();
+    }
+}
+
+void MJPrintheadWidget::onStartStopDisplayClicked()
+{
+    // Check if the timer is currently active
+    if (m_positionTimer->isActive())
+    {
+        // If it is active, stop it.
+        m_positionTimer->stop();
+        // Update the button text to show the next available action.
+        ui->startStopDisplay->setText("Start Encoder Display");
+    }
+    else
+    {
+        // If it is not active, first check if the controller is connected.
+        if (mPrinter->mjController->is_connected())
+        {
+            // If connected, start the timer.
+            m_positionTimer->start();
+            // Update the button text to show the next available action.
+            ui->startStopDisplay->setText("Stop Encoder Display");
+        }
+        else
+        {
+            mPrinter->mjController->outputMessage("Error: Controller is not connected.");
+        }
+    }
 }
 
 void MJPrintheadWidget::command_entered()
@@ -152,7 +203,23 @@ void MJPrintheadWidget::absoluteStartChanged()
 
 void MJPrintheadWidget::write_to_response_window(const QString &text)
 {
-    ui->responseTextEdit->appendPlainText(text);
+    const QString positionPrefix = "Encoder current count: ";
+
+    if (text.startsWith(positionPrefix)){
+
+        QString numberOnly = text.mid(positionPrefix.length());
+
+        m_encoderHistory.append(numberOnly);
+
+        while(m_encoderHistory.size() > 10)
+        {
+            m_encoderHistory.removeFirst();
+        }
+        ui->responseTextEdit_2->setPlainText(m_encoderHistory.join(""));
+    }
+    else{
+        ui->responseTextEdit->appendPlainText(text);
+    }
 //    ui->responseTextEdit->moveCursor(QTextCursor::End);
 //    ui->responseTextEdit->insertPlainText(text);
 //    ui->responseTextEdit->moveCursor(QTextCursor::End);
@@ -161,6 +228,11 @@ void MJPrintheadWidget::write_to_response_window(const QString &text)
 void MJPrintheadWidget::stopPrintingPressed()
 {
     mPrinter->mjController->clear_nozzles();
+}
+
+void MJPrintheadWidget::moveNozzleOffPlate()
+{
+    moveToLocation(5, 5, QString("Moved nozzle off of build plate"));
 }
 
 void MJPrintheadWidget::testPrintPressed()
@@ -174,7 +246,7 @@ void MJPrintheadWidget::testPrintPressed()
     double accelerationSpeed = 1000;       // CHANGE THIS: it is low so that we can see the backup distance
 
     // --- 2.0 Calculate Distances & Coordinates
-    double safetyVal = 1200.0;     // TODO: this value will usually be aroun 2 but for testing it is increased
+    double safetyVal = 300.0;     // TODO: this value will usually be aroun 2 but for testing it is increased
     double backUpDistance = (pow(printSpeed,2.0) / (2.0 * accelerationSpeed)) * safetyVal;
     double backUpDistanceEnc = backUpDistance * X_CNTS_PER_MM;
     double backedUpStartX = truePrintStartX - backUpDistance;
@@ -195,6 +267,7 @@ void MJPrintheadWidget::testPrintPressed()
 
     // --- 3. Go to the TRUE Start Location & Print a Verification Line
     verifyPrintStartAlignment(truePrintStartX, printStartY);
+    GSleep(2000);   //TODO: this is left to ensure that the print finished before moving on
 
     // Move from the true start to the backed-up position
     mPrinter->mjController->outputMessage(QString("Moving back to the acceleration start"));
@@ -220,16 +293,9 @@ void MJPrintheadWidget::testPrintPressed()
 
     // Set the controller to begin jetting after moving the required encoder steps
     GSleep(100);
-    mPrinter->mjController->set_absolute_start(-backUpDistance);
+    mPrinter->mjController->set_absolute_start(backUpDistanceEnc);
     mPrinter->mjController->outputMessage(QString("backUpDistanceEnc: %1").arg(backUpDistanceEnc));
     mPrinter->mjController->report_current_position();  //  !!!TODO: investigate the use of this
-
-    /*
-    MAIN BREAK LOOK HERE!!!
-
-    this is where you left off. the encoder count is not being reset for some reason at line 223. why? who knows.
-    */
-
 
     // BEGINS THE PRINT PROCESS from the backed-up location
     printComplete = false;
@@ -244,6 +310,8 @@ void MJPrintheadWidget::testPrintPressed()
     GSleep(80);
 
     mPrinter->mjController->outputMessage(QString("--- Test Print Finished ---"));
+
+    moveNozzleOffPlate();
 }
 
 void MJPrintheadWidget::testJetPressed()
@@ -591,7 +659,7 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
 
     // --- 6. Set Encoder Trigger and Execute Print ---
     // Tell the controller to start jetting after moving 'backUpDistanceEnc' steps from the start
-    mPrinter->mjController->set_absolute_start(-backUpDistanceEnc); // !!!TODO: made negative because encoder is read negative??? 6/6
+    mPrinter->mjController->set_absolute_start(backUpDistanceEnc);
 
     printComplete = false;  // Reset the print completion flag
 
@@ -633,7 +701,7 @@ void MJPrintheadWidget::verifyPrintStartAlignment(double xStart, double yStart){
     mPrinter->mjController->set_printing_frequency(1000);
 
     // Set printhead to print after 1 encoder tick
-    mPrinter->mjController->set_absolute_start(-1); // !!!TODO: madde negative bc encoder is read negative 6/6
+    mPrinter->mjController->set_absolute_start(1);
 
     // Send image to printhead
     const QString fileName = "LocationVerification.bmp";
@@ -856,7 +924,7 @@ void MJPrintheadWidget::purgeNozzles()
 
     // --- 5. Set the encoder trigger and execute the purge ---
     // Tell the controller to start jetting after moving 'backUpDistanceEnc' steps
-    mPrinter->mjController->set_absolute_start(-1); // !!!TODO: madde negative bc encoder is read negative 6/6
+    mPrinter->mjController->set_absolute_start(1);
 
     mPrinter->mjController->outputMessage(QString("Executing encoder-based purge..."));
 
@@ -988,4 +1056,42 @@ void MJPrintheadWidget::testNozzles()
     }
 }
 
+QString MJPrintheadWidget::verifyPrintStartStop(int xStart, int xStop){
+    int xLowerLimit = 0;
+    int xUpperLimit = 150;
 
+    if(xStart < xLowerLimit)
+    {
+        return QString("ERROR: Print start is outside the build plate");
+    }
+    else if(xStop > xUpperLimit)
+    {
+        return QString("ERROR: Print stop is outside the build plate");
+    }
+    else
+    {
+        return QString("Print fits inside the build plate");
+    }
+}
+
+/* 6/9 thoughts and things to look at
+!!!TODO: 6/9 work on implementing error catching including the printstartstop error catching so that all prints fit inside the build palte
+
+Next steps:
+- look at full error catching for prints
+    - does the print fit inside the build box
+    - is the safety factor too large (definitely currently)
+- write some code so that after the full print finishes the head moves off the build plate to not drip
+- look at how much the nozzle drips at different fill levels and write some code to verify interpolate good back pressure values
+- implement simple x, y, z movement in the MJPrintheadWidget as well as simple back-pressure control so avoid moving between so many different screens
+    - for X, Y, Z control: just forward and backwards motion as well as get current position and set speed
+    - for back-pressure:
+        - initially: toggle pressure up and down (for testing)
+        - long term: set current liquid height and it will calculate the desired back pressure
+- print some test images (added scientific logo)
+- clean up the entirety of the code and remove any of the relics
+- look at droplet velocity
+- verify droplet volume
+- write code to verify which nozzles are actually functioning
+- 3d print holder for all components so none are lost or get dirty
+*/

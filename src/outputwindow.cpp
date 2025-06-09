@@ -7,8 +7,12 @@ bool atLocation = false;
 
 void OutputWindow::print_string(QString outS)
 {
+    // Debug value for mjprinthead encoder ticks
+    const QString positionPrefix = "Encoder current count: ";
     // output to window
-    ui->mOutputText->appendPlainText(outS);
+    if(!outS.startsWith(positionPrefix)){
+        ui->mOutputText->appendPlainText(outS);
+    }
 
     // check print completion status
     if(outS.contains(QString("Print Complete"))){

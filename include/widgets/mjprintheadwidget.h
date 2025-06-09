@@ -39,6 +39,9 @@ protected:
     void absoluteStartChanged();
 
     void write_to_response_window(const QString &text);
+
+    void moveNozzleOffPlate();
+
     void stopPrintingPressed();
     void testPrintPressed();
     void testJetPressed();
@@ -53,16 +56,24 @@ protected:
     void print(double acceleration, double speed, double endTargetMM, QString endMessage);
     void printEnc(double acceleration, double speed, double endTargetMM, QString endMessage);
     void verifyPrintStartAlignment(double xStart, double yStart);
+    void zeroEncoder();
 
 
 
     void purgeNozzles();
     void testNozzles();
+    QString verifyPrintStartStop(int xStart, int xStop);
 
+private slots:
+    void onStartStopDisplayClicked();
+
+    void requestEncoderPosition();
 
 private:
     Ui::MJPrintheadWidget *ui;
     bool encFlag;
+    QTimer *m_positionTimer;
+    QStringList m_encoderHistory;
 };
 
 #endif // MJPRINTHEADWIDGET_H
