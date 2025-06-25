@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>951</width>
+    <width>1304</width>
     <height>810</height>
    </rect>
   </property>
@@ -14,21 +14,14 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="5" column="1">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="5" column="0" rowspan="3">
+   <item row="6" column="0" rowspan="4">
     <widget class="QFrame" name="frame">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="frameShape">
       <enum>QFrame::Shape::StyledPanel</enum>
      </property>
@@ -36,46 +29,6 @@
       <enum>QFrame::Shadow::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="2" colspan="2">
-       <widget class="QLineEdit" name="inputLineEdit">
-        <property name="minimumSize">
-         <size>
-          <width>300</width>
-          <height>0</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0" colspan="4">
-       <widget class="QPlainTextEdit" name="responseTextEdit">
-        <property name="acceptDrops">
-         <bool>false</bool>
-        </property>
-        <property name="undoRedoEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="textInteractionFlags">
-         <set>Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QLineEdit" name="imageFileLineEdit"/>
-      </item>
-      <item row="3" column="0">
-       <widget class="QPushButton" name="requestPHStatusPushButton">
-        <property name="text">
-         <string>Request Printhead Status</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="3">
-       <widget class="QLabel" name="setStartLabel">
-        <property name="text">
-         <string>Absolute Start</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="0">
        <widget class="QPushButton" name="powerToggleButton">
         <property name="text">
@@ -89,51 +42,10 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="2">
-       <widget class="QSpinBox" name="setStartSpinBox">
-        <property name="minimum">
-         <number>0</number>
-        </property>
-        <property name="maximum">
-         <number>100000</number>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <widget class="QLabel" name="setVoltLabel">
+      <item row="10" column="0">
+       <widget class="QPushButton" name="testPrintButton">
         <property name="text">
-         <string>Set Head 1 Voltage</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="2">
-       <widget class="QSpinBox" name="testPrintYPosSpinBox">
-        <property name="maximum">
-         <number>250</number>
-        </property>
-        <property name="value">
-         <number>60</number>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="responseLabel">
-        <property name="text">
-         <string>Response From Controller</string>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="3">
-       <widget class="QPushButton" name="testJetButton">
-        <property name="text">
-         <string>Test Jetting</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="3">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Test Print Y Position</string>
+         <string>TEST PRINT</string>
         </property>
        </widget>
       </item>
@@ -144,62 +56,10 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QSpinBox" name="setVoltageSpinBox">
-        <property name="minimum">
-         <number>15</number>
-        </property>
-        <property name="maximum">
-         <number>35</number>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="3">
-       <widget class="QLabel" name="imageFileLabel">
-        <property name="text">
-         <string>Image File Name</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QPushButton" name="getPositionButton">
-        <property name="text">
-         <string>Get Position</string>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="0" colspan="4">
-       <widget class="QPushButton" name="clearButton">
-        <property name="text">
-         <string>Clear</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QPushButton" name="getStatusButton">
-        <property name="text">
-         <string>Get Status</string>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="0">
-       <widget class="QPushButton" name="testPrintButton">
-        <property name="text">
-         <string>TEST PRINT</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="2">
        <widget class="QPushButton" name="getHeadTempButton">
         <property name="text">
          <string>Get Head Temps</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="3">
-       <widget class="QLabel" name="setFrequencyLabel">
-        <property name="text">
-         <string>Set Frequency</string>
         </property>
        </widget>
       </item>
@@ -216,6 +76,87 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="getStatusButton">
+        <property name="text">
+         <string>Get Status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0" colspan="4">
+       <widget class="QPlainTextEdit" name="responseTextEdit">
+        <property name="acceptDrops">
+         <bool>false</bool>
+        </property>
+        <property name="undoRedoEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="textInteractionFlags">
+         <set>Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QPushButton" name="getPositionButton">
+        <property name="text">
+         <string>Get Position</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QSpinBox" name="setVoltageSpinBox">
+        <property name="minimum">
+         <number>15</number>
+        </property>
+        <property name="maximum">
+         <number>35</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="inputLineEdit">
+        <property name="minimumSize">
+         <size>
+          <width>300</width>
+          <height>0</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QLabel" name="imageFileLabel">
+        <property name="text">
+         <string>Image File Name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="responseLabel">
+        <property name="text">
+         <string>Response From Controller</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QLineEdit" name="imageFileLineEdit"/>
+      </item>
+      <item row="6" column="3">
+       <widget class="QLabel" name="setFrequencyLabel">
+        <property name="text">
+         <string>Set Frequency</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QSpinBox" name="setStartSpinBox">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>100000</number>
+        </property>
+       </widget>
+      </item>
       <item row="10" column="1" colspan="2">
        <widget class="QPushButton" name="stopPrintingButton">
         <property name="text">
@@ -223,11 +164,75 @@
         </property>
        </widget>
       </item>
+      <item row="5" column="2">
+       <widget class="QSpinBox" name="testPrintYPosSpinBox">
+        <property name="maximum">
+         <number>250</number>
+        </property>
+        <property name="value">
+         <number>60</number>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="3">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Test Print Y Position</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="3">
+       <widget class="QPushButton" name="testJetButton">
+        <property name="text">
+         <string>Test Jetting</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QPushButton" name="requestPHStatusPushButton">
+        <property name="text">
+         <string>Request Printhead Status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0" colspan="4">
+       <widget class="QPushButton" name="clearButton">
+        <property name="text">
+         <string>Clear</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLabel" name="setStartLabel">
+        <property name="text">
+         <string>Absolute Start</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLabel" name="setVoltLabel">
+        <property name="text">
+         <string>Set Head 1 Voltage</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
-   <item row="6" column="1" rowspan="2">
+   <item row="8" column="2" rowspan="2">
     <widget class="QFrame" name="frame_2">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>450</width>
+       <height>525</height>
+      </size>
+     </property>
      <property name="font">
       <font>
        <pointsize>9</pointsize>
@@ -416,7 +421,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>Droplet Spacing (uM)</string>
+       <string>Droplet Spacing (um)</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_8">
@@ -755,7 +760,7 @@
      <widget class="QPushButton" name="moveNozzle">
       <property name="geometry">
        <rect>
-        <x>160</x>
+        <x>130</x>
         <y>480</y>
         <width>121</width>
         <height>31</height>
@@ -763,6 +768,154 @@
       </property>
       <property name="text">
        <string>MOVE NOZZLE OFF</string>
+      </property>
+     </widget>
+    </widget>
+   </item>
+   <item row="6" column="2" rowspan="2">
+    <widget class="QFrame" name="frame_3">
+     <property name="minimumSize">
+      <size>
+       <width>400</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Shape::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Shadow::Raised</enum>
+     </property>
+     <widget class="QPushButton" name="sliceStlButton">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>230</y>
+        <width>111</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>SLICE STL (test)</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="printFrequencySTL">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>40</y>
+        <width>61</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>0</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>1000</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_28">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>10</y>
+        <width>121</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Droplet Spacing (um)</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_29">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>40</y>
+        <width>111</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Initial Frequency (Hz)</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_30">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>70</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Line Spacing (um)</string>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="lineSpacingSTL">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>62</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="maximum">
+       <double>1000.000000000000000</double>
+      </property>
+      <property name="value">
+       <double>137.099999999999994</double>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="dropletSpacingSTL">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>62</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="maximum">
+       <double>1000.000000000000000</double>
+      </property>
+      <property name="value">
+       <double>50.000000000000000</double>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="layerHeightSTL">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>100</y>
+        <width>62</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="maximum">
+       <double>1000.000000000000000</double>
+      </property>
+      <property name="value">
+       <double>50.000000000000000</double>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_31">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>100</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Layer Height (um)</string>
       </property>
      </widget>
     </widget>

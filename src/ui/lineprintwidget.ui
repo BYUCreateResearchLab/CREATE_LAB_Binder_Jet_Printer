@@ -155,7 +155,7 @@
         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
        </property>
        <property name="maximum">
-        <double>100.000000000000000</double>
+        <double>500.000000000000000</double>
        </property>
        <property name="value">
         <double>10.000000000000000</double>

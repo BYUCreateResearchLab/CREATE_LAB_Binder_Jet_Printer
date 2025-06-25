@@ -18,11 +18,16 @@
 #include <cmath>
 #include <QTimer>
 
+// Includes for STL processing 06/24    !!! TODO
+#include <QFileDialog>
+#include<QProcess>
 
 
 MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     PrinterWidget(printer, parent),
-    ui(new Ui::MJPrintheadWidget)
+    ui(new Ui::MJPrintheadWidget),
+    //  New addition for STL processing 06/24 !!! TODO
+    m_pythonProcess(nullptr)
 {
     ui->setupUi(this);
     setAccessibleName("Multi-Jet Printhead Widget");
@@ -63,7 +68,8 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->startStopDisplay, &QPushButton::clicked, this, &MJPrintheadWidget::onStartStopDisplayClicked);
     connect(ui->moveNozzle, &QPushButton::clicked, this, &MJPrintheadWidget::moveNozzleOffPlate);
 
-    //connect(ui->verifyStartLocation, &QPushButton::clicked, this, &MJPrintheadWidget::verifyPrintStartAlignment);
+    // 06/24 !!! TODO
+    connect(ui->sliceStlButton, &QPushButton::clicked, this, &MJPrintheadWidget::sliceStlButton_clicked);
 }
 
 
@@ -513,98 +519,6 @@ void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, d
     GSleep(80);
 
 }
-
-// SAVED ORIGINAL PRINT PROCESS FOR QUICK REFERENCE
-/*
-void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName){
-    Axis nonPrintAxis = Axis::Y;
-    Axis printAxis = Axis::X;
-
-    double accelerationSpeed = 5000;
-
-    //double accTime = printSpeed / accelerationSpeed;
-    //double accDist = (1/2) * accelerationSpeed * std::pow(accTime,2);   //give the distance to get up to speed to avoid jetting at improper speeds
-    //xLocation = xLocation - accDist;
-    //the above code can't be implimented until we are able to begin motion and wait a set time until we begin jetting.
-
-    // Why is this section of the code failing on the second iteration? The program does not run and get stuck in the while loop
-
-    //Showing Paramaters
-    mPrinter->mjController->outputMessage(QString("File name: %1").arg(fileName));
-    mPrinter->mjController->outputMessage(QString("Parameters: "));
-    mPrinter->mjController->outputMessage(QString("Start X: %1").arg(xLocation));
-    mPrinter->mjController->outputMessage(QString("Start Y: %1").arg(yLocation));
-    mPrinter->mjController->outputMessage(QString("Frequency: %1").arg(frequency));
-    mPrinter->mjController->outputMessage(QString("Speed: %1").arg(printSpeed));
-    mPrinter->mjController->outputMessage(QString("Image Width: %1").arg(imageWidth));
-
-    // Set print frequency and mode
-    mPrinter->mjController->write_line("M 3");
-    mPrinter->mjController->set_printing_frequency(frequency);
-
-    // Set printhead to correct state for printing
-    mPrinter->mjController->set_absolute_start(1);
-
-    read_in_file(fileName);
-
-    // Create program to move printer into position and complete print
-    // Do we need to clear the s variable each time? (doesn't seem like it)
-    std::stringstream s_cmd;
-
-    // Move Y axis into position
-    s_cmd<< CMD::set_accleration(nonPrintAxis, 600);
-    s_cmd<< CMD::set_deceleration(nonPrintAxis, 600);
-    s_cmd<< CMD::set_speed(nonPrintAxis, 60);
-    s_cmd<< CMD::position_absolute(nonPrintAxis, yLocation * -1);
-    s_cmd<< CMD::begin_motion(nonPrintAxis);
-    s_cmd<< CMD::after_motion(nonPrintAxis);
-
-    // Move X axis_cmdinto position
-    s_cmd<< CMD::set_accleration(printAxis, 600);
-    s_cmd<< CMD::set_deceleration(printAxis, 600);
-    s_cmd<< CMD::set_speed(printAxis, 60);
-    s_cmd<< CMD::position_absolute(printAxis, xLocation);
-    s_cmd<< CMD::begin_motion(printAxis);
-    s_cmd<< CMD::after_motion(printAxis);
-
-
-    double endTargetMM = xLocation + (imageWidth/frequency)*printSpeed;
-
-    // Start the print
-    s_cmd<< CMD::set_accleration(printAxis, accelerationSpeed); // Added by Noah 9/11 -> do we need to customize the acceleration based on parameters?
-    s_cmd<< CMD::set_deceleration(printAxis, accelerationSpeed);
-    s_cmd<< CMD::set_speed(printAxis, printSpeed);
-    s_cmd<< CMD::position_absolute(printAxis, endTargetMM);
-    s_cmd<< CMD::start_MJ_print();
-    s_cmd<< CMD::start_MJ_dir();
-    s_cmd<< CMD::begin_motion(printAxis);
-    s_cmd<< CMD::after_motion(printAxis);
-
-    // clear bits_cmdfor print start
-    s_cmd<< CMD::disable_MJ_dir();
-    s_cmd<< CMD::disable_MJ_start();
-
-    s_cmd << CMD::display_message("Print Complete");                                // Added to trigger the flag
-
-    // Compile into program for printer to run
-    std::string returnStr = CMD::cmd_buf_to_dmc(s_cmd);
-    const char *cmds = returnStr.c_str();
-    qDebug().noquote() << cmds;
-
-    if (mPrinter->mcu->g)
-    {
-        GProgramDownload(mPrinter->mcu->g, cmds, "");
-    }
-
-    // Do we need to clear the c variable every time? (doesn't seem like it)
-    std::stringstream c_cmd;
-    c_cmd << "GCmd," << "XQ" << "\n";
-    c_cmd << "GProgramComplete," << "\n";
-
-    emit execute_command(c_cmd);
-
-}
-*/
 
 void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName){
     mPrinter->mjController->outputMessage(QString("Entered printBMPatLocationEncoder!!"));
@@ -1074,6 +988,88 @@ QString MJPrintheadWidget::verifyPrintStartStop(int xStart, int xStop){
     }
 }
 
+void MJPrintheadWidget::sliceStlButton_clicked(){
+    mPrinter->mjController->outputMessage(QString("Initiating STL slicing... "));
+
+    // --- 1. On button press, prompt to browse for an STL file ---
+    QString stlFilePath = QFileDialog::getOpenFileName(this, tr("Open STL File"),
+                                                       "C:\\Users\\CB140LAB\\Desktop\\Noah\\ComplexMultiNozzle\\STL_Files",
+                                                       tr("STL Files (*.stl *.STL)"));
+
+    if (stlFilePath.isEmpty()){
+        mPrinter->mjController->outputMessage(QString("No STL file selected."));
+        return;
+    }
+
+    // --- 2. Locate relavent files ---
+    // Python Script Location !!!
+    QString pythonScriptPath = "C:\\Users\\CB140LAB\\Desktop\\Noah\\ComplexMultiNozzle\\Python_Code\\STL_Slicing_Viewer_mod.py";
+
+    // Path to python.exe
+    QString pythonExecutable = "C:\\Users\\CB140LAB\\AppData\\Local\\Microsoft\\WindowsApps\\python3.11.exe";
+
+    // --- 3. read values from UI text boxes ---
+    int printFreqSTL = ui->printFrequencySTL->value();
+    double dropletSpacingSTLum = ui->dropletSpacing->value();
+    double lineSpacingSTLum = ui->lineSpacingSTL->value();
+    double layerHeightSTLum = ui->layerHeightSTL->value();
+
+    double dropletSpacingSTLmm = dropletSpacingSTLum / 1000.0;
+    double lineSpacingSTLmm = lineSpacingSTLum / 1000.0;
+    double layerHeightSTLmm = layerHeightSTLum / 1000.0;
+
+    if (m_pythonProcess && m_pythonProcess->state() == QProcess::Running){
+        mPrinter->mjController->outputMessage(QString("Slicer script is already running."));
+        return;
+    }
+
+    m_pythonProcess = new QProcess(this);
+
+    // Connect signals to slots to get feedback from script
+    connect(m_pythonProcess, &QProcess::readyReadStandardOutput, this, &MJPrintheadWidget::readPythonOutput);
+    connect(m_pythonProcess, &QProcess::readyReadStandardError, this, &MJPrintheadWidget::handlePythonError);
+    connect(m_pythonProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &MJPrintheadWidget::onPythonScriptFinished);
+
+    // List of arguments to pass to the script
+    QStringList args;
+    args << pythonScriptPath
+         << stlFilePath
+         << QString::number(printFreqSTL)
+         << QString::number(dropletSpacingSTLmm)
+         << QString::number(lineSpacingSTLmm)
+         << QString::number(layerHeightSTLmm);
+
+    mPrinter->mjController->outputMessage(QString("Starting Python slicer..."));
+    mPrinter->mjController->outputMessage(QString("Command: %1 %2").arg(pythonExecutable, args.join(" ")));
+
+    // --- 4. Launch the Script
+    m_pythonProcess->start(pythonExecutable, args);
+
+}
+
+void MJPrintheadWidget::readPythonOutput()
+{
+    // Your implementation here. For example:
+    QByteArray output = m_pythonProcess->readAllStandardOutput();
+    qDebug() << "Python output:" << output;
+}
+
+void MJPrintheadWidget::handlePythonError()
+{
+    // Your implementation here. For example:
+    QByteArray errorOutput = m_pythonProcess->readAllStandardError();
+    qWarning() << "Python error:" << errorOutput;
+}
+
+void MJPrintheadWidget::onPythonScriptFinished(int exitCode, QProcess::ExitStatus exitStatus)
+{
+    // Your implementation here. For example:
+    qDebug() << "Python script finished with exit code:" << exitCode;
+    if (exitStatus == QProcess::CrashExit) {
+        qWarning() << "The Python script crashed.";
+    }
+}
+
 /* 6/9 thoughts and things to look at
 !!!TODO: 6/9 work on implementing error catching including the printstartstop error catching so that all prints fit inside the build palte
 
@@ -1095,3 +1091,8 @@ Next steps:
 - write code to verify which nozzles are actually functioning
 - 3d print holder for all components so none are lost or get dirty
 */
+
+
+
+
+

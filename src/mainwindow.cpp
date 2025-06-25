@@ -393,7 +393,7 @@ void MainWindow::on_zUp_clicked()
     double predictedEndPos_mm = startPos_mm + stepValue_mm; // Add because we are moving up
 
     // 5. Create a clear display message
-    std::string message = "Z: " + std::to_string(startPos_mm) + " -> " + std::to_string(predictedEndPos_mm) + " mm";
+    std::string message = "Z: " + std::to_string(startPos_mm) + " -> " + std::to_string(predictedEndPos_mm) + " mm (+" + std::to_string(stepValue_mm) + "mm)";
     s << CMD::display_message(message);
 
     // 6. Execute all buffered commands
@@ -428,7 +428,7 @@ void MainWindow::on_zDown_clicked()
     double predictedEndPos_mm = startPos_mm - stepValue_mm; // Subtract because we are moving down
 
     // 5. Create a clear display message
-    std::string message = "Z: " + std::to_string(startPos_mm) + " -> " + std::to_string(predictedEndPos_mm) + " mm (" + std::to_string(stepValue_mm) + "mm)";
+    std::string message = "Z: " + std::to_string(startPos_mm) + " -> " + std::to_string(predictedEndPos_mm) + " mm (-" + std::to_string(stepValue_mm) + "mm)";
     s << CMD::display_message(message);
 
     // 6. Execute all buffered commands

@@ -2,8 +2,11 @@
 #define MJPRINTHEADWIDGET_H
 
 #include <QWidget>
-
 #include "printerwidget.h"
+
+// Includes for STL slicing 06/24
+#include <QProcess>
+
 
 namespace Ui {
 class MJPrintheadWidget;
@@ -31,15 +34,10 @@ protected:
     //void send_image_data(const QString &file);
 
     void send_command(const QString &command);
-
     void frequencyChanged();
-
     void voltageChanged();
-
     void absoluteStartChanged();
-
     void write_to_response_window(const QString &text);
-
     void moveNozzleOffPlate();
 
     void stopPrintingPressed();
@@ -58,22 +56,27 @@ protected:
     void verifyPrintStartAlignment(double xStart, double yStart);
     void zeroEncoder();
 
-
-
     void purgeNozzles();
     void testNozzles();
     QString verifyPrintStartStop(int xStart, int xStop);
 
 private slots:
     void onStartStopDisplayClicked();
-
     void requestEncoderPosition();
+
+    // 06/24 TODO
+    void sliceStlButton_clicked();
+    void readPythonOutput();
+    void handlePythonError();
+    void onPythonScriptFinished(int exitCode, QProcess::ExitStatus exitStatus);
+
 
 private:
     Ui::MJPrintheadWidget *ui;
     bool encFlag;
     QTimer *m_positionTimer;
     QStringList m_encoderHistory;
+    QProcess *m_pythonProcess;          // 06/24 TODO
 };
 
 #endif // MJPRINTHEADWIDGET_H
