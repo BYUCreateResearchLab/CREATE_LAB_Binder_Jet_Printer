@@ -22,6 +22,14 @@
 #include <QFileDialog>
 #include<QProcess>
 
+// Includes for full bed printing with slicing
+#include <QFileInfo>
+#include <QTextStream>
+#include <map>
+#include <QStringList>
+#include <QRegularExpression>
+#include <QRegularExpressionMatch>
+
 
 MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     PrinterWidget(printer, parent),
@@ -31,6 +39,8 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
 {
     ui->setupUi(this);
     setAccessibleName("Multi-Jet Printhead Widget");
+
+    allow_widget_input_MJ(false);
 
     // timer setuip
     m_positionTimer = new QTimer(this);
@@ -70,6 +80,38 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
 
     // 06/24 !!! TODO
     connect(ui->sliceStlButton, &QPushButton::clicked, this, &MJPrintheadWidget::sliceStlButton_clicked);
+
+    // connect jog buttons
+    connect(ui->xRightButtonMJ, &QAbstractButton::pressed, this, &MJPrintheadWidget::x_right_button_pressed_MJ);
+    connect(ui->xLeftButtonMJ, &QAbstractButton::pressed, this, &MJPrintheadWidget::x_left_button_pressed_MJ);
+    connect(ui->yUpButtonMJ, &QAbstractButton::pressed, this, &MJPrintheadWidget::y_up_button_pressed_MJ);
+    connect(ui->yDownButtonMJ, &QAbstractButton::pressed, this, &MJPrintheadWidget::y_down_button_pressed_MJ);
+
+    connect(ui->xRightButtonMJ, &QAbstractButton::released, this, &MJPrintheadWidget::jog_released_MJ);
+    connect(ui->xLeftButtonMJ, &QAbstractButton::released, this, &MJPrintheadWidget::jog_released_MJ);
+    connect(ui->yUpButtonMJ, &QAbstractButton::released, this, &MJPrintheadWidget::jog_released_MJ);
+    connect(ui->yDownButtonMJ, &QAbstractButton::released, this, &MJPrintheadWidget::jog_released_MJ);
+
+    // connect homing buttons
+    connect(ui->xHomeMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::on_xHome_clicked_MJ);
+    connect(ui->yHomeMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::on_yHome_clicked_MJ);
+
+    // connect z movement buttons
+    connect(ui->zUpMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::on_zUp_clicked_MJ);
+    connect(ui->zDownMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::on_zDown_clicked_MJ);
+    connect(ui->zMaxMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::on_zMax_clicked_MJ);
+    connect(ui->zMinMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::on_zMin_clicked_MJ);
+
+    // connect position getter buttons
+    connect(ui->getXAxisPositionMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::get_current_x_axis_position_MJ);
+    connect(ui->getYAxisPositionMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::get_current_y_axis_position_MJ);
+    connect(ui->getZAxisPositionMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::get_current_z_axis_position_MJ);
+    connect(ui->zAbsoluteMoveButtonMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::move_z_to_absolute_position_MJ);
+
+    // connect for printing full bed prints
+    connect(ui->startFullPrintButton, &QPushButton::clicked, this, &MJPrintheadWidget::on_startFullPrintButton_clicked);
+
+
 }
 
 
@@ -81,12 +123,75 @@ MJPrintheadWidget::~MJPrintheadWidget()
 
 void MJPrintheadWidget::allow_widget_input(bool allowed)
 {
+    // Jogging Buttons
+    ui->xRightButtonMJ->setEnabled(allowed);
+    ui->xLeftButtonMJ->setEnabled(allowed);
+    ui->yUpButtonMJ->setEnabled(allowed);
+    ui->yDownButtonMJ->setEnabled(allowed);
 
+    // Homing Buttons
+    ui->xHomeMJ->setEnabled(allowed);
+    ui->yHomeMJ->setEnabled(allowed);
+
+    // Z-Axis Buttons
+    ui->zUpMJ->setEnabled(allowed);
+    ui->zDownMJ->setEnabled(allowed);
+    ui->zMaxMJ->setEnabled(allowed);
+    ui->zMinMJ->setEnabled(allowed);
+    ui->zAbsoluteMoveButtonMJ->setEnabled(allowed);
+
+    // Position Getters
+    ui->getXAxisPositionMJ->setEnabled(allowed);
+    ui->getYAxisPositionMJ->setEnabled(allowed);
+    ui->getZAxisPositionMJ->setEnabled(allowed);
+
+    // Input Spin Boxes
+    ui->xVelocityMJ->setEnabled(allowed);
+    ui->yVelocityMJ->setEnabled(allowed);
+    ui->zStepSizeMJ->setEnabled(allowed);
+    ui->zAbsoluteMoveSpinBoxMJ->setEnabled(allowed);
+
+    // Test Movdes
+    ui->purgeNozzlesButton->setEnabled(allowed);
+    ui->testNozzlesButton->setEnabled(allowed);
+    ui->singleNozzlePushButton->setEnabled(allowed);
+    ui->startStopDisplay->setEnabled(allowed);
+    ui->zeroEncoder->setEnabled(allowed);
+    ui->printVariableTestPrint->setEnabled(allowed);
+    ui->printVariableTestPrintEnc->setEnabled(allowed);
+    ui->moveNozzle->setEnabled(allowed);
+    ui->verifyStartLocation->setEnabled(allowed);
+    ui->testPrintButton->setEnabled(allowed);
+    ui->testJetButton->setEnabled(allowed);
+    ui->startFullPrintButton->setEnabled(allowed);
+}
+
+void MJPrintheadWidget::allow_widget_input_MJ(bool allowed){
+    ui->getHeadTempButton->setEnabled(allowed);
+    ui->getStatusButton->setEnabled(allowed);
+    ui->powerToggleButton->setEnabled(allowed);
+    ui->requestPHStatusPushButton->setEnabled(allowed);
+    ui->getPositionButton->setEnabled(allowed);
+    ui->setVoltageSpinBox->setEnabled(allowed);
+    ui->setFreqSpinBox->setEnabled(allowed);
+    ui->imageFileLineEdit->setEnabled(allowed);
+    ui->setStartSpinBox->setEnabled(allowed);
+    ui->stopPrintingButton->setEnabled(allowed);
 }
 
 void MJPrintheadWidget::connect_to_printhead()
 {
-    mPrinter->mjController->connect_board();
+    // This function now toggles the connection to the board.
+    if (mPrinter->mjController->is_connected())
+    {
+        allow_widget_input_MJ(true);
+    }
+    else
+    {
+        // If not connected, attempt to connect.
+        mPrinter->mjController->connect_board();
+        allow_widget_input_MJ(true);
+    }
 }
 
 void MJPrintheadWidget::clear_response_text()
@@ -145,21 +250,27 @@ void MJPrintheadWidget::file_name_entered()
     read_in_file(filename);
 }
 
-void MJPrintheadWidget::read_in_file(const QString &filename)
+void MJPrintheadWidget::read_in_file(const QString &fileNameOrPath)
 {
-    const QString directory = "C:\\Users\\CB140LAB\\Desktop\\Noah\\";
-    QString filePath = directory + filename;
+    QString filePath = fileNameOrPath;
+    QFileInfo fileInfo(filePath);
+
+    // If the path is not absolute, prepend the default directory.
+    // This maintains backward compatibility for test functions.
+    if (!fileInfo.isAbsolute()) {
+        const QString directory = "C:\\Users\\CB140LAB\\Desktop\\Noah\\";
+        filePath = directory + fileNameOrPath;
+    }
 
     QImage image(filePath);
 
     if (image.isNull())
     {
-        mPrinter->mjController->emit response(QString("Failed to load image from" + filePath));
+        mPrinter->mjController->emit response(QString("Failed to load image from " + filePath));
         return;
     }
 
     mPrinter->mjController->send_image_data(1, image, 0);
-
 }
 
 void MJPrintheadWidget::powerTogglePressed()
@@ -1069,6 +1180,443 @@ void MJPrintheadWidget::onPythonScriptFinished(int exitCode, QProcess::ExitStatu
         qWarning() << "The Python script crashed.";
     }
 }
+
+
+// MOTION ADDITION:
+void MJPrintheadWidget::x_right_button_pressed_MJ()
+{
+    std::stringstream s;
+    s << CMD::set_accleration(Axis::X, 800);
+    s << CMD::set_deceleration(Axis::X, 800);
+    s << CMD::set_jog(Axis::X, ui->xVelocityMJ->value());
+    s << CMD::begin_motion(Axis::X);
+    emit execute_command(s);
+}
+
+void MJPrintheadWidget::x_left_button_pressed_MJ()
+{
+    std::stringstream s;
+    s << CMD::set_accleration(Axis::X, 800);
+    s << CMD::set_deceleration(Axis::X, 800);
+    s << CMD::set_jog(Axis::X, -ui->xVelocityMJ->value());
+    s << CMD::begin_motion(Axis::X);
+    emit execute_command(s);
+}
+
+void MJPrintheadWidget::y_up_button_pressed_MJ()
+{
+    std::stringstream s;
+    s << CMD::set_accleration(Axis::Y, 300);
+    s << CMD::set_deceleration(Axis::Y, 300);
+    s << CMD::set_jog(Axis::Y, -ui->yVelocityMJ->value());
+    s << CMD::begin_motion(Axis::Y);
+    emit execute_command(s);
+}
+
+void MJPrintheadWidget::y_down_button_pressed_MJ()
+{
+    std::stringstream s;
+    s << CMD::set_accleration(Axis::Y, 300);
+    s << CMD::set_deceleration(Axis::Y, 300);
+    s << CMD::set_jog(Axis::Y, ui->yVelocityMJ->value());
+    s << CMD::begin_motion(Axis::Y);
+    emit execute_command(s);
+}
+
+void MJPrintheadWidget::jog_released_MJ()
+{
+    std::stringstream s;
+    s << CMD::stop_motion(Axis::X);
+    s << CMD::stop_motion(Axis::Y);
+    s << CMD::stop_motion(Axis::Z);
+    s << CMD::motion_complete(Axis::X);
+    s << CMD::motion_complete(Axis::Y);
+    s << CMD::motion_complete(Axis::Z);
+    emit execute_command(s);
+}
+
+void MJPrintheadWidget::on_xHome_clicked_MJ()
+{
+    std::stringstream s;
+    Axis x{Axis::X};
+    s << CMD::set_accleration(x, 800);
+    s << CMD::set_deceleration(x, 800);
+    s << CMD::position_absolute(x, 0);
+    s << CMD::set_speed(x, 50);
+    s << CMD::begin_motion(x);
+    s << CMD::motion_complete(x);
+    emit execute_command(s);
+}
+
+void MJPrintheadWidget::on_yHome_clicked_MJ()
+{
+    std::stringstream s;
+    Axis y{Axis::Y};
+    s << CMD::set_accleration(y, 300);
+    s << CMD::set_deceleration(y, 300);
+    s << CMD::position_absolute(y, 0);
+    s << CMD::set_speed(y, 50);
+    s << CMD::begin_motion(y);
+    s << CMD::motion_complete(y);
+    emit execute_command(s);
+}
+
+void MJPrintheadWidget::on_zUp_clicked_MJ()
+{
+    std::stringstream s;
+    Axis z{Axis::Z};
+    double stepValue_microns = ui->zStepSizeMJ->value();
+    double stepValue_mm = stepValue_microns / 1000.0;
+    s << CMD::position_relative(z, stepValue_mm);
+    s << CMD::set_accleration(z, 10);
+    s << CMD::set_deceleration(z, 10);
+    s << CMD::set_speed(z, 1.5);
+    s << CMD::begin_motion(z);
+    s << CMD::motion_complete(z);
+    emit execute_command(s);
+}
+
+void MJPrintheadWidget::on_zDown_clicked_MJ()
+{
+    std::stringstream s;
+    Axis z{Axis::Z};
+    double stepValue_microns = ui->zStepSizeMJ->value();
+    double stepValue_mm = stepValue_microns / 1000.0;
+    s << CMD::position_relative(z, -stepValue_mm);
+    s << CMD::set_accleration(z, 10);
+    s << CMD::set_deceleration(z, 10);
+    s << CMD::set_speed(z, 1.5);
+    s << CMD::begin_motion(z);
+    s << CMD::motion_complete(z);
+    emit execute_command(s);
+}
+
+void MJPrintheadWidget::on_zMax_clicked_MJ()
+{
+    std::stringstream s;
+    Axis z{Axis::Z};
+    s << CMD::set_accleration(z, 10);
+    s << CMD::set_deceleration(z, 10);
+    s << CMD::set_jog(z, 1.5);
+    s << CMD::begin_motion(z);
+    s << CMD::motion_complete(z);
+    emit execute_command(s);
+}
+
+void MJPrintheadWidget::on_zMin_clicked_MJ()
+{
+    std::stringstream s;
+    Axis z{Axis::Z};
+    s << CMD::set_accleration(z, 10);
+    s << CMD::set_deceleration(z, 10);
+    s << CMD::set_jog(z, -1.5);
+    s << CMD::begin_motion(z);
+    s << CMD::motion_complete(z);
+    emit execute_command(s);
+}
+
+void MJPrintheadWidget::get_current_x_axis_position_MJ()
+{
+    if (mPrinter->mcu->g)
+    {
+        int currentXPos;
+        GCmdI(mPrinter->mcu->g, "TPX", &currentXPos);
+        double currentXPos_mm = currentXPos / (double)X_CNTS_PER_MM;
+        emit print_to_output_window("Current X: " + QString::number(currentXPos_mm) + "mm");
+    }
+}
+
+void MJPrintheadWidget::get_current_y_axis_position_MJ()
+{
+    if (mPrinter->mcu->g)
+    {
+        int currentYPos;
+        GCmdI(mPrinter->mcu->g, "TPY", &currentYPos);
+        double currentYPos_mm = currentYPos / (double)Y_CNTS_PER_MM;
+        emit print_to_output_window("Current Y: " + QString::number(currentYPos_mm) + "mm");
+    }
+}
+
+void MJPrintheadWidget::get_current_z_axis_position_MJ()
+{
+    if (mPrinter->mcu->g)
+    {
+        int currentZPos;
+        GCmdI(mPrinter->mcu->g, "TPZ", &currentZPos);
+        double currentZPos_mm = currentZPos / (double)Z_CNTS_PER_MM;
+        emit print_to_output_window("Current Z: " + QString::number(currentZPos_mm) + "mm");
+    }
+}
+
+void MJPrintheadWidget::move_z_to_absolute_position_MJ()
+{
+    std::stringstream s;
+    s << CMD::position_absolute(Axis::Z, ui->zAbsoluteMoveSpinBoxMJ->value());
+    s << CMD::set_accleration(Axis::Z, 10);
+    s << CMD::set_deceleration(Axis::Z, 10);
+    s << CMD::set_speed(Axis::Z, 1.5);
+    s << CMD::begin_motion(Axis::Z);
+    s << CMD::motion_complete(Axis::Z);
+    emit execute_command(s);
+}
+
+// FULL BED PRINTING 06/30
+// Find the job folder.
+void MJPrintheadWidget::on_startFullPrintButton_clicked()
+{
+    QString jobFolderPath = QFileDialog::getExistingDirectory(this, tr("Select Print Job Folder"),
+                                                              "C:\\Users\\CB140LAB\\Desktop\\Noah\\ComplexMultiNozzle\\Slicing",
+                                                              QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+    if (jobFolderPath.isEmpty()) {
+        mPrinter->mjController->outputMessage("No print job folder selected. Aborting.");
+        return;
+    }
+
+    // Start the print job using the selected folder
+    startFullPrintJob(jobFolderPath);
+}
+
+// parses the print_parameters.txt file for important print settings
+bool MJPrintheadWidget::parsePrintParameters(const QString& filePath, PrintParameters& params) {
+    // NOTE: Ensure your PrintParameters struct in the .h file is updated to include:
+    // QString sourceSTLFile;
+    // double layerHeight = 0.0;
+    // bool yShiftEnabled = false;
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        mPrinter->mjController->outputMessage(QString("ERROR: Could not open parameter file: %1").arg(filePath));
+        return false;
+    }
+
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+        if (line.contains(':')) {
+            QStringList parts = line.split(':');
+            if (parts.size() < 2) continue;
+
+            QString key = parts[0].trimmed();
+            QString valuePart = parts.last().trimmed();
+
+            if (key == "Source STL File") {
+                params.fileName = valuePart;
+            }
+            else if (key == "Layer Height (Z)") {
+                params.layerHeight = valuePart.split(' ')[0].toDouble();
+            }
+            else if (key == "Y-Shift Per Layer") {
+                params.yShiftEnabled = valuePart.contains("True", Qt::CaseInsensitive);
+            }
+            else if (key == "Print Frequency") {
+                params.printFrequency = valuePart.split(' ')[0].toDouble();
+            }
+            else if (key == "Calculated Print Speed (X-axis)") {
+                params.printSpeed = valuePart.split(' ')[0].toDouble();
+            }
+            else if (key == "Droplet Spacing (X-axis resolution)") {
+                params.dropletSpacingX = valuePart.split(' ')[0].toDouble();
+            }
+            else if (key == "Line Spacing (Y-axis resolution)") {
+                params.lineSpacingY = valuePart.split(' ')[0].toDouble();
+            }
+            else if (key == "Nozzle Count") {
+                params.nozzleCount = valuePart.split(' ')[0].toInt();
+            }
+            else if (key == "Part Position (Start X, Y)") {
+                QStringList coords = valuePart.split(',');
+                if (coords.size() == 2) {
+                    params.startX = coords[0].remove("mm").toDouble();
+                    params.startY = -coords[1].remove("mm").toDouble();
+                }
+            }
+        }
+    }
+    file.close();
+
+    // --- Log the parsed values for verification ---
+    mPrinter->mjController->outputMessage("--- Parsed Print Parameters ---");
+    mPrinter->mjController->outputMessage(QString("Source STL File: %1").arg(params.fileName));
+    mPrinter->mjController->outputMessage(QString("Layer Height: %1 mm").arg(params.layerHeight));
+    mPrinter->mjController->outputMessage(QString("Y-Shift Enabled: %1").arg(params.yShiftEnabled ? "True" : "False"));
+    mPrinter->mjController->outputMessage(QString("Print Frequency: %1 Hz").arg(params.printFrequency));
+    mPrinter->mjController->outputMessage(QString("Print Speed: %1 mm/s").arg(params.printSpeed));
+    mPrinter->mjController->outputMessage(QString("Droplet Spacing (X): %1 mm").arg(params.dropletSpacingX));
+    mPrinter->mjController->outputMessage(QString("Line Spacing (Y): %1 mm").arg(params.lineSpacingY));
+    mPrinter->mjController->outputMessage(QString("Part Start X: %1 mm").arg(params.startX));
+    mPrinter->mjController->outputMessage(QString("Part Start Y: %1 mm").arg(params.startY));
+    mPrinter->mjController->outputMessage(QString("Nozzle Count: %1").arg(params.nozzleCount));
+    mPrinter->mjController->outputMessage("-----------------------------");
+
+
+    // Check if essential values were loaded.
+    if (params.printFrequency == 0.0 || params.printSpeed == 0.0 || params.layerHeight == 0.0) {
+        mPrinter->mjController->outputMessage("WARNING: Some critical print parameters might not have been parsed correctly.");
+        return false;
+    }
+
+    return true;
+}
+
+// parses the layer_y_shifts.txt file for dithering
+bool MJPrintheadWidget::parseLayerShifts(const QString& filePath, std::map<int, int>& shifts) {
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        mPrinter->mjController->outputMessage(QString("ERROR: Could not open layer shifts file: %1").arg(filePath));
+        return false;
+    }
+
+    QTextStream in(&file);
+    if (!in.atEnd()) in.readLine(); // Skip header line "Layer,Y_Shift_Pixels"
+
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+        QStringList parts = line.split(',');
+        if (parts.size() == 2) {
+            bool ok1, ok2;
+            int layer = parts[0].toInt(&ok1);
+            int shift = parts[1].toInt(&ok2);
+            if(ok1 && ok2) {
+                shifts[layer] = shift;
+            }
+        }
+    }
+    file.close();
+    mPrinter->mjController->outputMessage(QString("Successfully parsed layer shifts."));
+    return true;
+}
+
+// main function for full prints of cut stl files
+void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
+    mPrinter->mjController->outputMessage(QString("--- Starting Full Print Job ---"));
+    mPrinter->mjController->outputMessage(QString("Job Folder: %1").arg(jobFolderPath));
+
+    // --- 1. Parse Parameter and Shift Files ---
+    PrintParameters params;
+    if (!parsePrintParameters(jobFolderPath + "\\print_parameters.txt", params)) {
+        mPrinter->mjController->outputMessage(QString("FATAL: Failed to parse parameters. Aborting print."));
+        return;
+    }
+
+    std::map<int, int> layerShifts;
+    if (params.yShiftEnabled)
+    {
+        if (!parseLayerShifts(jobFolderPath + "\\layer_y_shifts.txt", layerShifts)) {
+            mPrinter->mjController->outputMessage(QString("FATAL: Failed to parse layer shifts. Aborting print."));
+            return;
+        }
+    }
+
+    // --- 2. Get and Sort All Print Files ---
+    QString dividedFolderPath = jobFolderPath + "\\divided";
+    QDir dividedDir(dividedFolderPath);
+
+    // Set filters to find only the bitmap files for the print layers.
+    dividedDir.setNameFilters(QStringList() << "layer_*.bmp");
+    dividedDir.setFilter(QDir::Files | QDir::NoDotAndDotDot);
+
+    // Set the sorting to QDir::Name, which sorts entries alphabetically. This is the key change.
+    dividedDir.setSorting(QDir::Name);
+
+    // Get the list of all matching filenames, now guaranteed to be in alphabetical order.
+    QStringList fileList = dividedDir.entryList();
+
+    if (fileList.isEmpty()) {
+        mPrinter->mjController->outputMessage(QString("FATAL: No 'layer_*.bmp' files found in the divided folder. Aborting print."));
+        return;
+    }
+    mPrinter->mjController->outputMessage(QString("Found %1 files to print in alphabetical order.").arg(fileList.count()));
+
+
+    // --- 3. Pre-calculate Constant Values ---
+    const int imageWidthPixels = static_cast<int>(ceil(100.0 / params.dropletSpacingX));
+
+    // --- 4. Main Print Loop ---
+    int lastLayerProcessed = -1; // Use -1 to indicate no layers have been processed yet.
+    double layerBaseY = params.startY;
+
+    // Iterate through the sorted list of files.
+    for (const QString& fileName : fileList) {
+        QString passFilePath = dividedDir.absoluteFilePath(fileName);
+
+        // Use a regular expression to robustly parse layer and pass numbers from the filename.
+        // This captures one or more digits (\d+) for the layer and pass numbers.
+        QRegularExpression re("layer_(\\d+)_pass_(\\d+)\\.bmp");
+        QRegularExpressionMatch match = re.match(fileName);
+
+        if (!match.hasMatch()) {
+            mPrinter->mjController->outputMessage(QString("WARNING: Skipping file with unexpected name format: %1").arg(fileName));
+            continue; // Skip this file and move to the next one.
+        }
+
+        // Extract the layer and pass numbers from the matched parts of the filename.
+        int currentLayer = match.captured(1).toInt();
+        int currentPass = match.captured(2).toInt();
+
+        // --- New Layer Detection ---
+        // If the layer number from the current file is different from the last one we processed,
+        // it means we are starting a new layer.
+        if (currentLayer != lastLayerProcessed) {
+            // If this isn't the very first layer, print the "Finished" message for the previous one.
+            if (lastLayerProcessed != -1) {
+                mPrinter->mjController->outputMessage(QString("--- Finished Layer %1 ---").arg(lastLayerProcessed));
+            }
+
+            mPrinter->mjController->outputMessage(QString("--- Starting Layer %1 ---").arg(currentLayer));
+
+            // ===================================================================
+            // === INSERT NEW LAYER CODE HERE ===
+            // This is where you will add calls for:
+            // 1. Lowering the Z-axis for the build plate.
+            // 2. Depositing a new layer of powder.
+            // 3. Rolling the powder to create a smooth surface.
+            // ===================================================================
+            mPrinter->mjController->outputMessage("Performing new layer operations (Z-move, powder, roll)...");
+            GSleep(1000); // Placeholder delay for new layer operations
+
+            // Calculate the base Y position for this new layer, accounting for any shifts.
+            // This only needs to be calculated once per layer.
+            if (params.yShiftEnabled) {
+                int yPixelShift = layerShifts.count(currentLayer) ? layerShifts[currentLayer] : 0;
+                double yShiftForLayer_mm = static_cast<double>(yPixelShift) * params.lineSpacingY;
+                layerBaseY = params.startY - yShiftForLayer_mm;
+            } else {
+                layerBaseY = params.startY;
+            }
+            lastLayerProcessed = currentLayer;
+        }
+
+        // Calculate the specific Y location for the current pass within the layer.
+        double yOffsetForPass_mm = static_cast<double>(currentPass - 1) * params.nozzleCount * params.lineSpacingY;
+        double currentYLocation = layerBaseY + yOffsetForPass_mm;
+
+        mPrinter->mjController->outputMessage(QString("Printing Layer %1, Pass %2 at Y=%3mm")
+                                                  .arg(currentLayer).arg(currentPass).arg(currentYLocation));
+
+        atLocation = false;
+        // 06/30 TODO: setting startX to 0 because the offset is taken care of in the image
+        // Call the print function with the full path to the current pass file. params.startX,
+        printBMPatLocationEncoder(
+            0.0,
+            currentYLocation,
+            params.printFrequency,
+            params.printSpeed,
+            imageWidthPixels,
+            passFilePath
+            );
+        GSleep(100);
+    }
+
+    // After the loop finishes, print the "Finished" message for the very last layer.
+    if (lastLayerProcessed != -1) {
+        mPrinter->mjController->outputMessage(QString("--- Finished Layer %1 ---").arg(lastLayerProcessed));
+    }
+
+    mPrinter->mjController->outputMessage(QString("--- Print Job Complete ---"));
+    moveNozzleOffPlate(); // Move nozzle to a safe position after the print
+}
+
 
 /* 6/9 thoughts and things to look at
 !!!TODO: 6/9 work on implementing error catching including the printstartstop error catching so that all prints fit inside the build palte

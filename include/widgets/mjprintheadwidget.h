@@ -6,11 +6,25 @@
 
 // Includes for STL slicing 06/24
 #include <QProcess>
+#include <map>
 
 
 namespace Ui {
 class MJPrintheadWidget;
 }
+
+struct PrintParameters {
+    QString fileName = "";
+    double printFrequency = 0.0;
+    double printSpeed = 0.0;
+    double dropletSpacingX = 0.0;
+    double lineSpacingY = 0.0;
+    double layerHeight = 0.0;
+    double startX = 0.0;
+    double startY = 0.0;
+    int nozzleCount = 128;
+    bool yShiftEnabled = false;
+};
 
 class MJPrintheadWidget : public PrinterWidget
 {
@@ -60,11 +74,34 @@ protected:
     void testNozzles();
     QString verifyPrintStartStop(int xStart, int xStop);
 
+    // Motion Addition:
+    void x_right_button_pressed_MJ();
+    void x_left_button_pressed_MJ();
+    void y_up_button_pressed_MJ();
+    void y_down_button_pressed_MJ();
+    void jog_released_MJ();
+    void on_xHome_clicked_MJ();
+    void on_yHome_clicked_MJ();
+    void on_zUp_clicked_MJ();
+    void on_zDown_clicked_MJ();
+    void on_zMax_clicked_MJ();
+    void on_zMin_clicked_MJ();
+    void get_current_x_axis_position_MJ();
+    void get_current_y_axis_position_MJ();
+    void get_current_z_axis_position_MJ();
+    void move_z_to_absolute_position_MJ();
+
+    // Input allowance
+    void allow_widget_input_MJ(bool allowed);
+
+public slots:
+    void on_startFullPrintButton_clicked();
+
 private slots:
     void onStartStopDisplayClicked();
     void requestEncoderPosition();
 
-    // 06/24 TODO
+    // STL Slicing Slots
     void sliceStlButton_clicked();
     void readPythonOutput();
     void handlePythonError();
@@ -72,6 +109,11 @@ private slots:
 
 
 private:
+    // Helper methods for full print job
+    bool parsePrintParameters(const QString& filePath, PrintParameters& params);
+    bool parseLayerShifts(const QString& filePath, std::map<int, int>& shifts);
+    void startFullPrintJob(const QString& jobFolderPath);
+
     Ui::MJPrintheadWidget *ui;
     bool encFlag;
     QTimer *m_positionTimer;

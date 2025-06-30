@@ -260,6 +260,8 @@ string set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis,
                                                       int dropletSpacing);
 string mist_layer(double traverseSpeed_mm_per_s, int sleepTime_ms);
 string spread_layer(const RecoatSettings &settings);
+string sift_powder(int ultrasonicMode, int ultrasonicIntensity, int duration_ms);
+
 
 // Establish connection with motion controller
 inline string open_connection_to_controller()

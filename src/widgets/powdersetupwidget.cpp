@@ -23,6 +23,9 @@ PowderSetupWidget::PowderSetupWidget(Printer *printer, QWidget *parent) :
 
     connect(ui->cureLayerButton, &QPushButton::clicked, this, &PowderSetupWidget::cure_layer_pressed);
 
+    connect(ui->start_powder_deposition, &QPushButton::clicked, this, &PowderSetupWidget::sift_powder_clicked);
+
+
     setAccessibleName("Powder Setup Widget");
 
     // Set combo box defaults
@@ -101,6 +104,27 @@ void PowderSetupWidget::normal_recoat_clicked()
 
     emit execute_command(s);
     emit generate_printing_message_box("Normal recoat is in progress.");
+}
+
+void PowderSetupWidget::sift_powder_clicked()
+{
+    std::stringstream s;
+    const int sift_duration_min = ui->sift_time_min->value();
+    const int sift_duration_ms = sift_duration_min * (1000 * 60);
+
+    // Get ultrasonic settings from the UI
+    int ultrasonicIntensity = ui->ultrasonicIntensityComboBox->currentIndex();
+    int ultrasonicMode = ui->ultrasonicModeComboBox->currentIndex();
+
+    // Call the command helper function to build the command string
+    s << CMD::sift_powder(ultrasonicMode, ultrasonicIntensity, sift_duration_ms);
+
+    // Emit the command to be executed by the printer controller
+    emit execute_command(s);
+
+    // Show a message box in the main application UI to inform the user
+    std::string message = "Sifting powder for " + std::to_string(sift_duration_min) + " minutes.";
+    emit generate_printing_message_box(message);
 }
 
 void PowderSetupWidget::allow_widget_input(bool allowed)

@@ -511,6 +511,31 @@ std::string CMD::spread_layer(const RecoatSettings &settings)
     return s.str();
 }
 
+std::string CMD::sift_powder(int ultrasonicMode, int ultrasonicIntensity, int duration_ms)
+{
+    std::stringstream s;
+
+    // Display a message on the printer's screen
+    s << CMD::display_message("Sifting powder...");
+
+    // Set the ultrasonic mode and intensity based on UI settings
+    s << set_hopper_mode_and_intensity(ultrasonicMode, ultrasonicIntensity);
+
+    // Turn on the hopper/ultrasonics
+    s << enable_hopper();
+
+    // Wait for the specified duration
+    s << sleep(duration_ms);
+
+    // Turn off the hopper/ultrasonics
+    s << disable_hopper();
+
+    // Display a completion message and then clear the line
+    s << CMD::display_message("Sifting complete.");
+    s << CMD::display_message("");
+
+    return s.str();
+}
 std::string CMD::detail::create_gcmd(
         std::string_view command,
         Axis axis,

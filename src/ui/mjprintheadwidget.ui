@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1304</width>
+    <width>1362</width>
     <height>810</height>
    </rect>
   </property>
@@ -219,7 +219,704 @@
      </layout>
     </widget>
    </item>
-   <item row="8" column="2" rowspan="2">
+   <item row="6" column="2">
+    <widget class="QFrame" name="frame_4">
+     <property name="minimumSize">
+      <size>
+       <width>300</width>
+       <height>250</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Shape::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Shadow::Raised</enum>
+     </property>
+     <widget class="QWidget" name="layoutWidget_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>151</width>
+        <height>131</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_7" columnstretch="0,0,0">
+       <property name="spacing">
+        <number>6</number>
+       </property>
+       <item row="4" column="0" alignment="Qt::AlignmentFlag::AlignHCenter">
+        <widget class="QToolButton" name="xLeftButtonMJ">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>30</pointsize>
+           <bold>true</bold>
+           <kerning>true</kerning>
+          </font>
+         </property>
+         <property name="text">
+          <string>◀</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2" alignment="Qt::AlignmentFlag::AlignHCenter">
+        <widget class="QToolButton" name="xRightButtonMJ">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="baseSize">
+          <size>
+           <width>16</width>
+           <height>16</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>30</pointsize>
+           <italic>false</italic>
+           <bold>true</bold>
+           <kerning>true</kerning>
+          </font>
+         </property>
+         <property name="text">
+          <string>▶</string>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>16</width>
+           <height>16</height>
+          </size>
+         </property>
+         <property name="toolButtonStyle">
+          <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1" alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
+        <widget class="QToolButton" name="yDownButtonMJ">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="baseSize">
+          <size>
+           <width>16</width>
+           <height>16</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+           <kerning>true</kerning>
+          </font>
+         </property>
+         <property name="text">
+          <string>▼</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="3" alignment="Qt::AlignmentFlag::AlignHCenter">
+        <widget class="QLabel" name="label_23">
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+           <bold>true</bold>
+           <kerning>true</kerning>
+          </font>
+         </property>
+         <property name="text">
+          <string>X/Y Axis Control</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1" alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
+        <widget class="QToolButton" name="yUpButtonMJ">
+         <property name="minimumSize">
+          <size>
+           <width>30</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>20</pointsize>
+           <bold>true</bold>
+           <kerning>true</kerning>
+          </font>
+         </property>
+         <property name="text">
+          <string>▲</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>140</y>
+        <width>115</width>
+        <height>106</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_6">
+       <item row="0" column="1" alignment="Qt::AlignmentFlag::AlignHCenter">
+        <widget class="QLabel" name="VelocityLabel">
+         <property name="font">
+          <font>
+           <pointsize>9</pointsize>
+           <kerning>true</kerning>
+          </font>
+         </property>
+         <property name="text">
+          <string>Velocity
+(mm/s)</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QDoubleSpinBox" name="yVelocityMJ">
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+           <kerning>true</kerning>
+          </font>
+         </property>
+         <property name="minimum">
+          <double>0.010000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>30.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="Y_axis">
+         <property name="text">
+          <string>Y Axis</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="X_axis">
+         <property name="text">
+          <string>X Axis</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QDoubleSpinBox" name="xVelocityMJ">
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+           <kerning>true</kerning>
+          </font>
+         </property>
+         <property name="minimum">
+          <double>0.010000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>150.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>30.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget_4">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>10</y>
+        <width>221</width>
+        <height>161</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_9" rowminimumheight="20,20,20,20,20,20">
+       <property name="sizeConstraint">
+        <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
+       </property>
+       <item row="1" column="0" rowspan="5">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <property name="spacing">
+          <number>12</number>
+         </property>
+         <item alignment="Qt::AlignmentFlag::AlignHCenter">
+          <widget class="QToolButton" name="zMaxMJ">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>16</pointsize>
+             <kerning>true</kerning>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Move z-axis to top&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>⤊</string>
+           </property>
+          </widget>
+         </item>
+         <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
+          <widget class="QToolButton" name="zUpMJ">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>18</pointsize>
+             <bold>true</bold>
+             <kerning>true</kerning>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt; font-weight:400;&quot;&gt;Move z-axis up one layer&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>⇧</string>
+           </property>
+          </widget>
+         </item>
+         <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
+          <widget class="QToolButton" name="zDownMJ">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>18</pointsize>
+             <bold>true</bold>
+             <kerning>true</kerning>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt; font-weight:400;&quot;&gt;Move z-axis down one layer&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>⇩</string>
+           </property>
+          </widget>
+         </item>
+         <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignTop">
+          <widget class="QToolButton" name="zMinMJ">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>16</pointsize>
+             <kerning>true</kerning>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Move z-axis to bottom&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>⤋</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="5" column="2" alignment="Qt::AlignmentFlag::AlignTop">
+        <widget class="QPushButton" name="zAbsoluteMoveButtonMJ">
+         <property name="text">
+          <string>Move Z</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QSpinBox" name="zStepSizeMJ">
+         <property name="minimumSize">
+          <size>
+           <width>40</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>15000</number>
+         </property>
+         <property name="value">
+          <number>30</number>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLabel" name="label_25">
+         <property name="text">
+          <string>Z Step Size</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="label_27">
+         <property name="text">
+          <string>(Microns)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QLabel" name="label_32">
+         <property name="text">
+          <string>(mm)</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2" alignment="Qt::AlignmentFlag::AlignHCenter">
+        <widget class="QLabel" name="label_26">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+           <bold>true</bold>
+           <kerning>true</kerning>
+          </font>
+         </property>
+         <property name="text">
+          <string>Z-Axis Control</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>Move to Position</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2">
+        <widget class="QDoubleSpinBox" name="zAbsoluteMoveSpinBoxMJ">
+         <property name="minimumSize">
+          <size>
+           <width>40</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="minimum">
+          <double>-15.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>15.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="gridLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>180</y>
+        <width>261</width>
+        <height>62</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_8">
+       <item row="1" column="0">
+        <widget class="QPushButton" name="getXAxisPositionMJ">
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Get X-Axis Pos</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QPushButton" name="getZAxisPositionMJ">
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Get Z-Axis Pos</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QPushButton" name="getYAxisPositionMJ">
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Get Y-Axis Pos</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QToolButton" name="yHomeMJ">
+         <property name="minimumSize">
+          <size>
+           <width>40</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>9</pointsize>
+           <kerning>true</kerning>
+          </font>
+         </property>
+         <property name="text">
+          <string>Y
+Home</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QToolButton" name="xHomeMJ">
+         <property name="minimumSize">
+          <size>
+           <width>40</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>9</pointsize>
+           <kerning>true</kerning>
+          </font>
+         </property>
+         <property name="text">
+          <string>X
+Home</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item row="6" column="3">
+    <widget class="QFrame" name="frame_3">
+     <property name="minimumSize">
+      <size>
+       <width>300</width>
+       <height>250</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Shape::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Shadow::Raised</enum>
+     </property>
+     <widget class="QPushButton" name="sliceStlButton">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>130</y>
+        <width>111</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>SLICE STL</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="printFrequencySTL">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>40</y>
+        <width>61</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>0</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>1000</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_28">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>10</y>
+        <width>121</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Droplet Spacing (um)</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_29">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>40</y>
+        <width>111</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Initial Frequency (Hz)</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_30">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>70</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Line Spacing (um)</string>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="lineSpacingSTL">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>62</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="maximum">
+       <double>1000.000000000000000</double>
+      </property>
+      <property name="value">
+       <double>137.099999999999994</double>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="dropletSpacingSTL">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>62</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="maximum">
+       <double>1000.000000000000000</double>
+      </property>
+      <property name="value">
+       <double>50.000000000000000</double>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="layerHeightSTL">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>100</y>
+        <width>62</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="maximum">
+       <double>1000.000000000000000</double>
+      </property>
+      <property name="value">
+       <double>50.000000000000000</double>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_31">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>100</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Layer Height (um)</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="startFullPrintButton">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>210</y>
+        <width>111</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>FULL PRINT!!</string>
+      </property>
+     </widget>
+    </widget>
+   </item>
+   <item row="7" column="2" rowspan="3">
     <widget class="QFrame" name="frame_2">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
@@ -772,152 +1469,14 @@
      </widget>
     </widget>
    </item>
-   <item row="6" column="2" rowspan="2">
-    <widget class="QFrame" name="frame_3">
-     <property name="minimumSize">
-      <size>
-       <width>400</width>
-       <height>0</height>
-      </size>
-     </property>
+   <item row="7" column="3" rowspan="2">
+    <widget class="QFrame" name="frame_5">
      <property name="frameShape">
       <enum>QFrame::Shape::StyledPanel</enum>
      </property>
      <property name="frameShadow">
       <enum>QFrame::Shadow::Raised</enum>
      </property>
-     <widget class="QPushButton" name="sliceStlButton">
-      <property name="geometry">
-       <rect>
-        <x>150</x>
-        <y>230</y>
-        <width>111</width>
-        <height>24</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>SLICE STL (test)</string>
-      </property>
-     </widget>
-     <widget class="QSpinBox" name="printFrequencySTL">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>40</y>
-        <width>61</width>
-        <height>25</height>
-       </rect>
-      </property>
-      <property name="minimum">
-       <number>0</number>
-      </property>
-      <property name="maximum">
-       <number>10000</number>
-      </property>
-      <property name="value">
-       <number>1000</number>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_28">
-      <property name="geometry">
-       <rect>
-        <x>80</x>
-        <y>10</y>
-        <width>121</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Droplet Spacing (um)</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_29">
-      <property name="geometry">
-       <rect>
-        <x>80</x>
-        <y>40</y>
-        <width>111</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Initial Frequency (Hz)</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_30">
-      <property name="geometry">
-       <rect>
-        <x>80</x>
-        <y>70</y>
-        <width>101</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Line Spacing (um)</string>
-      </property>
-     </widget>
-     <widget class="QDoubleSpinBox" name="lineSpacingSTL">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>70</y>
-        <width>62</width>
-        <height>25</height>
-       </rect>
-      </property>
-      <property name="maximum">
-       <double>1000.000000000000000</double>
-      </property>
-      <property name="value">
-       <double>137.099999999999994</double>
-      </property>
-     </widget>
-     <widget class="QDoubleSpinBox" name="dropletSpacingSTL">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>10</y>
-        <width>62</width>
-        <height>25</height>
-       </rect>
-      </property>
-      <property name="maximum">
-       <double>1000.000000000000000</double>
-      </property>
-      <property name="value">
-       <double>50.000000000000000</double>
-      </property>
-     </widget>
-     <widget class="QDoubleSpinBox" name="layerHeightSTL">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>100</y>
-        <width>62</width>
-        <height>25</height>
-       </rect>
-      </property>
-      <property name="maximum">
-       <double>1000.000000000000000</double>
-      </property>
-      <property name="value">
-       <double>50.000000000000000</double>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_31">
-      <property name="geometry">
-       <rect>
-        <x>80</x>
-        <y>100</y>
-        <width>101</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Layer Height (um)</string>
-      </property>
-     </widget>
     </widget>
    </item>
   </layout>
