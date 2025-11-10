@@ -6,6 +6,7 @@
 
 extern bool printComplete;
 extern bool atLocation;
+extern bool recoatComplete;
 
 namespace Ui {
 class OutputWindow;

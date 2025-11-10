@@ -8,6 +8,9 @@
 #include <QProcess>
 #include <map>
 
+class QProgressDialog;
+
+
 
 namespace Ui {
 class MJPrintheadWidget;
@@ -94,8 +97,18 @@ protected:
     // Input allowance
     void allow_widget_input_MJ(bool allowed);
 
+    // Powder Rolling Addition
+    void levelRecoat_MJ();
+    void normalRecoat_MJ();
+    void performRecoat(const PrintParameters* params, bool usePrintParameters);
+    void reRollLayer();
+
+
+
+
 public slots:
     void on_startFullPrintButton_clicked();
+    void cancelPrintJob();
 
 private slots:
     void onStartStopDisplayClicked();
@@ -107,6 +120,8 @@ private slots:
     void handlePythonError();
     void onPythonScriptFinished(int exitCode, QProcess::ExitStatus exitStatus);
 
+    void onRollerButtonClicked();
+
 
 private:
     // Helper methods for full print job
@@ -114,11 +129,19 @@ private:
     bool parseLayerShifts(const QString& filePath, std::map<int, int>& shifts);
     void startFullPrintJob(const QString& jobFolderPath);
 
+    // Helpers for cancelling print job
+    volatile bool m_printJobCancelled = false;
+    QProgressDialog* m_printStatusDialog = nullptr;
+
     Ui::MJPrintheadWidget *ui;
     bool encFlag;
     QTimer *m_positionTimer;
     QStringList m_encoderHistory;
     QProcess *m_pythonProcess;          // 06/24 TODO
+
+    bool m_isRollerOn; // State variable to track the roller's status
+
+
 };
 
 #endif // MJPRINTHEADWIDGET_H

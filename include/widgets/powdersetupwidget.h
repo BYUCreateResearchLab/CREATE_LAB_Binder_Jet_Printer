@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include <sstream>
-
+#include "mainwindow.h"
 #include "printerwidget.h"
 
 namespace Ui {
@@ -33,6 +33,7 @@ private slots:
 
 private:
     Ui::PowderSetupWidget *ui;
+    Ui::MainWindow *uiMW;
     bool isMisting{false};
 };
 

@@ -4,6 +4,7 @@
 
 bool printComplete = false;
 bool atLocation = false;
+bool recoatComplete = false;
 
 void OutputWindow::print_string(QString outS)
 {
@@ -22,6 +23,10 @@ void OutputWindow::print_string(QString outS)
     // check if at location status
     if(outS.contains(QString("Arrived at Location"))){
         atLocation = true;
+    }
+
+    if(outS.contains(QString("Recoat Complete"))){
+        recoatComplete = true;
     }
 
     // write to log

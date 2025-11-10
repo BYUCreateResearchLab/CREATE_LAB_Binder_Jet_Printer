@@ -16,7 +16,7 @@ Printer::Printer(QObject *parent) :
     mcu ( new DMC4080("192.168.42.100", this) ),    // changed this from 192.168.42.100
     jetDrive ( new JetDrive::Controller("COM8", this) ),
     pressureController ( new PCD::Controller("COM3", this) ),
-    mister ( new Mister::Controller("COM4", this) ),
+    mister ( new Mister::Controller("COM6", this) ),
     bedMicroscope ( new BedMicroscope(this) ),
     mjController ( new Added_Scientific::Controller("COM5", this) )
 {
@@ -294,7 +294,7 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s, int sleepTime_ms)
 
     // setup
     s << message("Misting layer");
-    s << message("CMD MIST_OFF"); // just make sure that the mister is off
+    //s << message("CMD MIST_OFF"); // just make sure that the mister is off
     s << set_accleration(Axis::Y, 600);
     s << set_deceleration(Axis::Y, 600);
     s << set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
@@ -321,6 +321,7 @@ std::string CMD::mist_layer(double traverseSpeed_mm_per_s, int sleepTime_ms)
     s << after_motion(Axis::Y);
 
     s << message("CMD MIST_OFF");
+
 
     // move z-axis back up
     s << position_relative(Axis::Z, zAxisOffsetUnderRoller);
@@ -487,8 +488,10 @@ std::string CMD::spread_layer(const RecoatSettings &settings)
     s << sleep(settings.waitAfterHopperOn_millisecs);
 
     // move y-axis forward
+    s << set_deceleration(y, 1000);
+    s << set_accleration(y, 1000);
     s << set_speed(y, settings.recoatSpeed_mm_s);
-    s << position_relative(y, 120);
+    s << position_relative(y, 100);
     s << begin_motion(y);
     s << motion_complete(y);
 
@@ -500,7 +503,7 @@ std::string CMD::spread_layer(const RecoatSettings &settings)
 
     // move y-axis forward under roller
     s << set_speed(y, settings.rollerTraverseSpeed_mm_s);
-    s << position_relative(y, 135);
+    s << position_relative(y, 175);
     s << begin_motion(y);
     s << motion_complete(y);
 

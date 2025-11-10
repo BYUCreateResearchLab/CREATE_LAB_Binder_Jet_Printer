@@ -165,6 +165,17 @@ void MainWindow::setup()
     connect(ui->getYAxisPosition, &QAbstractButton::clicked, this, &MainWindow::get_current_y_axis_position);
     connect(ui->getZAxisPosition, &QAbstractButton::clicked, this, &MainWindow::get_current_z_axis_position);
 
+    connect(ui->moveTopRight, &QPushButton::clicked, this, &MainWindow::moveTopRight_clicked);
+    connect(ui->moveTopLeft, &QPushButton::clicked, this, &MainWindow::moveTopLeft_clicked);
+    connect(ui->moveBotRight, &QPushButton::clicked, this, &MainWindow::moveBotRight_clicked);
+    connect(ui->moveBotLeft, &QPushButton::clicked, this, &MainWindow::moveBotLeft_clicked);
+    connect(ui->moveCenter, &QPushButton::clicked, this, &MainWindow::moveCenter_clicked);
+
+    connect(ui->moveToX, &QPushButton::clicked, this, &MainWindow::moveToX_clicked);
+    connect(ui->moveToY, &QPushButton::clicked, this, &MainWindow::moveToY_clicked);
+
+
+
     connect(ui->stopMotionButton, &QAbstractButton::clicked,
             this, [this]()
     {
@@ -205,6 +216,8 @@ void MainWindow::setup()
     connect(printer->mjController, &Added_Scientific::Controller::response, this, &MainWindow::print_to_output_window);
     connect(printer->mjController, &Added_Scientific::Controller::timeout, this, &MainWindow::print_to_output_window);
     connect(printer->mjController, &Added_Scientific::Controller::error, this, &MainWindow::print_to_output_window);
+
+
 }
 
 void MainWindow::on_connect_clicked()
@@ -246,6 +259,13 @@ void MainWindow::allow_user_input(bool allowed)
     ui->getYAxisPosition->setEnabled(allowed);
     ui->getZAxisPosition->setEnabled(allowed);
     ui->zAbsoluteMoveButton->setEnabled(allowed);
+
+    ui->moveBotLeft->setEnabled(allowed);
+    ui->moveBotRight->setEnabled(allowed);
+    ui->moveTopLeft->setEnabled(allowed);
+    ui->moveTopRight->setEnabled(allowed);
+    ui->moveCenter->setEnabled(allowed);
+
 
     // set if user can input on all printer widgets
     QList<PrinterWidget*> printerWidgets = this->findChildren<PrinterWidget*>();
@@ -374,7 +394,7 @@ void MainWindow::on_zUp_clicked()
 
     // 1. Get the desired movement distance from the UI
     double stepValue_microns = ui->zStepSize->value();
-    double stepValue_mm = stepValue_microns / 1000.0;
+    double stepValue_mm = stepValue_microns / 1000.0 * (1.0 + (ui->scaleValue->value() / 100.0));
 
     // 2. Add the relative move command to the buffer (positive value for moving up)
     s << CMD::position_relative(z, stepValue_mm);
@@ -408,7 +428,7 @@ void MainWindow::on_zDown_clicked()
 
     // 1. Get the desired movement distance from the UI
     double stepValue_microns = ui->zStepSize->value();
-    double stepValue_mm = stepValue_microns / 1000.0;
+    double stepValue_mm = stepValue_microns / 1000.0 * (1.0 + (ui->scaleValue->value() / 100.0));
 
     // 2. Add the relative move command to the buffer
     //    (Note the negative sign for moving down)
@@ -460,6 +480,203 @@ void MainWindow::on_activateRoller1_toggled(bool checked)
 
     printer->mcu->printerThread->execute_command(s);
 }
+
+// NEW MOVE COMMANDS
+void MainWindow::moveTopRight_clicked(){
+    double xLocation = 88;
+    double yLocation = -28;
+
+    std::stringstream s_cmdMove;
+
+    // --- 1. **Build commands for Y-axis movement** ---
+    s_cmdMove << CMD::set_accleration(Axis::Y, 800);
+    s_cmdMove << CMD::set_deceleration(Axis::Y, 800);
+    s_cmdMove << CMD::set_speed(Axis::Y, 60);
+    s_cmdMove << CMD::position_absolute(Axis::Y, yLocation);
+    s_cmdMove << CMD::begin_motion(Axis::Y);
+    s_cmdMove << CMD::after_motion(Axis::Y);
+
+    // --- 2. **Build commands for X-axis movement** ---
+    s_cmdMove << CMD::set_accleration(Axis::X, 600);
+    s_cmdMove << CMD::set_deceleration(Axis::X, 600);
+    s_cmdMove << CMD::set_speed(Axis::X, 60);
+    s_cmdMove << CMD::position_absolute(Axis::X, xLocation);
+    s_cmdMove << CMD::begin_motion(Axis::X);
+    s_cmdMove << CMD::after_motion(Axis::X);
+
+    // --- 3. **Add completion message and compile program** ---
+    s_cmdMove << CMD::display_message("Arrived at Location \"Top Right\"");
+
+    printer->mcu->printerThread->execute_command(s_cmdMove);
+}
+
+void MainWindow::moveTopLeft_clicked(){
+    double xLocation = 5.5;
+    double yLocation = -28;
+
+    std::stringstream s_cmdMove;
+
+    // --- 1. **Build commands for Y-axis movement** ---
+    s_cmdMove << CMD::set_accleration(Axis::Y, 800);
+    s_cmdMove << CMD::set_deceleration(Axis::Y, 800);
+    s_cmdMove << CMD::set_speed(Axis::Y, 60);
+    s_cmdMove << CMD::position_absolute(Axis::Y, yLocation);
+    s_cmdMove << CMD::begin_motion(Axis::Y);
+    s_cmdMove << CMD::after_motion(Axis::Y);
+
+    // --- 2. **Build commands for X-axis movement** ---
+    s_cmdMove << CMD::set_accleration(Axis::X, 600);
+    s_cmdMove << CMD::set_deceleration(Axis::X, 600);
+    s_cmdMove << CMD::set_speed(Axis::X, 60);
+    s_cmdMove << CMD::position_absolute(Axis::X, xLocation);
+    s_cmdMove << CMD::begin_motion(Axis::X);
+    s_cmdMove << CMD::after_motion(Axis::X);
+
+    // --- 3. **Add completion message and compile program** ---
+    s_cmdMove << CMD::display_message("Arrived at Location \"Top Left\"");
+
+    printer->mcu->printerThread->execute_command(s_cmdMove);
+}
+
+void MainWindow::moveBotRight_clicked(){
+    double xLocation = 88;
+    double yLocation = -118;
+
+    std::stringstream s_cmdMove;
+
+    // --- 1. **Build commands for Y-axis movement** ---
+    s_cmdMove << CMD::set_accleration(Axis::Y, 800);
+    s_cmdMove << CMD::set_deceleration(Axis::Y, 800);
+    s_cmdMove << CMD::set_speed(Axis::Y, 60);
+    s_cmdMove << CMD::position_absolute(Axis::Y, yLocation);
+    s_cmdMove << CMD::begin_motion(Axis::Y);
+    s_cmdMove << CMD::after_motion(Axis::Y);
+
+    // --- 2. **Build commands for X-axis movement** ---
+    s_cmdMove << CMD::set_accleration(Axis::X, 600);
+    s_cmdMove << CMD::set_deceleration(Axis::X, 600);
+    s_cmdMove << CMD::set_speed(Axis::X, 60);
+    s_cmdMove << CMD::position_absolute(Axis::X, xLocation);
+    s_cmdMove << CMD::begin_motion(Axis::X);
+    s_cmdMove << CMD::after_motion(Axis::X);
+
+    // --- 3. **Add completion message and compile program** ---
+    s_cmdMove << CMD::display_message("Arrived at Location \"Bottom Right\"");
+
+    printer->mcu->printerThread->execute_command(s_cmdMove);
+}
+
+void MainWindow::moveBotLeft_clicked(){
+    double xLocation = 5.5;
+    double yLocation = -118;
+
+    std::stringstream s_cmdMove;
+
+    // --- 1. **Build commands for Y-axis movement** ---
+    s_cmdMove << CMD::set_accleration(Axis::Y, 800);
+    s_cmdMove << CMD::set_deceleration(Axis::Y, 800);
+    s_cmdMove << CMD::set_speed(Axis::Y, 60);
+    s_cmdMove << CMD::position_absolute(Axis::Y, yLocation);
+    s_cmdMove << CMD::begin_motion(Axis::Y);
+    s_cmdMove << CMD::after_motion(Axis::Y);
+
+    // --- 2. **Build commands for X-axis movement** ---
+    s_cmdMove << CMD::set_accleration(Axis::X, 600);
+    s_cmdMove << CMD::set_deceleration(Axis::X, 600);
+    s_cmdMove << CMD::set_speed(Axis::X, 60);
+    s_cmdMove << CMD::position_absolute(Axis::X, xLocation);
+    s_cmdMove << CMD::begin_motion(Axis::X);
+    s_cmdMove << CMD::after_motion(Axis::X);
+
+    // --- 3. **Add completion message and compile program** ---
+    s_cmdMove << CMD::display_message("Arrived at Location \"Bottom Left\"");
+
+    printer->mcu->printerThread->execute_command(s_cmdMove);
+}
+
+void MainWindow::moveCenter_clicked(){
+    double xLocation = 50;
+    double yLocation = -73;
+
+    std::stringstream s_cmdMove;
+
+    // --- 1. **Build commands for Y-axis movement** ---
+    s_cmdMove << CMD::set_accleration(Axis::Y, 800);
+    s_cmdMove << CMD::set_deceleration(Axis::Y, 800);
+    s_cmdMove << CMD::set_speed(Axis::Y, 60);
+    s_cmdMove << CMD::position_absolute(Axis::Y, yLocation);
+    s_cmdMove << CMD::begin_motion(Axis::Y);
+    s_cmdMove << CMD::after_motion(Axis::Y);
+
+    // --- 2. **Build commands for X-axis movement** ---
+    s_cmdMove << CMD::set_accleration(Axis::X, 600);
+    s_cmdMove << CMD::set_deceleration(Axis::X, 600);
+    s_cmdMove << CMD::set_speed(Axis::X, 60);
+    s_cmdMove << CMD::position_absolute(Axis::X, xLocation);
+    s_cmdMove << CMD::begin_motion(Axis::X);
+    s_cmdMove << CMD::after_motion(Axis::X);
+
+    // --- 3. **Add completion message and compile program** ---
+    s_cmdMove << CMD::display_message("Arrived at Location \"Center\"");
+
+    printer->mcu->printerThread->execute_command(s_cmdMove);
+    allow_user_input(false);
+}
+
+void MainWindow::moveToX_clicked(){
+
+    // OFFSET VALUES HARDCODED
+    double Printer2NozzleOffsetX{-12.48};
+    double Printer2NozzleOffsetY{-182.484};
+
+    double xLocation = ui->xMoveLoc->value() + Printer2NozzleOffsetX;
+    //double yLocation = ui->yMoveLoc->value();
+
+    std::stringstream s_cmdMoveX;
+
+    // --- 1. **Build commands for X-axis movement** ---
+    s_cmdMoveX << CMD::set_accleration(Axis::X, 600);
+    s_cmdMoveX << CMD::set_deceleration(Axis::X, 600);
+    s_cmdMoveX << CMD::set_speed(Axis::X, 60);
+    s_cmdMoveX << CMD::position_absolute(Axis::X, xLocation);
+    s_cmdMoveX << CMD::begin_motion(Axis::X);
+    s_cmdMoveX << CMD::after_motion(Axis::X);
+
+    // --- 2. **Add completion message and compile program** ---
+    CMD::string moveMSG = "Moved to: " + std::to_string(xLocation);
+    s_cmdMoveX << CMD::display_message(moveMSG);
+
+    // --- 3. **Execute the compiled program** ---
+    printer->mcu->printerThread->execute_command(s_cmdMoveX);
+}
+
+void MainWindow::moveToY_clicked(){
+
+    // OFFSET VALUES HARDCODED
+    double Printer2NozzleOffsetX{-12.48};
+    double Printer2NozzleOffsetY{-182.484};
+
+    //double xLocation = ui->xMoveLoc->value();
+    double yLocation = ui->yMoveLoc->value() + Printer2NozzleOffsetY;
+
+    std::stringstream s_cmdMoveY;
+
+    // --- 1. **Build commands for Y-axis movement** ---
+    s_cmdMoveY << CMD::set_accleration(Axis::Y, 600);
+    s_cmdMoveY << CMD::set_deceleration(Axis::Y, 600);
+    s_cmdMoveY << CMD::set_speed(Axis::X, 60);
+    s_cmdMoveY << CMD::position_absolute(Axis::Y, yLocation);
+    s_cmdMoveY << CMD::begin_motion(Axis::Y);
+    s_cmdMoveY << CMD::after_motion(Axis::Y);
+
+    // --- 2. **Add completion message and compile program** ---
+    CMD::string moveMSG = "Moved to: " + std::to_string(yLocation);
+    s_cmdMoveY << CMD::display_message(moveMSG);
+
+    // --- 3. **Execute the compiled program** ---
+    printer->mcu->printerThread->execute_command(s_cmdMoveY);
+}
+
 
 void MainWindow::print_to_output_window(QString s)
 {

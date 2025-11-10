@@ -49,6 +49,15 @@ private slots:
     void on_zMin_clicked();
     void on_connect_clicked();
 
+    void moveTopRight_clicked();
+    void moveTopLeft_clicked();
+    void moveBotRight_clicked();
+    void moveBotLeft_clicked();
+    void moveCenter_clicked();
+
+    void moveToX_clicked();
+    void moveToY_clicked();
+
     void on_activateRoller1_toggled(bool checked);
     void allow_user_input(bool allowed);
     void thread_ended();

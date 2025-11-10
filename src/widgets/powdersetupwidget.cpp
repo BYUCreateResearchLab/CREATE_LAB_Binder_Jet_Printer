@@ -1,11 +1,15 @@
 #include "powdersetupwidget.h"
 #include "ui_powdersetupwidget.h"
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
 
 #include <sstream>
 
 #include "printer.h"
 #include "dmc4080.h"
 #include "mister.h"
+#include "mjdriver.h"
+
 
 #include <QMessageBox>
 #include <QDebug>
@@ -74,6 +78,8 @@ void PowderSetupWidget::level_recoat_clicked()
 
 void PowderSetupWidget::normal_recoat_clicked()
 {
+    double zScale = 1.0 + (ui->Z_ScaleFactor->value()) / 100.0;
+
     std::stringstream s;
     int numLayers{ui->recoatCyclesSpinBox->value()};
     RecoatSettings layerRecoatSettings {};
@@ -83,10 +89,12 @@ void PowderSetupWidget::normal_recoat_clicked()
     // Note: Index from the combo box must match up with the data to be sent over RS-232 to the generator (see documentation of generator)
     layerRecoatSettings.ultrasonicIntensityLevel = ui->ultrasonicIntensityComboBox->currentIndex();
     layerRecoatSettings.ultrasonicMode = ui->ultrasonicModeComboBox->currentIndex();
-    layerRecoatSettings.layerHeight_microns = ui->layerHeightSpinBox->value();
+    layerRecoatSettings.layerHeight_microns = (ui->layerHeightSpinBox->value()) * zScale;
     layerRecoatSettings.waitAfterHopperOn_millisecs = ui->hopperDwellTimeMsSpinBox->value();
 
     s << CMD::display_message("starting normal recoat...");
+    s << CMD::display_message("Z Scale Factor: ");
+    s << CMD::display_message(std::to_string(zScale));
     for(int i{0}; i < numLayers; ++i)
     {
         std::string message{"spreading layer "};

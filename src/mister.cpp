@@ -2,6 +2,7 @@
 
 #include <QSerialPort>
 #include <QDebug>
+#include <QTimer> // Ensure QTimer is included
 
 namespace Mister
 {
@@ -27,35 +28,43 @@ void Controller::handle_ready_read()
 {
     auto inData = serialPort->readAll();
     readData.append(inData);
-    QString responseString = QString(readData).simplified();
+    QString responseString = QString(readData).simplified(); // simplified() removes whitespace, including \n\r
 
-    if (!inData.contains("\r")) {return;}
+    // Check if a complete line (ending with \r) has been received
+    if (!inData.contains("\r")) {
+        return;
+    }
+
+    // Clear readData for the next incoming message once a full message is processed
+    readData.clear();
+
     switch (initState)
     {
     case NOT_INITIALIZED:
+        // Arduino sends "MISTER\n\r". simplified() makes it "MISTER".
         if (responseString == initString)
         {
-            readData.clear();
             initState = INITIALIZED;
             emit response(QString("Connected to %1").arg(name));
-            write_next();
+            write_next(); // Process next command in queue, if any
         }
         else
         {
             emit error(QString("Unexpected response from device."
-                               " Expected %1 from device but got %2")
-                       .arg(initString)
-                       .arg(responseString));
+                               " Expected '%1' from device but got '%2'")
+                           .arg(initString)
+                           .arg(responseString));
             disconnect_serial();
         }
         break;
     case INITIALIZED:
-        // handle response from device here
-        // right now the response does nothing,
-        // just exists so we know the Arduino got the
-        // command and is ready for a new one
-        readData.clear();
-        write_next();
+        // In the INITIALIZED state, we expect an "OK" or "ERROR" or "STATUS" response
+        // after each command. The current logic just clears data and writes next.
+        // If you need to parse specific responses (e.g., "STATUS:LON,ROFF"),
+        // you would add more `if/else if` conditions here.
+        // For now, simply receiving any response ending in '\r' is enough to proceed.
+        qDebug() << "Arduino responded:" << responseString; // Log the response for debugging
+        write_next(); // Arduino processed the command, send the next one
         break;
 
     default: break;
@@ -66,7 +75,7 @@ void Controller::handle_timeout()
 {
     timer->stop();
     emit error(QString("Serial IO Timeout: No response from %1").arg(name));
-    emit error(readData);
+    emit error("Data received so far: " + readData); // Show partial data for debugging
     disconnect_serial();
 }
 
@@ -84,7 +93,7 @@ int Controller::connect_to_misters()
     if (!serialPort->open(QIODevice::ReadWrite))
     {
         emit error(QString("Can't open %1 on %2, error code %3")
-                   .arg(name, serialPort->portName(), QVariant::fromValue(serialPort->error()).toString()));
+                       .arg(name, serialPort->portName(), QVariant::fromValue(serialPort->error()).toString()));
         return -1;
     }
 
@@ -106,9 +115,36 @@ void Controller::disconnect_serial()
     else emit response(QString("%1 is already disconnected").arg(name));
 }
 
+/**
+ * @brief Sends a command string to the Arduino.
+ * This function now maps the CMD enum to the actual string command.
+ * @param command The CMD enum value representing the command.
+ */
 void Controller::send_command(CMD command)
 {
-    write(QString("%1\r").arg((char)command).toUtf8());
+    QString cmdString;
+    switch (command) {
+    case INIT:
+        cmdString = "INIT";
+        break;
+    case MIST_ON:
+        cmdString = "ON";
+        break;
+    case MIST_OFF:
+        cmdString = "OFF";
+        break;
+    case LEFT_ON:
+        cmdString = "LON";
+        break;
+    case RIGHT_ON:
+        cmdString = "RON";
+        break;
+    default:
+        qWarning() << "Unknown command enum sent to Arduino:" << command;
+        return; // Do not send an unknown command
+    }
+    // Append carriage return and send as UTF-8 bytes
+    write(QString("%1\r").arg(cmdString).toUtf8());
 }
 
 void Controller::initialize_misters()
@@ -140,34 +176,36 @@ void Controller::clear_members()
 {
     initState = InitState::NOT_INITIALIZED;
     clear_command_queue();
+    readData.clear(); // Clear any partial data on disconnect/clear
 }
 
 void Controller::handle_serial_error(
-        QSerialPort::SerialPortError serialPortError)
+    QSerialPort::SerialPortError serialPortError)
 {
     if (serialPortError == QSerialPort::ReadError)
     {
         emit error(QObject::tr("Read error on port %1, error: %2")
-                            .arg(serialPort->portName(),
-                                 serialPort->errorString()));
+                       .arg(serialPort->portName(),
+                            serialPort->errorString()));
         disconnect_serial();
     }
 
     if (serialPortError == QSerialPort::OpenError)
     {
         emit error(QObject::tr("Error opening port %1, error: %2")
-                            .arg(serialPort->portName(),
-                                 serialPort->errorString()));
+                       .arg(serialPort->portName(),
+                            serialPort->errorString()));
         disconnect_serial();
     }
 
     if (serialPortError == QSerialPort::WriteError)
     {
         emit error(QObject::tr("Error writing to port %1, error: %2")
-                            .arg(serialPort->portName(),
-                                 serialPort->errorString()));
+                       .arg(serialPort->portName(),
+                            serialPort->errorString()));
         disconnect_serial();
     }
+    // Add other error types if needed for more robust handling
 }
 
 }
