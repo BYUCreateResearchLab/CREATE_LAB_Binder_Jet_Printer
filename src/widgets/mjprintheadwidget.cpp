@@ -320,7 +320,7 @@ void MJPrintheadWidget::file_name_entered()
 
 
 // Reads an image file and sends its data to the printhead controller.
-void MJPrintheadWidget::read_in_file(const QString &fileNameOrPath)
+void MJPrintheadWidget::read_in_file(const QString &fileNameOrPath, int headIdx, int whiteSpace)
 {
     QString filePath = fileNameOrPath;
     QFileInfo fileInfo(filePath);
@@ -340,7 +340,7 @@ void MJPrintheadWidget::read_in_file(const QString &fileNameOrPath)
         return;
     }
 
-    mPrinter->mjController->send_image_data(1, image, 0);
+    mPrinter->mjController->send_image_data(headIdx, image, whiteSpace);
 }
 
 // Toggles the power to the printhead.
