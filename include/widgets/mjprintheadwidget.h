@@ -129,7 +129,8 @@ private:
     bool parsePrintParameters(const QString& filePath, PrintParameters& params);
     bool parseLayerShifts(const QString& filePath, std::map<int, int>& shifts);
     void startFullPrintJob(const QString& jobFolderPath);
-    int calculate_gap(const QString& associatedBitmap); // 12/1 added to calculate pixel gap between heads
+    int calculate_gap(const QString& associatedBitmap); // Calculate pixel gap between heads from print parameters
+    bool readyHeads(); // checks if the print heads are on
 
     // Helpers for cancelling print job
     volatile bool m_printJobCancelled = false;

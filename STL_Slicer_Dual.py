@@ -738,7 +738,7 @@ class SlicerMainWindow(QMainWindow):
                            
                             # Convert mm to pixels
                             coords_mm = face_vertices_3d[:, :2]
-                            coords_mm[:, 1] = BED_SIZE[1] - coords_mm[:, 1] # Flip Y
+                            #coords_mm[:, 1] = BED_SIZE[1] - coords_mm[:, 1] # Flip Y # change dir
                             pixels = (coords_mm / [droplet_spacing_x, line_spacing_y]).astype(int)
                            
                             # Draw the filled triangle

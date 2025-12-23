@@ -729,10 +729,12 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     // --- 4. **Configure Printhead and Load Data** ---
     mPrinter->mjController->write_line("M 4"); // Set encoder print mode
     mPrinter->mjController->set_printing_frequency(frequency);
-    GSleep(80);//12/4 added
-    read_in_file(fileName);
-    GSleep(80);//12/4 added
-    read_in_file(fileName, 2); // 11/24 added 2nd head
+
+    read_in_file(fileName); // HEAD 1
+    if (!readyHeads()) return;
+    read_in_file(fileName, 2); // HEAD 2
+    if (!readyHeads()) return;
+    GSleep(50);
 
     // --- 5. **Move to Backed-Up Starting Position** ---
     moveToLocation(backedUpStartX, yLocation, QString("Move to Encoder Start Complete"));
@@ -999,7 +1001,7 @@ void MJPrintheadWidget::sliceStlButton_clicked() {
 
     // --- 1. Define executable and the Python GUI script path ---
     // IMPORTANT: Update this path to the final Python script you are using.
-    QString pythonScriptPath = "C:\\Users\\CB140LAB\\Documents\\CREATE_LAB_Binder_Jet_Printer\\CREATE_LAB_Binder_Jet_Printer (Dual Head)\\STL_Slicing_Viewer_Zack.py";
+    QString pythonScriptPath = "C:\\Users\\CB140LAB\\Documents\\GitHub\\CREATE_LAB_Binder_Jet_Printer\\STL_Slicer_Dual.py";
     QString pythonExecutable = "C:\\Users\\CB140LAB\\AppData\\Local\\Microsoft\\WindowsApps\\python3.11.exe";
 
     // --- 2. Check if the process is already running ---
@@ -1412,7 +1414,6 @@ void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
     // --- 4. **Main Print Loop** ---
     int lastLayerProcessed = -1;
     double layerBaseY = params.startY;
-    double yHeadOffset = 37;
 
     for (const QString& fileName : fileList) {
         if (m_printJobCancelled) break; // Check for cancellation at the start of each pass
@@ -1481,7 +1482,7 @@ void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
 
         printBMPatLocationEncoder(
             params.startX,// check this
-            (currentYLocation - yHeadOffset),
+            (currentYLocation - Y_HEAD_OFFSET),
             params.printFrequency,
             params.printSpeed,
             imageWidthPixels,
@@ -1659,6 +1660,84 @@ void MJPrintheadWidget::cancelPrintJob()
     }
 }
 
+
+#include <QEventLoop>
+#include <QTimer>
+
+bool MJPrintheadWidget::readyHeads()
+{
+    // Define the good statuses (only 10 likely)
+    const QString STATUS_READY = "10";
+
+    // Wait for status message
+    for (int attempt = 0; attempt < 2; attempt++) {
+
+        QEventLoop loop;
+        QString lastStatus = "";
+        bool statusReceived = false;
+
+        // Listen for status response
+        QMetaObject::Connection conn = connect(mPrinter->mjController, &AsyncSerialDevice::response,
+                                               [&](const QString &response) {
+                                                   // // Filter response
+                                                   if (response.contains(STATUS_READY) || response.contains("-") || response.toInt() != 0) {
+                                                       lastStatus = response.trimmed(); // Remove whitespace
+                                                       statusReceived = true;
+                                                       loop.quit();
+                                                   }
+                                               });
+
+        // Request Status
+        mPrinter->mjController->request_status_of_all_heads();
+
+        // Wait (Timeout 2 seconds)
+        QTimer::singleShot(2000, &loop, &QEventLoop::quit);
+        loop.exec();
+        disconnect(conn);
+
+        // Evaluate stauts
+        if (!statusReceived) {
+            mPrinter->mjController->outputMessage("Warning: Timeout waiting for status.");
+            continue; // Retry loop
+        }
+
+        if (lastStatus.contains(STATUS_READY)) {
+            return true; // Success
+        }
+        else {
+            // If not active
+            mPrinter->mjController->outputMessage(QString("Error: Invalid Status '%1'. Initiating Auto-Power Cycle...").arg(lastStatus));
+
+            // AUTO RECOVERY SEQUENCE
+            mPrinter->mjController->power_off();
+            mPrinter->mjController->outputMessage("Heads off...");
+
+            // Wait for drain
+            QEventLoop waitLoop;
+            QTimer::singleShot(2000, &waitLoop, &QEventLoop::quit);
+            waitLoop.exec();
+
+            mPrinter->mjController->power_on();
+            mPrinter->mjController->outputMessage("Heads on...");
+
+            // Wait for boot
+            QTimer::singleShot(2000, &waitLoop, &QEventLoop::quit);
+            waitLoop.exec();
+
+            // RE-APPLY SETTINGS
+            int freq = ui->setFreqSpinBox->value();
+            double volt = ui->setVoltageSpinBox->value(); // Take voltage from UI
+            mPrinter->mjController->set_printing_frequency(freq);
+            mPrinter->mjController->set_head_voltage(Added_Scientific::Controller::HEAD1, volt);
+            mPrinter->mjController->set_head_voltage(Added_Scientific::Controller::HEAD2, volt);
+
+            mPrinter->mjController->outputMessage("Recovery Complete. Retrying status check...");
+        }
+    }
+
+    mPrinter->mjController->outputMessage("CRITICAL: Unable to recover head status 10.");
+    return false;
+}
 /* 6/9 thoughts and things to look at
 !!!TODO: 6/9 work on implementing error catching including the printstartstop error catching so that all prints fit inside the build palte
 
