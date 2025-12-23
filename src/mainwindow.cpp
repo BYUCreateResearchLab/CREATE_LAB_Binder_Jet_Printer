@@ -29,14 +29,12 @@
 #include "lineprintwidget.h"
 #include "outputwindow.h"
 #include "powdersetupwidget.h"
-#include "jettingwidget.h"
 #include "highspeedlinewidget.h"
 #include "dropletobservationwidget.h"
 #include "bedmicroscopewidget.h"
 #include "mjprintheadwidget.h"
 
 #include "pcd.h"
-#include "ginterrupthandler.h"
 #include "dmc4080.h"
 #include "mister.h"
 
