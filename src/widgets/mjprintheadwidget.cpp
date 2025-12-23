@@ -28,7 +28,7 @@
 #include <QProgressDialog>
 #include <QApplication>
 
-
+//
 MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     PrinterWidget(printer, parent),
     ui(new Ui::MJPrintheadWidget),
