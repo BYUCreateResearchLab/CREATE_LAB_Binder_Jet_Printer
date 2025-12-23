@@ -97,6 +97,9 @@ class BedMicroscope;
 #define PRINT_Y_SIZE_MM 100
 #define PRINT_Z_SIZE_MM 14 //?
 
+//11/24 Added constants for second print head
+#define HEAD_GAP_MM 21.1 // print head gap in mm
+
 // NOTE: these are not the same as the pin number on the DSUB HD44 cable
 #define ROLLER_1_BIT 18 // pin 1
 #define ROLLER_2_BIT 20 // pin 17

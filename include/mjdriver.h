@@ -53,7 +53,7 @@ public:
     void report_head_temps();
     QByteArray convert_image(int headIdx, const QImage &image, int whiteSpace);
     void send_image_data(int headIdx, const QImage &image, int whiteSpace);
-    void reconstructed_bitmap(const QByteArray &imageData, int width, int height);
+    void reconstructed_bitmap(int headIdx, const QByteArray &imageData, int width, int height); // 12/1 added headIdx
 
     void create_bitmap_lines(int numLines, int width);
     void createBitmapTestLines(int numberOfLines,  int lineSpacing, int dropletSpacing, int frequency, int lineLength, int number);

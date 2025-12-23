@@ -46,6 +46,7 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     printer(printer_)
 {
     ui->setupUi(this);
+    ui->homeZAxisCheckBox->setChecked(false); // Set Z-home to off by default as currently it rams the z-axis into the print heads.
 
     // set up widgets (parent is set when adding as a tab)
     linePrintingWidget       = new LinePrintWidget(printer);
@@ -217,7 +218,8 @@ void MainWindow::setup()
     connect(printer->mjController, &Added_Scientific::Controller::timeout, this, &MainWindow::print_to_output_window);
     connect(printer->mjController, &Added_Scientific::Controller::error, this, &MainWindow::print_to_output_window);
 
-
+    // Connect the new Y-Axis Init button (added 12/11)
+    connect(ui->initYAxisButton, &QPushButton::clicked, this, &MainWindow::initialize_y_axis_commutation);
 }
 
 void MainWindow::on_connect_clicked()
@@ -237,6 +239,7 @@ void MainWindow::on_connect_clicked()
         // change button label text
         ui->connect->setText("\nConnect and Home Printer\n");
         ui->homeZAxisCheckBox->setEnabled(true);
+
     }
 }
 
@@ -886,5 +889,49 @@ void MainWindow::connected_to_motion_controller()
     ui->connect->setText("\nDisconnect Controller\n");
     ui->homeZAxisCheckBox->setEnabled(false);
 }
+
+
+// Galil script that calibrates the y-axis when it is broken
+void MainWindow::initialize_y_axis_commutation()
+{
+
+    std::string program =
+        "REM Y-Axis Commutation Initialization\r"
+        "MOY\r"               // Motor Off Y
+        "BAY\r"               // Brushless Axis Y
+        "BMY=2000\r"          // Brushless Modulo Y
+        "BIY=-1\r"            // Brushless Init Y
+        "BCY\r"               // Brushless Calibration Y
+        "hall=_QHY\r"         // Store Hall State
+        "SHY\r"               // Servo Here Y
+        "JGY=-1600\r"         // Jog Y Negative (-1600)
+        "BGY\r"               // Begin Jog Y
+        "#hall\r"             // Label for loop
+        "WT2\r"               // Wait 2ms
+        "JP#hall,_QHY=hall\r" // Jump back if hall state is same
+        "STY\r"               // Stop Y
+        "AMY\r"               // After Motion (Wait for stop)
+        "MG \"Y-Axis Initialization Complete\"\r" // Prints to Output Window
+        "EN\r";               // End Program
+
+    if (printer->mcu->g)
+    {
+        // Print "Starting" message
+        outputWindow->print_string("Starting Y-Axis Initialization (Negative Dir)...");
+
+        // 1. Download the program to the controller
+        GProgramDownload(printer->mcu->g, program.c_str(), "");
+
+        // 2. Execute the program
+        std::stringstream s;
+        s << "GCmd," << "XQ" << "\n";
+        printer->mcu->printerThread->execute_command(s);
+    }
+    else
+    {
+        outputWindow->print_string("Error: Controller not connected.");
+    }
+}
+
 
 #include "moc_mainwindow.cpp"

@@ -28,7 +28,7 @@
 #include <QProgressDialog>
 #include <QApplication>
 
-//
+
 MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     PrinterWidget(printer, parent),
     ui(new Ui::MJPrintheadWidget),
@@ -36,6 +36,7 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     m_pythonProcess(nullptr)
 {
     ui->setupUi(this);
+
     setAccessibleName("Multi-Jet Printhead Widget");
 
     allow_widget_input_MJ(false);
@@ -77,6 +78,7 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->singleNozzlePushButton, &QPushButton::clicked, this, &MJPrintheadWidget::singleNozzlePressed);
     connect(ui->purgeNozzlesButton, &QPushButton::clicked, this, &MJPrintheadWidget::purgeNozzles);
     connect(ui->moveNozzle, &QPushButton::clicked, this, &MJPrintheadWidget::moveNozzleOffPlate);
+    connect(ui->checkMaps, &QPushButton::clicked, this, &MJPrintheadWidget::checkMapsPressed);
 
     // --- 5. **Connect Encoder & Variable Print** ---
     connect(ui->zeroEncoder, &QPushButton::clicked, this, &MJPrintheadWidget::zeroEncoder);
@@ -315,12 +317,13 @@ void MJPrintheadWidget::command_entered()
 void MJPrintheadWidget::file_name_entered()
 {
     QString filename = ui->imageFileLineEdit->text();
-    read_in_file(filename);
+    read_in_file(filename); // loads in file for head 1
+    read_in_file(filename, 2); // 11/24 loads in file for head 2
 }
 
 
 // Reads an image file and sends its data to the printhead controller.
-void MJPrintheadWidget::read_in_file(const QString &fileNameOrPath)
+void MJPrintheadWidget::read_in_file(const QString &fileNameOrPath, int headIdx)
 {
     QString filePath = fileNameOrPath;
     QFileInfo fileInfo(filePath);
@@ -340,7 +343,52 @@ void MJPrintheadWidget::read_in_file(const QString &fileNameOrPath)
         return;
     }
 
-    mPrinter->mjController->send_image_data(1, image, 0);
+    // --- 3. Calculate print head gap
+
+    int whitespace = 0;
+
+    if (headIdx == 2) {
+        whitespace = 0;
+    } else if (headIdx == 1) {
+        whitespace = calculate_gap(fileNameOrPath);
+        // check for failed calculation
+        if (whitespace == -1) return;
+    }
+
+    mPrinter->mjController->send_image_data(headIdx, image, whitespace);
+}
+
+void MJPrintheadWidget::checkMapsPressed() {
+
+    // CHANGE: Select a FILE, not a Directory.
+    // The debug function needs to know exactly which layer/pass image you want to test.
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Select Bitmap to Check"),
+                                                    "C:\\Users\\CB140LAB\\Desktop\\Noah\\ComplexMultiNozzle\\Slicing",
+                                                    tr("Images (*.bmp);;All Files (*)"));
+
+    if (filePath.isEmpty()) return; // Handle Cancel
+
+    QImage image(filePath);
+
+    // --- 2. **Verify image loaded and send data** ---
+    if (image.isNull())
+    {
+        mPrinter->mjController->emit response(QString("Failed to load image from " + filePath));
+        return;
+    }
+
+    // --- 3. Calculate print head gap
+
+    int whitespace1 = 0;
+
+    int whitespace2 = calculate_gap(filePath);
+    // check for failed calculation
+    if (whitespace2 == -1) return;
+
+
+    mPrinter->mjController->convert_image(1, image, whitespace1);
+    mPrinter->mjController->convert_image(2, image, whitespace2);
+
 }
 
 // Toggles the power to the printhead.
@@ -383,6 +431,7 @@ void MJPrintheadWidget::voltageChanged()
 {
     double volt = ui->setVoltageSpinBox->value();
     mPrinter->mjController->set_head_voltage(Added_Scientific::Controller::HEAD1, volt);
+    mPrinter->mjController->set_head_voltage(Added_Scientific::Controller::HEAD2, volt); // 12/4 added second head. Is this right??
 }
 
 void MJPrintheadWidget::absoluteStartChanged()
@@ -481,6 +530,7 @@ void MJPrintheadWidget::testPrintPressed()
     mPrinter->mjController->write_line("M 4"); // Set encoder print mode
     mPrinter->mjController->set_printing_frequency(printFreq);
     read_in_file("currentBitmap.bmp");
+    //read_in_file("currentBitmap.bmp", 2);
     GSleep(100);
     mPrinter->mjController->set_absolute_start(backUpDistanceEnc);
 
@@ -647,15 +697,30 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     // --- 1. **Set Motion & Print Parameters** ---
     double accelerationSpeed = 3000.0;
     double safetyFactor = 2.0;
-    double encoderCountsPerMM = X_CNTS_PER_MM;
+    //double encoderCountsPerMM = X_CNTS_PER_MM;
 
-    // --- 2. **Calculate Distances & Coordinates for Acceleration** ---
+    // --- 2. Calculate Distances & Coordinates for Acceleration ---
     double backUpDistance = (pow(printSpeed, 2.0) / (2.0 * accelerationSpeed)) * safetyFactor;
     double printDistance = (static_cast<double>(imageWidth) / frequency) * printSpeed;
-    double backUpDistanceEnc = backUpDistance * encoderCountsPerMM;
+
+    double totalRunway = backUpDistance + HEAD_GAP_MM;
+
+    // Safety Clamp: Prevents negative X coordinates that stall the Galil
+    if ((xLocation - totalRunway) < 0.0) {
+        mPrinter->mjController->outputMessage(QString("WARNING: Start X too low. Shifting to %1").arg(totalRunway));
+        xLocation = totalRunway;
+    }
+
     double trueStartX = xLocation;
-    double backedUpStartX = trueStartX - backUpDistance;
-    double endTargetMM = backedUpStartX + backUpDistance + printDistance + backUpDistance;
+    double backedUpStartX = trueStartX - totalRunway;
+
+    // endTargetMM must allow the trailing head (Head 1) to fully clear the image.
+    double endTargetMM = backedUpStartX + totalRunway + printDistance + HEAD_GAP_MM + backUpDistance;
+
+    // backUpDistanceEnc is the "Trigger Distance".
+    // It is the number of encoder counts the carriage travels BEFORE jetting starts.
+    // For Head 1 to hit 'trueStartX', the carriage travels 'totalRunway' mm.
+    int backUpDistanceEnc = totalRunway * X_CNTS_PER_MM;
 
     // --- 3. **Log Calculated Values** ---
     mPrinter->mjController->outputMessage(QString("File: %1\n X: %2, Y: %3, Freq: %4, Speed: %5").arg(fileName).arg(xLocation).arg(yLocation).arg(frequency).arg(printSpeed));
@@ -664,7 +729,10 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     // --- 4. **Configure Printhead and Load Data** ---
     mPrinter->mjController->write_line("M 4"); // Set encoder print mode
     mPrinter->mjController->set_printing_frequency(frequency);
+    GSleep(80);//12/4 added
     read_in_file(fileName);
+    GSleep(80);//12/4 added
+    read_in_file(fileName, 2); // 11/24 added 2nd head
 
     // --- 5. **Move to Backed-Up Starting Position** ---
     moveToLocation(backedUpStartX, yLocation, QString("Move to Encoder Start Complete"));
@@ -931,7 +999,7 @@ void MJPrintheadWidget::sliceStlButton_clicked() {
 
     // --- 1. Define executable and the Python GUI script path ---
     // IMPORTANT: Update this path to the final Python script you are using.
-    QString pythonScriptPath = "C:\\Users\\CB140LAB\\Desktop\\Noah\\ComplexMultiNozzle\\Python_Code\\STL_Slicing_Viewer_mod3.py";
+    QString pythonScriptPath = "C:\\Users\\CB140LAB\\Documents\\CREATE_LAB_Binder_Jet_Printer\\CREATE_LAB_Binder_Jet_Printer (Dual Head)\\STL_Slicing_Viewer_Zack.py";
     QString pythonExecutable = "C:\\Users\\CB140LAB\\AppData\\Local\\Microsoft\\WindowsApps\\python3.11.exe";
 
     // --- 2. Check if the process is already running ---
@@ -1225,6 +1293,44 @@ bool MJPrintheadWidget::parsePrintParameters(const QString& filePath, PrintParam
     return true;
 }
 
+// Parses the parameter file to calculate the head gap in pixels (added 12/1)
+int MJPrintheadWidget::calculate_gap(const QString &associatedBitmap) {
+    // 1. Resolve path (Handle relative paths like "test.bmp")
+    QString fullPath = associatedBitmap;
+    QFileInfo fileInfo(fullPath);
+    if (!fileInfo.isAbsolute()) {
+        fullPath = "C:\\Users\\CB140LAB\\Desktop\\Noah\\" + associatedBitmap;
+        fileInfo.setFile(fullPath);
+    }
+
+    // 2. Find Parameter File
+    QDir dir = fileInfo.absoluteDir();
+    QString paramPath = dir.filePath("print_parameters.txt");
+
+    // Look in current folder, then parent folder
+    if (!QFile::exists(paramPath)) {
+        if (dir.cdUp()) {
+            QString parentPath = dir.filePath("print_parameters.txt");
+            if (QFile::exists(parentPath)) paramPath = parentPath;
+        }
+    }
+
+    // 3. Parse and Error Check
+    PrintParameters params;
+    if (!QFile::exists(paramPath) || !parsePrintParameters(paramPath, params))
+    {
+        // ERROR: No defaults allowed. Stop everything.
+        mPrinter->mjController->outputMessage(QString("ERROR: Could not find 'print_parameters.txt' for file: %1").arg(associatedBitmap));
+        return -1; // Return error code
+    }
+
+    // 4. Calculate
+    if (params.dropletSpacingX <= 0) return -1; // Avoid divide by zero
+
+    // Use the constant from printer.h
+    return static_cast<int>(HEAD_GAP_MM / params.dropletSpacingX);
+}
+
 // Parses the layer_y_shifts.txt file to load dithering values for each layer.
 bool MJPrintheadWidget::parseLayerShifts(const QString& filePath, std::map<int, int>& shifts) {
     QFile file(filePath);
@@ -1366,7 +1472,7 @@ void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
 
         // --- 4c. Calculate Y Location for Current Pass and Print ---
         double yOffsetForPass_mm = static_cast<double>(currentPass - 1) * params.nozzleCount * params.lineSpacingY;
-        double currentYLocation = layerBaseY + yOffsetForPass_mm;
+        double currentYLocation = layerBaseY - yOffsetForPass_mm;
 
         mPrinter->mjController->outputMessage(QString("Printing Pass %1 at Y=%2mm").arg(currentPass).arg(currentYLocation));
 
@@ -1374,8 +1480,8 @@ void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
         QString passFilePath = dividedDir.absoluteFilePath(fileName);
 
         printBMPatLocationEncoder(
-            40.0, // Start X is 0 as offset is built into the bitmap
-            (-currentYLocation - yHeadOffset),
+            params.startX,// check this
+            (currentYLocation - yHeadOffset),
             params.printFrequency,
             params.printSpeed,
             imageWidthPixels,

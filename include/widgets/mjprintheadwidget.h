@@ -47,7 +47,7 @@ protected:
     void getPositionPressed();
     void getHeadTempsPressed();
     void file_name_entered();
-    void read_in_file(const QString &filename);
+    void read_in_file(const QString &filename, int headIdx = 1); // 11/24 added arguments to reduce copy/pasted code. If this doesn't work delete headIdx and WhiteSpace
     //void send_image_data(const QString &file);
 
     void send_command(const QString &command);
@@ -72,6 +72,7 @@ protected:
     void printEnc(double acceleration, double speed, double endTargetMM, QString endMessage);
     void verifyPrintStartAlignment(double xStart, double yStart);
     void zeroEncoder();
+    void checkMapsPressed();
 
     void purgeNozzles();
     void testNozzles();
@@ -128,6 +129,7 @@ private:
     bool parsePrintParameters(const QString& filePath, PrintParameters& params);
     bool parseLayerShifts(const QString& filePath, std::map<int, int>& shifts);
     void startFullPrintJob(const QString& jobFolderPath);
+    int calculate_gap(const QString& associatedBitmap); // 12/1 added to calculate pixel gap between heads
 
     // Helpers for cancelling print job
     volatile bool m_printJobCancelled = false;

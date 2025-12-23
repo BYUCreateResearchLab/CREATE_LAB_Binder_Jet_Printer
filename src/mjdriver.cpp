@@ -232,9 +232,15 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
             for (int bit = 0; bit < 8; ++bit)
             {
                 int j = byt*8 + bit;
-                if (j < height && processedPixels[j * width + i] > 0.5f)
+                // 12/1 added 2nd material logic
+                if (j < height) // j < height && processedPixels[j * width + i] > 0.5f previous condition
                 {
-                    curByte += 1 << (7 - bit);
+                    unsigned char pixelColor = pixelData[j * width + i];
+                        if (headIdx == 1 && pixelColor < 50) { // black pixels on head 1
+                            curByte += 1 << (7 - bit);
+                        } else if (headIdx == 2 && pixelColor > 100 && pixelColor < 200) { // grey pixels on head 2
+                            curByte += 1 << (7 - bit);
+                        }
                 }
             }
             imageData.append(curByte);
@@ -246,14 +252,14 @@ QByteArray Controller::convert_image(int headIdx, const QImage &image, int white
     }
 
     // Check image is correct by reconstructing and saving it to view
-    reconstructed_bitmap(imageData, width, height);
+    reconstructed_bitmap(headIdx, imageData, width, height);
 
     emit response(QString("lastval = %1, sumofval = %2, copnt = %3").arg(lastval).arg(sumofval).arg(copnt));
 
     return imageData;
 }
 
-void Controller::reconstructed_bitmap(const QByteArray &imageData, int width, int height)
+void Controller::reconstructed_bitmap(int headIdx, const QByteArray &imageData, int width, int height)
 {
     // Skip first two bytes
     int startIdx = 2;
@@ -290,15 +296,18 @@ void Controller::reconstructed_bitmap(const QByteArray &imageData, int width, in
     QImage image = newBitmap.toImage();
 
     // save to file library
-    QString filePath = "C:\\Users\\CB140LAB\\Desktop\\Noah\\newBitmap.bmp";
+    QString filePath = QString("C:\\Users\\CB140LAB\\Desktop\\Noah\\debugBitmap%1.bmp").arg(headIdx); // 12/1 saves separate files for head 1/2
     image.save(filePath);
 
-    emit response(QString("Bitmap reconstructed and saved"));
+    emit response(QString("Bitmap reconstructed and saved: %1").arg(filePath));
 }
 
 void Controller::send_image_data(int headIdx, const QImage &image, int whiteSpace)
 {
     QByteArray imageData = convert_image(headIdx, image, whiteSpace);
+
+
+
     write(imageData);
 }
 
