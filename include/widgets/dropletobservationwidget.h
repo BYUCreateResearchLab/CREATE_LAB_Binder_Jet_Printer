@@ -8,8 +8,6 @@
 #include <camera.h>
 #include <QTimer>
 
-#include "jettingwidget.h"
-
 class Camera;
 namespace JetDrive { class Controller; }
 class PressureControllerWidget;
@@ -76,7 +74,6 @@ private:
     bool m_isJettingFor3Minutes {false};
     const int m_minutesToJet = 3;
 
-    JettingWidget *m_JettingWidget {nullptr};
     PressureControllerWidget *pressureControllerWidget {nullptr};
 
     std::unique_ptr<DropletAnalyzer> m_analyzer;

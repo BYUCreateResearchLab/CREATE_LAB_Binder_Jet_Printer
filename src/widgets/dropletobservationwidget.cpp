@@ -54,8 +54,8 @@ DropletObservationWidget::DropletObservationWidget(Printer *printer, QWidget *pa
     QGridLayout *gridLayout = ui->frame->findChild<QGridLayout*>("gridLayout_frame");
 
     // add widgets to the right panel
-    m_JettingWidget = new JettingWidget(printer, this);
-    gridLayout->addWidget(m_JettingWidget, gridLayout->rowCount(),0,1,-1);
+    //m_JettingWidget = new JettingWidget(printer, this);
+    //gridLayout->addWidget(m_JettingWidget, gridLayout->rowCount(),0,1,-1);
 
     pressureControllerWidget = new PressureControllerWidget(printer, this);
     gridLayout->addWidget(pressureControllerWidget, gridLayout->rowCount(),0,1,-1);
@@ -75,7 +75,7 @@ DropletObservationWidget::DropletObservationWidget(Printer *printer, QWidget *pa
     connect(m_JetVolumeTimer, &QTimer::timeout, this, &DropletObservationWidget::end_jet_timer);
 
     m_ProgressBarTimer = new QTimer(this);
-    connect(m_ProgressBarTimer, &QTimer::timeout, this, &DropletObservationWidget::update_progress_bar);   
+    connect(m_ProgressBarTimer, &QTimer::timeout, this, &DropletObservationWidget::update_progress_bar);
 
     ui->jetProgressBar->setMinimum(0);
     ui->jetProgressBar->setMaximum(m_minutesToJet * 60 * 1000);
@@ -124,7 +124,7 @@ void DropletObservationWidget::show_droplet_analyzer_widget(bool loadTempVideo)
     if (loadTempVideo)
     {
         m_analyzerWidget->load_video_from_observation_widget(m_tempFileName,
-                                                             m_JettingWidget->get_jet_drive_settings(),
+                                                             mPrinter->jetDrive->get_jetting_parameters(),
                                                              ui->stepTimeSpinBox->value());
     }
     m_analyzerWindow.get()->show();
@@ -139,10 +139,10 @@ void DropletObservationWidget::hide_droplet_analyzer_widget()
 void DropletObservationWidget::calculate_droplet_velocity()
 {
     m_analyzerWidget->load_video_from_observation_widget(m_tempFileName,
-                                                         m_JettingWidget->get_jet_drive_settings(),
+                                                         mPrinter->jetDrive->get_jetting_parameters(),
                                                          ui->stepTimeSpinBox->value());
     QMetaObject::invokeMethod(m_analyzer.get(), [this]()
-    { this->m_analyzer.get()->analyze_video(); }, Qt::QueuedConnection);
+                              { this->m_analyzer.get()->analyze_video(); }, Qt::QueuedConnection);
 
     // disable droplet observation widget settings until analysis is complete
     this->ui->frame->setEnabled(false);
@@ -484,7 +484,7 @@ void DropletObservationWidget::update_strobe_sweep_offset()
     else if (m_currentStrobeOffset >= ui->endTimeSpinBox->value()) // if sweep complete
     {
         disconnect(m_Camera, static_cast<void (Camera::*)(ImageBufferPtr)>(&Camera::frameReceived),
-                this, &DropletObservationWidget::update_strobe_sweep_offset);
+                   this, &DropletObservationWidget::update_strobe_sweep_offset);
         m_currentStrobeOffset = -1;
         ui->sweepProgressBar->setValue(0);
     }
