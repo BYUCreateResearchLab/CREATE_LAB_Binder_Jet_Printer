@@ -98,7 +98,7 @@ class BedMicroscope;
 #define PRINT_Z_SIZE_MM 14 //?
 
 #define HEAD_GAP_MM 21.1 // print head gap in mm
-#define Y_HEAD_OFFSET 37
+#define Y_HEAD_OFFSET 17.4 // was 37, test "swath width" from XAAR specs
 
 // NOTE: these are not the same as the pin number on the DSUB HD44 cable
 #define ROLLER_1_BIT 18 // pin 1

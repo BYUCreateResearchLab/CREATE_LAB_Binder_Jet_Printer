@@ -738,7 +738,7 @@ class SlicerMainWindow(QMainWindow):
                            
                             # Convert mm to pixels
                             coords_mm = face_vertices_3d[:, :2]
-                            #coords_mm[:, 1] = BED_SIZE[1] - coords_mm[:, 1] # Flip Y # change dir
+                            coords_mm[:, 1] = BED_SIZE[1] - coords_mm[:, 1] # Flip Y 
                             pixels = (coords_mm / [droplet_spacing_x, line_spacing_y]).astype(int)
                            
                             # Draw the filled triangle
@@ -804,33 +804,75 @@ class SlicerMainWindow(QMainWindow):
             f.write(header_content)
         print("Successfully created header file with corrected parameters.")
 
-    def split_image(self, image, strip_height, output_dir, layer_num):
-        """
-        Splits the layer image into smaller passes (strips) and saves only the non-blank ones.
-        On pass 6, it forces rows 90-127 to be white to correct for artifacts.
-        """
-        width, height = image.size
-        for i in range((height + strip_height - 1) // strip_height):
-            pass_num = i + 1
-            strip = image.crop((0, i * strip_height, width, (i + 1) * strip_height))
 
-            # 11/26 changed to include greyscale logic for 2nd material
-            # Force pass 6 to be all white to remove black bar artifacts
+    def split_image(self, image, strip_height, output_dir, layer_num):
+            """
+            Splits the image from BOTTOM to TOP.
+            Pass 1 takes the bottom-most strip (Front of bed).
+            Last Pass takes the top-most strip (Back of bed).
+            """
+            width, height = image.size
+            # Calculate how many strips we need
+            num_strips = (height + strip_height - 1) // strip_height
             
-            if pass_num == 6:
-                padded_strip = Image.new('L', (width, strip_height), 255)
-                padded_strip.paste(strip, (0, 0))
-                strip = padded_strip
+            for i in range(num_strips):
+                pass_num = i + 1
                 
-                draw = ImageDraw.Draw(strip)
-                draw.rectangle([0, 90, strip.width, 128], fill=255)
+                # Crop from Bottom Up 
+                bottom_y = height - (i * strip_height)
+                top_y = height - ((i + 1) * strip_height)
+                
+                # Handle the top edge
+                if top_y < 0:
+                    top_y = 0
+                    
+                # Crop format: (left, top, right, bottom)
+                strip = image.crop((0, top_y, width, bottom_y))
+                
+                # ARTIFACT FIX
+                if pass_num == 6:
+                    padded_strip = Image.new('L', (width, strip_height), 255)
+                    # Paste the partial strip at the TOP of the padded area
+                    padded_strip.paste(strip, (0, 0))
+                    strip = padded_strip
+                    
+                    draw = ImageDraw.Draw(strip)
+                    # Ensure the empty bottom area is white
+                    draw.rectangle([0, 90, strip.width, 128], fill=255)
+
+                extrema = strip.getextrema()
+                if extrema is None or extrema == (255, 255):
+                    continue
+
+                strip.save(os.path.join(output_dir, f"layer_{layer_num:04d}_pass_{pass_num:02d}.bmp"))
+            
+    # def split_image(self, image, strip_height, output_dir, layer_num):
+    #     """
+    #     Splits the layer image into smaller passes (strips) and saves only the non-blank ones.
+    #     On pass 6, it forces rows 90-127 to be white to correct for artifacts.
+    #     """
+    #     width, height = image.size
+    #     for i in range((height + strip_height - 1) // strip_height):
+    #         pass_num = i + 1
+    #         strip = image.crop((0, i * strip_height, width, (i + 1) * strip_height))
+
+    #         # 11/26 changed to include greyscale logic for 2nd material
+    #         # Force pass 6 to be all white to remove black bar artifacts
+            
+    #         if pass_num == 6:
+    #             padded_strip = Image.new('L', (width, strip_height), 255)
+    #             padded_strip.paste(strip, (0, 0))
+    #             strip = padded_strip
+                
+    #             draw = ImageDraw.Draw(strip)
+    #             draw.rectangle([0, 90, strip.width, 128], fill=255)
             
                 
-            extrema = strip.getextrema()
-            if extrema is None or extrema == (255, 255):
-                continue
+    #         extrema = strip.getextrema()
+    #         if extrema is None or extrema == (255, 255):
+    #             continue
                 
-            strip.save(os.path.join(output_dir, f"layer_{layer_num:04d}_pass_{pass_num:02d}.bmp"))
+    #         strip.save(os.path.join(output_dir, f"layer_{layer_num:04d}_pass_{pass_num:02d}.bmp"))
 
 
 if __name__ == "__main__":
