@@ -691,63 +691,64 @@ void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, d
 }
 
 // Prints a bitmap at a specified location using precise encoder-based triggering.
-void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName){
-    mPrinter->mjController->outputMessage(QString("--- Encoder-Based Print Initiated ---"));
+void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName)
+{
+    mPrinter->mjController->outputMessage("--- Encoder-Based Print Initiated ---");
 
-    // --- 1. **Set Motion & Print Parameters** ---
+    // Motion parameters
     double accelerationSpeed = 3000.0;
     double safetyFactor = 2.0;
-    //double encoderCountsPerMM = X_CNTS_PER_MM;
 
-    // --- 2. Calculate Distances & Coordinates for Acceleration ---
+    // Calculate runway required for acceleration
+    // Physics: d = v^2 / 2a
     double backUpDistance = (pow(printSpeed, 2.0) / (2.0 * accelerationSpeed)) * safetyFactor;
     double printDistance = (static_cast<double>(imageWidth) / frequency) * printSpeed;
 
-    double totalRunway = backUpDistance;
-
-    double trueStartX = xLocation;
-    double backedUpStartX = trueStartX - totalRunway;
-
-    // Safety Clamp: Prevents negative X coordinates that stall the Galil
-    if ((xLocation - totalRunway) < 0.0) {
-        mPrinter->mjController->outputMessage(QString("WARNING: Start X too low. Shifting to 0.0mm"));
-        xLocation = 0;
+    // Safety clamp: if xLocation is too close to 0, force it to 0
+    if ((xLocation - backUpDistance) < 0.0) {
+        mPrinter->mjController->outputMessage("WARNING: Start X too low. Shifting to 0.0mm");
+        xLocation = 0.0;
     }
 
-    // endTargetMM must allow the trailing head (Head 1) to fully clear the image.
-    double endTargetMM = backedUpStartX + totalRunway + printDistance + backUpDistance;
+    // Determine physical start and stop coordinates
+    double backedUpStartX = xLocation - backUpDistance;
+    double endTargetMM = xLocation + printDistance + backUpDistance; // Start + Print + Decel
 
-    // backUpDistanceEnc is the "Trigger Distance".
-    // It is the number of encoder counts the carriage travels BEFORE jetting starts.
-    // For Head 1 to hit 'trueStartX', the carriage travels 'totalRunway' mm.
-    int backUpDistanceEnc = totalRunway * X_CNTS_PER_MM;
+    // Convert runway distance to encoder counts for the trigger
+    int backUpDistanceEnc = backUpDistance * X_CNTS_PER_MM;
 
-    // --- 3. **Log Calculated Values** ---
-    mPrinter->mjController->outputMessage(QString("File: %1\n X: %2, Y: %3, Freq: %4, Speed: %5").arg(fileName).arg(xLocation).arg(yLocation).arg(frequency).arg(printSpeed));
-    mPrinter->mjController->outputMessage(QString("Backed-up Start: %1 mm, End Target: %2 mm, Trigger: %3 counts").arg(backedUpStartX).arg(endTargetMM).arg(backUpDistanceEnc));
+    // Log job details
+    mPrinter->mjController->outputMessage(QString("File: %1\n X: %2, Y: %3, Freq: %4, Speed: %5")
+                                              .arg(fileName).arg(xLocation).arg(yLocation).arg(frequency).arg(printSpeed));
+    mPrinter->mjController->outputMessage(QString("Runway: %1 mm, Start: %2 mm, End: %3 mm")
+                                              .arg(backUpDistance).arg(backedUpStartX).arg(endTargetMM));
 
-    // --- 4. **Configure Printhead and Load Data** ---
-    mPrinter->mjController->write_line("M 4"); // Set encoder print mode
+    // Configure printhead
+    mPrinter->mjController->write_line("M 4");
     mPrinter->mjController->set_printing_frequency(frequency);
 
-    read_in_file(fileName); // HEAD 1
+    // Load image data for both heads
+    read_in_file(fileName); // Head 1
     if (!readyHeads()) return;
-    read_in_file(fileName, 2); // HEAD 2
+
+    read_in_file(fileName, 2); // Head 2
     if (!readyHeads()) return;
+
     GSleep(50);
 
-    // --- 5. **Move to Backed-Up Starting Position** ---
-    moveToLocation(backedUpStartX, yLocation, QString("Move to Encoder Start Complete"));
+    // Move to the backed-up start position
+    moveToLocation(backedUpStartX, yLocation, "Move to Encoder Start Complete");
     while (!atLocation) {
         QCoreApplication::processEvents();
     }
     atLocation = false;
     GSleep(100);
 
-    // --- 6. **Set Encoder Trigger and Execute Print** ---
+    // Arm the encoder trigger and execute the print pass
     mPrinter->mjController->set_absolute_start(backUpDistanceEnc);
     printComplete = false;
-    printEnc(accelerationSpeed, printSpeed, endTargetMM, QString("Encoder Print Motion Complete"));
+
+    printEnc(accelerationSpeed, printSpeed, endTargetMM, "Encoder Print Motion Complete");
 
     while (!printComplete) {
         QCoreApplication::processEvents();
@@ -755,7 +756,7 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     printComplete = false;
     GSleep(100);
 
-    mPrinter->mjController->outputMessage(QString("--- Encoder Print Finished ---"));
+    mPrinter->mjController->outputMessage("--- Encoder Print Finished ---");
 }
 
 // Prints a small verification line at a precise location to check alignment.

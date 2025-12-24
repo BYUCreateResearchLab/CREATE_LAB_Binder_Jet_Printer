@@ -829,16 +829,16 @@ class SlicerMainWindow(QMainWindow):
                 # Crop format: (left, top, right, bottom)
                 strip = image.crop((0, top_y, width, bottom_y))
                 
-                # ARTIFACT FIX
-                if pass_num == 6:
-                    padded_strip = Image.new('L', (width, strip_height), 255)
-                    # Paste the partial strip at the TOP of the padded area
-                    padded_strip.paste(strip, (0, 0))
-                    strip = padded_strip
+                # # ARTIFACT FIX
+                # if pass_num == 6:
+                #     padded_strip = Image.new('L', (width, strip_height), 255)
+                #     # Paste the partial strip at the TOP of the padded area
+                #     padded_strip.paste(strip, (0, 0))
+                #     strip = padded_strip
                     
-                    draw = ImageDraw.Draw(strip)
-                    # Ensure the empty bottom area is white
-                    draw.rectangle([0, 90, strip.width, 128], fill=255)
+                #     draw = ImageDraw.Draw(strip)
+                #     # Ensure the empty bottom area is white
+                #     draw.rectangle([0, 90, strip.width, 128], fill=255)
 
                 extrema = strip.getextrema()
                 if extrema is None or extrema == (255, 255):
