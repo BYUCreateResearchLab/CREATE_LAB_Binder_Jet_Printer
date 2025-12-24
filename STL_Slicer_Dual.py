@@ -778,8 +778,8 @@ class SlicerMainWindow(QMainWindow):
         model_names = list(self.models.keys())
         print_speed_x = self.slicing_params['print_freq'] * self.slicing_params['droplet_spacing']
         
-        start_x = 0.0
-        start_y = 0.0
+        start_x = 3.0
+        start_y = 9.0
 
         header_content = (
             f"--- Print Parameters ---\n"

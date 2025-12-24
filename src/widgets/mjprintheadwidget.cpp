@@ -703,19 +703,19 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     double backUpDistance = (pow(printSpeed, 2.0) / (2.0 * accelerationSpeed)) * safetyFactor;
     double printDistance = (static_cast<double>(imageWidth) / frequency) * printSpeed;
 
-    double totalRunway = backUpDistance + HEAD_GAP_MM;
-
-    // Safety Clamp: Prevents negative X coordinates that stall the Galil
-    if ((xLocation - totalRunway) < 0.0) {
-        mPrinter->mjController->outputMessage(QString("WARNING: Start X too low. Shifting to %1").arg(totalRunway));
-        xLocation = totalRunway;
-    }
+    double totalRunway = backUpDistance;
 
     double trueStartX = xLocation;
     double backedUpStartX = trueStartX - totalRunway;
 
+    // Safety Clamp: Prevents negative X coordinates that stall the Galil
+    if ((xLocation - totalRunway) < 0.0) {
+        mPrinter->mjController->outputMessage(QString("WARNING: Start X too low. Shifting to 0.0mm"));
+        xLocation = 0;
+    }
+
     // endTargetMM must allow the trailing head (Head 1) to fully clear the image.
-    double endTargetMM = backedUpStartX + totalRunway + printDistance + HEAD_GAP_MM + backUpDistance;
+    double endTargetMM = backedUpStartX + totalRunway + printDistance + backUpDistance;
 
     // backUpDistanceEnc is the "Trigger Distance".
     // It is the number of encoder counts the carriage travels BEFORE jetting starts.
