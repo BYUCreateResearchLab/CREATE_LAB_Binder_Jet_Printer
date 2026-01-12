@@ -36,6 +36,7 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     m_pythonProcess(nullptr)
 {
     ui->setupUi(this);
+
     setAccessibleName("Multi-Jet Printhead Widget");
 
     allow_widget_input_MJ(false);
@@ -77,6 +78,7 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->singleNozzlePushButton, &QPushButton::clicked, this, &MJPrintheadWidget::singleNozzlePressed);
     connect(ui->purgeNozzlesButton, &QPushButton::clicked, this, &MJPrintheadWidget::purgeNozzles);
     connect(ui->moveNozzle, &QPushButton::clicked, this, &MJPrintheadWidget::moveNozzleOffPlate);
+    connect(ui->checkMaps, &QPushButton::clicked, this, &MJPrintheadWidget::checkMapsPressed);
 
     // --- 5. **Connect Encoder & Variable Print** ---
     connect(ui->zeroEncoder, &QPushButton::clicked, this, &MJPrintheadWidget::zeroEncoder);
@@ -315,12 +317,13 @@ void MJPrintheadWidget::command_entered()
 void MJPrintheadWidget::file_name_entered()
 {
     QString filename = ui->imageFileLineEdit->text();
-    read_in_file(filename);
+    read_in_file(filename); // loads in file for head 1
+    read_in_file(filename, 2); // 11/24 loads in file for head 2
 }
 
 
 // Reads an image file and sends its data to the printhead controller.
-void MJPrintheadWidget::read_in_file(const QString &fileNameOrPath)
+void MJPrintheadWidget::read_in_file(const QString &fileNameOrPath, int headIdx)
 {
     QString filePath = fileNameOrPath;
     QFileInfo fileInfo(filePath);
@@ -340,7 +343,52 @@ void MJPrintheadWidget::read_in_file(const QString &fileNameOrPath)
         return;
     }
 
-    mPrinter->mjController->send_image_data(1, image, 0);
+    // --- 3. Calculate print head gap
+
+    int whitespace = 0;
+
+    if (headIdx == 2) {
+        whitespace = 0;
+    } else if (headIdx == 1) {
+        whitespace = calculate_gap(fileNameOrPath);
+        // check for failed calculation
+        if (whitespace == -1) return;
+    }
+
+    mPrinter->mjController->send_image_data(headIdx, image, whitespace);
+}
+
+void MJPrintheadWidget::checkMapsPressed() {
+
+    // CHANGE: Select a FILE, not a Directory.
+    // The debug function needs to know exactly which layer/pass image you want to test.
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Select Bitmap to Check"),
+                                                    "C:\\Users\\CB140LAB\\Desktop\\Noah\\ComplexMultiNozzle\\Slicing",
+                                                    tr("Images (*.bmp);;All Files (*)"));
+
+    if (filePath.isEmpty()) return; // Handle Cancel
+
+    QImage image(filePath);
+
+    // --- 2. **Verify image loaded and send data** ---
+    if (image.isNull())
+    {
+        mPrinter->mjController->emit response(QString("Failed to load image from " + filePath));
+        return;
+    }
+
+    // --- 3. Calculate print head gap
+
+    int whitespace1 = 0;
+
+    int whitespace2 = calculate_gap(filePath);
+    // check for failed calculation
+    if (whitespace2 == -1) return;
+
+
+    mPrinter->mjController->convert_image(1, image, whitespace1);
+    mPrinter->mjController->convert_image(2, image, whitespace2);
+
 }
 
 // Toggles the power to the printhead.
@@ -383,6 +431,7 @@ void MJPrintheadWidget::voltageChanged()
 {
     double volt = ui->setVoltageSpinBox->value();
     mPrinter->mjController->set_head_voltage(Added_Scientific::Controller::HEAD1, volt);
+    mPrinter->mjController->set_head_voltage(Added_Scientific::Controller::HEAD2, volt); // 12/4 added second head. Is this right??
 }
 
 void MJPrintheadWidget::absoluteStartChanged()
@@ -481,6 +530,7 @@ void MJPrintheadWidget::testPrintPressed()
     mPrinter->mjController->write_line("M 4"); // Set encoder print mode
     mPrinter->mjController->set_printing_frequency(printFreq);
     read_in_file("currentBitmap.bmp");
+    //read_in_file("currentBitmap.bmp", 2);
     GSleep(100);
     mPrinter->mjController->set_absolute_start(backUpDistanceEnc);
 
@@ -641,43 +691,64 @@ void MJPrintheadWidget::printBMPatLocation(double xLocation, double yLocation, d
 }
 
 // Prints a bitmap at a specified location using precise encoder-based triggering.
-void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName){
-    mPrinter->mjController->outputMessage(QString("--- Encoder-Based Print Initiated ---"));
+void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName)
+{
+    mPrinter->mjController->outputMessage("--- Encoder-Based Print Initiated ---");
 
-    // --- 1. **Set Motion & Print Parameters** ---
+    // Motion parameters
     double accelerationSpeed = 3000.0;
     double safetyFactor = 2.0;
-    double encoderCountsPerMM = X_CNTS_PER_MM;
 
-    // --- 2. **Calculate Distances & Coordinates for Acceleration** ---
+    // Calculate runway required for acceleration
+    // Physics: d = v^2 / 2a
     double backUpDistance = (pow(printSpeed, 2.0) / (2.0 * accelerationSpeed)) * safetyFactor;
     double printDistance = (static_cast<double>(imageWidth) / frequency) * printSpeed;
-    double backUpDistanceEnc = backUpDistance * encoderCountsPerMM;
-    double trueStartX = xLocation;
-    double backedUpStartX = trueStartX - backUpDistance;
-    double endTargetMM = backedUpStartX + backUpDistance + printDistance + backUpDistance;
 
-    // --- 3. **Log Calculated Values** ---
-    mPrinter->mjController->outputMessage(QString("File: %1\n X: %2, Y: %3, Freq: %4, Speed: %5").arg(fileName).arg(xLocation).arg(yLocation).arg(frequency).arg(printSpeed));
-    mPrinter->mjController->outputMessage(QString("Backed-up Start: %1 mm, End Target: %2 mm, Trigger: %3 counts").arg(backedUpStartX).arg(endTargetMM).arg(backUpDistanceEnc));
+    // Safety clamp: if xLocation is too close to 0, force it to 0
+    if ((xLocation - backUpDistance) < 0.0) {
+        mPrinter->mjController->outputMessage("WARNING: Start X too low. Shifting to 0.0mm");
+        xLocation = 0.0;
+    }
 
-    // --- 4. **Configure Printhead and Load Data** ---
-    mPrinter->mjController->write_line("M 4"); // Set encoder print mode
+    // Determine physical start and stop coordinates
+    double backedUpStartX = xLocation - backUpDistance;
+    double endTargetMM = xLocation + printDistance + backUpDistance; // Start + Print + Decel
+
+    // Convert runway distance to encoder counts for the trigger
+    int backUpDistanceEnc = backUpDistance * X_CNTS_PER_MM;
+
+    // Log job details
+    mPrinter->mjController->outputMessage(QString("File: %1\n X: %2, Y: %3, Freq: %4, Speed: %5")
+                                              .arg(fileName).arg(xLocation).arg(yLocation).arg(frequency).arg(printSpeed));
+    mPrinter->mjController->outputMessage(QString("Runway: %1 mm, Start: %2 mm, End: %3 mm")
+                                              .arg(backUpDistance).arg(backedUpStartX).arg(endTargetMM));
+
+    // Configure printhead
+    mPrinter->mjController->write_line("M 4");
     mPrinter->mjController->set_printing_frequency(frequency);
-    read_in_file(fileName);
 
-    // --- 5. **Move to Backed-Up Starting Position** ---
-    moveToLocation(backedUpStartX, yLocation, QString("Move to Encoder Start Complete"));
+    // Load image data for both heads
+    read_in_file(fileName); // Head 1
+    if (!readyHeads()) return;
+
+    read_in_file(fileName, 2); // Head 2
+    if (!readyHeads()) return;
+
+    GSleep(50);
+
+    // Move to the backed-up start position
+    moveToLocation(backedUpStartX, yLocation, "Move to Encoder Start Complete");
     while (!atLocation) {
         QCoreApplication::processEvents();
     }
     atLocation = false;
     GSleep(100);
 
-    // --- 6. **Set Encoder Trigger and Execute Print** ---
+    // Arm the encoder trigger and execute the print pass
     mPrinter->mjController->set_absolute_start(backUpDistanceEnc);
     printComplete = false;
-    printEnc(accelerationSpeed, printSpeed, endTargetMM, QString("Encoder Print Motion Complete"));
+
+    printEnc(accelerationSpeed, printSpeed, endTargetMM, "Encoder Print Motion Complete");
 
     while (!printComplete) {
         QCoreApplication::processEvents();
@@ -685,7 +756,7 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     printComplete = false;
     GSleep(100);
 
-    mPrinter->mjController->outputMessage(QString("--- Encoder Print Finished ---"));
+    mPrinter->mjController->outputMessage("--- Encoder Print Finished ---");
 }
 
 // Prints a small verification line at a precise location to check alignment.
@@ -931,7 +1002,7 @@ void MJPrintheadWidget::sliceStlButton_clicked() {
 
     // --- 1. Define executable and the Python GUI script path ---
     // IMPORTANT: Update this path to the final Python script you are using.
-    QString pythonScriptPath = "C:\\Users\\CB140LAB\\Desktop\\Noah\\ComplexMultiNozzle\\Python_Code\\STL_Slicing_Viewer_mod3.py";
+    QString pythonScriptPath = "C:\\Users\\CB140LAB\\Documents\\GitHub\\CREATE_LAB_Binder_Jet_Printer\\STL_Slicer_Dual.py";
     QString pythonExecutable = "C:\\Users\\CB140LAB\\AppData\\Local\\Microsoft\\WindowsApps\\python3.11.exe";
 
     // --- 2. Check if the process is already running ---
@@ -1225,6 +1296,44 @@ bool MJPrintheadWidget::parsePrintParameters(const QString& filePath, PrintParam
     return true;
 }
 
+// Parses the parameter file to calculate the head gap in pixels (added 12/1)
+int MJPrintheadWidget::calculate_gap(const QString &associatedBitmap) {
+    // 1. Resolve path (Handle relative paths like "test.bmp")
+    QString fullPath = associatedBitmap;
+    QFileInfo fileInfo(fullPath);
+    if (!fileInfo.isAbsolute()) {
+        fullPath = "C:\\Users\\CB140LAB\\Desktop\\Noah\\" + associatedBitmap;
+        fileInfo.setFile(fullPath);
+    }
+
+    // 2. Find Parameter File
+    QDir dir = fileInfo.absoluteDir();
+    QString paramPath = dir.filePath("print_parameters.txt");
+
+    // Look in current folder, then parent folder
+    if (!QFile::exists(paramPath)) {
+        if (dir.cdUp()) {
+            QString parentPath = dir.filePath("print_parameters.txt");
+            if (QFile::exists(parentPath)) paramPath = parentPath;
+        }
+    }
+
+    // 3. Parse and Error Check
+    PrintParameters params;
+    if (!QFile::exists(paramPath) || !parsePrintParameters(paramPath, params))
+    {
+        // ERROR: No defaults allowed. Stop everything.
+        mPrinter->mjController->outputMessage(QString("ERROR: Could not find 'print_parameters.txt' for file: %1").arg(associatedBitmap));
+        return -1; // Return error code
+    }
+
+    // 4. Calculate
+    if (params.dropletSpacingX <= 0) return -1; // Avoid divide by zero
+
+    // Use the constant from printer.h
+    return static_cast<int>(HEAD_GAP_MM / params.dropletSpacingX);
+}
+
 // Parses the layer_y_shifts.txt file to load dithering values for each layer.
 bool MJPrintheadWidget::parseLayerShifts(const QString& filePath, std::map<int, int>& shifts) {
     QFile file(filePath);
@@ -1306,7 +1415,6 @@ void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
     // --- 4. **Main Print Loop** ---
     int lastLayerProcessed = -1;
     double layerBaseY = params.startY;
-    double yHeadOffset = 37;
 
     for (const QString& fileName : fileList) {
         if (m_printJobCancelled) break; // Check for cancellation at the start of each pass
@@ -1366,7 +1474,7 @@ void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
 
         // --- 4c. Calculate Y Location for Current Pass and Print ---
         double yOffsetForPass_mm = static_cast<double>(currentPass - 1) * params.nozzleCount * params.lineSpacingY;
-        double currentYLocation = layerBaseY + yOffsetForPass_mm;
+        double currentYLocation = layerBaseY - yOffsetForPass_mm;
 
         mPrinter->mjController->outputMessage(QString("Printing Pass %1 at Y=%2mm").arg(currentPass).arg(currentYLocation));
 
@@ -1374,8 +1482,8 @@ void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
         QString passFilePath = dividedDir.absoluteFilePath(fileName);
 
         printBMPatLocationEncoder(
-            40.0, // Start X is 0 as offset is built into the bitmap
-            (-currentYLocation - yHeadOffset),
+            params.startX,// check this
+            (currentYLocation - Y_HEAD_OFFSET),
             params.printFrequency,
             params.printSpeed,
             imageWidthPixels,
@@ -1553,6 +1661,84 @@ void MJPrintheadWidget::cancelPrintJob()
     }
 }
 
+
+#include <QEventLoop>
+#include <QTimer>
+
+bool MJPrintheadWidget::readyHeads()
+{
+    // Define the good statuses (only 10 likely)
+    const QString STATUS_READY = "10";
+
+    // Wait for status message
+    for (int attempt = 0; attempt < 2; attempt++) {
+
+        QEventLoop loop;
+        QString lastStatus = "";
+        bool statusReceived = false;
+
+        // Listen for status response
+        QMetaObject::Connection conn = connect(mPrinter->mjController, &AsyncSerialDevice::response,
+                                               [&](const QString &response) {
+                                                   // // Filter response
+                                                   if (response.contains(STATUS_READY) || response.contains("-") || response.toInt() != 0) {
+                                                       lastStatus = response.trimmed(); // Remove whitespace
+                                                       statusReceived = true;
+                                                       loop.quit();
+                                                   }
+                                               });
+
+        // Request Status
+        mPrinter->mjController->request_status_of_all_heads();
+
+        // Wait (Timeout 2 seconds)
+        QTimer::singleShot(2000, &loop, &QEventLoop::quit);
+        loop.exec();
+        disconnect(conn);
+
+        // Evaluate stauts
+        if (!statusReceived) {
+            mPrinter->mjController->outputMessage("Warning: Timeout waiting for status.");
+            continue; // Retry loop
+        }
+
+        if (lastStatus.contains(STATUS_READY)) {
+            return true; // Success
+        }
+        else {
+            // If not active
+            mPrinter->mjController->outputMessage(QString("Error: Invalid Status '%1'. Initiating Auto-Power Cycle...").arg(lastStatus));
+
+            // AUTO RECOVERY SEQUENCE
+            mPrinter->mjController->power_off();
+            mPrinter->mjController->outputMessage("Heads off...");
+
+            // Wait for drain
+            QEventLoop waitLoop;
+            QTimer::singleShot(2000, &waitLoop, &QEventLoop::quit);
+            waitLoop.exec();
+
+            mPrinter->mjController->power_on();
+            mPrinter->mjController->outputMessage("Heads on...");
+
+            // Wait for boot
+            QTimer::singleShot(2000, &waitLoop, &QEventLoop::quit);
+            waitLoop.exec();
+
+            // RE-APPLY SETTINGS
+            int freq = ui->setFreqSpinBox->value();
+            double volt = ui->setVoltageSpinBox->value(); // Take voltage from UI
+            mPrinter->mjController->set_printing_frequency(freq);
+            mPrinter->mjController->set_head_voltage(Added_Scientific::Controller::HEAD1, volt);
+            mPrinter->mjController->set_head_voltage(Added_Scientific::Controller::HEAD2, volt);
+
+            mPrinter->mjController->outputMessage("Recovery Complete. Retrying status check...");
+        }
+    }
+
+    mPrinter->mjController->outputMessage("CRITICAL: Unable to recover head status 10.");
+    return false;
+}
 /* 6/9 thoughts and things to look at
 !!!TODO: 6/9 work on implementing error catching including the printstartstop error catching so that all prints fit inside the build palte
 

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(BJPrinter VERSION 0.1 LANGUAGES CXX)
+project(BJPrinterMH VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -36,8 +36,6 @@ set(HEADERS
     include/printer.h
     include/printhread.h
     include/svgview.h
-    include/datarecordpoller.h
-    include/ginterrupthandler.h
     include/gmessagepoller.h
     include/gmessagehandler.h
     include/pcd.h
@@ -61,8 +59,6 @@ set(SOURCES
     src/printer.cpp
     src/printhread.cpp
     src/svgview.cpp
-    src/datarecordpoller.cpp
-    src/ginterrupthandler.cpp
     src/gmessagepoller.cpp
     src/gmessagehandler.cpp
     src/pcd.cpp
@@ -77,7 +73,6 @@ set(WIDGET_HEADERS
 
     include/widgets/printerwidget.h
     include/widgets/powdersetupwidget.h
-    include/widgets/jettingwidget.h
     include/widgets/lineprintwidget.h
     include/widgets/highspeedlinewidget.h
     include/widgets/dropletobservationwidget.h
@@ -91,7 +86,6 @@ set(WIDGET_SOURCES
 
     src/widgets/printerwidget.cpp
     src/widgets/highspeedlinewidget.cpp
-    src/widgets/jettingwidget.cpp
     src/widgets/lineprintwidget.cpp
     src/widgets/powdersetupwidget.cpp
     src/widgets/dropletobservationwidget.cpp
@@ -105,7 +99,6 @@ set(FORMS
 
     src/ui/mainwindow.ui
     src/ui/highspeedlinewidget.ui
-    src/ui/jettingwidget.ui
     src/ui/lineprintwidget.ui
     src/ui/outputwindow.ui
     src/ui/powdersetupwidget.ui

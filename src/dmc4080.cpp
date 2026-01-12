@@ -6,7 +6,6 @@
 #include "gclib_record.h"
 
 #include "printhread.h"
-#include "ginterrupthandler.h"
 
 #include "printer.h"
 

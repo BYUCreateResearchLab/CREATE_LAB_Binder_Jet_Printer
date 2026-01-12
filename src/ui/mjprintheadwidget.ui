@@ -821,6 +821,19 @@ Home</string>
        <string>STL Printing</string>
       </property>
      </widget>
+     <widget class="QPushButton" name="checkMaps">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>100</y>
+        <width>111</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Check BitMaps</string>
+      </property>
+     </widget>
     </widget>
    </item>
    <item row="7" column="2" rowspan="3">

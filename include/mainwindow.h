@@ -85,6 +85,8 @@ private slots:
     void connect_to_mister_button_pressed();
     void connect_motion_controller_button_pressed();
 
+    void initialize_y_axis_commutation();
+
 private:
     Ui::MainWindow *ui;
     void resizeEvent(QResizeEvent* event) override;
