@@ -23,6 +23,7 @@ void PressureControllerWidget::allow_widget_input(bool allowed)
 
 void PressureControllerWidget::get_bed_temp() {
     print("bed temp requested");
+    ui -> text_output -> setText(QString("bed temp requested!"));
 }
 
 #include "moc_heatlampwidget.cpp"

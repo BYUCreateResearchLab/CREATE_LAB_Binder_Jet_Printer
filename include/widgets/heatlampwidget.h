@@ -2,6 +2,7 @@
 #define HEATLAMPWIDGET_H
 
 #include <QWidget>
+#include <QLabel>
 
 #include "printerwidget.h"
 
