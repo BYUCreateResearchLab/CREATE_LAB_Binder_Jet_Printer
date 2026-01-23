@@ -474,7 +474,7 @@ void MJPrintheadWidget::moveNozzleOffPlate()
     // Getting the Current Y Position
     int currentYPos;
     GCmdI(mPrinter->mcu->g, "TPY", &currentYPos);
-    double currentYPos_mm = currentYPos / (double)Y_CNTS_PER_MM;
+    double currentYPos_mm = currentYPos / (double)Y_CNTS_PER_MM;`
 
     atLocation = false;
     moveToLocation(5.0, currentYPos_mm, QString("Moved off plate."));

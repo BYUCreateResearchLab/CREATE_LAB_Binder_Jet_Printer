@@ -86,7 +86,7 @@ void Controller::handle_timeout()
 // writes to serial device, adding a LF character ('\n')
 // the controller expects LF after every command
 void Controller::write_line(const QByteArray &data)
-{
+{`
     write(data + "\n");
 }
 
