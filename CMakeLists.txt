@@ -79,6 +79,7 @@ set(WIDGET_HEADERS
     include/widgets/pressurecontrollerwidget.h
     include/widgets/bedmicroscopewidget.h
     include/widgets/mjprintheadwidget.h
+    include/widgets/heatlampwidget.h
 
 )
 
@@ -92,6 +93,7 @@ set(WIDGET_SOURCES
     src/widgets/pressurecontrollerwidget.cpp
     src/widgets/bedmicroscopewidget.cpp
     src/widgets/mjprintheadwidget.cpp
+    src/widgets/heatlampwidget.cpp
 
 )
 
@@ -107,6 +109,7 @@ set(FORMS
     src/ui/pressurecontrollerwidget.ui
     src/ui/bedmicroscopewidget.ui
     src/ui/mjprintheadwidget.ui
+    src/ui/heatlampwidget.ui
 
 )
 

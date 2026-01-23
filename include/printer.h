@@ -358,6 +358,14 @@ inline string set_bit(int bit)
 inline string clear_bit(int bit)
 { return detail::GCmd() + "CB " + std::to_string(bit) + "\n"; }
 
+// The DM command defines an array.
+inline string define_array(string array_name, int array_size)
+{ return detail::GCmd() + "DM " + std::to_string(array_name) + "[" + std::to_string(array_size) + "]" + "\n"; }
+
+// The DA command deallocates an array.
+inline string define_array(string array_name, int array_size)
+{ return detail::GCmd() + "DA " + std::to_string(array_name) + "[" + std::to_string(array_size) + "]" + "\n"; }
+
 inline string enable_roller1() { return set_bit(ROLLER_1_BIT); }
 inline string disable_roller1() { return clear_bit(ROLLER_1_BIT); }
 
