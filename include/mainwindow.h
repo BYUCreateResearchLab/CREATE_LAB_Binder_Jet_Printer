@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <fstream>
 #include "gmessagehandler.h"
+#include "heatlampwidget.h"
 
 class Printer;
 class PrintThread;
@@ -102,6 +103,7 @@ private:
     DropletObservationWidget *dropletObservationWidget {nullptr};
     BedMicroscopeWidget *bedMicroscopeWidget {nullptr};
     MJPrintheadWidget *mjPrintheadWidget {nullptr};
+    HeatLampWidget *heatLampWidget {nullptr};
 
     QMessageBox *messageBox {nullptr};
     // TODO: should this go somewhere else?

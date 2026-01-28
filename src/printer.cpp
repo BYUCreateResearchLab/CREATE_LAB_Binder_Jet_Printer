@@ -595,7 +595,7 @@ double calculate_acceleration_distance(
 
 void get_bed_temp() {
     std::stringstream ss;
-    ss << CMD::display_message()
+    ss << CMD::display_message("getting bed temp");
 }
 
 // ======================================

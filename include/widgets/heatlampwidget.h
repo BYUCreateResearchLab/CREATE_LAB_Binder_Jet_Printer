@@ -25,7 +25,7 @@ private:
     void get_bed_temp();
 
 private:
-    Ui::PressureControllerWidget *ui;
+    Ui::HeatLampWidget *ui;
 };
 
 #endif // HEATLAMPWIDGET_H

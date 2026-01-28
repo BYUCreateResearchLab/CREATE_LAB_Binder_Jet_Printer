@@ -8,21 +8,20 @@ HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     ui->setupUi(this);
     setAccessibleName("Heat Lamp Widget");
 
-    connect(ui->getBedTempButton, &QPushButton::clicked, this, &PressureControllerWidget::get_bed_temp);
+    connect(ui->getBedTempButton, &QPushButton::clicked, this, &HeatLampWidget::get_bed_temp);
 }
 
-PressureControllerWidget::~PressureControllerWidget()
+HeatLampWidget::~HeatLampWidget()
 {
     delete ui;
 }
 
 // enable/disable widgets when they should not be able to be pressed
-void PressureControllerWidget::allow_widget_input(bool allowed)
+void HeatLampWidget::allow_widget_input(bool allowed)
 {
 }
 
-void PressureControllerWidget::get_bed_temp() {
-    print("bed temp requested");
+void HeatLampWidget::get_bed_temp() {
     ui -> text_output -> setText(QString("bed temp requested!"));
 }
 

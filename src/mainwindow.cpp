@@ -53,6 +53,7 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     dropletObservationWidget = new DropletObservationWidget(printer);
     bedMicroscopeWidget      = new BedMicroscopeWidget(printer);
     mjPrintheadWidget        = new MJPrintheadWidget(printer);
+    heatLampWidget           = new HeatLampWidget(printer);
 
     // add widgets to tabs on the top bar (tab widget now owns)
     ui->tabWidget->addTab(powderSetupWidget, "Powder Setup");
@@ -61,6 +62,7 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     ui->tabWidget->addTab(dropletObservationWidget, "Jetting");
     ui->tabWidget->addTab(bedMicroscopeWidget, "Bed Imaging");
     ui->tabWidget->addTab(mjPrintheadWidget, "MJ Printhead");
+    ui->tabWidget->addTab(heatLampWidget, "Heat Lamp");
 
     // set fill background for all tab widgets
     for (int i{0}; i < ui->tabWidget->count(); ++i)
