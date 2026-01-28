@@ -593,6 +593,11 @@ double calculate_acceleration_distance(
     return 0.5 * acceleration_mm_per_s2 * std::pow(accelerationTime, 2);
 }
 
+void get_bed_temp() {
+    std::stringstream ss;
+    ss << CMD::display_message()
+}
+
 // ======================================
 
 CommandGenerator::CommandGenerator() {}
