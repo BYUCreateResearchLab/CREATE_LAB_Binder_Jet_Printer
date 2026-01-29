@@ -1,5 +1,6 @@
 #include "heatlampwidget.h"
 #include "ui_heatlampwidget.h"
+#include <iostream>
 
 HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     PrinterWidget(printer, parent),
@@ -22,10 +23,13 @@ void HeatLampWidget::allow_widget_input(bool allowed)
 }
 
 void HeatLampWidget::get_bed_temp() {
+    std::cout << "getting temp";
     char buff[G_HUGE_BUFFER];
     ui -> text_output -> setText(QString("bed temp requested!"));
-    execute_command(CMD::read_analog_input(1));
-    GMessage(g, buff, G_HUGE_BUFFER)
+    std::stringstream ss;
+    ss << CMD::read_analog_input(1);
+    mPrinter -> mcu -> printerThread -> execute_command(ss);
+    GMessage(mPrinter->mcu->g, buff, G_HUGE_BUFFER);
     ui -> text_output -> setText(QString(buff));
 }
 

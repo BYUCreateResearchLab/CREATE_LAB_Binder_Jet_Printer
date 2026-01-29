@@ -5,6 +5,7 @@
 #include <QLabel>
 
 #include "printerwidget.h"
+#include "dmc4080.h"
 
 namespace Ui {
 class HeatLampWidget;

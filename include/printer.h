@@ -366,10 +366,6 @@ inline string define_array(string array_name, int array_size)
 inline string deallocate_array(string array_name, int array_size)
 { return detail::GCmd() + "DA " + array_name + "[" + std::to_string(array_size) + "]" + "\n"; }
 
-// The read_analog_input command sends a message containing the value of the analog pin.
-inline string read_analog_input(int analog_num)
-{ return CMD::message("@AN[" + std::to_string(analog_num) + "]");}
-
 inline string enable_roller1() { return set_bit(ROLLER_1_BIT); }
 inline string disable_roller1() { return clear_bit(ROLLER_1_BIT); }
 
@@ -397,6 +393,10 @@ inline string message(const std::string& text)
 {
     return detail::GCmd() + "MG " + "\"" + text + "\"" + "\n";
 }
+
+// The read_analog_input command sends a message containing the value of the analog pin.
+inline string read_analog_input(int analog_num)
+{ return message("@AN[" + std::to_string(analog_num) + "]");}
 
 // this command does not support newlines or commas right now...
 // either will cause the print to fail...
