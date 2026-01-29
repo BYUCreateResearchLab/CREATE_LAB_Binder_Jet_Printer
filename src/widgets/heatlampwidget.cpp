@@ -22,7 +22,11 @@ void HeatLampWidget::allow_widget_input(bool allowed)
 }
 
 void HeatLampWidget::get_bed_temp() {
+    char buff[G_HUGE_BUFFER];
     ui -> text_output -> setText(QString("bed temp requested!"));
+    execute_command(CMD::read_analog_input(1));
+    GMessage(g, buff, G_HUGE_BUFFER)
+    ui -> text_output -> setText(QString(buff));
 }
 
 #include "moc_heatlampwidget.cpp"
