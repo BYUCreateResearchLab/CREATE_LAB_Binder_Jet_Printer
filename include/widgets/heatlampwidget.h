@@ -6,6 +6,7 @@
 
 #include "printerwidget.h"
 #include "dmc4080.h"
+#include "asyncserialdevice.h"
 
 namespace Ui {
 class HeatLampWidget;
@@ -24,6 +25,7 @@ public:
 
 private:
     void get_bed_temp();
+    void open_connection();
 
 private:
     Ui::HeatLampWidget *ui;

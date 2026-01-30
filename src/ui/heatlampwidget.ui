@@ -36,6 +36,19 @@
     </rect>
    </property>
   </widget>
+  <widget class="QPushButton" name="openConnectionToControllerButton">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>30</y>
+     <width>102</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Open Connection</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

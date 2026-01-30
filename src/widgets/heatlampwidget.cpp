@@ -1,6 +1,5 @@
 #include "heatlampwidget.h"
 #include "ui_heatlampwidget.h"
-#include <iostream>
 
 HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     PrinterWidget(printer, parent),
@@ -10,6 +9,7 @@ HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     setAccessibleName("Heat Lamp Widget");
 
     connect(ui->getBedTempButton, &QPushButton::clicked, this, &HeatLampWidget::get_bed_temp);
+    connect(ui->openConnectionToControllerButton, &QPushButton::clicked, this, &HeatLampWidget::open_connection);
 }
 
 HeatLampWidget::~HeatLampWidget()
@@ -22,15 +22,29 @@ void HeatLampWidget::allow_widget_input(bool allowed)
 {
 }
 
+void HeatLampWidget::open_connection() {
+    std::stringstream ss;
+    ss << CMD::open_connection_to_controller();
+    mPrinter -> mcu -> printerThread -> execute_command(ss);
+}
+
 void HeatLampWidget::get_bed_temp() {
-    std::cout << "getting temp";
-    char buff[G_HUGE_BUFFER];
+    char buff[7];
+    double temp;
     ui -> text_output -> setText(QString("bed temp requested!"));
     std::stringstream ss;
-    ss << CMD::read_analog_input(1);
+    ss << CMD::deallocate_array("BEDTEMP");
+    ss << CMD::define_array("BEDTEMP", 1);
+    ss << CMD::detail::GCmd() + "BEDTEMP[0] = @AN[1] \n";
     mPrinter -> mcu -> printerThread -> execute_command(ss);
-    GMessage(mPrinter->mcu->g, buff, G_HUGE_BUFFER);
-    ui -> text_output -> setText(QString(buff));
+    for(int i = 0; i < 10000000; i++){}
+    if(mPrinter->mcu->g) {
+        GArrayUpload(mPrinter->mcu->g, "BEDTEMP", G_BOUNDS, G_BOUNDS, G_COMMA, buff, 7);
+        temp = std::stod(buff);
+        ui -> text_output -> setText(QString::number(temp));
+    } else {
+        qDebug("controller not connected");
+    }
 }
 
 #include "moc_heatlampwidget.cpp"
