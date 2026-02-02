@@ -17,7 +17,7 @@ class HeatLamp : public QObject
         explicit HeatLamp(double target_temp, QObject *parent = nullptr);
         ~HeatLamp();
         double get_next_voltage();
-        double set_last_temp();
+        void set_last_temp(double temperature);
         double target_temp;
         int pin_address = 1; //TODO update pin_address 
     
