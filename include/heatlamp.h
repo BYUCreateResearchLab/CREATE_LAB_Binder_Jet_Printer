@@ -7,7 +7,7 @@
 struct TempData {
     double voltage;
     double temp;
-}
+};
 
 class HeatLamp : public QObject
 {

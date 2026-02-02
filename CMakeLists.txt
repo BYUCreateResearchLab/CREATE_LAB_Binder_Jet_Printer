@@ -43,6 +43,7 @@ set(HEADERS
     include/mister.h
     include/bedmicroscope.h
     include/mjdriver.h
+    include/heatlamp.h
 
 
 )
@@ -66,6 +67,7 @@ set(SOURCES
     src/mister.cpp
     src/bedmicroscope.cpp
     src/mjdriver.cpp
+    src/heatlamp.cpp
 
 )
 
@@ -216,9 +218,6 @@ else()
         ${CAMERA_SOURCES}
         ${DA_HEADERS}
         ${DA_SOURCES}
-
-
-
     )
 endif()
 
