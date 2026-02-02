@@ -24,6 +24,10 @@ private:
     void connect_to_pressure_controller();
     void set_pressure();
     void toggle_purge();
+    void gravity_feed_up();
+    void gravity_feed_down();
+    void quick_purge();
+    void send_command(const QString &command);
 
 private:
     Ui::PressureControllerWidget *ui;
