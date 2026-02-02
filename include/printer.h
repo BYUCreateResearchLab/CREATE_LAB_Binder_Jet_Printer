@@ -82,6 +82,7 @@ namespace Mister { class Controller; }
 namespace Added_Scientific { class Controller; }
 class DMC4080;
 class BedMicroscope;
+class HeatLamp;
 
 // TODO: get rid of these #defines and convert to
 // constants in a namespace or static members
@@ -186,6 +187,7 @@ public:
     Mister::Controller *mister {nullptr};
     BedMicroscope *bedMicroscope {nullptr};
     Added_Scientific::Controller *mjController {nullptr};
+    HeatLamp *heatLamp {nullptr};
 
 
     // TODO:

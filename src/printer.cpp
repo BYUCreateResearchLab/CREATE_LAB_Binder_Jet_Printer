@@ -18,7 +18,8 @@ Printer::Printer(QObject *parent) :
     pressureController ( new PCD::Controller("COM3", this) ),
     mister ( new Mister::Controller("COM6", this) ),
     bedMicroscope ( new BedMicroscope(this) ),
-    mjController ( new Added_Scientific::Controller("COM5", this) )
+    mjController ( new Added_Scientific::Controller("COM5", this) ),
+    heatLamp ( new HeatLamp(50, this) )
 {
 //    using Added_Scientific::Controller::HeadIndex;------------------------------------------------
 //    mjController->set_head_voltage(HeadIndex::HEAD1, 25);
@@ -441,6 +442,23 @@ std::string CMD::homing_sequence(bool homeZAxis)
     s << set_forward_software_limit(Axis::Z, 0);
 
     return s.str();
+}
+
+std::string CMD::cure_layer(const CureSettings &settings) 
+{
+    std::stringstream ss;
+    
+    //get last temperature
+
+    //move to edge of heat lamp
+
+    //turn on heat lamp
+
+    //move to other end of heat lamp
+
+    //measure temperature
+
+    //turn off heat lamp
 }
 
 std::string CMD::spread_layer(const RecoatSettings &settings)
