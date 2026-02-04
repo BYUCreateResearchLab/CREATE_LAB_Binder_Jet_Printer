@@ -115,7 +115,7 @@ class HeatLamp;
 
 enum class Axis
 {
-    X, Y, Z, Jet
+    X, Y, Z, Jet, HeatLamp
 };
 
 enum class MotorType
@@ -345,6 +345,13 @@ inline string find_index(Axis axis)
 // as the command position and to enable servo control at the current position.
 inline string servo_here(Axis axis)
 { return detail::GCmd() + "SH" + detail::axis_string(axis) + "\n"; }
+
+// The OF command sets a bias voltage in the motor command output or returns a previously
+// set value. This can be used to counteract gravity or an offset in an amplifier.
+// offset is a signed number in the range -9.998 to 9.998 volts with resolution of 0.0003. 
+inline string offset(Axis axis, double offset)
+{ return detail::GCmd() + "OF" + detail::axis_string(axis) + "=" + std::to_string(offset) "\n"; }
+
 
 // The ST command stops motion on the specified axis. Motors will come to a decelerated stop.
 inline string stop_motion(Axis axis)

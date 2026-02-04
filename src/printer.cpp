@@ -61,6 +61,7 @@ std::string CMD::detail::axis_string(Axis axis)
     case Axis::Y:   return {"Y"};
     case Axis::Z:   return {"Z"};
     case Axis::Jet: return {"H"};
+    case Axis::HeatLamp: return {"D"};
 
     default:
         throw std::invalid_argument("invalid axis");
@@ -447,18 +448,44 @@ std::string CMD::homing_sequence(bool homeZAxis)
 std::string CMD::cure_layer(const CureSettings &settings) 
 {
     std::stringstream ss;
-    
+    const int yAxisTravelSpeed_mm_per_s = 60;
+    const int CuringTraverseSpeed_mm_per_s = 60;
+    const double startPosition_mm = -350;
+    const double endPosition_mm = -150;
+    const double pyrometerPosition_mm = -250;
+
+    ss << message("curing layer");
+
     //get last temperature
+    char buff[G_LARGE_BUFF];
+    GArrayUpload(mcu->g, "BEDTEMP", 0, 0, G_COMMA, buff, G_LARGE_BUFF);
+    heatLamp -> set_last_temp(std::stod(buff));
+    ss << message("last temperature was: " + std::to_string(buff));
 
     //move to edge of heat lamp
+    s << set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
+    s << position_absolute(Axis::Y, startPosition_mm);
+    s << begin_motion();
+    s << motion_complete();
 
     //turn on heat lamp
+    s << offset(Axis::HeatLamp, heatLamp -> get_next_voltage());
 
     //move to other end of heat lamp
-
-    //measure temperature
+    s << set_speed(Axis::Y, CuringTraverseSpeed_mm_per_s);
+    s << position_absolute(Axis::Y, endPosition_mm);
+    s << begin_motion();
+    s << motion_complete();
 
     //turn off heat lamp
+    s << offset(Axis::HeatLamp, 0);
+
+    //measure temperature
+    ss << CMD::deallocate_array("BEDTEMP[0]");
+    ss << CMD::define_array("BEDTEMP", 1);
+    ss << CMD::detail::GCmd() + "BEDTEMP[0] = @AN[1] \n";
+
+    ss << message("done curing layer");
 }
 
 std::string CMD::spread_layer(const RecoatSettings &settings)
