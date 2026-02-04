@@ -166,6 +166,19 @@ inline std::string interrupt_string(Interrupt interrupt)
     }
 }
 
+struct CureSettings
+{
+    double cureSpeed_mm_s {100};
+    double yAxisTraverseSpeed_mm_s {3};
+
+    int waitAfterHeatLampOn_millisecs {1000};
+
+    //absolute positions
+    double heatLampStart_mm {115};
+    double HeatLampEnd_mm {172.5};
+    double pyrometerPosition_mm {172.5};
+};
+
 class Printer : public QObject
 {
     Q_OBJECT
@@ -189,6 +202,7 @@ public:
     Added_Scientific::Controller *mjController {nullptr};
     HeatLamp *heatLamp {nullptr};
 
+    std::string cure_layer(const CureSettings &settings);
 
     // TODO:
     // printer should own handles to the USB Camera
@@ -350,7 +364,7 @@ inline string servo_here(Axis axis)
 // set value. This can be used to counteract gravity or an offset in an amplifier.
 // offset is a signed number in the range -9.998 to 9.998 volts with resolution of 0.0003. 
 inline string offset(Axis axis, double offset)
-{ return detail::GCmd() + "OF" + detail::axis_string(axis) + "=" + std::to_string(offset) "\n"; }
+{ return detail::GCmd() + "OF" + detail::axis_string(axis) + "=" + std::to_string(offset) + "\n"; }
 
 
 // The ST command stops motion on the specified axis. Motors will come to a decelerated stop.

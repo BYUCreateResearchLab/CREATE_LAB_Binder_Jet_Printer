@@ -29,7 +29,7 @@ void HeatLampWidget::open_connection() {
 }
 
 void HeatLampWidget::get_bed_temp() {
-    char buff[G_LARGE_BUFFER];
+    char buff[G_SMALL_BUFFER];
     double temp;
     ui -> text_output -> setText(QString("bed temp requested!"));
     std::stringstream ss;
@@ -39,7 +39,7 @@ void HeatLampWidget::get_bed_temp() {
     mPrinter -> mcu -> printerThread -> execute_command(ss);
     for(int i = 0; i < 10000000; i++){}
     if(mPrinter->mcu->g) {
-        GArrayUpload(mPrinter->mcu->g, "BEDTEMP", 0, 0, G_COMMA, buff, G_LARGE_BUFF);
+        GArrayUpload(mPrinter->mcu->g, "BEDTEMP", 0, 0, G_COMMA, buff, G_SMALL_BUFFER);
         temp = std::stod(buff);
         ui -> text_output -> setText(QString::number(temp));
     } else {
