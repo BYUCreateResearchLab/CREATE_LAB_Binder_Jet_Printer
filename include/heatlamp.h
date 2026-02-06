@@ -19,12 +19,13 @@ class HeatLamp : public QObject
         double get_next_voltage();
         void set_last_temp(double temperature);
         double target_temp;
-        int pin_address = 1; //TODO update pin_address 
+        double kp = 0.1; // volts per degree
+        double ki = 0.05; //volts per degree*passes
     
     private:
         double last_voltage;
         std::vector<TempData> temp_history;
-        double max_voltage;
+        double max_voltage = 5;
 };
 
 #endif

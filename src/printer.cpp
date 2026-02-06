@@ -449,12 +449,7 @@ std::string CMD::homing_sequence(bool homeZAxis)
 std::string Printer::cure_layer(const CureSettings &settings)
 {
     std::stringstream ss;
-    //TODO use CureSettings instead
-    const int yAxisTravelSpeed_mm_per_s = 60;
-    const int CuringTraverseSpeed_mm_per_s = 60;
-    const double startPosition_mm = -350;
-    const double endPosition_mm = -150;
-    const double pyrometerPosition_mm = -250;
+    //TODO use pyrometer position to detect temperature
 
     ss << CMD::message("curing layer");
 
@@ -465,17 +460,18 @@ std::string Printer::cure_layer(const CureSettings &settings)
     ss << CMD::message("last temperature was: " + std::string(buff));
 
     //move to edge of heat lamp
-    ss << CMD::set_speed(Axis::Y, yAxisTravelSpeed_mm_per_s);
-    ss << CMD::position_absolute(Axis::Y, startPosition_mm);
+    ss << CMD::set_speed(Axis::Y, settings.yAxisTraverseSpeed_mm_s);
+    ss << CMD::position_absolute(Axis::Y, settings.heatLampStart_mm);
     ss << CMD::begin_motion(Axis::Y);
     ss << CMD::motion_complete(Axis::Y);
 
     //turn on heat lamp
+    heatLamp -> target_temp = settings.target_temp;
     ss << CMD::offset(Axis::HeatLamp, heatLamp -> get_next_voltage());
 
     //move to other end of heat lamp
-    ss << CMD::set_speed(Axis::Y, CuringTraverseSpeed_mm_per_s);
-    ss << CMD::position_absolute(Axis::Y, endPosition_mm);
+    ss << CMD::set_speed(Axis::Y, settings.cureSpeed_mm_s);
+    ss << CMD::position_absolute(Axis::Y, settings.heatLampEnd_mm);
     ss << CMD::begin_motion(Axis::Y);
     ss << CMD::motion_complete(Axis::Y);
 

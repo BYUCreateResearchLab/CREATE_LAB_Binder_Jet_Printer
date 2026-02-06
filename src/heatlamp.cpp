@@ -13,12 +13,23 @@ HeatLamp::~HeatLamp()
 }
 
 double HeatLamp::get_next_voltage() {
-    if(target_temp > temp_history.back().temp) {
-        last_voltage = std::min(std::max(0.0, temp_history.back().voltage + 0.2), max_voltage);
+    // if(target_temp > temp_history.back().temp) {
+    //     last_voltage = std::min(std::max(0.0, temp_history.back().voltage + 0.2), max_voltage);
+    // } else {
+    //     last_voltage = std::min(std::max(0.0, temp_history.back().voltage - 0.2), max_voltage);
+    // }
+    
+    if(temp_history.size() == 0) {
+        return last_voltage;
     } else {
-        last_voltage = std::min(std::max(0.0, temp_history.back().voltage - 0.2), max_voltage);
+        double error_integral = 0;
+        for(TempData data : temp_history) {
+            error_integral += target_temp - data.temp;
+        }
+        last_voltage += kp*(target_temp - temp_history.back().temp) + error_integral*ki;
+        last_voltage = std::min(std::max(0.0, last_voltage), max_voltage);
+        return last_voltage;
     }
-    return last_voltage;
 }
 
 void HeatLamp::set_last_temp(double temperature) {
