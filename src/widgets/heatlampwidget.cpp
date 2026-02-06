@@ -11,7 +11,14 @@ HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     connect(ui->getBedTempButton, &QPushButton::clicked, this, &HeatLampWidget::get_bed_temp);
     connect(ui->openConnectionToControllerButton, &QPushButton::clicked, this, &HeatLampWidget::open_connection);
     connect(ui->cureLayerButton, &QPushButton::clicked, this, &HeatLampWidget::cure_layer_pressed);
-
+    CureSettings settings;
+    // ui -> cureSpeedInput -> setValue(settings.cureSpeed_mm_s);
+    // ui -> heatLampEndInput -> setValue(settings.heatLampEnd_mm);
+    // ui -> heatLampStartInput -> setValue(settings.heatLampStart_mm);
+    // ui -> pyrometerPositionInput -> setValue(settings.pyrometerPosition_mm);
+    // ui -> targetTempInput -> setValue(settings.target_temp);
+    // ui -> waitAfterHeatLampInput -> setValue(settings.waitAfterHeatLampOn_millisecs);
+    // ui -> traverseSpeedInput -> setValue(settings.yAxisTraverseSpeed_mm_s);
 }
 
 HeatLampWidget::~HeatLampWidget()

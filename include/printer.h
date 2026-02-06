@@ -165,7 +165,7 @@ struct CureSettings
     double cureSpeed_mm_s {10};
     double yAxisTraverseSpeed_mm_s {30};
 
-    int waitAfterHeatLampOn_millisecs {1000};
+    int waitAfterHeatLampOn_millisecs {500};
 
     //absolute positions
     double heatLampStart_mm {-350};

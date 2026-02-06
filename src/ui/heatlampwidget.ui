@@ -67,7 +67,14 @@
      </widget>
     </item>
     <item>
-     <widget class="QSpinBox" name="cureSpeedInput"/>
+     <widget class="QSpinBox" name="cureSpeedInput">
+      <property name="maximum">
+       <number>1000</number>
+      </property>
+      <property name="value">
+       <number>10</number>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="label_2">
@@ -77,7 +84,14 @@
      </widget>
     </item>
     <item>
-     <widget class="QSpinBox" name="traverseSpeedInput"/>
+     <widget class="QSpinBox" name="traverseSpeedInput">
+      <property name="maximum">
+       <number>1000</number>
+      </property>
+      <property name="value">
+       <number>30</number>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="label_3">
@@ -87,17 +101,31 @@
      </widget>
     </item>
     <item>
-     <widget class="QSpinBox" name="waitAfterHeatLampInput"/>
-    </item>
-    <item>
-     <widget class="QLabel" name="label_4">
-      <property name="text">
-       <string>Target Temperature</string>
+     <widget class="QSpinBox" name="waitAfterHeatLampInput">
+      <property name="maximum">
+       <number>100000</number>
+      </property>
+      <property name="value">
+       <number>500</number>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QSpinBox" name="targetTempInput"/>
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>Target Temperature (deg C)</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSpinBox" name="targetTempInput">
+      <property name="maximum">
+       <number>150</number>
+      </property>
+      <property name="value">
+       <number>40</number>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="label_5">
@@ -107,7 +135,17 @@
      </widget>
     </item>
     <item>
-     <widget class="QSpinBox" name="heatLampStartInput"/>
+     <widget class="QSpinBox" name="heatLampStartInput">
+      <property name="minimum">
+       <number>-10000</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>-350</number>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="label_6">
@@ -117,7 +155,17 @@
      </widget>
     </item>
     <item>
-     <widget class="QSpinBox" name="heatLampEndInput"/>
+     <widget class="QSpinBox" name="heatLampEndInput">
+      <property name="minimum">
+       <number>-100000</number>
+      </property>
+      <property name="maximum">
+       <number>100000</number>
+      </property>
+      <property name="value">
+       <number>-150</number>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="label_7">
@@ -127,7 +175,17 @@
      </widget>
     </item>
     <item>
-     <widget class="QSpinBox" name="pyrometerPositionInput"/>
+     <widget class="QSpinBox" name="pyrometerPositionInput">
+      <property name="minimum">
+       <number>-100000</number>
+      </property>
+      <property name="maximum">
+       <number>100000</number>
+      </property>
+      <property name="value">
+       <number>-250</number>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QPushButton" name="cureLayerButton">
