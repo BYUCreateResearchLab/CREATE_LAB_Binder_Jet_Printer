@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>1065</width>
+    <height>673</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,7 @@
   <widget class="QPushButton" name="getBedTempButton">
    <property name="geometry">
     <rect>
-     <x>120</x>
+     <x>60</x>
      <y>30</y>
      <width>103</width>
      <height>29</height>
@@ -39,15 +39,104 @@
   <widget class="QPushButton" name="openConnectionToControllerButton">
    <property name="geometry">
     <rect>
-     <x>230</x>
+     <x>180</x>
      <y>30</y>
-     <width>102</width>
-     <height>24</height>
+     <width>110</width>
+     <height>26</height>
     </rect>
    </property>
    <property name="text">
     <string>Open Connection</string>
    </property>
+  </widget>
+  <widget class="QWidget" name="verticalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>430</x>
+     <y>30</y>
+     <width>231</width>
+     <height>392</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Cure Speed (mm/s)</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSpinBox" name="cureSpeedInput"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>Traverse Speed (mm/s)</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSpinBox" name="traverseSpeedInput"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>Delay After Turning on Heat Lamp (ms)</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSpinBox" name="waitAfterHeatLampInput"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>Target Temperature</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSpinBox" name="targetTempInput"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>Heat Lamp Start Position (mm)</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSpinBox" name="heatLampStartInput"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_6">
+      <property name="text">
+       <string>Heat Lamp End Position (mm)</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSpinBox" name="heatLampEndInput"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_7">
+      <property name="text">
+       <string>Pyrometer Position (mm)</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSpinBox" name="pyrometerPositionInput"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="cureLayerButton">
+      <property name="text">
+       <string>Cure Layer</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>

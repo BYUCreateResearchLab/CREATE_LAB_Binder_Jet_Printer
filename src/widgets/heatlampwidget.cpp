@@ -10,6 +10,8 @@ HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
 
     connect(ui->getBedTempButton, &QPushButton::clicked, this, &HeatLampWidget::get_bed_temp);
     connect(ui->openConnectionToControllerButton, &QPushButton::clicked, this, &HeatLampWidget::open_connection);
+    connect(ui->cureLayerButton, &QPushButton::clicked, this, &HeatLampWidget::cure_layer_pressed);
+
 }
 
 HeatLampWidget::~HeatLampWidget()
@@ -45,6 +47,21 @@ void HeatLampWidget::get_bed_temp() {
     } else {
         qDebug("controller not connected");
     }
+}
+
+void HeatLampWidget::cure_layer_pressed() {
+    CureSettings settings;
+    settings.cureSpeed_mm_s = ui -> cureSpeedInput -> value();
+    settings.heatLampEnd_mm = ui -> heatLampEndInput -> value();
+    settings.heatLampStart_mm = ui -> heatLampStartInput -> value();
+    settings.pyrometerPosition_mm = ui -> pyrometerPositionInput -> value();
+    settings.target_temp = ui -> targetTempInput -> value();
+    settings.waitAfterHeatLampOn_millisecs = ui -> waitAfterHeatLampInput -> value();
+    settings.yAxisTraverseSpeed_mm_s = ui -> traverseSpeedInput -> value();
+
+    std::stringstream s;
+    s << mPrinter -> cure_layer(settings);
+    mPrinter -> mcu -> printerThread -> execute_command(s);
 }
 
 #include "moc_heatlampwidget.cpp"
