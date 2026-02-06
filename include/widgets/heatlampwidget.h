@@ -26,6 +26,7 @@ public:
 private:
     void get_bed_temp();
     void open_connection();
+    void cure_layer_pressed();
 
 private:
     Ui::HeatLampWidget *ui;

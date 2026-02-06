@@ -63,15 +63,9 @@
  */
 
 #pragma once
-#include "gclib.h"
-#include "gclibo.h"
-#include "gclib_errors.h"
-#include "gclib_record.h"
 #include <string>
 #include <sstream>
 #include <string_view>
-#include <functional>
-#include <map>
 #include <QObject>
 
 class PrintThread;
