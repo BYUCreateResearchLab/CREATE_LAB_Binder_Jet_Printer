@@ -168,15 +168,16 @@ inline std::string interrupt_string(Interrupt interrupt)
 
 struct CureSettings
 {
-    double cureSpeed_mm_s {100};
-    double yAxisTraverseSpeed_mm_s {3};
+    double cureSpeed_mm_s {10};
+    double yAxisTraverseSpeed_mm_s {30};
 
     int waitAfterHeatLampOn_millisecs {1000};
 
     //absolute positions
-    double heatLampStart_mm {115};
-    double HeatLampEnd_mm {172.5};
-    double pyrometerPosition_mm {172.5};
+    double heatLampStart_mm {-350};
+    double heatLampEnd_mm {-150};
+    double pyrometerPosition_mm {-250};
+    double target_temp {40};
 };
 
 class Printer : public QObject
