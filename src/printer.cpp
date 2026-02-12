@@ -62,7 +62,7 @@ std::string CMD::detail::axis_string(Axis axis)
     case Axis::Y:   return {"Y"};
     case Axis::Z:   return {"Z"};
     case Axis::Jet: return {"H"};
-    case Axis::HeatLamp: return {"D"};
+    case Axis::HeatLamp: return {"E"};
 
     default:
         throw std::invalid_argument("invalid axis");
@@ -176,6 +176,13 @@ std::string CMD::set_default_controller_settings()
       << GCmd("AGZ=0")       // Set amplifier gain
       << GCmd("AUZ=9")       // Set current loop (based on inductance of motor)
          // Note: There might be more settings especially for this axis I might want to add later
+
+         // E axis (Heat Lamp)
+      << Gcmd("MTE=1")
+      << GCmd("AGE=0")
+      << GCmd("TLE=5")
+      << GCmd("TKE=5")
+      << GCmd("OFE=0")
 
          // H Axis (Jetting Axis)
       << GCmd("MTH=-2")      // Set jetting axis to be stepper motor with defualt low
