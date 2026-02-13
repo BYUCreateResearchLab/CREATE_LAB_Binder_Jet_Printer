@@ -178,7 +178,7 @@ std::string CMD::set_default_controller_settings()
          // Note: There might be more settings especially for this axis I might want to add later
 
          // E axis (Heat Lamp)
-      << Gcmd("MTE=1")
+      << GCmd("MTE=1")
       << GCmd("AGE=0")
       << GCmd("TLE=5")
       << GCmd("TKE=5")
