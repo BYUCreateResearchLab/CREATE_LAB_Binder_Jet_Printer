@@ -34,6 +34,7 @@ void HeatLampWidget::allow_widget_input(bool allowed)
 void HeatLampWidget::open_connection() {
     std::stringstream ss;
     ss << CMD::open_connection_to_controller();
+    ss << CMD::set_default_controller_settings();
     mPrinter -> mcu -> printerThread -> execute_command(ss);
 }
 
