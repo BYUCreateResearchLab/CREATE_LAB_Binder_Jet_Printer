@@ -55,7 +55,7 @@
      <x>430</x>
      <y>30</y>
      <width>231</width>
-     <height>392</height>
+     <height>397</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -191,6 +191,42 @@
      <widget class="QPushButton" name="cureLayerButton">
       <property name="text">
        <string>Cure Layer</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="verticalLayoutWidget_2">
+   <property name="geometry">
+    <rect>
+     <x>770</x>
+     <y>60</y>
+     <width>160</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QLabel" name="label_8">
+      <property name="text">
+       <string>Voltage Output</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QDoubleSpinBox" name="voltageInput">
+      <property name="maximum">
+       <double>5.000000000000000</double>
+      </property>
+      <property name="singleStep">
+       <double>0.100000000000000</double>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="setVoltageButton">
+      <property name="text">
+       <string>Set Voltage</string>
       </property>
      </widget>
     </item>

@@ -27,6 +27,7 @@ private:
     void get_bed_temp();
     void open_connection();
     void cure_layer_pressed();
+    void set_voltage();
 
 private:
     Ui::HeatLampWidget *ui;

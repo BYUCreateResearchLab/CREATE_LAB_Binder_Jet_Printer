@@ -11,6 +11,7 @@ HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     connect(ui->getBedTempButton, &QPushButton::clicked, this, &HeatLampWidget::get_bed_temp);
     connect(ui->openConnectionToControllerButton, &QPushButton::clicked, this, &HeatLampWidget::open_connection);
     connect(ui->cureLayerButton, &QPushButton::clicked, this, &HeatLampWidget::cure_layer_pressed);
+    connect(ui->setVoltageButton, &QPushButton::clicked, this, &HeatLampWidget::set_voltage);
     CureSettings settings;
     // ui -> cureSpeedInput -> setValue(settings.cureSpeed_mm_s);
     // ui -> heatLampEndInput -> setValue(settings.heatLampEnd_mm);
@@ -34,7 +35,19 @@ void HeatLampWidget::allow_widget_input(bool allowed)
 void HeatLampWidget::open_connection() {
     std::stringstream ss;
     ss << CMD::open_connection_to_controller();
-    ss << CMD::set_default_controller_settings();
+    ss << CMD::detail::GCmd("MTE=1")
+       << CMD::detail::GCmd("AGE=0")
+       << CMD::detail::GCmd("TLE=5")
+       << CMD::detail::GCmd("TKE=5")
+       << CMD::detail::GCmd("OFE=0");
+    mPrinter -> mcu -> printerThread -> execute_command(ss);
+}
+
+void HeatLampWidget::set_voltage() {
+    std::stringstream ss;
+    ss << CMD::offset(Axis::HeatLamp, ui -> voltageInput->value());
+    ss << CMD::servo_here(Axis::HeatLamp);
+
     mPrinter -> mcu -> printerThread -> execute_command(ss);
 }
 
