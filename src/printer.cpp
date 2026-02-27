@@ -458,7 +458,7 @@ std::string Printer::cure_layer(const CureSettings &settings)
 {
     std::stringstream ss;
 
-    ss << CMD::message("curing layer");
+    ss << CMD::display_message("curing layer");
 
     //get last temperature
     char buff[G_SMALL_BUFFER];
@@ -466,7 +466,7 @@ std::string Printer::cure_layer(const CureSettings &settings)
     if (std::stod(buff) != 0) {
         heatLamp -> set_last_temp(100*std::stod(buff));
     }
-    ss << CMD::message("last temperature was: " + std::to_string(std::stod(buff)*100));
+    ss << CMD::display_message("last temperature was: " + std::to_string(std::stod(buff)*100));
 
     double zAxisOffsetUnderRoller {0.5};
 
@@ -488,7 +488,7 @@ std::string Printer::cure_layer(const CureSettings &settings)
 
     //turn on heat lamp
     heatLamp -> target_temp = settings.target_temp;
-    ss << CMD::message("set voltage to: " + std::to_string(heatLamp -> get_next_voltage()));
+    ss << CMD::display_message("set voltage to: " + std::to_string(heatLamp -> get_next_voltage()));
     // ss << CMD::offset(Axis::HeatLamp, heatLamp -> get_next_voltage());
 
     //move to pyrometer position
@@ -516,7 +516,7 @@ std::string Printer::cure_layer(const CureSettings &settings)
        << CMD::begin_motion(Axis::Z)
        << CMD::motion_complete(Axis::Z);
 
-    ss << CMD::message("done curing layer");
+    ss << CMD::display_message("done curing layer");
     return ss.str();
 }
 
