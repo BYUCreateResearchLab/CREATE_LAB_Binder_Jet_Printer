@@ -183,6 +183,7 @@ std::string CMD::set_default_controller_settings()
       << GCmd("TLE=5")
       << GCmd("TKE=5")
       << GCmd("OFE=0")
+      << GCmd("DM BEDTEMP[1]")
 
          // H Axis (Jetting Axis)
       << GCmd("MTH=-2")      // Set jetting axis to be stepper motor with defualt low
@@ -456,17 +457,30 @@ std::string CMD::homing_sequence(bool homeZAxis)
 std::string Printer::cure_layer(const CureSettings &settings)
 {
     std::stringstream ss;
-    //TODO use pyrometer position to detect temperature
 
     ss << CMD::message("curing layer");
 
     //get last temperature
     char buff[G_SMALL_BUFFER];
     GArrayUpload(mcu->g, "BEDTEMP", 0, 0, G_COMMA, buff, G_SMALL_BUFFER);
-    heatLamp -> set_last_temp(std::stod(buff));
-    ss << CMD::message("last temperature was: " + std::string(buff));
+    if (std::stod(buff) != 0) {
+        heatLamp -> set_last_temp(100*std::stod(buff));
+    }
+    ss << CMD::message("last temperature was: " + std::to_string(std::stod(buff)*100));
+
+    double zAxisOffsetUnderRoller {0.5};
+
+    // move z-axis down when going back to get more powder
+    ss << CMD::set_accleration(Axis::Z, 10)
+       << CMD::set_deceleration(Axis::Z, 10)
+       << CMD::set_speed(Axis::Z, 2)
+       << CMD::position_relative(Axis::Z, -zAxisOffsetUnderRoller)
+       << CMD::begin_motion(Axis::Z)
+       << CMD::motion_complete(Axis::Z);
 
     //move to edge of heat lamp
+    ss << CMD::set_deceleration(Axis::Y, 1000);
+    ss << CMD::set_accleration(Axis::Y, 1000);
     ss << CMD::set_speed(Axis::Y, settings.yAxisTraverseSpeed_mm_s);
     ss << CMD::position_absolute(Axis::Y, settings.heatLampStart_mm);
     ss << CMD::begin_motion(Axis::Y);
@@ -474,7 +488,19 @@ std::string Printer::cure_layer(const CureSettings &settings)
 
     //turn on heat lamp
     heatLamp -> target_temp = settings.target_temp;
-    ss << CMD::offset(Axis::HeatLamp, heatLamp -> get_next_voltage());
+    ss << CMD::message("set voltage to: " + std::to_string(heatLamp -> get_next_voltage()));
+    // ss << CMD::offset(Axis::HeatLamp, heatLamp -> get_next_voltage());
+
+    //move to pyrometer position
+    ss << CMD::set_speed(Axis::Y, settings.cureSpeed_mm_s);
+    ss << CMD::position_absolute(Axis::Y, settings.pyrometerPosition_mm);
+    ss << CMD::begin_motion(Axis::Y);
+    ss << CMD::motion_complete(Axis::Y);
+
+    //measure temperature
+    // ss << CMD::deallocate_array("BEDTEMP[0]");
+    // ss << CMD::define_array("BEDTEMP", 1);
+    ss << CMD::detail::GCmd() + "BEDTEMP[0] = @AN[1] \n";
 
     //move to other end of heat lamp
     ss << CMD::set_speed(Axis::Y, settings.cureSpeed_mm_s);
@@ -485,10 +511,10 @@ std::string Printer::cure_layer(const CureSettings &settings)
     //turn off heat lamp
     ss << CMD::offset(Axis::HeatLamp, 0);
 
-    //measure temperature
-    ss << CMD::deallocate_array("BEDTEMP[0]");
-    ss << CMD::define_array("BEDTEMP", 1);
-    ss << CMD::detail::GCmd() + "BEDTEMP[0] = @AN[1] \n";
+    //move up to original z position
+    ss << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller)
+       << CMD::begin_motion(Axis::Z)
+       << CMD::motion_complete(Axis::Z);
 
     ss << CMD::message("done curing layer");
     return ss.str();
