@@ -88,10 +88,12 @@ class BedMicroscope;
 #define X_CNTS_PER_MM 1000
 #define Y_CNTS_PER_MM 800
 #define Z_CNTS_PER_MM 75745.7108f
+#define R_CNTS_PER_MM 200.0f        // MAX 03/04 !!! counts per mm idk if it is right
 
 #define X_STAGE_LEN_MM 150
 #define Y_STAGE_LEN_MM 500
 #define Z_STAGE_LEN_MM 15
+#define R_STAGE_LEN_MM 200          // MAX 03/04 !!! stage length idk if it is right
 
 #define PRINT_X_SIZE_MM 100
 #define PRINT_Y_SIZE_MM 100
@@ -114,7 +116,7 @@ class BedMicroscope;
 
 enum class Axis
 {
-    X, Y, Z, Jet
+    X, Y, Z, Jet, Reservoir         // MAX 03/04 !!! added axis
 };
 
 enum class MotorType

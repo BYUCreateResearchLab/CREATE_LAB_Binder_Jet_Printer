@@ -60,6 +60,7 @@ std::string CMD::detail::axis_string(Axis axis)
     case Axis::Y:   return {"Y"};
     case Axis::Z:   return {"Z"};
     case Axis::Jet: return {"H"};
+    case Axis::Reservoir: return {'D'};     // MAX 03/04 !!! idk what you want to map it to
 
     default:
         throw std::invalid_argument("invalid axis");
@@ -74,6 +75,7 @@ constexpr int CMD::detail::mm2cnts(double mm, Axis axis)
     case Axis::Y:   return (int)(mm * Y_CNTS_PER_MM);
     case Axis::Z:   return (int)(mm * Z_CNTS_PER_MM);
     case Axis::Jet: return (int)(mm);
+    case Axis::Reservoir: return (int)(mm * R_CNTS_PER_MM); // MAX 03/04 converts mm distance to steps
 
     default: throw std::invalid_argument("invalid axis");
     }
@@ -182,6 +184,13 @@ std::string CMD::set_default_controller_settings()
       << GCmd("ITH=1" )      // Minimize filters on step signals
       << GCmd("YAH=1")       // set step resolution to 1 full step per step
 
+      // MAX 03/04 !!! all below is added and may need tuning
+       // Reservoir Axis (D)
+      << GCmd("MTD=-2.5")    // Stepper motor with active high step pulses, reversed direction
+      << GCmd("AGD=0")       // Set amplifier gain
+      << GCmd("AUD=9")       // Set current loop (based on inductance of motor)
+
+
          // Configure Extended I/O
       << GCmd("CO 1")        // configures bank 2 as outputs on extended I/O (IO 17-24)
 
@@ -189,7 +198,8 @@ std::string CMD::set_default_controller_settings()
       << GCmd("CN=-1")           // Set correct polarity for all limit switches
       << GCmd("BN")              // Save (burn) these settings to the controller just to be safe
       << GCmd("SH XYZ")          // Enable X,Y, and Z motors
-      << GCmd("SH H");           // Servo the jetting axis
+      << GCmd("SH H")            // Servo the jetting axis
+      << GCmd("SH D");           // MAX 03/04 !!! Servo the reservoir axis?
 
     return s.str();
 }

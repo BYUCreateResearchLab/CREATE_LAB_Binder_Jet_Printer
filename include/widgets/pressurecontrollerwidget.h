@@ -28,6 +28,7 @@ private:
     void gravity_feed_down();
     void quick_purge();
     void send_command(const QString &command);
+    void move_reservoir();
 
 private:
     Ui::PressureControllerWidget *ui;
