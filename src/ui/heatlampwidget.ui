@@ -199,7 +199,7 @@
       <property name="value">
         <number>0.1</number>
       </property>
-     <widget/>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="label_10">
@@ -213,7 +213,7 @@
       <property name="value">
         <number>0.05</number>
       </property>
-     <widget/>
+     </widget>
     </item>
     <item>
      <widget class="QPushButton" name="cureLayerButton">
