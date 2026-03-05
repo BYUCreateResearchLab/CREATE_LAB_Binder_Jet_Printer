@@ -1,5 +1,6 @@
 #include "heatlampwidget.h"
 #include "ui_heatlampwidget.h"
+#include "heatlamp.h"
 
 HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     PrinterWidget(printer, parent),
@@ -12,6 +13,7 @@ HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     connect(ui->openConnectionToControllerButton, &QPushButton::clicked, this, &HeatLampWidget::open_connection);
     connect(ui->cureLayerButton, &QPushButton::clicked, this, &HeatLampWidget::cure_layer_pressed);
     connect(ui->setVoltageButton, &QPushButton::clicked, this, &HeatLampWidget::set_voltage);
+    connect(ui->clearHistoryButton, &QPushButton::clicked, this, &HeatLampWidget::clear_temperature_history);
     CureSettings settings;
     // ui -> cureSpeedInput -> setValue(settings.cureSpeed_mm_s);
     // ui -> heatLampEndInput -> setValue(settings.heatLampEnd_mm);
@@ -30,6 +32,12 @@ HeatLampWidget::~HeatLampWidget()
 // enable/disable widgets when they should not be able to be pressed
 void HeatLampWidget::allow_widget_input(bool allowed)
 {
+}
+
+void HeatLampWidget::clear_temperature_history() {
+    if(mPrinter -> heatLamp) {
+        mPrinter -> heatLamp -> clear_history();
+    }
 }
 
 void HeatLampWidget::open_connection() {
@@ -79,6 +87,8 @@ void HeatLampWidget::cure_layer_pressed() {
     settings.target_temp = ui -> targetTempInput -> value();
     settings.waitAfterHeatLampOn_millisecs = ui -> waitAfterHeatLampInput -> value();
     settings.yAxisTraverseSpeed_mm_s = ui -> traverseSpeedInput -> value();
+    settings.kp = ui -> kpInput -> value();
+    settings.ki = ui -> kiInput -> value();
 
     std::stringstream s;
     s << mPrinter -> cure_layer(settings);

@@ -488,6 +488,8 @@ std::string Printer::cure_layer(const CureSettings &settings)
 
     //turn on heat lamp
     heatLamp -> target_temp = settings.target_temp;
+    heatLamp -> kp = settings.kp;
+    heatLamp -> ki = settings.ki;
     ss << CMD::display_message("set voltage to: " + std::to_string(heatLamp -> get_next_voltage()));
     // ss << CMD::offset(Axis::HeatLamp, heatLamp -> get_next_voltage());
 

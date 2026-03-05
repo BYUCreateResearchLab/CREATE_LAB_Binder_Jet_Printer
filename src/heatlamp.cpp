@@ -12,6 +12,11 @@ HeatLamp::~HeatLamp()
 
 }
 
+void HeatLamp::clear_history() {
+    temp_history.clear();
+    last_voltage = 0;
+}
+
 double HeatLamp::get_next_voltage() {
     // if(target_temp > temp_history.back().temp) {
     //     last_voltage = std::min(std::max(0.0, temp_history.back().voltage + 0.2), max_voltage);
