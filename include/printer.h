@@ -172,6 +172,8 @@ struct CureSettings
     double heatLampEnd_mm {-150};
     double pyrometerPosition_mm {-250};
     double target_temp {40};
+    double kp {0.1};
+    double ki {0.05};
 };
 
 class Printer : public QObject
