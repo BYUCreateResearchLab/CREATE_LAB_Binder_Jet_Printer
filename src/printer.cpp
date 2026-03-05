@@ -180,9 +180,7 @@ std::string CMD::set_default_controller_settings()
          // E axis (Heat Lamp)
       << GCmd("MTE=1")
       << GCmd("AGE=0")
-      << GCmd("TLE=5")
-      << GCmd("TKE=5")
-      << GCmd("OFE=0")
+      << GCmd("OFE=-10")
       << GCmd("DM BEDTEMP[1]")
 
          // H Axis (Jetting Axis)
@@ -511,7 +509,7 @@ std::string Printer::cure_layer(const CureSettings &settings)
     ss << CMD::motion_complete(Axis::Y);
 
     //turn off heat lamp
-    ss << CMD::offset(Axis::HeatLamp, 0);
+    ss << CMD::offset(Axis::HeatLamp, -10);
 
     //move up to original z position
     ss << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller)

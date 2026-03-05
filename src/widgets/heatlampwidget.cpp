@@ -15,13 +15,6 @@ HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     connect(ui->setVoltageButton, &QPushButton::clicked, this, &HeatLampWidget::set_voltage);
     connect(ui->clearHistoryButton, &QPushButton::clicked, this, &HeatLampWidget::clear_temperature_history);
     CureSettings settings;
-    // ui -> cureSpeedInput -> setValue(settings.cureSpeed_mm_s);
-    // ui -> heatLampEndInput -> setValue(settings.heatLampEnd_mm);
-    // ui -> heatLampStartInput -> setValue(settings.heatLampStart_mm);
-    // ui -> pyrometerPositionInput -> setValue(settings.pyrometerPosition_mm);
-    // ui -> targetTempInput -> setValue(settings.target_temp);
-    // ui -> waitAfterHeatLampInput -> setValue(settings.waitAfterHeatLampOn_millisecs);
-    // ui -> traverseSpeedInput -> setValue(settings.yAxisTraverseSpeed_mm_s);
 }
 
 HeatLampWidget::~HeatLampWidget()
@@ -45,9 +38,7 @@ void HeatLampWidget::open_connection() {
     ss << CMD::open_connection_to_controller();
     ss << CMD::detail::GCmd("MTE=1")
        << CMD::detail::GCmd("AGE=0")
-       << CMD::detail::GCmd("TLE=5")
-       << CMD::detail::GCmd("TKE=5")
-       << CMD::detail::GCmd("OFE=0");
+       << CMD::detail::GCmd("OFE=-10");
     mPrinter -> mcu -> printerThread -> execute_command(ss);
 }
 

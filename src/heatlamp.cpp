@@ -32,7 +32,7 @@ double HeatLamp::get_next_voltage() {
             error_integral += target_temp - data.temp;
         }
         last_voltage += kp*(target_temp - temp_history.back().temp) + error_integral*ki;
-        last_voltage = std::min(std::max(0.0, last_voltage), max_voltage);
+        last_voltage = std::min(std::max(min_voltage, last_voltage), max_voltage);
         return last_voltage;
     }
 }
