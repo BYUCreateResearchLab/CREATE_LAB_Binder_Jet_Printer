@@ -55,7 +55,7 @@
      <x>430</x>
      <y>30</y>
      <width>231</width>
-     <height>397</height>
+     <height>533</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -188,9 +188,36 @@
      </widget>
     </item>
     <item>
+     <widget class="QLabel" name="label_9">
+      <property name="text">
+       <string>kp</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QDoubleSpinBox" name="kpInput"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_10">
+      <property name="text">
+       <string>ki</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QDoubleSpinBox" name="kiInput"/>
+    </item>
+    <item>
      <widget class="QPushButton" name="cureLayerButton">
       <property name="text">
        <string>Cure Layer</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="ClearHistoryButton">
+      <property name="text">
+       <string>Clear Temperature History</string>
       </property>
      </widget>
     </item>
