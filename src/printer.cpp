@@ -60,7 +60,7 @@ std::string CMD::detail::axis_string(Axis axis)
     case Axis::Y:   return {"Y"};
     case Axis::Z:   return {"Z"};
     case Axis::Jet: return {"H"};
-    case Axis::Reservoir: return {'D'};     // MAX 03/04 !!! idk what you want to map it to
+    case Axis::Reservoir: return {'E'};     // MAX 03/04 !!! idk what you want to map it to
 
     default:
         throw std::invalid_argument("invalid axis");
@@ -75,7 +75,7 @@ constexpr int CMD::detail::mm2cnts(double mm, Axis axis)
     case Axis::Y:   return (int)(mm * Y_CNTS_PER_MM);
     case Axis::Z:   return (int)(mm * Z_CNTS_PER_MM);
     case Axis::Jet: return (int)(mm);
-    case Axis::Reservoir: return (int)(mm * R_CNTS_PER_MM); // MAX 03/04 converts mm distance to steps
+    case Axis::Reservoir: return (int)(mm * R_CNTS_PER_MM); // MAX 03/04 !!! converts mm distance to steps
 
     default: throw std::invalid_argument("invalid axis");
     }
@@ -185,10 +185,14 @@ std::string CMD::set_default_controller_settings()
       << GCmd("YAH=1")       // set step resolution to 1 full step per step
 
       // MAX 03/04 !!! all below is added and may need tuning
-       // Reservoir Axis (D)
-      << GCmd("MTD=-2.5")    // Stepper motor with active high step pulses, reversed direction
-      << GCmd("AGD=0")       // Set amplifier gain
-      << GCmd("AUD=9")       // Set current loop (based on inductance of motor)
+       // Reservoir Axis (E)
+      << GCmd("MTE=-2")    // Stepper motor with active high step pulses, reversed direction
+      //<< GCmd("YAE=1")       // Test step resolution (set to 1 here)
+      << GCmd("AGE=0")       // Set amplifier gain
+      << GCmd("AUE=9")       // Set current loop (based on inductance of motor)
+      << GCmd("ALE=0")       // 1 = Active High, 0 = Active Low, doesn't seem to fix issue where the stepper is always disabled
+      << GCmd("LDE=0")       // CHANGE: Set to 0 to ENABLE limit switch monitoring, 3 = diable limits
+      << GCmd("CNE=-1")     // Set polarity (use -1 for Normally Closed, 1 for Normally Open)
 
 
          // Configure Extended I/O
@@ -199,7 +203,7 @@ std::string CMD::set_default_controller_settings()
       << GCmd("BN")              // Save (burn) these settings to the controller just to be safe
       << GCmd("SH XYZ")          // Enable X,Y, and Z motors
       << GCmd("SH H")            // Servo the jetting axis
-      << GCmd("SH D");           // MAX 03/04 !!! Servo the reservoir axis?
+      << GCmd("SH E");           // MAX 03/04 !!! Servo the reservoir axis?
 
     return s.str();
 }

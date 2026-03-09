@@ -88,7 +88,7 @@ class BedMicroscope;
 #define X_CNTS_PER_MM 1000
 #define Y_CNTS_PER_MM 800
 #define Z_CNTS_PER_MM 75745.7108f
-#define R_CNTS_PER_MM 200.0f        // MAX 03/04 !!! counts per mm idk if it is right
+#define R_CNTS_PER_MM 40        // MAX 03/04 !!! counts per mm idk if it is right
 
 #define X_STAGE_LEN_MM 150
 #define Y_STAGE_LEN_MM 500
