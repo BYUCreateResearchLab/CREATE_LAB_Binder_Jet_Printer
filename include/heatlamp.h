@@ -22,12 +22,12 @@ class HeatLamp : public QObject
         double kp{0.1}; // volts per degree
         double ki{0.05}; //volts per degree*passes
         void clear_history();
+        double max_voltage{9.997};
+        double min_voltage{-9.997};
     
     private:
         double last_voltage;
         std::vector<TempData> temp_history;
-        double max_voltage{10.0};
-        double min_voltage{-10.0};
 };
 
 #endif

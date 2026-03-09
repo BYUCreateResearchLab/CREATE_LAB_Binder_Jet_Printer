@@ -180,7 +180,9 @@ std::string CMD::set_default_controller_settings()
          // E axis (Heat Lamp)
       << GCmd("MTE=1")
       << GCmd("AGE=0")
-      << GCmd("OFE=-10")
+      << GCmd("OFE=-9.997")
+      << GCmd("TLE=9.997")
+      << GCmd("TKE=9.997")
       << GCmd("DM BEDTEMP[1]")
 
          // H Axis (Jetting Axis)
@@ -488,8 +490,10 @@ std::string Printer::cure_layer(const CureSettings &settings)
     heatLamp -> target_temp = settings.target_temp;
     heatLamp -> kp = settings.kp;
     heatLamp -> ki = settings.ki;
-    ss << CMD::display_message("set voltage to: " + std::to_string(heatLamp -> get_next_voltage()));
-    // ss << CMD::offset(Axis::HeatLamp, heatLamp -> get_next_voltage());
+    double next_voltage = heatLamp -> get_next_voltage();
+    ss << CMD::display_message("set voltage to: " + std::to_string(next_voltage));
+    ss << CMD::offset(Axis::HeatLamp, next_voltage);
+    ss << CMD::servo_here(Axis::HeatLamp);
 
     //move to pyrometer position
     ss << CMD::set_speed(Axis::Y, settings.cureSpeed_mm_s);
@@ -509,7 +513,7 @@ std::string Printer::cure_layer(const CureSettings &settings)
     ss << CMD::motion_complete(Axis::Y);
 
     //turn off heat lamp
-    ss << CMD::offset(Axis::HeatLamp, -10);
+    ss << CMD::offset(Axis::HeatLamp, heatLamp -> min_voltage);
 
     //move up to original z position
     ss << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller)

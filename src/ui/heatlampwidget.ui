@@ -197,7 +197,7 @@
     <item>
      <widget class="QDoubleSpinBox" name="kpInput">
       <property name="value">
-        <number>0.1</number>
+       <double>0.000000000000000</double>
       </property>
      </widget>
     </item>
@@ -211,7 +211,7 @@
     <item>
      <widget class="QDoubleSpinBox" name="kiInput">
       <property name="value">
-        <number>0.05</number>
+       <double>0.000000000000000</double>
       </property>
      </widget>
     </item>
@@ -250,6 +250,9 @@
     </item>
     <item>
      <widget class="QDoubleSpinBox" name="voltageInput">
+      <property name="minimum">
+       <double>-10.000000000000000</double>
+      </property>
       <property name="maximum">
        <double>10.000000000000000</double>
       </property>

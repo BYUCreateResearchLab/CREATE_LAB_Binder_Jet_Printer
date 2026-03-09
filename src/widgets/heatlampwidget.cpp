@@ -38,7 +38,9 @@ void HeatLampWidget::open_connection() {
     ss << CMD::open_connection_to_controller();
     ss << CMD::detail::GCmd("MTE=1")
        << CMD::detail::GCmd("AGE=0")
-       << CMD::detail::GCmd("OFE=-10");
+       << CMD::detail::GCmd("OFE=-9.997")
+       << CMD::detail::GCmd("TLE=9.997")
+       << CMD::detail::GCmd("TKE=9.997");
     mPrinter -> mcu -> printerThread -> execute_command(ss);
 }
 
