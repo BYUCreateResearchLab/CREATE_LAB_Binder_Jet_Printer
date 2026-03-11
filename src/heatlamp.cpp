@@ -25,6 +25,7 @@ double HeatLamp::get_next_voltage() {
     // }
     
     if(temp_history.size() == 0) {
+        last_voltage = starting_voltage;
         return last_voltage;
     } else {
         double error_integral = 0;

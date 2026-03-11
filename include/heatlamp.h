@@ -24,6 +24,7 @@ class HeatLamp : public QObject
         void clear_history();
         double max_voltage{-8.0};
         double min_voltage{-9.0};
+        double starting_voltage {-8.5};
     
     private:
         double last_voltage;
