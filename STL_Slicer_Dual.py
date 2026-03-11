@@ -805,11 +805,11 @@ class SlicerMainWindow(QMainWindow):
 
             f"--- Heat Lamp ---\n"
             f"Cure Speed: {self.slicing_params['cure_speed']} mm/s\n" 
-            f"Target Temperature: {self.slicing_params["target_temp"]} deg C\n"
-            f"Kp {self.slicing_params["kp"]} volts per degree\n"
-            f"Ki {self.slicing_params["ki"]} volts per degree*passes\n"
-            f"HeatLamp Starting Voltage {self.slicing_params["starting_voltage"]} V\n",
-            f"Delay After HeatLamp On {self.slicing_params["waitAfterHeatLampOn_millisecs"]} ms\n"
+            f"Target Temperature: {self.slicing_params['target_temp']} deg C\n"
+            f"Kp: {self.slicing_params['kp']} volts per degree\n"
+            f"Ki: {self.slicing_params['ki']} volts per degree*passes\n"
+            f"HeatLamp Starting Voltage: {self.slicing_params['starting_voltage']} V\n"
+            f"Delay After HeatLamp On: {self.slicing_params['waitAfterHeatLampOn_millisecs']} ms\n\n"
 
             f"--- Positioning ---\n"
             f"Part Position (Start X, Y): {start_x:.3f}mm, {start_y:.3f}mm\n"
