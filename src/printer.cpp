@@ -11,6 +11,7 @@
 #include "bedmicroscope.h"
 #include "mjdriver.h"
 #include "heatlamp.h"
+#include "mjprintheadwidget.h"
 
 Printer::Printer(QObject *parent) :
     QObject(parent),
@@ -454,8 +455,13 @@ std::string CMD::homing_sequence(bool homeZAxis)
     return s.str();
 }
 
-std::string Printer::cure_layer(const CureSettings &settings)
+std::string Printer::cure_layer(const PrintParameters &settings)
 {
+    double yAxisTraverseSpeed_mm_s {30};
+    double heatLampStart_mm {-350};
+    double heatLampEnd_mm {-150};
+    double pyrometerPosition_mm {-250};
+    
     std::stringstream ss;
 
     ss << CMD::display_message("curing layer");
@@ -481,8 +487,8 @@ std::string Printer::cure_layer(const CureSettings &settings)
     //move to edge of heat lamp
     ss << CMD::set_deceleration(Axis::Y, 1000);
     ss << CMD::set_accleration(Axis::Y, 1000);
-    ss << CMD::set_speed(Axis::Y, settings.yAxisTraverseSpeed_mm_s);
-    ss << CMD::position_absolute(Axis::Y, settings.heatLampStart_mm);
+    ss << CMD::set_speed(Axis::Y, yAxisTraverseSpeed_mm_s);
+    ss << CMD::position_absolute(Axis::Y, heatLampStart_mm);
     ss << CMD::begin_motion(Axis::Y);
     ss << CMD::motion_complete(Axis::Y);
 
@@ -494,10 +500,11 @@ std::string Printer::cure_layer(const CureSettings &settings)
     ss << CMD::display_message("set voltage to: " + std::to_string(next_voltage));
     ss << CMD::offset(Axis::HeatLamp, next_voltage);
     ss << CMD::servo_here(Axis::HeatLamp);
+    ss << CMD::wait(settings.waitAfterHeatLampOn_millisecs);
 
     //move to pyrometer position
     ss << CMD::set_speed(Axis::Y, settings.cureSpeed_mm_s);
-    ss << CMD::position_absolute(Axis::Y, settings.pyrometerPosition_mm);
+    ss << CMD::position_absolute(Axis::Y, pyrometerPosition_mm);
     ss << CMD::begin_motion(Axis::Y);
     ss << CMD::motion_complete(Axis::Y);
 
@@ -508,7 +515,7 @@ std::string Printer::cure_layer(const CureSettings &settings)
 
     //move to other end of heat lamp
     ss << CMD::set_speed(Axis::Y, settings.cureSpeed_mm_s);
-    ss << CMD::position_absolute(Axis::Y, settings.heatLampEnd_mm);
+    ss << CMD::position_absolute(Axis::Y, heatLampEnd_mm);
     ss << CMD::begin_motion(Axis::Y);
     ss << CMD::motion_complete(Axis::Y);
 

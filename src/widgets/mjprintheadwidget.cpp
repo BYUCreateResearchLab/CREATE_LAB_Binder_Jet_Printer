@@ -1271,6 +1271,12 @@ bool MJPrintheadWidget::parsePrintParameters(const QString& filePath, PrintParam
             else if (key == "Droplet Spacing (X-axis resolution)") params.dropletSpacingX = valuePart.split(' ')[0].toDouble();
             else if (key == "Line Spacing (Y-axis resolution)") params.lineSpacingY = valuePart.split(' ')[0].toDouble();
             else if (key == "Nozzle Count") params.nozzleCount = valuePart.split(' ')[0].toInt();
+            else if (key == "Cure Speed") params.cureSpeed_mm_s = valuePart.split(' ')[0].toDouble();
+            else if (key == "Target Temperature") params.target_temp = valuePart.split(' ')[0].toDouble();
+            else if (key == "Kp") params.kp = valuePart.split(' ')[0].toDouble();
+            else if (key == "Ki") params.ki = valuePart.split(' ')[0].toDouble();
+            else if (key == "HeatLamp Starting Voltage") params.starting_voltage = valuePart.split(' ')[0].toDouble();
+            else if (key == "Delay after HeatLamp On") params.waitAfterHeatLampOn_millisecs = valuePart.split(' ')[0].toInt();
             else if (key == "Part Position (Start X, Y)") {
                 QStringList coords = valuePart.split(',');
                 if (coords.size() == 2) {

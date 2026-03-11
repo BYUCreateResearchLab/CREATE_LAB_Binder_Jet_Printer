@@ -174,6 +174,7 @@ struct CureSettings
     double target_temp {40};
     double kp {0.1};
     double ki {0.05};
+    double starting_voltage {1};
 };
 
 class Printer : public QObject
@@ -199,7 +200,7 @@ public:
     Added_Scientific::Controller *mjController {nullptr};
     HeatLamp *heatLamp {nullptr};
 
-    std::string cure_layer(const CureSettings &settings);
+    std::string cure_layer(const PrintParameters &settings);
 
     // TODO:
     // printer should own handles to the USB Camera

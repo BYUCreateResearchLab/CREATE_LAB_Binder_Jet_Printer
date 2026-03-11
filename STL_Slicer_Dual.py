@@ -52,7 +52,10 @@ class SlicerMainWindow(QMainWindow):
         self.active_model_key = None
         self.slicing_params = {
             "print_freq": 1000.0, "droplet_spacing": 0.05,
-            "line_spacing": 0.13716, "layer_height": 0.05
+            "line_spacing": 0.13716, "layer_height": 0.05,
+            "cure_speed": 10, "target_temp": 40,
+            "kp": 0.1, "ki": 0.05, "starting_voltage": 1,
+            "waitAfterHeatLampOn_millisecs": 500
         }
 
         # --- Initialize VTK Scene ---
@@ -449,7 +452,10 @@ class SlicerMainWindow(QMainWindow):
         grid = QGridLayout()
         self.param_edits = {}
         params = {"Layer Height (mm)": "layer_height", "Droplet Spacing (mm)": "droplet_spacing",
-                  "Line Spacing (mm)": "line_spacing", "Print Frequency (Hz)": "print_freq"}
+                  "Line Spacing (mm)": "line_spacing", "Print Frequency (Hz)": "print_freq",
+                  "Cure Speed (mm/s)": "cure_speed", "Target Temperature (deg C)": "target_temp",
+                  "Kp (volts per degree)": "kp", "Ki (volts per degree*passes)": "ki", "HeatLamp Starting Voltage (V)": "starting_voltage",
+                  "Delay After HeatLamp On (ms)": "waitAfterHeatLampOn_millisecs"}
         row = 0
         for label_text, key in params.items():
             label = QLabel(label_text); edit = QLineEdit(str(self.slicing_params[key])); edit.setFixedWidth(80)
@@ -796,6 +802,14 @@ class SlicerMainWindow(QMainWindow):
             f"Calculated Print Speed (X-axis): {print_speed_x:.2f} mm/s\n"
             f"Nozzle Count: {NOZZLE_COUNT}\n"
             f"Y-Shift Per Layer: {DITHER_PASSES}\n\n"
+
+            f"--- Heat Lamp ---\n"
+            f"Cure Speed: {self.slicing_params['cure_speed']} mm/s\n" 
+            f"Target Temperature: {self.slicing_params["target_temp"]} deg C\n"
+            f"Kp {self.slicing_params["kp"]} volts per degree\n"
+            f"Ki {self.slicing_params["ki"]} volts per degree*passes\n"
+            f"HeatLamp Starting Voltage {self.slicing_params["starting_voltage"]} V\n",
+            f"Delay After HeatLamp On {self.slicing_params["waitAfterHeatLampOn_millisecs"]} ms\n"
 
             f"--- Positioning ---\n"
             f"Part Position (Start X, Y): {start_x:.3f}mm, {start_y:.3f}mm\n"

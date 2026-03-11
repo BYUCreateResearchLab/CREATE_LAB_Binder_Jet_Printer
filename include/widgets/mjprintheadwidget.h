@@ -27,6 +27,13 @@ struct PrintParameters {
     double startY = 0.0;
     int nozzleCount = 128;
     bool yShiftEnabled = false;
+
+    double cureSpeed_mm_s {10};
+    int waitAfterHeatLampOn_millisecs {500};
+    double target_temp {40};
+    double kp {0.1};
+    double ki {0.05};
+    double starting_voltage {1};
 };
 
 class MJPrintheadWidget : public PrinterWidget

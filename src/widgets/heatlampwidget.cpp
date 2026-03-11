@@ -1,6 +1,7 @@
 #include "heatlampwidget.h"
 #include "ui_heatlampwidget.h"
 #include "heatlamp.h"
+#include "mjprintheadwidget.h"
 
 HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     PrinterWidget(printer, parent),
@@ -14,7 +15,6 @@ HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     connect(ui->cureLayerButton, &QPushButton::clicked, this, &HeatLampWidget::cure_layer_pressed);
     connect(ui->setVoltageButton, &QPushButton::clicked, this, &HeatLampWidget::set_voltage);
     connect(ui->clearHistoryButton, &QPushButton::clicked, this, &HeatLampWidget::clear_temperature_history);
-    CureSettings settings;
 }
 
 HeatLampWidget::~HeatLampWidget()
@@ -72,14 +72,10 @@ void HeatLampWidget::get_bed_temp() {
 }
 
 void HeatLampWidget::cure_layer_pressed() {
-    CureSettings settings;
+    PrintParameters settings;
     settings.cureSpeed_mm_s = ui -> cureSpeedInput -> value();
-    settings.heatLampEnd_mm = ui -> heatLampEndInput -> value();
-    settings.heatLampStart_mm = ui -> heatLampStartInput -> value();
-    settings.pyrometerPosition_mm = ui -> pyrometerPositionInput -> value();
     settings.target_temp = ui -> targetTempInput -> value();
     settings.waitAfterHeatLampOn_millisecs = ui -> waitAfterHeatLampInput -> value();
-    settings.yAxisTraverseSpeed_mm_s = ui -> traverseSpeedInput -> value();
     settings.kp = ui -> kpInput -> value();
     settings.ki = ui -> kiInput -> value();
 
