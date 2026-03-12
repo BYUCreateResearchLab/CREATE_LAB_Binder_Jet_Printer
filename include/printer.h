@@ -88,12 +88,12 @@ class BedMicroscope;
 #define X_CNTS_PER_MM 1000
 #define Y_CNTS_PER_MM 800
 #define Z_CNTS_PER_MM 75745.7108f
-#define R_CNTS_PER_MM 40        // MAX 03/04 !!! counts per mm idk if it is right
+#define R_CNTS_PER_MM 40
 
 #define X_STAGE_LEN_MM 150
 #define Y_STAGE_LEN_MM 500
 #define Z_STAGE_LEN_MM 15
-#define R_STAGE_LEN_MM 200          // MAX 03/04 !!! stage length idk if it is right
+#define R_STAGE_LEN_MM 150
 
 #define PRINT_X_SIZE_MM 100
 #define PRINT_Y_SIZE_MM 100
@@ -306,9 +306,13 @@ inline string set_homing_velocity(Axis axis, double velocity_mm_s)
 
 // The FL command sets the forward software position limit.
 // If this limit is exceeded during motion, motion on that axis will decelerate to a stop.
-// Forward motion beyond this limit is not permitted.
 inline string set_forward_software_limit(Axis axis, double position_mm)
 { return detail::create_gcmd("FL", axis, detail::mm2cnts(position_mm, axis)); }
+
+// The BL command sets the reverse software position limit.
+// If this limit is exceeded during motion, motion on that axis will decelerate to a stop.
+inline string set_reverse_software_limit(Axis axis, double position_mm)
+{ return detail::create_gcmd("BL", axis, detail::mm2cnts(position_mm, axis)); }
 
 // The PR command sets the incremental distance and direction of the next move.
 // The move is referenced with respect to the current position.
@@ -382,6 +386,9 @@ inline string disable_hopper()
 
 inline string disable_forward_software_limit(Axis axis)
 { return detail::create_gcmd("FL", axis, 2147483647); }
+
+inline string disable_reverse_software_limit(Axis axis)
+{ return detail::create_gcmd("BL", axis, -2147483647); }
 
 inline string message(const std::string& text)
 {

@@ -60,7 +60,7 @@ std::string CMD::detail::axis_string(Axis axis)
     case Axis::Y:   return {"Y"};
     case Axis::Z:   return {"Z"};
     case Axis::Jet: return {"H"};
-    case Axis::Reservoir: return {'E'};     // MAX 03/04 !!! idk what you want to map it to
+    case Axis::Reservoir: return {'E'};
 
     default:
         throw std::invalid_argument("invalid axis");
@@ -184,14 +184,14 @@ std::string CMD::set_default_controller_settings()
       << GCmd("ITH=1" )      // Minimize filters on step signals
       << GCmd("YAH=1")       // set step resolution to 1 full step per step
 
-      // MAX 03/04 !!! all below is added and may need tuning
+      // MAX 03/04 !!!
        // Reservoir Axis (E)
       << GCmd("MTE=-2")    // Stepper motor with active high step pulses, reversed direction
       //<< GCmd("YAE=1")       // Test step resolution (set to 1 here)
       << GCmd("AGE=0")       // Set amplifier gain
       << GCmd("AUE=9")       // Set current loop (based on inductance of motor)
       << GCmd("ALE=0")       // 1 = Active High, 0 = Active Low, doesn't seem to fix issue where the stepper is always disabled
-      << GCmd("LDE=0")       // CHANGE: Set to 0 to ENABLE limit switch monitoring, 3 = diable limits
+      << GCmd("LDE=2")       // 2 = forward limit only, 3 = diable both limits
       << GCmd("CNE=-1")     // Set polarity (use -1 for Normally Closed, 1 for Normally Open)
 
 
@@ -394,10 +394,19 @@ std::string CMD::homing_sequence(bool homeZAxis)
         s << disable_forward_software_limit(Axis::Z);
     }
 
+    // === Home Reservoir Axis to Single Limit Switch === (added 3/11)
+    s << set_accleration(Axis::Reservoir, 200);
+    s << set_deceleration(Axis::Reservoir, 200);
+    s << set_limit_switch_deceleration(Axis::Reservoir, 400);
+    // Jog towards the physical limit switch.
+    s << set_jog(Axis::Reservoir, 5); // 5mm/s into fwd limit
+
+
     s << begin_motion(Axis::X);
     s << begin_motion(Axis::Y);
     if (homeZAxis)
         s << begin_motion(Axis::Z);
+    s << begin_motion(Axis::Reservoir); // Start Reservoir homing
 
     s << motion_complete(Axis::X);
     s << motion_complete(Axis::Y);
@@ -417,6 +426,8 @@ std::string CMD::homing_sequence(bool homeZAxis)
         s << motion_complete(Axis::Z);
 
     s << sleep(1000);
+    s << motion_complete(Axis::Reservoir); // Wait for Reservoir to hit the physical limit
+
 
     // home to center index on x axis
     s << set_jog(Axis::X, -30);
@@ -451,6 +462,11 @@ std::string CMD::homing_sequence(bool homeZAxis)
     s << define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
     s << define_position(Axis::Y, 0);
     s << define_position(Axis::Z, 0);
+
+    // === Set Reservoir Zero and Software Limit ===
+    s << define_position(Axis::Reservoir, 0); // Define current physical limit as 0
+    s << set_reverse_software_limit(Axis::Reservoir, R_STAGE_LEN_MM);
+
     // set software limit to current position
     s << set_forward_software_limit(Axis::Z, 0);
 
