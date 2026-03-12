@@ -1455,8 +1455,22 @@ void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
                 mPrinter->mjController->outputMessage("Moving nozzle to park position for recoat.");
 
                 moveNozzleOffPlate();
+                
+                //2. cure layer
+                mPrinter->mjController->outputMessage("Performing curing operation...");
+                curingComplete = false;
+                std::stringstream s;
+                s << CMD::display_message("Curing layer...");
+                s << mPrinter -> cure_layer(params);
+                s << CMD::display_message("Curing Complete");
 
-                // 2. Now that the head is parked, perform the recoat operation.
+                emit execute_command(s);
+
+                while (!curingComplete) {
+                    QCoreApplication::processEvents();
+                }
+
+                // 3. Now that the head is parked, perform the recoat operation.
                 mPrinter->mjController->outputMessage("Performing recoat operation...");
                 recoatComplete = false;
                 performRecoat(&params, true);

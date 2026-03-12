@@ -5,6 +5,7 @@
 bool printComplete = false;
 bool atLocation = false;
 bool recoatComplete = false;
+bool curingComplete = false;
 
 void OutputWindow::print_string(QString outS)
 {
@@ -27,6 +28,10 @@ void OutputWindow::print_string(QString outS)
 
     if(outS.contains(QString("Recoat Complete"))){
         recoatComplete = true;
+    }
+
+    if(outS.contains(QString("Curing Complete"))){
+        curingComplete = true;
     }
 
     // write to log

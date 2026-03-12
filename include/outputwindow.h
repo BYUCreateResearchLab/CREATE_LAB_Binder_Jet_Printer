@@ -7,6 +7,7 @@
 extern bool printComplete;
 extern bool atLocation;
 extern bool recoatComplete;
+extern bool curingComplete;
 
 namespace Ui {
 class OutputWindow;
