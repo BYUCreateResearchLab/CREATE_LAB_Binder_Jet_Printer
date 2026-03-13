@@ -26,7 +26,7 @@ private:
     void toggle_purge();
     void gravity_feed_up();
     void gravity_feed_down();
-    void quick_purge();
+    void quick_purge_clicked();
     void send_command(const QString &command);
     void move_reservoir();  // MAX 03/04 !!! added command
 

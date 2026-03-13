@@ -13,7 +13,7 @@ PressureControllerWidget::PressureControllerWidget(Printer *printer, QWidget *pa
 
     connect(ui->purgeButton, &QPushButton::clicked, this, &PressureControllerWidget::toggle_purge);
     connect(ui->setPressureButton, &QPushButton::clicked, this, &PressureControllerWidget::set_pressure);
-    connect(ui->quickPurgeButton, &QPushButton::clicked, this, &PressureControllerWidget::quick_purge);
+    connect(ui->quickPurgeButton, &QPushButton::clicked, this, &PressureControllerWidget::quick_purge_clicked);
     connect(ui->moveDistButton, &QPushButton::clicked, this, & PressureControllerWidget::move_reservoir);
 
     //mPrinter->pressureController->connect_to_pressure_controller();
@@ -53,9 +53,12 @@ void PressureControllerWidget::toggle_purge()
     }
 }
 
-void PressureControllerWidget::quick_purge()
+void PressureControllerWidget::quick_purge_clicked()
 {
-    //TO DO Add purge for a fraction of a second
+    std::stringstream s;
+    const int pulseTime_ms = 100; // 0.1 seconds
+    s << CMD::quick_purge(pulseTime_ms); // function in printer.cpp
+    emit execute_command(s);
 
 }
 

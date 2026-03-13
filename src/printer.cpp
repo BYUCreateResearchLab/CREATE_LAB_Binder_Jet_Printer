@@ -662,4 +662,20 @@ std::stringstream& CommandGenerator::jog_axis(Axis axis, double speed_mm_s)
     return s;
 }
 
+std::string CMD::quick_purge(int pulseTime_ms)
+{
+    std::stringstream s;
+    s << CMD::display_message("Quick purging valve.");
+    // Turn valve ON
+    s << CMD::set_bit(PURGE_VALVE_BIT);
+    // Wait
+    s << CMD::sleep(pulseTime_ms);
+    // Turn valve OFF
+    s << CMD::clear_bit(PURGE_VALVE_BIT);
+
+    return s.str();
+}
+
+
+
 #include "moc_printer.cpp"

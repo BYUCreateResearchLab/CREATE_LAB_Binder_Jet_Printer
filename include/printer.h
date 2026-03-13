@@ -108,6 +108,8 @@ class BedMicroscope;
 
 #define HEAT_LAMP_BIT 24 // pin 3
 
+#define PURGE_VALVE_BIT 11 // pin 11 for valve from wall pressure (added 3/13)
+
 #define HS_TTL_BIT 17 // pin 16
 //#define MISTER_BIT 21 // pin 2
 
@@ -266,6 +268,8 @@ string set_jetting_gearing_ratio_from_droplet_spacing(Axis masterAxis,
 string mist_layer(double traverseSpeed_mm_per_s, int sleepTime_ms);
 string spread_layer(const RecoatSettings &settings);
 string sift_powder(int ultrasonicMode, int ultrasonicIntensity, int duration_ms);
+
+string quick_purge(int pulseTime_ms); // added 3/13
 
 
 // Establish connection with motion controller
