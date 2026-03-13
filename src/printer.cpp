@@ -36,8 +36,8 @@ void Printer::connect(bool homeZAxis)
 
     // connect to serial devices
     jetDrive->connect_to_jet_drive();
-    pressureController->connect_to_pressure_controller();
-    mister->connect_to_misters();
+    //pressureController->connect_to_pressure_controller();
+    //mister->connect_to_misters();
 }
 
 void Printer::disconnect_printer()
@@ -203,8 +203,7 @@ std::string CMD::set_default_controller_settings()
       << GCmd("BN")              // Save (burn) these settings to the controller just to be safe
       << GCmd("SH XYZ")          // Enable X,Y, and Z motors
       << GCmd("SH H")            // Servo the jetting axis
-      << GCmd("SH E");           // MAX 03/04 !!! Servo the reservoir axis?
-
+      << GCmd("SH E");           // Servo the Reservior Axis !!!
     return s.str();
 }
 
@@ -394,19 +393,10 @@ std::string CMD::homing_sequence(bool homeZAxis)
         s << disable_forward_software_limit(Axis::Z);
     }
 
-    // === Home Reservoir Axis to Single Limit Switch === (added 3/11)
-    s << set_accleration(Axis::Reservoir, 200);
-    s << set_deceleration(Axis::Reservoir, 200);
-    s << set_limit_switch_deceleration(Axis::Reservoir, 400);
-    // Jog towards the physical limit switch.
-    s << set_jog(Axis::Reservoir, 5); // 5mm/s into fwd limit
-
-
     s << begin_motion(Axis::X);
     s << begin_motion(Axis::Y);
     if (homeZAxis)
         s << begin_motion(Axis::Z);
-    s << begin_motion(Axis::Reservoir); // Start Reservoir homing
 
     s << motion_complete(Axis::X);
     s << motion_complete(Axis::Y);
@@ -426,8 +416,6 @@ std::string CMD::homing_sequence(bool homeZAxis)
         s << motion_complete(Axis::Z);
 
     s << sleep(1000);
-    s << motion_complete(Axis::Reservoir); // Wait for Reservoir to hit the physical limit
-
 
     // home to center index on x axis
     s << set_jog(Axis::X, -30);
@@ -463,12 +451,31 @@ std::string CMD::homing_sequence(bool homeZAxis)
     s << define_position(Axis::Y, 0);
     s << define_position(Axis::Z, 0);
 
-    // === Set Reservoir Zero and Software Limit ===
-    s << define_position(Axis::Reservoir, 0); // Define current physical limit as 0
-    s << set_reverse_software_limit(Axis::Reservoir, R_STAGE_LEN_MM);
-
     // set software limit to current position
     s << set_forward_software_limit(Axis::Z, 0);
+
+    // === Home Reservoir Axis to Single Limit Switch === (added 3/11)
+    s << disable_forward_software_limit(Axis::Reservoir); // try to fix phantom limits 3/12
+    s << set_accleration(Axis::Reservoir, 200);
+    s << set_deceleration(Axis::Reservoir, 200);
+    s << set_limit_switch_deceleration(Axis::Reservoir, 400);
+
+    // Jog towards the physical limit switch.
+    s << set_jog(Axis::Reservoir, 5); // jog into upper limit
+    s << begin_motion(Axis::Reservoir); // Start Reservoir homing
+    //s << motion_complete(Axis::Reservoir); // Wait for Reservoir to hit the physical limit
+
+    // Force the controller to back off of the forward limit
+    //s << CMD::detail::GCmd("STE;MOE;LDE=3;SHE");
+    s << sleep(200);
+
+    // Perform the Back-off (Negative = Down)
+    //s << CMD::detail::GCmd("SPE=2000;PRE=-4000;BGE;AME;LDE=1");
+
+    // // Define final Reservoir position and software limits
+    // s << define_position(Axis::Reservoir, 0);
+    // s << set_forward_software_limit(Axis::Reservoir, 0); // Can't go past the back-off point
+    // s << set_reverse_software_limit(Axis::Reservoir, -R_STAGE_LEN_MM);
 
     return s.str();
 }
