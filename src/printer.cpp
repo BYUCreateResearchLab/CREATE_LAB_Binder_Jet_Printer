@@ -198,7 +198,7 @@ std::string CMD::set_default_controller_settings()
       << GCmd("CO 1")        // configures bank 2 as outputs on extended I/O (IO 17-24)
 
       << GCmd("CC 19200,0,1,0")  // AUX PORT FOR THE ULTRASONIC GENERATOR
-      << GCmd("CN=-1, 1")           // Set correct polarity for all limit switches
+      << GCmd("CN=-1")           // Set correct polarity for all limit switches
       << GCmd("BN")              // Save (burn) these settings to the controller just to be safe
       << GCmd("SH XYZ")          // Enable X,Y, and Z motors
       << GCmd("SH H");           // Servo the jetting axis
