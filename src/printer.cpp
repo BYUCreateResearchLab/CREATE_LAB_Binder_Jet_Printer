@@ -198,7 +198,7 @@ std::string CMD::set_default_controller_settings()
       << GCmd("CO 1")        // configures bank 2 as outputs on extended I/O (IO 17-24)
 
       << GCmd("CC 19200,0,1,0")  // AUX PORT FOR THE ULTRASONIC GENERATOR
-      << GCmd("CN=-1")           // Set correct polarity for all limit switches
+      << GCmd("CN=-1, 1")           // Set correct polarity for all limit switches
       << GCmd("BN")              // Save (burn) these settings to the controller just to be safe
       << GCmd("SH XYZ")          // Enable X,Y, and Z motors
       << GCmd("SH H");           // Servo the jetting axis
@@ -371,16 +371,19 @@ std::string CMD::homing_sequence(bool homeZAxis)
 
     // === Home the X-Axis using the central home sensor index pulse ===
 
+    s << CMD::display_message("part 1");
     s << set_accleration(Axis::X, 800);
     s << set_deceleration(Axis::X, 800);
     s << set_limit_switch_deceleration(Axis::X, 800);
     s << set_jog(Axis::X, 25); // jog towards front limit
 
+    s << CMD::display_message("part 2");
     s << set_accleration(Axis::Y, 400);
     s << set_deceleration(Axis::Y, 400);
     s << set_limit_switch_deceleration(Axis::Y, 600);
     s << set_jog(Axis::Y, 25); // jog towards front limit
 
+    s << CMD::display_message("part 3");
     if (homeZAxis)
     {
         s << set_accleration(Axis::Z, 20);
@@ -392,13 +395,16 @@ std::string CMD::homing_sequence(bool homeZAxis)
         s << disable_forward_software_limit(Axis::Z);
     }
 
+    s << CMD::display_message("part 4");
     s << begin_motion(Axis::X);
     s << begin_motion(Axis::Y);
     if (homeZAxis)
         s << begin_motion(Axis::Z);
 
     s << motion_complete(Axis::X);
+    s << CMD::display_message("part 5");
     s << motion_complete(Axis::Y);
+    s << CMD::display_message("part 6");
 
     // TODO: This is a temporary solution that depends on alignment
     // of ballscrew and motor index pulse
@@ -406,25 +412,30 @@ std::string CMD::homing_sequence(bool homeZAxis)
     // move y-axis forward a bit to avoid being right on top of the index pulse
     s << position_relative(Axis::Y, -5);
     s << set_speed(Axis::Y, 10);
+    s << CMD::display_message("part 7");
     s << begin_motion(Axis::Y);
     s << motion_complete(Axis::Y);
+    s << CMD::display_message("part 8");
     // =================================
 
     // this is put after the short y move because the z axis is slow
     if (homeZAxis)
         s << motion_complete(Axis::Z);
 
+    s << CMD::display_message("part 9");
     s << sleep(1000);
 
     // home to center index on x axis
     s << set_jog(Axis::X, -30);
     s << set_homing_velocity(Axis::X, 0.5);
     s << find_index(Axis::X);
+    s << CMD::display_message("part 10");
 
     // home y axis to nearest index
     s << set_jog(Axis::Y, -0.5);
     s << set_homing_velocity(Axis::Y, 0.25);
     s << find_index(Axis::Y);
+    s << CMD::display_message("part 11");
 
     if (homeZAxis)
     {
@@ -440,15 +451,19 @@ std::string CMD::homing_sequence(bool homeZAxis)
     s << begin_motion(Axis::Y);
     if (homeZAxis)
         s << begin_motion(Axis::Z);
+    s << CMD::display_message("part 12");
 
     s << motion_complete(Axis::X);
+    s << CMD::display_message("part 13");
     s << motion_complete(Axis::Y);
+    s << CMD::display_message("part 14");
     if (homeZAxis)
         s << motion_complete(Axis::Z);
 
     s << define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
     s << define_position(Axis::Y, 0);
     s << define_position(Axis::Z, 0);
+    s << CMD::display_message("part 15");
     // set software limit to current position
     s << set_forward_software_limit(Axis::Z, 0);
 

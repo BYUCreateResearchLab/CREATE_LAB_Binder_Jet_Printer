@@ -356,6 +356,10 @@ inline string sleep(int milliseconds)
 inline string find_index(Axis axis)
 { return detail::GCmd() + "FI" + detail::axis_string(axis) + "\n"; }
 
+// The FE command moves a motor until a transition is seen on the homing input for that axis.
+inline string find_edge(Axis axis)
+{ return detail::GCmd() + "FE" + detail::axis_string(axis) + "\n"; }
+
 // The SH commands tells the controller to use the current motor position
 // as the command position and to enable servo control at the current position.
 inline string servo_here(Axis axis)
