@@ -30,13 +30,47 @@ DMC4080::~DMC4080()
 void DMC4080::connect_to_motion_controller(bool homeZAxis)
 {
     std::stringstream s;
-
     s << CMD::open_connection_to_controller();
-    s << CMD::axis_calibration();                   // y-axis calibration only
-    s << CMD::set_default_controller_settings();
-    s << CMD::homing_sequence(homeZAxis);
-
     printerThread->execute_command(s);
+    s = std::stringstream();
+
+    std::string program =
+        "REM Y-Axis Commutation Initialization\r"
+        "MOY\r"               // Motor Off Y
+        "BAY\r"               // Brushless Axis Y
+        "BMY=2000\r"          // Brushless Modulo Y
+        "BIY=-1\r"            // Brushless Init Y
+        "BCY\r"               // Brushless Calibration Y
+        "hall=_QHY\r"         // Store Hall State
+        "SHY\r"               // Servo Here Y
+        "JGY=-1600\r"         // Jog Y Negative (-1600)
+        "BGY\r"               // Begin Jog Y
+        "#hall\r"             // Label for loop
+        "WT2\r"               // Wait 2ms
+        "JP#hall,_QHY=hall\r" // Jump back if hall state is same
+        "STY\r"               // Stop Y
+        "AMY\r"               // After Motion (Wait for stop)
+        "MG \"Y-Axis Initialization Complete\"\r" // Prints to Output Window
+        "EN\r";               // End Program
+
+    std::time_t currentTime = std::time(nullptr);
+    while (!g && std::time(nullptr) < currentTime + 10) {}
+    if(g) {
+        // 1. Download the program to the controller
+        GProgramDownload(g, program.c_str(), "");
+
+        // 2. Execute the program
+        s << "GCmd," << "XQ" << "\n";
+        s << CMD::sleep(500);
+        s << CMD::after_motion(Axis::Y);
+
+        s << CMD::set_default_controller_settings();
+        s << CMD::homing_sequence(homeZAxis);
+
+        printerThread->execute_command(s);
+    } else {
+        qDebug() << "couldn't connect to controller";
+    }
 
     // subscribe to messages
     messagePoller->connect_to_controller(address);
