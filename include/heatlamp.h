@@ -19,11 +19,11 @@ class HeatLamp : public QObject
         double get_next_voltage();
         void set_last_temp(double temperature);
         double target_temp;
-        double kp{0.1}; // volts per degree
-        double ki{0.05}; //volts per degree*passes
+        double kp{0.05}; // volts per degree
+        double ki{0.02}; //volts per degree*passes
         void clear_history();
-        double max_voltage{-8.0};
-        double min_voltage{-9.0};
+        double max_voltage{-8.4};
+        double min_voltage{-8.9};
         double starting_voltage {-8.5};
     
     private:

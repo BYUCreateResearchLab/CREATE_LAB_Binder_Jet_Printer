@@ -32,7 +32,7 @@ void DMC4080::connect_to_motion_controller(bool homeZAxis)
     std::stringstream s;
 
     s << CMD::open_connection_to_controller();
-    //s << CMD::axis_calibration();                   // y-axis calibration only
+    s << CMD::axis_calibration();                   // y-axis calibration only
     s << CMD::set_default_controller_settings();
     s << CMD::homing_sequence(homeZAxis);
 

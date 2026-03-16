@@ -99,7 +99,6 @@ float Printer::motor_type_value(MotorType motorType)
     }
 }
 
-/*
 std::string CMD::axis_calibration(){
     using CMD::detail::GCmd;
 
@@ -127,7 +126,6 @@ std::string CMD::axis_calibration(){
 
     return s.str();
 }
-*/
 
 std::string CMD::set_default_controller_settings()
 {
