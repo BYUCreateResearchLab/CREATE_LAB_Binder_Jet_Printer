@@ -177,6 +177,7 @@ std::string CMD::set_default_controller_settings()
          // Note: There might be more settings especially for this axis I might want to add later
 
          // E axis (Heat Lamp)
+      << GCmd("CB 9")
       << GCmd("MTE=1")
       << GCmd("AGE=0")
       << GCmd("OFE=-9.997")
@@ -496,6 +497,11 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     heatLamp -> ki = settings.ki;
     double next_voltage = heatLamp -> get_next_voltage();
     ss << CMD::display_message("set voltage to: " + std::to_string(next_voltage));
+    if(next_voltage == 0) {
+        ss << CMD::clear_bit(9);
+    } else {
+        ss << CMD::set_bit(9);
+    }
     ss << CMD::offset(Axis::HeatLamp, next_voltage);
     ss << CMD::servo_here(Axis::HeatLamp);
     ss << CMD::wait(settings.waitAfterHeatLampOn_millisecs);
