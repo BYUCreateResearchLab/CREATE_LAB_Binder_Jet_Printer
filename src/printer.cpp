@@ -463,19 +463,16 @@ std::string CMD::homing_sequence(bool homeZAxis)
     // Jog towards the physical limit switch.
     s << set_jog(Axis::Reservoir, 5); // jog into upper limit
     s << begin_motion(Axis::Reservoir); // Start Reservoir homing
-    //s << motion_complete(Axis::Reservoir); // Wait for Reservoir to hit the physical limit
-
-    // Force the controller to back off of the forward limit
-    //s << CMD::detail::GCmd("STE;MOE;LDE=3;SHE");
-    s << sleep(200);
-
+    s << motion_complete(Axis::Reservoir); // Wait for Reservoir to hit the physical limit
     // Perform the Back-off (Negative = Down)
-    //s << CMD::detail::GCmd("SPE=2000;PRE=-4000;BGE;AME;LDE=1");
+    s << position_relative(Axis::Reservoir, -2);
+    s << begin_motion(Axis::Reservoir);
+    s << motion_complete(Axis::Reservoir);
 
-    // // Define final Reservoir position and software limits
-    // s << define_position(Axis::Reservoir, 0);
-    // s << set_forward_software_limit(Axis::Reservoir, 0); // Can't go past the back-off point
-    // s << set_reverse_software_limit(Axis::Reservoir, -R_STAGE_LEN_MM);
+    // Define final Reservoir position and software limits
+    s << define_position(Axis::Reservoir, R_STAGE_LEN_MM);
+    s << set_forward_software_limit(Axis::Reservoir, R_STAGE_LEN_MM); // Can't go past the back-off point
+    s << set_reverse_software_limit(Axis::Reservoir, 0);
 
     return s.str();
 }
