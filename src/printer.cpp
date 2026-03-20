@@ -36,8 +36,8 @@ void Printer::connect(bool homeZAxis)
 
     // connect to serial devices
     jetDrive->connect_to_jet_drive();
-    pressureController->connect_to_pressure_controller();
-    mister->connect_to_misters();
+    //pressureController->connect_to_pressure_controller();
+    //mister->connect_to_misters();
 }
 
 void Printer::disconnect_printer()
@@ -60,6 +60,7 @@ std::string CMD::detail::axis_string(Axis axis)
     case Axis::Y:   return {"Y"};
     case Axis::Z:   return {"Z"};
     case Axis::Jet: return {"H"};
+    case Axis::Reservoir: return {'E'};
 
     default:
         throw std::invalid_argument("invalid axis");
@@ -74,6 +75,7 @@ constexpr int CMD::detail::mm2cnts(double mm, Axis axis)
     case Axis::Y:   return (int)(mm * Y_CNTS_PER_MM);
     case Axis::Z:   return (int)(mm * Z_CNTS_PER_MM);
     case Axis::Jet: return (int)(mm);
+    case Axis::Reservoir: return (int)(mm * R_CNTS_PER_MM); // MAX 03/04 !!! converts mm distance to steps
 
     default: throw std::invalid_argument("invalid axis");
     }
@@ -182,6 +184,17 @@ std::string CMD::set_default_controller_settings()
       << GCmd("ITH=1" )      // Minimize filters on step signals
       << GCmd("YAH=1")       // set step resolution to 1 full step per step
 
+      // MAX 03/04 !!!
+       // Reservoir Axis (E)
+      << GCmd("MTE=-2")    // Stepper motor with active high step pulses, reversed direction
+      //<< GCmd("YAE=1")       // Test step resolution (set to 1 here)
+      << GCmd("AGE=0")       // Set amplifier gain
+      << GCmd("AUE=9")       // Set current loop (based on inductance of motor)
+      << GCmd("ALE=0")       // 1 = Active High, 0 = Active Low, doesn't seem to fix issue where the stepper is always disabled
+      << GCmd("LDE=2")       // 2 = forward limit only, 3 = diable both limits
+      << GCmd("CNE=-1")     // Set polarity (use -1 for Normally Closed, 1 for Normally Open)
+
+
          // Configure Extended I/O
       << GCmd("CO 1")        // configures bank 2 as outputs on extended I/O (IO 17-24)
 
@@ -189,8 +202,8 @@ std::string CMD::set_default_controller_settings()
       << GCmd("CN=-1")           // Set correct polarity for all limit switches
       << GCmd("BN")              // Save (burn) these settings to the controller just to be safe
       << GCmd("SH XYZ")          // Enable X,Y, and Z motors
-      << GCmd("SH H");           // Servo the jetting axis
-
+      << GCmd("SH H")            // Servo the jetting axis
+      << GCmd("SH E");           // Servo the Reservior Axis !!!
     return s.str();
 }
 
@@ -437,8 +450,29 @@ std::string CMD::homing_sequence(bool homeZAxis)
     s << define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
     s << define_position(Axis::Y, 0);
     s << define_position(Axis::Z, 0);
+
     // set software limit to current position
     s << set_forward_software_limit(Axis::Z, 0);
+
+    // === Home Reservoir Axis to Single Limit Switch === (added 3/11)
+    s << disable_forward_software_limit(Axis::Reservoir); // try to fix phantom limits 3/12
+    s << set_accleration(Axis::Reservoir, 200);
+    s << set_deceleration(Axis::Reservoir, 200);
+    s << set_limit_switch_deceleration(Axis::Reservoir, 400);
+
+    // Jog towards the physical limit switch.
+    s << set_jog(Axis::Reservoir, 5); // jog into upper limit
+    s << begin_motion(Axis::Reservoir); // Start Reservoir homing
+    s << motion_complete(Axis::Reservoir); // Wait for Reservoir to hit the physical limit
+    // Perform the Back-off (Negative = Down)
+    s << position_relative(Axis::Reservoir, -2);
+    s << begin_motion(Axis::Reservoir);
+    s << motion_complete(Axis::Reservoir);
+
+    // Define final Reservoir position and software limits
+    s << define_position(Axis::Reservoir, R_STAGE_LEN_MM);
+    s << set_forward_software_limit(Axis::Reservoir, R_STAGE_LEN_MM); // Can't go past the back-off point
+    s << set_reverse_software_limit(Axis::Reservoir, 0);
 
     return s.str();
 }
@@ -624,5 +658,21 @@ std::stringstream& CommandGenerator::jog_axis(Axis axis, double speed_mm_s)
     s << CMD::begin_motion(axis);
     return s;
 }
+
+std::string CMD::quick_purge(int pulseTime_ms)
+{
+    std::stringstream s;
+    s << CMD::display_message("Quick purging valve.");
+    // Turn valve ON
+    s << CMD::set_bit(PURGE_VALVE_BIT);
+    // Wait
+    s << CMD::sleep(pulseTime_ms);
+    // Turn valve OFF
+    s << CMD::clear_bit(PURGE_VALVE_BIT);
+
+    return s.str();
+}
+
+
 
 #include "moc_printer.cpp"
