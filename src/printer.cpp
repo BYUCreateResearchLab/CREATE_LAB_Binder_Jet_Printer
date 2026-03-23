@@ -63,7 +63,7 @@ std::string CMD::detail::axis_string(Axis axis)
     case Axis::Y:   return {"Y"};
     case Axis::Z:   return {"Z"};
     case Axis::Jet: return {"H"};
-    case Axis::HeatLamp: return {"E"};
+    case Axis::HeatLamp: return {"G"};
 
     default:
         throw std::invalid_argument("invalid axis");
@@ -176,13 +176,13 @@ std::string CMD::set_default_controller_settings()
       << GCmd("AUZ=9")       // Set current loop (based on inductance of motor)
          // Note: There might be more settings especially for this axis I might want to add later
 
-         // E axis (Heat Lamp)
+         // G axis (Heat Lamp)
       << GCmd("CB 9")
-      << GCmd("MTE=1")
-      << GCmd("AGE=0")
-      << GCmd("OFE=-9.997")
-      << GCmd("TLE=9.997")
-      << GCmd("TKE=9.997")
+      << GCmd("MTG=1")
+      << GCmd("AGG=0")
+      << GCmd("OFG=-9.997")
+      << GCmd("TLG=9.997")
+      << GCmd("TKG=9.997")
       << GCmd("DM BEDTEMP[1]")
 
          // H Axis (Jetting Axis)
