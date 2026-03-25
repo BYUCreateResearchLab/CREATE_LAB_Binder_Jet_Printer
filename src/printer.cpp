@@ -180,9 +180,9 @@ std::string CMD::set_default_controller_settings()
       << GCmd("CB 9")
       << GCmd("MTG=1")
       << GCmd("AGG=0")
-      << GCmd("OFG=-9.997")
-      << GCmd("TLG=9.997")
-      << GCmd("TKG=9.997")
+      << GCmd("OFG=0")
+      << GCmd("TLG=5")
+      << GCmd("TKG=5")
       << GCmd("DM BEDTEMP[1]")
 
          // H Axis (Jetting Axis)
@@ -194,7 +194,7 @@ std::string CMD::set_default_controller_settings()
       << GCmd("YAH=1")       // set step resolution to 1 full step per step
 
          // Configure Extended I/O
-      << GCmd("CO 1")        // configures bank 2 as outputs on extended I/O (IO 17-24)
+      << GCmd("CO 3")        // configures bank 2 and 3 as outputs on extended I/O (IO 17-32)
 
       << GCmd("CC 19200,0,1,0")  // AUX PORT FOR THE ULTRASONIC GENERATOR
       << GCmd("CN=-1")           // Set correct polarity for all limit switches

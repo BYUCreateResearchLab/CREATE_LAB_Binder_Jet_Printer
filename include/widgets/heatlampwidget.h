@@ -23,6 +23,7 @@ public:
     void allow_widget_input(bool allowed) override;
 
     void clear_temperature_history();
+    void set_bits();
 
 private:
     void get_bed_temp();
