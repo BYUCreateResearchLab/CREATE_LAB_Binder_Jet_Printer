@@ -15,6 +15,7 @@ HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     connect(ui->cureLayerButton, &QPushButton::clicked, this, &HeatLampWidget::cure_layer_pressed);
     connect(ui->setVoltageButton, &QPushButton::clicked, this, &HeatLampWidget::set_voltage);
     connect(ui->clearHistoryButton, &QPushButton::clicked, this, &HeatLampWidget::clear_temperature_history);
+    connect(ui->setBitsButton, &QPushButton::clicked, this, &HeatLampWidget::set_bits);
 }
 
 HeatLampWidget::~HeatLampWidget()
@@ -33,14 +34,45 @@ void HeatLampWidget::clear_temperature_history() {
     }
 }
 
+void HeatLampWidget::set_bits() {
+    qDebug("set_bits pressed");
+    std::stringstream ss;
+    if(ui -> D0Checkbox -> isChecked()) {
+        qDebug("D0");
+        ss << CMD::set_bit(9);
+    } else {
+        ss << CMD::clear_bit(9);
+    }
+    if(ui -> D1Checkbox -> isChecked()) {
+        qDebug("D1");
+        ss << CMD::set_bit(10);
+    } else {
+        ss << CMD::clear_bit(10);
+    }
+    if(ui -> D2Checkbox -> isChecked()) {
+        qDebug("D2");
+        ss << CMD::set_bit(11);
+    } else {
+        ss << CMD::clear_bit(11);
+    }
+    if(ui -> D3Checkbox -> isChecked()) {
+        qDebug("D3");
+        ss << CMD::set_bit(12);
+    } else {
+        ss << CMD::clear_bit(12);
+    }
+
+    mPrinter -> mcu -> printerThread -> execute_command(ss);
+}
+
 void HeatLampWidget::open_connection() {
     std::stringstream ss;
     ss << CMD::open_connection_to_controller();
     ss << CMD::detail::GCmd("MTG=1")
        << CMD::detail::GCmd("AGG=0")
-       << CMD::detail::GCmd("OFG=-9.997")
-       << CMD::detail::GCmd("TLG=9.997")
-       << CMD::detail::GCmd("TKG=9.997");
+       << CMD::detail::GCmd("OFG=0")
+       << CMD::detail::GCmd("TLG=5")
+       << CMD::detail::GCmd("TKG=5");
     mPrinter -> mcu -> printerThread -> execute_command(ss);
 }
 
