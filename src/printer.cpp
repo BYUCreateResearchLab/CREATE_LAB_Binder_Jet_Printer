@@ -63,7 +63,6 @@ std::string CMD::detail::axis_string(Axis axis)
     case Axis::Y:   return {"Y"};
     case Axis::Z:   return {"Z"};
     case Axis::Jet: return {"H"};
-    case Axis::HeatLamp: return {"G"};
 
     default:
         throw std::invalid_argument("invalid axis");
