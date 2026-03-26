@@ -36,11 +36,11 @@ void HeatLampWidget::clear_temperature_history() {
 void HeatLampWidget::open_connection() {
     std::stringstream ss;
     ss << CMD::open_connection_to_controller();
-    ss << CMD::detail::GCmd("MTE=1")
-       << CMD::detail::GCmd("AGE=0")
-       << CMD::detail::GCmd("OFE=-9.997")
-       << CMD::detail::GCmd("TLE=9.997")
-       << CMD::detail::GCmd("TKE=9.997");
+    ss << CMD::detail::GCmd("MTG=1")
+       << CMD::detail::GCmd("AGG=0")
+       << CMD::detail::GCmd("OFG=-9.997")
+       << CMD::detail::GCmd("TLG=9.997")
+       << CMD::detail::GCmd("TKG=9.997");
     mPrinter -> mcu -> printerThread -> execute_command(ss);
 }
 
