@@ -495,15 +495,9 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     heatLamp -> target_temp = settings.target_temp;
     heatLamp -> kp = settings.kp;
     heatLamp -> ki = settings.ki;
-    double next_voltage = heatLamp -> get_next_voltage();
-    ss << CMD::display_message("set voltage to: " + std::to_string(next_voltage));
-    if(next_voltage == 0) {
-        ss << CMD::clear_bit(9);
-    } else {
-        ss << CMD::set_bit(9);
-    }
-    ss << CMD::offset(Axis::HeatLamp, next_voltage);
-    ss << CMD::servo_here(Axis::HeatLamp);
+    int next_intensity = heatLamp -> get_next_intensity();
+    ss << CMD::display_message("set intensity to: " + std::to_string(next_intensity));
+    ss << heatLamp -> set_bits(next_intensity);
     ss << CMD::wait(settings.waitAfterHeatLampOn_millisecs);
 
     //move to pyrometer position
@@ -524,7 +518,7 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     ss << CMD::motion_complete(Axis::Y);
 
     //turn off heat lamp
-    ss << CMD::offset(Axis::HeatLamp, heatLamp -> min_voltage);
+    ss << heatLamp -> set_bits(0);
 
     //move up to original z position
     ss << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller)

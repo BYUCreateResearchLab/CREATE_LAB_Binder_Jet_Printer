@@ -3,9 +3,10 @@
 
 #include <vector>
 #include <QObject>
+#include "printer.h"
 
 struct TempData {
-    double voltage;
+    int intensity;
     double temp;
 };
 
@@ -16,18 +17,19 @@ class HeatLamp : public QObject
     public:
         explicit HeatLamp(double target_temp, QObject *parent = nullptr);
         ~HeatLamp();
-        double get_next_voltage();
         void set_last_temp(double temperature);
         double target_temp;
-        double kp{0.05}; // volts per degree
-        double ki{0.02}; //volts per degree*passes
+        double kp{0.05}; // intensity per degree
+        double ki{0.02}; //intensity per degree*passes
         void clear_history();
-        double max_voltage{-8.4};
-        double min_voltage{-8.9};
-        double starting_voltage {-8.5};
+        std::string set_intensity(int intensity);
+        int get_next_intensity();
+        int max_intensity{15};
+        int min_intensity{0};
+        int starting_intensity{0};
     
     private:
-        double last_voltage;
+        int last_intensity;
         std::vector<TempData> temp_history;
 };
 
