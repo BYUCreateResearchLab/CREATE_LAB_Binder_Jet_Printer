@@ -33,8 +33,8 @@
  * Pin 31 - I/O Bit 19
  * Pin 32 - I/O Bit 22
  * Pin 33 - Digital Ground
- * Pin 34 - I/O Bit 34
- * Pin 35 - No Connect
+ * Pin 34 - I/O Bit 27
+ * Pin 35 - I/0 Bit 30
  * Pin 36 - Digital Ground
  * Pin 37 - I/O Bit 34
  * Pin 38 - No Connect
@@ -106,6 +106,11 @@ class HeatLamp;
 
 #define MJ_START_BIT 23 // pin 18
 #define MJ_DIR_BIT 22 // pin 32
+
+#define HEATLAMP_D0 25
+#define HEATLAMP_D1 26
+#define HEATLAMP_D2 27
+#define HEATLAMP_D3 28
 
 struct PrintParameters {
     QString fileName = "";
