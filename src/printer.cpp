@@ -176,15 +176,6 @@ std::string CMD::set_default_controller_settings()
       << GCmd("AUZ=9")       // Set current loop (based on inductance of motor)
          // Note: There might be more settings especially for this axis I might want to add later
 
-         // G axis (Heat Lamp)
-      << GCmd("CB 9")
-      << GCmd("MTG=1")
-      << GCmd("AGG=0")
-      << GCmd("OFG=0")
-      << GCmd("TLG=5")
-      << GCmd("TKG=5")
-      << GCmd("DM BEDTEMP[1]")
-
          // H Axis (Jetting Axis)
       << GCmd("MTH=-2")      // Set jetting axis to be stepper motor with defualt low
       << GCmd("AGH=0")       // Set gain to lowest value
@@ -195,6 +186,10 @@ std::string CMD::set_default_controller_settings()
 
          // Configure Extended I/O
       << GCmd("CO 3")        // configures bank 2 and 3 as outputs on extended I/O (IO 17-32)
+      << GCmd("SB " + std::to_string(HEATLAMP_D0))       // turn off heat lamp
+      << GCmd("SB " + std::to_string(HEATLAMP_D1))
+      << GCmd("SB " + std::to_string(HEATLAMP_D2))
+      << GCmd("SB " + std::to_string(HEATLAMP_D3))
 
       << GCmd("CC 19200,0,1,0")  // AUX PORT FOR THE ULTRASONIC GENERATOR
       << GCmd("CN=-1")           // Set correct polarity for all limit switches
@@ -457,9 +452,9 @@ std::string CMD::homing_sequence(bool homeZAxis)
 std::string Printer::cure_layer(const PrintParameters &settings)
 {
     double yAxisTraverseSpeed_mm_s {30};
-    double heatLampStart_mm {-350};
-    double heatLampEnd_mm {-150};
-    double pyrometerPosition_mm {-250};
+    double heatLampStart_mm {-180};
+    double heatLampEnd_mm {-330};
+    double pyrometerPosition_mm {-295};
     
     std::stringstream ss;
 
@@ -497,7 +492,7 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     heatLamp -> ki = settings.ki;
     int next_intensity = heatLamp -> get_next_intensity();
     ss << CMD::display_message("set intensity to: " + std::to_string(next_intensity));
-    ss << heatLamp -> set_bits(next_intensity);
+    ss << heatLamp -> set_intensity(next_intensity);
     ss << CMD::wait(settings.waitAfterHeatLampOn_millisecs);
 
     //move to pyrometer position
@@ -518,7 +513,7 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     ss << CMD::motion_complete(Axis::Y);
 
     //turn off heat lamp
-    ss << heatLamp -> set_bits(0);
+    ss << heatLamp -> set_intensity(0);
 
     //move up to original z position
     ss << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller)

@@ -13,9 +13,9 @@ HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     connect(ui->getBedTempButton, &QPushButton::clicked, this, &HeatLampWidget::get_bed_temp);
     connect(ui->openConnectionToControllerButton, &QPushButton::clicked, this, &HeatLampWidget::open_connection);
     connect(ui->cureLayerButton, &QPushButton::clicked, this, &HeatLampWidget::cure_layer_pressed);
-    connect(ui->setVoltageButton, &QPushButton::clicked, this, &HeatLampWidget::set_voltage);
     connect(ui->clearHistoryButton, &QPushButton::clicked, this, &HeatLampWidget::clear_temperature_history);
     connect(ui->setBitsButton, &QPushButton::clicked, this, &HeatLampWidget::set_bits);
+    connect(ui->setIntensityButton, &QPushButton::clicked, this, &HeatLampWidget::set_intensity);
 }
 
 HeatLampWidget::~HeatLampWidget()
@@ -32,6 +32,12 @@ void HeatLampWidget::clear_temperature_history() {
     if(mPrinter -> heatLamp) {
         mPrinter -> heatLamp -> clear_history();
     }
+}
+
+void HeatLampWidget::set_intensity() {
+    std::stringstream ss;
+    ss << mPrinter -> heatLamp -> set_intensity(ui -> intensityInput -> value());
+    mPrinter -> mcu -> printerThread -> execute_command(ss);
 }
 
 void HeatLampWidget::set_bits() {
@@ -78,14 +84,6 @@ void HeatLampWidget::open_connection() {
        << CMD::set_bit(HEATLAMP_D1)
        << CMD::set_bit(HEATLAMP_D2)
        << CMD::set_bit(HEATLAMP_D3);
-    mPrinter -> mcu -> printerThread -> execute_command(ss);
-}
-
-void HeatLampWidget::set_voltage() {
-    std::stringstream ss;
-    ss << CMD::offset(Axis::HeatLamp, ui -> voltageInput->value());
-    ss << CMD::servo_here(Axis::HeatLamp);
-
     mPrinter -> mcu -> printerThread -> execute_command(ss);
 }
 

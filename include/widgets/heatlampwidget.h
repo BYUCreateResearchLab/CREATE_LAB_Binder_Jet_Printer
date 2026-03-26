@@ -23,13 +23,13 @@ public:
     void allow_widget_input(bool allowed) override;
 
     void clear_temperature_history();
+    void set_intensity();
     void set_bits();
 
 private:
     void get_bed_temp();
     void open_connection();
     void cure_layer_pressed();
-    void set_voltage();
 
 private:
     Ui::HeatLampWidget *ui;

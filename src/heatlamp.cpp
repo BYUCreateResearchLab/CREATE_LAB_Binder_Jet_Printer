@@ -1,4 +1,5 @@
 #include "heatlamp.h"
+#include <QDebug>
 
 HeatLamp::HeatLamp(double target_temp, QObject *parent):
     QObject(parent),
@@ -19,25 +20,25 @@ void HeatLamp::clear_history() {
 
 std::string HeatLamp::set_intensity(int intensity) {
     std::stringstream ss;
-    if (intensity%2) {
+    if (intensity%2 == 0) {
         ss << CMD::set_bit(HEATLAMP_D0);
     } else {
         ss << CMD::clear_bit(HEATLAMP_D0);
     }
     intensity /= 2;
-    if (intensity%2) {
+    if (intensity%2 == 0) {
         ss << CMD::set_bit(HEATLAMP_D1);
     } else {
         ss << CMD::clear_bit(HEATLAMP_D1);
     }
     intensity /= 2;
-    if (intensity%2) {
+    if (intensity%2 == 0) {
         ss << CMD::set_bit(HEATLAMP_D2);
     } else {
         ss << CMD::clear_bit(HEATLAMP_D2);
     }
     intensity /= 2;
-    if (intensity%2) {
+    if (intensity%2 == 0) {
         ss << CMD::set_bit(HEATLAMP_D3);
     } else {
         ss << CMD::clear_bit(HEATLAMP_D3);

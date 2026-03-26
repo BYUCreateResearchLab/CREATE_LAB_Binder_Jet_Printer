@@ -134,7 +134,7 @@ struct PrintParameters {
 
 enum class Axis
 {
-    X, Y, Z, Jet, HeatLamp
+    X, Y, Z, Jet
 };
 
 enum class MotorType

@@ -231,45 +231,6 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="verticalLayoutWidget_2">
-   <property name="geometry">
-    <rect>
-     <x>770</x>
-     <y>60</y>
-     <width>160</width>
-     <height>80</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
-    <item>
-     <widget class="QLabel" name="label_8">
-      <property name="text">
-       <string>Voltage Output</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QDoubleSpinBox" name="voltageInput">
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-      <property name="singleStep">
-       <double>0.100000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="setVoltageButton">
-      <property name="text">
-       <string>Set Voltage</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
   <widget class="QWidget" name="verticalLayoutWidget_3">
    <property name="geometry">
     <rect>
@@ -316,6 +277,39 @@
      <widget class="QPushButton" name="setBitsButton">
       <property name="text">
        <string>Set Bits</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="verticalLayoutWidget_4">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
+     <y>340</y>
+     <width>160</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_4">
+    <item>
+     <widget class="QLabel" name="label_11">
+      <property name="text">
+       <string>Intensity (0-15)</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSpinBox" name="intensityInput">
+      <property name="maximum">
+       <number>15</number>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="setIntensityButton">
+      <property name="text">
+       <string>Set Intensity</string>
       </property>
      </widget>
     </item>
