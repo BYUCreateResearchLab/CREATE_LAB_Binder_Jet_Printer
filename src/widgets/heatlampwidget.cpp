@@ -39,27 +39,27 @@ void HeatLampWidget::set_bits() {
     std::stringstream ss;
     if(ui -> D0Checkbox -> isChecked()) {
         qDebug("D0");
-        ss << CMD::set_bit(9);
+        ss << CMD::set_bit(HEATLAMP_D0);
     } else {
-        ss << CMD::clear_bit(9);
+        ss << CMD::clear_bit(HEATLAMP_D0);
     }
     if(ui -> D1Checkbox -> isChecked()) {
         qDebug("D1");
-        ss << CMD::set_bit(10);
+        ss << CMD::set_bit(HEATLAMP_D1);
     } else {
-        ss << CMD::clear_bit(10);
+        ss << CMD::clear_bit(HEATLAMP_D1);
     }
     if(ui -> D2Checkbox -> isChecked()) {
         qDebug("D2");
-        ss << CMD::set_bit(11);
+        ss << CMD::set_bit(HEATLAMP_D2);
     } else {
-        ss << CMD::clear_bit(11);
+        ss << CMD::clear_bit(HEATLAMP_D2);
     }
     if(ui -> D3Checkbox -> isChecked()) {
         qDebug("D3");
-        ss << CMD::set_bit(12);
+        ss << CMD::set_bit(HEATLAMP_D3);
     } else {
-        ss << CMD::clear_bit(12);
+        ss << CMD::clear_bit(HEATLAMP_D3);
     }
 
     mPrinter -> mcu -> printerThread -> execute_command(ss);
