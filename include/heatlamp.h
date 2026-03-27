@@ -27,6 +27,7 @@ class HeatLamp : public QObject
         int max_intensity{15};
         int min_intensity{0};
         int starting_intensity{2};
+        int default_intensity{1};
     
     private:
         int last_intensity;
