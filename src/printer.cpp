@@ -195,6 +195,9 @@ std::string CMD::set_default_controller_settings()
       << GCmd("LDE=2")       // 2 = forward limit only, 3 = diable both limits
       << GCmd("CNE=-1")     // Set polarity (use -1 for Normally Closed, 1 for Normally Open)
 
+      // Pyrometer data array
+      << GCmd("DM BEDTEMP[1]")
+
 
          // Configure Extended I/O
       << GCmd("CO 3")        // configures bank 2 and 3 as outputs on extended I/O (IO 17-32)
@@ -496,7 +499,7 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     //get last temperature
     char buff[G_SMALL_BUFFER];
     GArrayUpload(mcu->g, "BEDTEMP", 0, 0, G_COMMA, buff, G_SMALL_BUFFER);
-    if (std::stod(buff) != 0) {
+    if (std::stod(buff) != 1) {
         heatLamp -> set_last_temp(100*std::stod(buff));
     }
     ss << CMD::display_message("last temperature was: " + std::to_string(std::stod(buff)*100));
@@ -554,6 +557,7 @@ std::string Printer::cure_layer(const PrintParameters &settings)
        << CMD::motion_complete(Axis::Z);
 
     ss << CMD::display_message("done curing layer");
+
     return ss.str();
 }
 

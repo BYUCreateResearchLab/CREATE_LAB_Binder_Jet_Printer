@@ -75,11 +75,7 @@ void HeatLampWidget::open_connection() {
     std::stringstream ss;
     ss << CMD::open_connection_to_controller();
     ss << CMD::detail::GCmd("CO 3");        // configures bank 2 and 3 as outputs on extended I/O (IO 17-32)
-    ss << CMD::detail::GCmd("MTG=1")
-       << CMD::detail::GCmd("AGG=0")
-       << CMD::detail::GCmd("OFG=0")
-       << CMD::detail::GCmd("TLG=5")
-       << CMD::detail::GCmd("TKG=5")
+    ss << CMD::detail::GCmd("DM BEDTEMP[1]")
        << CMD::set_bit(HEATLAMP_D0)
        << CMD::set_bit(HEATLAMP_D1)
        << CMD::set_bit(HEATLAMP_D2)
