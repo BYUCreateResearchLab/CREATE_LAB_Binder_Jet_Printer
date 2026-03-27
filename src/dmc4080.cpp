@@ -54,7 +54,7 @@ void DMC4080::connect_to_motion_controller(bool homeZAxis)
         "EN\r";               // End Program
 
     std::time_t currentTime = std::time(nullptr);
-    while (!g && std::time(nullptr) < currentTime + 10) {}
+    while (!g && std::time(nullptr) < currentTime + 2) {}
     if(g) {
         // 1. Download the program to the controller
         GProgramDownload(g, program.c_str(), "");
