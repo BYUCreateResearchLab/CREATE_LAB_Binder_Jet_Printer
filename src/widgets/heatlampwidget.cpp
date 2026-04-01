@@ -115,4 +115,30 @@ void HeatLampWidget::cure_layer_pressed() {
     mPrinter -> mcu -> printerThread -> execute_command(s);
 }
 
+void HeatLampWidget::roll_and_cure_layers() {
+    PrintParameters settings {};
+    settings.cureSpeed_mm_s = ui -> cureSpeedInput -> value();
+    settings.target_temp = ui -> targetTempInput -> value();
+    settings.waitAfterHeatLampOn_millisecs = ui -> waitAfterHeatLampInput -> value();
+    settings.kp = ui -> kpInput -> value();
+    settings.ki = ui -> kiInput -> value();
+
+    RecoatSettings layerRecoatSettings {};
+    // layerRecoatSettings.isLevelRecoat = false;
+    // layerRecoatSettings.rollerTraverseSpeed_mm_s = ui->rollerTraverseSpeedSpinBox->value();
+    // layerRecoatSettings.recoatSpeed_mm_s = ui->recoatSpeedSpinBox->value();
+    // // Note: Index from the combo box must match up with the data to be sent over RS-232 to the generator (see documentation of generator)
+    // layerRecoatSettings.ultrasonicIntensityLevel = ui->ultrasonicIntensityComboBox->currentIndex();
+    // layerRecoatSettings.ultrasonicMode = ui->ultrasonicModeComboBox->currentIndex();
+    // layerRecoatSettings.layerHeight_microns = (ui->layerHeightSpinBox->value()) * zScale;
+    // layerRecoatSettings.waitAfterHopperOn_millisecs = ui->hopperDwellTimeMsSpinBox->value();
+
+    for(int i = 0; i < ui -> numLayersToRoll -> value(); i++) {
+        std::stringstream s;
+        s << CMD::spread_layer(layerRecoatSettings);
+        s << mPrinter -> cure_layer(settings);
+        mPrinter -> mcu -> printerThread -> execute_command(s);
+    }
+}
+
 #include "moc_heatlampwidget.cpp"
