@@ -17,8 +17,8 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 set(GCLIB_INSTALL_DIR "C:/Program Files (x86)/Galil/gclib")
 
 find_package(OpenCV REQUIRED)
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Svg PrintSupport SerialPort REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Svg PrintSupport SerialPort REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Svg PrintSupport SerialPort REQUIRED Charts)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Svg PrintSupport SerialPort REQUIRED Charts)
 find_package(ueyeapi REQUIRED)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -242,6 +242,7 @@ target_link_libraries(${EXE_NAME} PUBLIC
     Qt${QT_VERSION_MAJOR}::Svg
     Qt${QT_VERSION_MAJOR}::PrintSupport
     Qt${QT_VERSION_MAJOR}::SerialPort
+    Qt${QT_VERSION_MAJOR}::Charts
     gclib
     gclibo
     ueye_api${PLATFORM_SUFFIX}
@@ -249,7 +250,6 @@ target_link_libraries(${EXE_NAME} PUBLIC
     ${OpenCV_LIBS}
 
 )
-
 target_include_directories(${EXE_NAME} PUBLIC
 
     ${GCLIB_INSTALL_DIR}/include
