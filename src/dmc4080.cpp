@@ -63,9 +63,11 @@ void DMC4080::connect_to_motion_controller(bool homeZAxis)
         s << "GCmd," << "XQ" << "\n";
         s << CMD::sleep(500);
         s << CMD::after_motion(Axis::Y);
-
         s << CMD::set_default_controller_settings();
+
         s << CMD::homing_sequence(homeZAxis);
+
+        s << CMD::display_message("done homing");
 
         printerThread->execute_command(s);
     } else {

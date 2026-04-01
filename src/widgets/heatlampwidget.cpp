@@ -1,7 +1,9 @@
 #include "heatlampwidget.h"
+#include "outputwindow.h"
 #include "ui_heatlampwidget.h"
 #include "heatlamp.h"
 #include "mjprintheadwidget.h"
+#include "mainwindow.h"
 #include <QtCharts>
 
 HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
@@ -17,6 +19,10 @@ HeatLampWidget::HeatLampWidget(Printer *printer, QWidget *parent) :
     connect(ui->clearHistoryButton, &QPushButton::clicked, this, &HeatLampWidget::clear_temperature_history);
     connect(ui->setBitsButton, &QPushButton::clicked, this, &HeatLampWidget::set_bits);
     connect(ui->setIntensityButton, &QPushButton::clicked, this, &HeatLampWidget::set_intensity);
+    connect(ui->showChartButton, &QPushButton::clicked, this, &HeatLampWidget::show_chart);
+    connect(ui->addFakeTempButton, &QPushButton::clicked, this, &HeatLampWidget::add_fake_temp);
+    connect(ui->rollAndCureButton, &QPushButton::clicked, this, &HeatLampWidget::roll_and_cure_layers);
+    connect(ui->printTemperatureDataButton, &QPushButton::clicked, this, &HeatLampWidget::print_temp_history);
 }
 
 HeatLampWidget::~HeatLampWidget()
@@ -116,6 +122,43 @@ void HeatLampWidget::cure_layer_pressed() {
     mPrinter -> mcu -> printerThread -> execute_command(s);
 }
 
+void HeatLampWidget::cure_and_roll(PrintParameters params, RecoatSettings recoatSettings) {
+    // 1. Move nozzle to park position FIRST.
+    //mPrinter->mjController->outputMessage("Moving nozzle to park position for recoat.");
+
+    //MJPrintheadWidget::moveNozzleOffPlate();
+
+    //2. cure layer
+    //mPrinter->mjController->outputMessage("Performing curing operation...");
+    curingComplete = false;
+    std::stringstream s;
+    s << CMD::display_message("Curing layer...");
+    s << mPrinter -> cure_layer(params);
+    s << CMD::display_message("Curing Complete");
+
+    emit execute_command(s);
+
+    while (!curingComplete) {
+        QCoreApplication::processEvents();
+    }
+
+    // 3. Now that the head is parked, perform the recoat operation.
+    //mPrinter->mjController->outputMessage("Performing recoat operation...");
+    recoatComplete = false;
+    s = std::stringstream();
+
+    // --- 2. **Build and execute the recoat command** ---
+    s << CMD::display_message("Recoating for new layer...");
+    s << CMD::spread_layer(recoatSettings);
+    s << CMD::display_message("Recoat Complete");
+
+    emit execute_command(s);
+
+    while (!recoatComplete) {
+        QCoreApplication::processEvents();
+    }
+}
+
 void HeatLampWidget::roll_and_cure_layers() {
     PrintParameters settings {};
     settings.cureSpeed_mm_s = ui -> cureSpeedInput -> value();
@@ -123,64 +166,71 @@ void HeatLampWidget::roll_and_cure_layers() {
     settings.waitAfterHeatLampOn_millisecs = ui -> waitAfterHeatLampInput -> value();
     settings.kp = ui -> kpInput -> value();
     settings.ki = ui -> kiInput -> value();
-
-    RecoatSettings layerRecoatSettings {};
-    // layerRecoatSettings.isLevelRecoat = false;
-    // layerRecoatSettings.rollerTraverseSpeed_mm_s = ui->rollerTraverseSpeedSpinBox->value();
-    // layerRecoatSettings.recoatSpeed_mm_s = ui->recoatSpeedSpinBox->value();
-    // // Note: Index from the combo box must match up with the data to be sent over RS-232 to the generator (see documentation of generator)
-    // layerRecoatSettings.ultrasonicIntensityLevel = ui->ultrasonicIntensityComboBox->currentIndex();
-    // layerRecoatSettings.ultrasonicMode = ui->ultrasonicModeComboBox->currentIndex();
-    // layerRecoatSettings.layerHeight_microns = (ui->layerHeightSpinBox->value()) * zScale;
-    // layerRecoatSettings.waitAfterHopperOn_millisecs = ui->hopperDwellTimeMsSpinBox->value();
+    settings.default_intensity = ui -> defaultIntensityInput -> value();
+    RecoatSettings recoatSettings{};
+    recoatSettings.layerHeight_microns = ui->layerHeightSpinBox->value();
+    recoatSettings.isLevelRecoat = false; // Normal recoat for full prints
+    recoatSettings.rollerTraverseSpeed_mm_s = ui->rollerTraverseSpeedSpinBox->value();
+    recoatSettings.recoatSpeed_mm_s = ui->recoatSpeedSpinBox->value();
+    recoatSettings.ultrasonicIntensityLevel = ui->ultrasonicIntensityComboBox->currentIndex();
+    recoatSettings.ultrasonicMode = ui->ultrasonicModeComboBox->currentIndex();
+    recoatSettings.waitAfterHopperOn_millisecs = ui->hopperDwellTimeMsSpinBox->value();
 
     for(int i = 0; i < ui -> numLayersToRoll -> value(); i++) {
-        std::stringstream s;
-        s << CMD::spread_layer(layerRecoatSettings);
-        s << mPrinter -> cure_layer(settings);
-        mPrinter -> mcu -> printerThread -> execute_command(s);
+        cure_and_roll(settings, recoatSettings);
+        char buff[G_SMALL_BUFFER];
+        GArrayUpload(mPrinter -> mcu -> g, "BEDTEMP", 0, 0, G_COMMA, buff, G_SMALL_BUFFER);
+        temp_history.push_back((std::stod(buff))*100);
+        show_chart();
+        std::time_t currentTime = std::time(nullptr);
+        while (std::time(nullptr) < currentTime + ui -> printDelayInput -> value()) {
+            QCoreApplication::processEvents();
+        }
     }
 }
 
-void HeatLampWidget::show_graph() {
-        GraphsView {
-                     axisX: ValueAxis {
-                                     max: 5
+void clearLayout(QLayout *layout) {
+    if (layout == NULL)
+        return;
+    QLayoutItem *item;
+    while((item = layout->takeAt(0))) {
+        if (item->layout()) {
+            clearLayout(item->layout());
+            delete item->layout();
+        }
+        if (item->widget()) {
+            delete item->widget();
+        }
+        delete item;
     }
-                     axisY: ValueAxis {
-                                     max: 5
-    }
+}
 
-                     LineSeries {
-                                  color: "#00ff00"
-                                  joinStyle: Qt.RoundJoin
+void HeatLampWidget::print_temp_history() {
+    std::stringstream s;
+    for(double temp:temp_history) {
+        qDebug() << temp;
+    }
+}
 
-                                  XYPoint {
-                                          x: 0.5
-                                          y: 0.5
+void HeatLampWidget::show_chart() {
+    clearLayout(ui ->chartLayout);
+    QLineSeries *series = new QLineSeries();
+    for(int i = 0; i < temp_history.size(); i++) {
+        series->append(i + 1, temp_history.at(i));
     }
+    QChart *chart = new QChart();
+    chart->legend()->hide();
+    chart->addSeries(series);
+    chart->createDefaultAxes();
+    chart->setTitle("Temperature vs Layer Number");
+    QChartView *chartView = new QChartView(chart);
+    chartView->setRenderHint(QPainter::Antialiasing);
+    ui -> chartLayout -> addWidget(chartView);
+}
 
-                                  XYPoint {
-                                          x: 1.1
-                                          y: NaN
-    }
-
-                                  XYPoint {
-                                          x: 1.9
-                                          y: 3.3
-    }
-
-                                  XYPoint {
-                                          x: 2.1
-                                          y: 2.1
-    }
-
-                                  XYPoint {
-                                            x: 5
-                                            y: 4.9
-    }
-    }
-    }
+void HeatLampWidget::add_fake_temp() {
+    temp_history.push_back(ui -> fakeTemp -> value());
+    show_chart();
 }
 
 #include "moc_heatlampwidget.cpp"

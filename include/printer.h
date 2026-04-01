@@ -131,9 +131,10 @@ struct PrintParameters {
     double cureSpeed_mm_s {10};
     int waitAfterHeatLampOn_millisecs {500};
     double target_temp {40};
-    double kp {0.1};
+    double kp {0.2};
     double ki {0.05};
-    double starting_voltage {1};
+    double starting_intensity {1};
+    double default_intensity {1};
 };
 
 enum class Axis

@@ -1275,7 +1275,8 @@ bool MJPrintheadWidget::parsePrintParameters(const QString& filePath, PrintParam
             else if (key == "Target Temperature") params.target_temp = valuePart.split(' ')[0].toDouble();
             else if (key == "Kp") params.kp = valuePart.split(' ')[0].toDouble();
             else if (key == "Ki") params.ki = valuePart.split(' ')[0].toDouble();
-            else if (key == "HeatLamp Starting Voltage") params.starting_voltage = valuePart.split(' ')[0].toDouble();
+            else if (key == "HeatLamp Starting Intensity") params.starting_intensity = valuePart.split(' ')[0].toDouble();
+            else if (key == "HeatLamp Default Intensity") params.default_intensity = valuePart.split(' ')[0].toDouble();
             else if (key == "Delay after HeatLamp On") params.waitAfterHeatLampOn_millisecs = valuePart.split(' ')[0].toInt();
             else if (key == "Part Position (Start X, Y)") {
                 QStringList coords = valuePart.split(',');
@@ -1366,6 +1367,35 @@ bool MJPrintheadWidget::parseLayerShifts(const QString& filePath, std::map<int, 
     file.close();
     mPrinter->mjController->outputMessage(QString("Successfully parsed layer shifts."));
     return true;
+}
+
+void MJPrintheadWidget::cure_and_roll(PrintParameters params) {
+    // 1. Move nozzle to park position FIRST.
+    mPrinter->mjController->outputMessage("Moving nozzle to park position for recoat.");
+
+    moveNozzleOffPlate();
+
+    //2. cure layer
+    mPrinter->mjController->outputMessage("Performing curing operation...");
+    curingComplete = false;
+    std::stringstream s;
+    s << CMD::display_message("Curing layer...");
+    s << mPrinter -> cure_layer(params);
+    s << CMD::display_message("Curing Complete");
+
+    emit execute_command(s);
+
+    while (!curingComplete) {
+        QCoreApplication::processEvents();
+    }
+
+    // 3. Now that the head is parked, perform the recoat operation.
+    mPrinter->mjController->outputMessage("Performing recoat operation...");
+    recoatComplete = false;
+    performRecoat(&params, true);
+    while (!recoatComplete) {
+        QCoreApplication::processEvents();
+    }
 }
 
 // Main function for executing a multi-layer print from a sliced STL job folder.

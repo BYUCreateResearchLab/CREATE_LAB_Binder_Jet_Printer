@@ -207,7 +207,7 @@ std::string CMD::set_default_controller_settings()
       << GCmd("SB " + std::to_string(HEATLAMP_D3))
 
       << GCmd("CC 19200,0,1,0")  // AUX PORT FOR THE ULTRASONIC GENERATOR
-      << GCmd("CN=-1")           // Set correct polarity for all limit switches
+      << GCmd("CN=-1, -1")           // Set correct polarity for all limit switches
       << GCmd("BN")              // Save (burn) these settings to the controller just to be safe
       << GCmd("SH XYZ")          // Enable X,Y, and Z motors
       << GCmd("SH H")            // Servo the jetting axis
@@ -462,25 +462,25 @@ std::string CMD::homing_sequence(bool homeZAxis)
     // set software limit to current position
     s << set_forward_software_limit(Axis::Z, 0);
 
-    // === Home Reservoir Axis to Single Limit Switch === (added 3/11)
-    s << disable_forward_software_limit(Axis::Reservoir); // try to fix phantom limits 3/12
-    s << set_accleration(Axis::Reservoir, 200);
-    s << set_deceleration(Axis::Reservoir, 200);
-    s << set_limit_switch_deceleration(Axis::Reservoir, 400);
+    // // === Home Reservoir Axis to Single Limit Switch === (added 3/11)
+    // s << disable_forward_software_limit(Axis::Reservoir); // try to fix phantom limits 3/12
+    // s << set_accleration(Axis::Reservoir, 200);
+    // s << set_deceleration(Axis::Reservoir, 200);
+    // s << set_limit_switch_deceleration(Axis::Reservoir, 400);
 
-    // Jog towards the physical limit switch.
-    s << set_jog(Axis::Reservoir, 5); // jog into upper limit
-    s << begin_motion(Axis::Reservoir); // Start Reservoir homing
-    s << motion_complete(Axis::Reservoir); // Wait for Reservoir to hit the physical limit
-    // Perform the Back-off (Negative = Down)
-    s << position_relative(Axis::Reservoir, -2);
-    s << begin_motion(Axis::Reservoir);
-    s << motion_complete(Axis::Reservoir);
+    // // Jog towards the physical limit switch.
+    // s << set_jog(Axis::Reservoir, 5); // jog into upper limit
+    // s << begin_motion(Axis::Reservoir); // Start Reservoir homing
+    // s << motion_complete(Axis::Reservoir); // Wait for Reservoir to hit the physical limit
+    // // Perform the Back-off (Negative = Down)
+    // s << position_relative(Axis::Reservoir, -2);
+    // s << begin_motion(Axis::Reservoir);
+    // s << motion_complete(Axis::Reservoir);
 
-    // Define final Reservoir position and software limits
-    s << define_position(Axis::Reservoir, R_STAGE_LEN_MM);
-    s << set_forward_software_limit(Axis::Reservoir, R_STAGE_LEN_MM); // Can't go past the back-off point
-    s << set_reverse_software_limit(Axis::Reservoir, 0);
+    // // Define final Reservoir position and software limits
+    // s << define_position(Axis::Reservoir, R_STAGE_LEN_MM);
+    // s << set_forward_software_limit(Axis::Reservoir, R_STAGE_LEN_MM); // Can't go past the back-off point
+    // s << set_reverse_software_limit(Axis::Reservoir, 0);
 
     return s.str();
 }
@@ -526,6 +526,8 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     heatLamp -> target_temp = settings.target_temp;
     heatLamp -> kp = settings.kp;
     heatLamp -> ki = settings.ki;
+    heatLamp -> starting_intensity = settings.starting_intensity;
+    heatLamp -> default_intensity = settings.default_intensity;
     int next_intensity = heatLamp -> get_next_intensity();
     ss << CMD::display_message("set intensity to: " + std::to_string(next_intensity));
     ss << heatLamp -> set_intensity(next_intensity);

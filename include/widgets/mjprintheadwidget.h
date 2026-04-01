@@ -24,6 +24,7 @@ public:
     explicit MJPrintheadWidget(Printer *printer, QWidget *parent = nullptr);
     ~MJPrintheadWidget();
     void allow_widget_input(bool allowed) override;
+    void cure_and_roll(PrintParameters params);
 
 
 protected:

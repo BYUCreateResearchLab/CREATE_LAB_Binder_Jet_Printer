@@ -102,7 +102,6 @@ private:
     HighSpeedLineWidget *highSpeedLineWidget {nullptr};
     DropletObservationWidget *dropletObservationWidget {nullptr};
     BedMicroscopeWidget *bedMicroscopeWidget {nullptr};
-    MJPrintheadWidget *mjPrintheadWidget {nullptr};
     HeatLampWidget *heatLampWidget {nullptr};
 
     QMessageBox *messageBox {nullptr};
@@ -111,5 +110,10 @@ private:
 
 
     std::ofstream logFile;
+
+public:
+    MJPrintheadWidget *mjPrintheadWidget {nullptr};
 };
+
+
 #endif // MAINWINDOW_H
