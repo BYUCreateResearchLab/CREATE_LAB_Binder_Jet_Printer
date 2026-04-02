@@ -28,6 +28,7 @@ class HeatLamp : public QObject
         int min_intensity{0};
         int starting_intensity{2};
         int default_intensity{1};
+        std::string get_temp_history();
     
     private:
         int last_intensity;

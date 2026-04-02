@@ -210,6 +210,8 @@ void HeatLampWidget::print_temp_history() {
     for(double temp:temp_history) {
         qDebug() << temp;
     }
+    qDebug("---------");
+    qDebug() << mPrinter -> heatLamp -> get_temp_history().c_str();
 }
 
 void HeatLampWidget::show_chart() {

@@ -428,6 +428,7 @@ std::string CMD::homing_sequence(bool homeZAxis)
     // home to center index on x axis
     s << set_jog(Axis::X, -30);
     s << set_homing_velocity(Axis::X, 0.5);
+    s << set_homing_velocity(Axis::X, 1);
     s << find_index(Axis::X);
 
     // home y axis to nearest index
@@ -454,7 +455,6 @@ std::string CMD::homing_sequence(bool homeZAxis)
     s << motion_complete(Axis::Y);
     if (homeZAxis)
         s << motion_complete(Axis::Z);
-
     s << define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
     s << define_position(Axis::Y, 0);
     s << define_position(Axis::Z, 0);
@@ -531,7 +531,7 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     int next_intensity = heatLamp -> get_next_intensity();
     ss << CMD::display_message("set intensity to: " + std::to_string(next_intensity));
     ss << heatLamp -> set_intensity(next_intensity);
-    ss << CMD::wait(settings.waitAfterHeatLampOn_millisecs);
+    ss << CMD::sleep(settings.waitAfterHeatLampOn_millisecs);
 
     //move to pyrometer position
     ss << CMD::set_speed(Axis::Y, settings.cureSpeed_mm_s);
