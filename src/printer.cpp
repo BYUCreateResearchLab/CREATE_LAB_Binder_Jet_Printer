@@ -530,7 +530,14 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     heatLamp -> default_intensity = settings.default_intensity;
     int next_intensity = heatLamp -> get_next_intensity();
     ss << CMD::display_message("set intensity to: " + std::to_string(next_intensity));
-    ss << heatLamp -> set_intensity(next_intensity);
+    std::string program = "i = 0\n#Loop\n";
+    program += CMD::cmd_buf_to_dmc(heatLamp -> set_intensity(next_intensity));
+    program += "\nWT 500\n";
+    program += CMD::cmd_buf_to_dmc(heatLamp -> set_intensity(next_intensity - 1));
+    program += "\nWT 500\ni = i + 1\n";
+    program += "JP #Loop, i < 15\nEN";
+    qDebug(program);
+    //GProgramDownload(mcu->g, program);
     ss << CMD::sleep(settings.waitAfterHeatLampOn_millisecs);
 
     //move to pyrometer position

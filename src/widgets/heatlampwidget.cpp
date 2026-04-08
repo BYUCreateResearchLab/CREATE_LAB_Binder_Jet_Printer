@@ -119,7 +119,7 @@ void HeatLampWidget::cure_layer_pressed() {
 
     std::stringstream s;
     s << mPrinter -> cure_layer(settings);
-    mPrinter -> mcu -> printerThread -> execute_command(s);
+    //mPrinter -> mcu -> printerThread -> execute_command(s);
 }
 
 void HeatLampWidget::cure_and_roll(PrintParameters params, RecoatSettings recoatSettings) {
