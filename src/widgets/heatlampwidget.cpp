@@ -111,7 +111,7 @@ void HeatLampWidget::get_bed_temp() {
 
 void HeatLampWidget::cure_layer_pressed() {
     PrintParameters settings;
-    settings.cureSpeed_mm_s = ui -> cureSpeedInput -> value();
+    settings.cureTime_s = ui -> cureTimeInput -> value();
     settings.target_temp = ui -> targetTempInput -> value();
     settings.waitAfterHeatLampOn_millisecs = ui -> waitAfterHeatLampInput -> value();
     settings.kp = ui -> kpInput -> value();
@@ -119,7 +119,7 @@ void HeatLampWidget::cure_layer_pressed() {
 
     std::stringstream s;
     s << mPrinter -> cure_layer(settings);
-    //mPrinter -> mcu -> printerThread -> execute_command(s);
+    mPrinter -> mcu -> printerThread -> execute_command(s);
 }
 
 void HeatLampWidget::cure_and_roll(PrintParameters params, RecoatSettings recoatSettings) {
@@ -161,7 +161,7 @@ void HeatLampWidget::cure_and_roll(PrintParameters params, RecoatSettings recoat
 
 void HeatLampWidget::roll_and_cure_layers() {
     PrintParameters settings {};
-    settings.cureSpeed_mm_s = ui -> cureSpeedInput -> value();
+    settings.cureTime_s = ui -> cureTimeInput -> value();
     settings.target_temp = ui -> targetTempInput -> value();
     settings.waitAfterHeatLampOn_millisecs = ui -> waitAfterHeatLampInput -> value();
     settings.kp = ui -> kpInput -> value();

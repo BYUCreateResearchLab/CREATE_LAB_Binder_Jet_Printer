@@ -6,7 +6,7 @@
 #include "printer.h"
 
 struct TempData {
-    int intensity;
+    double intensity;
     double temp;
 };
 
@@ -23,15 +23,15 @@ class HeatLamp : public QObject
         double ki{0.02}; //intensity per degree*passes
         void clear_history();
         std::string set_intensity(int intensity);
-        int get_next_intensity();
-        int max_intensity{15};
-        int min_intensity{0};
-        int starting_intensity{2};
-        int default_intensity{1};
+        double get_next_intensity();
+        double max_intensity{15};
+        double min_intensity{0};
+        double starting_intensity{2};
+        double default_intensity{1};
         std::string get_temp_history();
     
     private:
-        int last_intensity;
+        double last_intensity;
         std::vector<TempData> temp_history;
 };
 

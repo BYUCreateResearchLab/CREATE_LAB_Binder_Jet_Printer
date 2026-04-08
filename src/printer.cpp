@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include "pcd.h"
+#include "gclib.h"
 #include "jetdrive.h"
 #include "dmc4080.h"
 #include "mister.h"
@@ -528,20 +529,28 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     heatLamp -> ki = settings.ki;
     heatLamp -> starting_intensity = settings.starting_intensity;
     heatLamp -> default_intensity = settings.default_intensity;
-    int next_intensity = heatLamp -> get_next_intensity();
+    double next_intensity = heatLamp -> get_next_intensity();
+    int int_intensity = (int) next_intensity;
+    double duty_cycle {next_intensity - int_intensity};
+    int period_ms {250};
     ss << CMD::display_message("set intensity to: " + std::to_string(next_intensity));
     std::string program = "i = 0\n#Loop\n";
-    program += CMD::cmd_buf_to_dmc(heatLamp -> set_intensity(next_intensity));
-    program += "\nWT 500\n";
-    program += CMD::cmd_buf_to_dmc(heatLamp -> set_intensity(next_intensity - 1));
-    program += "\nWT 500\ni = i + 1\n";
-    program += "JP #Loop, i < 15\nEN";
-    qDebug(program);
-    //GProgramDownload(mcu->g, program);
+    program += CMD::cmd_buf_to_dmc(std::stringstream(heatLamp -> set_intensity(int_intensity + 1)));
+    program += "\nWT " + std::to_string((int) ((duty_cycle)*period_ms)) + "\n";
+    program += CMD::cmd_buf_to_dmc(std::stringstream(heatLamp -> set_intensity(int_intensity)));
+    program += "\nWT " + std::to_string((int) ((1 - duty_cycle)*period_ms)) + "\n";
+    program += "i = i + 1\n";
+    program += "JP #Loop, i < " + std::to_string((int) ((settings.cureTime_s*1000 + settings.waitAfterHeatLampOn_millisecs)/period_ms)) + "\n";
+    program += CMD::cmd_buf_to_dmc(std::stringstream(heatLamp -> set_intensity(0)));
+    program += "\nEN";
+    qDebug(program.c_str());
+    GProgramDownload(mcu->g, program.c_str(), "");
+    ss << "GCmd," << "XQ" << "\n";
     ss << CMD::sleep(settings.waitAfterHeatLampOn_millisecs);
 
     //move to pyrometer position
-    ss << CMD::set_speed(Axis::Y, settings.cureSpeed_mm_s);
+    double cureSpeed_mm_s = abs(heatLampStart_mm - heatLampEnd_mm)/settings.cureTime_s;
+    ss << CMD::set_speed(Axis::Y, cureSpeed_mm_s);
     ss << CMD::position_absolute(Axis::Y, pyrometerPosition_mm);
     ss << CMD::begin_motion(Axis::Y);
     ss << CMD::motion_complete(Axis::Y);
@@ -552,7 +561,7 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     ss << CMD::detail::GCmd() + "BEDTEMP[0] = @AN[1] \n";
 
     //move to other end of heat lamp
-    ss << CMD::set_speed(Axis::Y, settings.cureSpeed_mm_s);
+    ss << CMD::set_speed(Axis::Y, cureSpeed_mm_s);
     ss << CMD::position_absolute(Axis::Y, heatLampEnd_mm);
     ss << CMD::begin_motion(Axis::Y);
     ss << CMD::motion_complete(Axis::Y);

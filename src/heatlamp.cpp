@@ -46,7 +46,7 @@ std::string HeatLamp::set_intensity(int intensity) {
     return ss.str();
 }
 
-int HeatLamp::get_next_intensity() {
+double HeatLamp::get_next_intensity() {
     // if(target_temp > temp_history.back().temp) {
     //     last_voltage = std::min(std::max(0.0, temp_history.back().voltage + 0.2), max_voltage);
     // } else {
@@ -77,8 +77,8 @@ void HeatLamp::set_last_temp(double temperature) {
 std::string HeatLamp::get_temp_history() {
     std::stringstream ss;
     for(TempData tempData : temp_history) {
-        ss << tempData.temp << ", " << tempData.intensity;
+        ss << tempData.temp << ", " << tempData.intensity << "\n";
     }
-    ss << "      , " << last_intensity;
+    ss << "      , " << last_intensity << "\n";
     return ss.str();
 }

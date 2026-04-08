@@ -62,12 +62,12 @@
     <item>
      <widget class="QLabel" name="label">
       <property name="text">
-       <string>Cure Speed (mm/s)</string>
+       <string>Cure Time (s)</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QSpinBox" name="cureSpeedInput">
+     <widget class="QSpinBox" name="cureTimeInput">
       <property name="maximum">
        <number>1000</number>
       </property>

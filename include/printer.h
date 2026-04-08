@@ -128,7 +128,7 @@ struct PrintParameters {
     int nozzleCount = 128;
     bool yShiftEnabled = false;
 
-    double cureSpeed_mm_s {10};
+    double cureTime_s {20};
     int waitAfterHeatLampOn_millisecs {500};
     double target_temp {40};
     double kp {0.2};
