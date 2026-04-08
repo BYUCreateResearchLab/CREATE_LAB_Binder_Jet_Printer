@@ -544,7 +544,9 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     program += CMD::cmd_buf_to_dmc(std::stringstream(heatLamp -> set_intensity(0)));
     program += "\nEN";
     qDebug(program.c_str());
-    GProgramDownload(mcu->g, program.c_str(), "");
+    if (gclib_set_program(mcu->g, program.c_str(), "0") == GCLIB_INVALID_ARGUMENT) {
+        qDebug("program not downloaded");
+    }
     ss << "GCmd," << "XQ" << "\n";
     ss << CMD::sleep(settings.waitAfterHeatLampOn_millisecs);
 
