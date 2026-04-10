@@ -255,6 +255,7 @@ using std::string;
 namespace detail
 {
 string axis_string(Axis axis);
+string int_to_axis_string(int analoginput)
 constexpr int mm2cnts(double mm, Axis axis);
 string create_gcmd(std::string_view command, Axis axis, int quantity);
 
@@ -380,6 +381,23 @@ inline string find_edge(Axis axis)
 // as the command position and to enable servo control at the current position.
 inline string servo_here(Axis axis)
 { return detail::GCmd() + "SH" + detail::axis_string(axis) + "\n"; }
+
+// The RA command selects one through eight arrays for automatic data capture. 
+// The selected arrays must be dimensioned by the DM command. The data
+// to be captured is specified by the RD command and time interval by the RC command.
+inline string record_array_mode(string arrayname)
+{ return detail::GCmd() + "RA " + arrayname + "[]\n"; }
+
+inline string record_analog_data(int analoginput)
+{ return detail::GCmd() + "RD _AF" + detail::int_to_axis_string(analoginput) + "\n"; }
+
+// The RC command begins recording for the Automatic Record Array Mode (RA).
+// msbetweensamples must be a power of 2
+inline string start_recording(int msbetweensamples)
+{ return detail::GCmd() + "RC " + std::to_string((int) round(log2(msbetweensamples))) + "\n"; }
+
+inline string stop_recording()
+{ return detail::GCmd() + "RC 0\n"; }
 
 // The OF command sets a bias voltage in the motor command output or returns a previously
 // set value. This can be used to counteract gravity or an offset in an amplifier.

@@ -71,6 +71,24 @@ std::string CMD::detail::axis_string(Axis axis)
     }
 }
 
+std::string CMD::detail::int_to_axis_string(int analoginput)
+{
+    switch (analoginput)
+    {
+    case 1:     return {"X"};
+    case 2:     return {"Y"};
+    case 3:     return {"Z"};
+    case 4:     return {"W"};
+    case 5:     return {'E'};
+    case 6:     return {"F"};
+    case 7:     return {"G"};
+    case 8:     return {'H'};
+
+    default:
+        throw std::invalid_argument("invalid axis");
+    }
+}
+
 constexpr int CMD::detail::mm2cnts(double mm, Axis axis)
 {
     switch (axis)
@@ -198,6 +216,7 @@ std::string CMD::set_default_controller_settings()
 
       // Pyrometer data array
       << GCmd("DM BEDTEMP[1]")
+      << GCmd("DM BEDTEMPS[1000]")
 
 
          // Configure Extended I/O
@@ -491,19 +510,30 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     double yAxisTraverseSpeed_mm_s {30};
     double heatLampStart_mm {-180};
     double heatLampEnd_mm {-330};
-    double pyrometerPosition_mm {-295};
+    double pyrometerPosition_mm {-249}; //start at -249, end at -339
     
     std::stringstream ss;
 
     ss << CMD::display_message("curing layer");
 
     //get last temperature
-    char buff[G_SMALL_BUFFER];
-    GArrayUpload(mcu->g, "BEDTEMP", 0, 0, G_COMMA, buff, G_SMALL_BUFFER);
-    if (std::stod(buff) != 1) {
-        heatLamp -> set_last_temp(100*std::stod(buff));
+    char buff[G_HUGE_BUFFER];
+    GArrayUpload(mcu->g, "BEDTEMPLIST", 0, 0, G_COMMA, buff, G_HUGE_BUFFER);
+    std::stringstream s = std::stringstream(buff);
+    std::string segment;
+    std::vector<double> bedTempList;
+
+    while(std::getline(s, segment, ",")) {
+        bedTempList.push_back(stod(segment));
     }
-    ss << CMD::display_message("last temperature was: " + std::to_string(std::stod(buff)*100));
+    qDebug(buff);
+    double sum = std::accumulate(bedTempList.begin(), bedTempList.end(), 0.0);
+    double averageTemp = 100*(sum/bedTempList.size());
+
+    if (std::stod(buff) != 1) {
+        heatLamp -> set_last_temp(averageTemp);
+    }
+    ss << CMD::display_message("last temperature was: " + std::to_string(averageTemp));
 
     double zAxisOffsetUnderRoller {0.5};
 
@@ -532,7 +562,7 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     double next_intensity = heatLamp -> get_next_intensity();
     int int_intensity = (int) next_intensity;
     double duty_cycle {next_intensity - int_intensity};
-    int period_ms {250};
+    int period_ms {2000};
     ss << CMD::display_message("set intensity to: " + std::to_string(next_intensity));
     std::string program = "i = 0\n#Loop\n";
     program += CMD::cmd_buf_to_dmc(std::stringstream(heatLamp -> set_intensity(int_intensity + 1)));
@@ -558,9 +588,11 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     ss << CMD::begin_motion(Axis::Y);
     ss << CMD::motion_complete(Axis::Y);
 
-    //measure temperature
-    // ss << CMD::deallocate_array("BEDTEMP[0]");
-    // ss << CMD::define_array("BEDTEMP", 1);
+    //start recording temperature
+    ss << CMD::record_array_mode("BEDTEMPS");
+    ss << CMD::record_analog_data(1);
+    ss << CMD::start_recording(100);
+
     ss << CMD::detail::GCmd() + "BEDTEMP[0] = @AN[1] \n";
 
     //move to other end of heat lamp
@@ -571,6 +603,13 @@ std::string Printer::cure_layer(const PrintParameters &settings)
 
     //turn off heat lamp
     ss << heatLamp -> set_intensity(0);
+
+    //move to end of pyrometer
+    ss << CMD::set_speed(Axis::Y, cureSpeed_mm_s);
+    ss << CMD::position_absolute(Axis::Y, pyrometerPosition_mm - 90);
+    ss << CMD::begin_motion(Axis::Y);
+    ss << CMD::motion_complete(Axis::Y);
+    ss << CMD::stop_recording();
 
     //move up to original z position
     ss << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller)

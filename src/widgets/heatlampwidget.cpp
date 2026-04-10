@@ -83,6 +83,7 @@ void HeatLampWidget::open_connection() {
     ss << CMD::open_connection_to_controller();
     ss << CMD::detail::GCmd("CO 3");        // configures bank 2 and 3 as outputs on extended I/O (IO 17-32)
     ss << CMD::detail::GCmd("DM BEDTEMP[1]")
+       << CMD::detail::GCmd("DM BEDTEMPS[1000]")
        << CMD::set_bit(HEATLAMP_D0)
        << CMD::set_bit(HEATLAMP_D1)
        << CMD::set_bit(HEATLAMP_D2)
