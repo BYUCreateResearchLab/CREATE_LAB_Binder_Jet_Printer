@@ -130,7 +130,7 @@
     <item>
      <widget class="QLabel" name="label_9">
       <property name="text">
-       <string>kp</string>
+       <string>Kp</string>
       </property>
      </widget>
     </item>
@@ -144,7 +144,7 @@
     <item>
      <widget class="QLabel" name="label_10">
       <property name="text">
-       <string>ki</string>
+       <string>Ki</string>
       </property>
      </widget>
     </item>
@@ -154,6 +154,16 @@
        <double>0.050000000000000</double>
       </property>
      </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>Kd</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QDoubleSpinBox" name="kdInput"/>
     </item>
     <item>
      <widget class="QLabel" name="label_20">

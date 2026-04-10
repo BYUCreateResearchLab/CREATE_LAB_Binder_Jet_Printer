@@ -82,9 +82,14 @@ void HeatLampWidget::open_connection() {
     std::stringstream ss;
     ss << CMD::open_connection_to_controller();
     ss << CMD::detail::GCmd("CO 3");        // configures bank 2 and 3 as outputs on extended I/O (IO 17-32)
-    ss << CMD::detail::GCmd("DM BEDTEMP[1]")
-       << CMD::detail::GCmd("DM BEDTEMPS[1000]")
-       << CMD::set_bit(HEATLAMP_D0)
+    ss << CMD::detail::GCmd("DM BEDTEMP[1]");
+    ss << CMD::detail::GCmd("DM BEDTEMPS[1000]");
+
+    for(int i = 0; i < 1000; i++){ //clear BEDTEMPS array
+        ss << CMD::detail::GCmd("BEDTEMPS[" + std::to_string(i) + "] = 0");
+    }
+
+    ss << CMD::set_bit(HEATLAMP_D0)
        << CMD::set_bit(HEATLAMP_D1)
        << CMD::set_bit(HEATLAMP_D2)
        << CMD::set_bit(HEATLAMP_D3);
@@ -168,6 +173,7 @@ void HeatLampWidget::roll_and_cure_layers() {
     settings.waitAfterHeatLampOn_millisecs = ui -> waitAfterHeatLampInput -> value();
     settings.kp = ui -> kpInput -> value();
     settings.ki = ui -> kiInput -> value();
+    settings.kd = ui -> kdInput -> value();
     settings.default_intensity = ui -> defaultIntensityInput -> value();
     RecoatSettings recoatSettings{};
     recoatSettings.layerHeight_microns = ui->layerHeightSpinBox->value();

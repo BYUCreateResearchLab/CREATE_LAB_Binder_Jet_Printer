@@ -61,7 +61,12 @@ double HeatLamp::get_next_intensity() {
         for(TempData data : temp_history) {
             error_integral += target_temp - data.temp;
         }
-        last_intensity = default_intensity + kp*(target_temp - temp_history.back().temp) + error_integral*ki;
+        double error_derivative = 0;
+        if (temp_history.size() > 1) {
+            error_derivative = temp_history.at(temp_history.size()-1).temp - temp_history.at(temp_history.size()-2).temp;
+        }
+        qDebug(("error derivative = " + std::to_string(error_derivative)).c_str());
+        last_intensity = default_intensity + kp*(target_temp - temp_history.back().temp) + error_integral*ki + error_derivative*kd;
         last_intensity = std::min(std::max(min_intensity, last_intensity), max_intensity);
         return last_intensity;
     }

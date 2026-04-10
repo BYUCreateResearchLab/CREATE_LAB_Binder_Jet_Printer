@@ -216,11 +216,15 @@ std::string CMD::set_default_controller_settings()
 
       // Pyrometer data array
       << GCmd("DM BEDTEMP[1]")
-      << GCmd("DM BEDTEMPS[1000]")
+      << GCmd("DM BEDTEMPS[1000]");
+
+    for(int i = 0; i < 1000; i++){ //clear BEDTEMPS array
+        s << GCmd("BEDTEMPS[" + std::to_string(i) + "] = 0");
+    }
 
 
          // Configure Extended I/O
-      << GCmd("CO 3")        // configures bank 2 and 3 as outputs on extended I/O (IO 17-32)
+      s << GCmd("CO 3")        // configures bank 2 and 3 as outputs on extended I/O (IO 17-32)
       << GCmd("SB " + std::to_string(HEATLAMP_D0))       // turn off heat lamp
       << GCmd("SB " + std::to_string(HEATLAMP_D1))
       << GCmd("SB " + std::to_string(HEATLAMP_D2))
@@ -568,6 +572,7 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     heatLamp -> target_temp = settings.target_temp;
     heatLamp -> kp = settings.kp;
     heatLamp -> ki = settings.ki;
+    heatLamp -> kd = settings.kd;
     heatLamp -> starting_intensity = settings.starting_intensity;
     heatLamp -> default_intensity = settings.default_intensity;
     double next_intensity = heatLamp -> get_next_intensity();
@@ -617,15 +622,15 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     ss << CMD::begin_motion(Axis::Y);
     ss << CMD::motion_complete(Axis::Y);
 
-    //turn off heat lamp
-    ss << heatLamp -> set_intensity(0);
-
     //move to end of pyrometer
     ss << CMD::set_speed(Axis::Y, cureSpeed_mm_s);
     ss << CMD::position_absolute(Axis::Y, pyrometerPosition_mm - 90);
     ss << CMD::begin_motion(Axis::Y);
     ss << CMD::motion_complete(Axis::Y);
     ss << CMD::stop_recording();
+
+    //turn off heat lamp (it should already be off by this point, just to make sure
+    ss << heatLamp -> set_intensity(0);
 
     //move up to original z position
     ss << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller)

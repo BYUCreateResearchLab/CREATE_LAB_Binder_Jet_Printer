@@ -21,6 +21,7 @@ class HeatLamp : public QObject
         double target_temp;
         double kp{0.05}; // intensity per degree
         double ki{0.02}; //intensity per degree*passes
+        double kd{0.0}; //intensity per degree/passes
         void clear_history();
         std::string set_intensity(int intensity);
         double get_next_intensity();

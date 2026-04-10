@@ -54,7 +54,7 @@ class SlicerMainWindow(QMainWindow):
             "print_freq": 1000.0, "droplet_spacing": 0.05,
             "line_spacing": 0.13716, "layer_height": 0.05,
             "cure_time": 20, "target_temp": 40,
-            "kp": 0.1, "ki": 0.05, "starting_intensity": 1,
+            "kp": 0.1, "ki": 0.05, "kd": 0.0, "starting_intensity": 1,
             "default_intensity": 1, "waitAfterHeatLampOn_millisecs": 500
         }
 
@@ -454,7 +454,8 @@ class SlicerMainWindow(QMainWindow):
         params = {"Layer Height (mm)": "layer_height", "Droplet Spacing (mm)": "droplet_spacing",
                   "Line Spacing (mm)": "line_spacing", "Print Frequency (Hz)": "print_freq",
                   "Cure Time (s)": "cure_time", "Target Temperature (deg C)": "target_temp",
-                  "Kp (volts per degree)": "kp", "Ki (volts per degree*passes)": "ki", "HeatLamp Starting Intensity (0-15)": "starting_intensity",
+                  "Kp (volts per degree)": "kp", "Ki (volts per degree*passes)": "ki", "Kd (volts per degree/passes)": "kd", 
+                  "HeatLamp Starting Intensity (0-15)": "starting_intensity",
                   "HeatLamp Default Intensity (0-15)": "default_intensity",
                   "Delay After HeatLamp On (ms)": "waitAfterHeatLampOn_millisecs"}
         row = 0
@@ -809,6 +810,7 @@ class SlicerMainWindow(QMainWindow):
             f"Target Temperature: {self.slicing_params['target_temp']} deg C\n"
             f"Kp: {self.slicing_params['kp']} volts per degree\n"
             f"Ki: {self.slicing_params['ki']} volts per degree*passes\n"
+            f"Kd: {self.slicing_params['kd']} volts per degree/passes\n"
             f"HeatLamp Starting Intensity (0-15): {self.slicing_params['starting_intensity']}\n"
             f"HeatLamp Default Intensity (0-15): {self.slicing_params['default_intensity']}\n"
             f"Delay After HeatLamp On: {self.slicing_params['waitAfterHeatLampOn_millisecs']} ms\n\n"

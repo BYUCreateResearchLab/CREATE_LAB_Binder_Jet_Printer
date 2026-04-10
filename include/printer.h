@@ -133,6 +133,7 @@ struct PrintParameters {
     double target_temp {40};
     double kp {0.2};
     double ki {0.05};
+    double kd {0.0};
     double starting_intensity {1};
     double default_intensity {1};
 };
