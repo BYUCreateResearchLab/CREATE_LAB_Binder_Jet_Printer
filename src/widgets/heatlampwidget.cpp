@@ -117,6 +117,7 @@ void HeatLampWidget::cure_layer_pressed() {
     settings.waitAfterHeatLampOn_millisecs = ui -> waitAfterHeatLampInput -> value();
     settings.kp = ui -> kpInput -> value();
     settings.ki = ui -> kiInput -> value();
+    settings.default_intensity = ui -> defaultIntensityInput -> value();
 
     std::stringstream s;
     s << mPrinter -> cure_layer(settings);
@@ -179,9 +180,14 @@ void HeatLampWidget::roll_and_cure_layers() {
 
     for(int i = 0; i < ui -> numLayersToRoll -> value(); i++) {
         cure_and_roll(settings, recoatSettings);
-        char buff[G_SMALL_BUFFER];
-        GArrayUpload(mPrinter -> mcu -> g, "BEDTEMP", 0, 0, G_COMMA, buff, G_SMALL_BUFFER);
-        temp_history.push_back((std::stod(buff))*100);
+        std::vector<double> bedTempList = mPrinter -> get_last_bed_temp_list();
+        double averageTemp{0};
+
+        if (bedTempList.size() != 0) {
+            double sum = std::accumulate(bedTempList.begin(), bedTempList.end(), 0.0);
+            averageTemp = (sum/bedTempList.size());
+        }
+        temp_history.push_back(averageTemp);
         show_chart();
         std::time_t currentTime = std::time(nullptr);
         while (std::time(nullptr) < currentTime + ui -> printDelayInput -> value()) {

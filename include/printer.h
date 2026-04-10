@@ -214,6 +214,7 @@ public:
     HeatLamp *heatLamp {nullptr};
 
     std::string cure_layer(const PrintParameters &settings);
+    std::vector<double> get_last_bed_temp_list();
 
     // TODO:
     // printer should own handles to the USB Camera
@@ -255,7 +256,7 @@ using std::string;
 namespace detail
 {
 string axis_string(Axis axis);
-string int_to_axis_string(int analoginput)
+string int_to_axis_string(int analoginput);
 constexpr int mm2cnts(double mm, Axis axis);
 string create_gcmd(std::string_view command, Axis axis, int quantity);
 

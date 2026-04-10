@@ -505,6 +505,24 @@ std::string CMD::homing_sequence(bool homeZAxis)
     return s.str();
 }
 
+std::vector<double> Printer::get_last_bed_temp_list() {
+    char buff[G_HUGE_BUFFER];
+    GArrayUpload(mcu->g, "BEDTEMPS", G_BOUNDS, G_BOUNDS, G_COMMA, buff, G_HUGE_BUFFER);
+    std::stringstream s;
+    s.str(buff);
+    std::string segment;
+    std::vector<double> bedTempList;
+
+    while(std::getline(s, segment, ',')) {
+        double temperature = stod(segment)/40.96;
+        if(temperature != 0) {
+            bedTempList.push_back(temperature);
+            qDebug(std::to_string(bedTempList.back()).c_str());
+        }
+    }
+    return bedTempList;
+}
+
 std::string Printer::cure_layer(const PrintParameters &settings)
 {
     double yAxisTraverseSpeed_mm_s {30};
@@ -517,20 +535,13 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     ss << CMD::display_message("curing layer");
 
     //get last temperature
-    char buff[G_HUGE_BUFFER];
-    GArrayUpload(mcu->g, "BEDTEMPLIST", 0, 0, G_COMMA, buff, G_HUGE_BUFFER);
-    std::stringstream s = std::stringstream(buff);
-    std::string segment;
-    std::vector<double> bedTempList;
+    std::vector<double> bedTempList = get_last_bed_temp_list();
+    qDebug(std::to_string(bedTempList.size()).c_str());
+    double averageTemp{0};
 
-    while(std::getline(s, segment, ",")) {
-        bedTempList.push_back(stod(segment));
-    }
-    qDebug(buff);
-    double sum = std::accumulate(bedTempList.begin(), bedTempList.end(), 0.0);
-    double averageTemp = 100*(sum/bedTempList.size());
-
-    if (std::stod(buff) != 1) {
+    if (bedTempList.size() != 0) {
+        double sum = std::accumulate(bedTempList.begin(), bedTempList.end(), 0.0);
+        averageTemp = (sum/bedTempList.size());
         heatLamp -> set_last_temp(averageTemp);
     }
     ss << CMD::display_message("last temperature was: " + std::to_string(averageTemp));
@@ -562,7 +573,7 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     double next_intensity = heatLamp -> get_next_intensity();
     int int_intensity = (int) next_intensity;
     double duty_cycle {next_intensity - int_intensity};
-    int period_ms {2000};
+    int period_ms {1000};
     ss << CMD::display_message("set intensity to: " + std::to_string(next_intensity));
     std::string program = "i = 0\n#Loop\n";
     program += CMD::cmd_buf_to_dmc(std::stringstream(heatLamp -> set_intensity(int_intensity + 1)));
@@ -570,7 +581,7 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     program += CMD::cmd_buf_to_dmc(std::stringstream(heatLamp -> set_intensity(int_intensity)));
     program += "\nWT " + std::to_string((int) ((1 - duty_cycle)*period_ms)) + "\n";
     program += "i = i + 1\n";
-    program += "JP #Loop, i < " + std::to_string((int) ((settings.cureTime_s*1000 + settings.waitAfterHeatLampOn_millisecs)/period_ms)) + "\n";
+    program += "JP #Loop, i < " + std::to_string((int) ceil((settings.cureTime_s*1000 + settings.waitAfterHeatLampOn_millisecs)/period_ms)) + "\n";
     program += CMD::cmd_buf_to_dmc(std::stringstream(heatLamp -> set_intensity(0)));
     program += "\nEN";
     qDebug(program.c_str());
@@ -589,6 +600,11 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     ss << CMD::motion_complete(Axis::Y);
 
     //start recording temperature
+    std::string emptyarray = "0";
+    for(int i = 1; i < 1000; i++) {
+        emptyarray += ",0";
+    }
+    GArrayDownload(mcu->g, "BEDTEMPS", 0, 999, emptyarray.c_str());
     ss << CMD::record_array_mode("BEDTEMPS");
     ss << CMD::record_analog_data(1);
     ss << CMD::start_recording(100);

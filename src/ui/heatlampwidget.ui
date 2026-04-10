@@ -128,66 +128,6 @@
      </widget>
     </item>
     <item>
-     <widget class="QLabel" name="label_5">
-      <property name="text">
-       <string>Heat Lamp Start Position (mm)</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QSpinBox" name="heatLampStartInput">
-      <property name="minimum">
-       <number>-10000</number>
-      </property>
-      <property name="maximum">
-       <number>10000</number>
-      </property>
-      <property name="value">
-       <number>-185</number>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLabel" name="label_6">
-      <property name="text">
-       <string>Heat Lamp End Position (mm)</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QSpinBox" name="heatLampEndInput">
-      <property name="minimum">
-       <number>-100000</number>
-      </property>
-      <property name="maximum">
-       <number>100000</number>
-      </property>
-      <property name="value">
-       <number>-300</number>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLabel" name="label_7">
-      <property name="text">
-       <string>Pyrometer Position (mm)</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QSpinBox" name="pyrometerPositionInput">
-      <property name="minimum">
-       <number>-100000</number>
-      </property>
-      <property name="maximum">
-       <number>100000</number>
-      </property>
-      <property name="value">
-       <number>-270</number>
-      </property>
-     </widget>
-    </item>
-    <item>
      <widget class="QLabel" name="label_9">
       <property name="text">
        <string>kp</string>
@@ -223,12 +163,12 @@
      </widget>
     </item>
     <item>
-     <widget class="QSpinBox" name="defaultIntensityInput">
+     <widget class="QDoubleSpinBox" name="defaultIntensityInput">
       <property name="maximum">
-       <number>15</number>
+       <double>15.000000000000000</double>
       </property>
       <property name="value">
-       <number>1</number>
+       <double>1.000000000000000</double>
       </property>
      </widget>
     </item>
