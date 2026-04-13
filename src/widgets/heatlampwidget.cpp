@@ -123,6 +123,7 @@ void HeatLampWidget::cure_layer_pressed() {
     settings.kp = ui -> kpInput -> value();
     settings.ki = ui -> kiInput -> value();
     settings.default_intensity = ui -> defaultIntensityInput -> value();
+    settings.starting_intensity = ui -> startingIntensityInput -> value();
 
     std::stringstream s;
     s << mPrinter -> cure_layer(settings);
@@ -175,6 +176,7 @@ void HeatLampWidget::roll_and_cure_layers() {
     settings.ki = ui -> kiInput -> value();
     settings.kd = ui -> kdInput -> value();
     settings.default_intensity = ui -> defaultIntensityInput -> value();
+    settings.starting_intensity = ui -> startingIntensityInput -> value();
     RecoatSettings recoatSettings{};
     recoatSettings.layerHeight_microns = ui->layerHeightSpinBox->value();
     recoatSettings.isLevelRecoat = false; // Normal recoat for full prints
@@ -219,12 +221,9 @@ void clearLayout(QLayout *layout) {
 }
 
 void HeatLampWidget::print_temp_history() {
-    std::stringstream s;
-    for(double temp:temp_history) {
-        qDebug() << temp;
-    }
-    qDebug("---------");
-    qDebug() << mPrinter -> heatLamp -> get_temp_history().c_str();
+    qDebug("Temperature (deg C)\tIntensity(0-15)");
+    qDebug("------------------");
+    qDebug() << mPrinter -> heatLamp -> get_temp_history(temp_history.back()).c_str();
 }
 
 void HeatLampWidget::show_chart() {

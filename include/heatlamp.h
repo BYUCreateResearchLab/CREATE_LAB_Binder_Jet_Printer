@@ -29,7 +29,7 @@ class HeatLamp : public QObject
         double min_intensity{0};
         double starting_intensity{2};
         double default_intensity{1};
-        std::string get_temp_history();
+        std::string get_temp_history(double last_temp);
     
     private:
         double last_intensity;

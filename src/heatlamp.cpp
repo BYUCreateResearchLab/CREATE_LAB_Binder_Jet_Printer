@@ -79,11 +79,11 @@ void HeatLamp::set_last_temp(double temperature) {
     temp_history.push_back(data);
 }
 
-std::string HeatLamp::get_temp_history() {
+std::string HeatLamp::get_temp_history(double last_temp) {
     std::stringstream ss;
     for(TempData tempData : temp_history) {
-        ss << tempData.temp << ", " << tempData.intensity << "\n";
+        ss << tempData.temp << "\t" << tempData.intensity << "\n";
     }
-    ss << "      , " << last_intensity << "\n";
+    ss << last_temp << "\t" << last_intensity << "\n";
     return ss.str();
 }
