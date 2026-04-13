@@ -1275,6 +1275,7 @@ bool MJPrintheadWidget::parsePrintParameters(const QString& filePath, PrintParam
             else if (key == "Target Temperature") params.target_temp = valuePart.split(' ')[0].toDouble();
             else if (key == "Kp") params.kp = valuePart.split(' ')[0].toDouble();
             else if (key == "Ki") params.ki = valuePart.split(' ')[0].toDouble();
+            else if (key == "Kd") params.kd = valuePart.split(' ')[0].toDouble();
             else if (key == "HeatLamp Starting Intensity") params.starting_intensity = valuePart.split(' ')[0].toDouble();
             else if (key == "HeatLamp Default Intensity") params.default_intensity = valuePart.split(' ')[0].toDouble();
             else if (key == "Delay after HeatLamp On") params.waitAfterHeatLampOn_millisecs = valuePart.split(' ')[0].toInt();

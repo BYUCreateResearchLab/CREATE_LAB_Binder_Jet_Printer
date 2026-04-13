@@ -54,8 +54,8 @@ class SlicerMainWindow(QMainWindow):
             "print_freq": 1000.0, "droplet_spacing": 0.05,
             "line_spacing": 0.13716, "layer_height": 0.05,
             "cure_time": 20, "target_temp": 40,
-            "kp": 0.1, "ki": 0.05, "kd": 0.0, "starting_intensity": 1,
-            "default_intensity": 1, "waitAfterHeatLampOn_millisecs": 500
+            "kp": 0.1, "ki": 0.05, "kd": 0.05, "starting_intensity": 1,
+            "default_intensity": 0.5, "waitAfterHeatLampOn_millisecs": 500
         }
 
         # --- Initialize VTK Scene ---
