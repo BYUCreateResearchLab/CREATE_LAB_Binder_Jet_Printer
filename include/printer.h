@@ -131,11 +131,34 @@ struct PrintParameters {
     double cureTime_s {20};
     int waitAfterHeatLampOn_millisecs {500};
     double target_temp {40};
-    double kp {0.2};
+    double kp {0.1};
     double ki {0.05};
-    double kd {0.0};
+    double kd {0.05};
     double starting_intensity {1};
-    double default_intensity {1};
+    double default_intensity {0.5};
+
+    std::string to_string() {
+        std::stringstream ss;
+        ss << "fileName = " << fileName.toStdString() << "\n";
+        ss << "printFrequency = " << std::to_string(printFrequency) << "\n";
+        ss << "printSpeed = " << std::to_string(printSpeed) << "\n";
+        ss << "dropletSpacingX = " << std::to_string(dropletSpacingX) << "\n";
+        ss << "lineSpacingY = " << std::to_string(lineSpacingY) << "\n";
+        ss << "layerHeight = " << std::to_string(layerHeight) << "\n";
+        ss << "startX = " << std::to_string(startX) << "\n";
+        ss << "startY = " << std::to_string(startY) << "\n";
+        ss << "nozzleCount = " << std::to_string(nozzleCount) << "\n";
+        ss << "yShiftEnabled = " << (yShiftEnabled ? "True" : "False") << "\n";
+        ss << "cureTime_s = " << std::to_string(cureTime_s) << "\n";
+        ss << "waitAfterHeatLampOn_millisecs = " << std::to_string(waitAfterHeatLampOn_millisecs) << "\n";
+        ss << "target_temp = " << std::to_string(target_temp) << "\n";
+        ss << "kp = " << std::to_string(kp) << "\n";
+        ss << "ki = " << std::to_string(ki) << "\n";
+        ss << "kd = " << std::to_string(kd) << "\n";
+        ss << "starting_intensity = " << std::to_string(starting_intensity) << "\n";
+        ss << "default_intensity = " << std::to_string(default_intensity) << "\n";
+        return ss.str();
+    }
 };
 
 enum class Axis
