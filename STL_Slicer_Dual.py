@@ -52,7 +52,10 @@ class SlicerMainWindow(QMainWindow):
         self.active_model_key = None
         self.slicing_params = {
             "print_freq": 1000.0, "droplet_spacing": 0.05,
-            "line_spacing": 0.13716, "layer_height": 0.05
+            "line_spacing": 0.13716, "layer_height": 0.05,
+            "cure_time": 20, "target_temp": 40,
+            "kp": 0.1, "ki": 0.05, "kd": 0.05, "starting_intensity": 1,
+            "default_intensity": 0.5, "waitAfterHeatLampOn_millisecs": 500
         }
 
         # --- Initialize VTK Scene ---
@@ -449,7 +452,12 @@ class SlicerMainWindow(QMainWindow):
         grid = QGridLayout()
         self.param_edits = {}
         params = {"Layer Height (mm)": "layer_height", "Droplet Spacing (mm)": "droplet_spacing",
-                  "Line Spacing (mm)": "line_spacing", "Print Frequency (Hz)": "print_freq"}
+                  "Line Spacing (mm)": "line_spacing", "Print Frequency (Hz)": "print_freq",
+                  "Cure Time (s)": "cure_time", "Target Temperature (deg C)": "target_temp",
+                  "Kp (volts per degree)": "kp", "Ki (volts per degree*passes)": "ki", "Kd (volts per degree/passes)": "kd", 
+                  "HeatLamp Starting Intensity (0-15)": "starting_intensity",
+                  "HeatLamp Default Intensity (0-15)": "default_intensity",
+                  "Delay After HeatLamp On (ms)": "waitAfterHeatLampOn_millisecs"}
         row = 0
         for label_text, key in params.items():
             label = QLabel(label_text); edit = QLineEdit(str(self.slicing_params[key])); edit.setFixedWidth(80)
@@ -796,6 +804,16 @@ class SlicerMainWindow(QMainWindow):
             f"Calculated Print Speed (X-axis): {print_speed_x:.2f} mm/s\n"
             f"Nozzle Count: {NOZZLE_COUNT}\n"
             f"Y-Shift Per Layer: {DITHER_PASSES}\n\n"
+
+            f"--- Heat Lamp ---\n"
+            f"Cure Time: {self.slicing_params['cure_time']} s\n" 
+            f"Target Temperature: {self.slicing_params['target_temp']} deg C\n"
+            f"Kp: {self.slicing_params['kp']} volts per degree\n"
+            f"Ki: {self.slicing_params['ki']} volts per degree*passes\n"
+            f"Kd: {self.slicing_params['kd']} volts per degree/passes\n"
+            f"HeatLamp Starting Intensity (0-15): {self.slicing_params['starting_intensity']}\n"
+            f"HeatLamp Default Intensity (0-15): {self.slicing_params['default_intensity']}\n"
+            f"Delay After HeatLamp On: {self.slicing_params['waitAfterHeatLampOn_millisecs']} ms\n\n"
 
             f"--- Positioning ---\n"
             f"Part Position (Start X, Y): {start_x:.3f}mm, {start_y:.3f}mm\n"

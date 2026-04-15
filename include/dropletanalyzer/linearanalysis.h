@@ -50,7 +50,7 @@ inline FitLine find_fit_line_ransac(const std::vector<double>& x,
                                     double distanceThreshold)
 {
     FitLine bestFitLine;
-    int numPoints = x.size();
+    size_t numPoints = x.size();
 
     if (numPoints != y.size() || numPoints < 2)
     {

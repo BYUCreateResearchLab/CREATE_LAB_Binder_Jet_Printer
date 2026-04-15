@@ -5,11 +5,14 @@
 #include <stdexcept>
 
 #include "pcd.h"
+#include <gclib.h>
 #include "jetdrive.h"
 #include "dmc4080.h"
 #include "mister.h"
 #include "bedmicroscope.h"
 #include "mjdriver.h"
+#include "heatlamp.h"
+#include "mjprintheadwidget.h"
 
 Printer::Printer(QObject *parent) :
     QObject(parent),
@@ -18,7 +21,8 @@ Printer::Printer(QObject *parent) :
     pressureController ( new PCD::Controller("COM3", this) ),
     mister ( new Mister::Controller("COM6", this) ),
     bedMicroscope ( new BedMicroscope(this) ),
-    mjController ( new Added_Scientific::Controller("COM5", this) )
+    mjController ( new Added_Scientific::Controller("COM5", this) ),
+    heatLamp ( new HeatLamp(40, this) )
 {
 //    using Added_Scientific::Controller::HeadIndex;------------------------------------------------
 //    mjController->set_head_voltage(HeadIndex::HEAD1, 25);
@@ -67,6 +71,24 @@ std::string CMD::detail::axis_string(Axis axis)
     }
 }
 
+std::string CMD::detail::int_to_axis_string(int analoginput)
+{
+    switch (analoginput)
+    {
+    case 1:     return {"X"};
+    case 2:     return {"Y"};
+    case 3:     return {"Z"};
+    case 4:     return {"W"};
+    case 5:     return {'E'};
+    case 6:     return {"F"};
+    case 7:     return {"G"};
+    case 8:     return {'H'};
+
+    default:
+        throw std::invalid_argument("invalid axis");
+    }
+}
+
 constexpr int CMD::detail::mm2cnts(double mm, Axis axis)
 {
     switch (axis)
@@ -96,36 +118,6 @@ float Printer::motor_type_value(MotorType motorType)
     default: throw std::invalid_argument("invalid motor type");
     }
 }
-
-/*
-std::string CMD::axis_calibration(){
-    using CMD::detail::GCmd;
-
-    std::stringstream s;
-
-    // Controller Configuration
-
-    s << GCmd("BAY")                // Set the update time of the motion controller
-
-      // Y Axis Calibration
-      << GCmd("BMY=2000")           // Set magnetic pitch of rotary motor
-      << GCmd("BIY=-1")             // Set estimated commutation based on current hall state
-      << GCmd("BCY")                // Commutation Calibration
-      << GCmd("hall=_QHY")          // Store initial hall sensor state
-      << GCmd("SHY")                // Enable amplifier
-      << GCmd("JGY=-1600")          // Slow jog so commutation angle is set precisely at next hall transition
-      << GCmd("BGY")                // Begin jogging motion
-      << GCmd("#hall")              // Wait for hall sensor transition
-      << GCmd("WT2")                // Wait for 2 ms
-      << GCmd("JP#hall,_QHY=hall")  // Store hall state
-      << GCmd("STY")                // Stop motion
-      << GCmd("AMY")                // Acknowledge motion complete
-      << GCmd("EN")                 // End command sequence
-        ;
-
-    return s.str();
-}
-*/
 
 std::string CMD::set_default_controller_settings()
 {
@@ -194,12 +186,24 @@ std::string CMD::set_default_controller_settings()
       << GCmd("LDE=2")       // 2 = forward limit only, 3 = diable both limits
       << GCmd("CNE=-1")     // Set polarity (use -1 for Normally Closed, 1 for Normally Open)
 
+      // Pyrometer data array
+      << GCmd("DM BEDTEMP[1]")
+      << GCmd("DM BEDTEMPS[1000]");
+
+    for(int i = 0; i < 1000; i++){ //clear BEDTEMPS array
+        s << GCmd("BEDTEMPS[" + std::to_string(i) + "] = 0");
+    }
+
 
          // Configure Extended I/O
-      << GCmd("CO 1")        // configures bank 2 as outputs on extended I/O (IO 17-24)
+      s << GCmd("CO 3")        // configures bank 2 and 3 as outputs on extended I/O (IO 17-32)
+      << GCmd("SB " + std::to_string(HEATLAMP_D0))       // turn off heat lamp
+      << GCmd("SB " + std::to_string(HEATLAMP_D1))
+      << GCmd("SB " + std::to_string(HEATLAMP_D2))
+      << GCmd("SB " + std::to_string(HEATLAMP_D3))
 
       << GCmd("CC 19200,0,1,0")  // AUX PORT FOR THE ULTRASONIC GENERATOR
-      << GCmd("CN=-1")           // Set correct polarity for all limit switches
+      << GCmd("CN=-1, -1")           // Set correct polarity for all limit switches
       << GCmd("BN")              // Save (burn) these settings to the controller just to be safe
       << GCmd("SH XYZ")          // Enable X,Y, and Z motors
       << GCmd("SH H")            // Servo the jetting axis
@@ -446,7 +450,6 @@ std::string CMD::homing_sequence(bool homeZAxis)
     s << motion_complete(Axis::Y);
     if (homeZAxis)
         s << motion_complete(Axis::Z);
-
     s << define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
     s << define_position(Axis::Y, 0);
     s << define_position(Axis::Z, 0);
@@ -454,27 +457,160 @@ std::string CMD::homing_sequence(bool homeZAxis)
     // set software limit to current position
     s << set_forward_software_limit(Axis::Z, 0);
 
-    // === Home Reservoir Axis to Single Limit Switch === (added 3/11)
-    s << disable_forward_software_limit(Axis::Reservoir); // try to fix phantom limits 3/12
-    s << set_accleration(Axis::Reservoir, 200);
-    s << set_deceleration(Axis::Reservoir, 200);
-    s << set_limit_switch_deceleration(Axis::Reservoir, 400);
+    // // === Home Reservoir Axis to Single Limit Switch === (added 3/11)
+    // s << disable_forward_software_limit(Axis::Reservoir); // try to fix phantom limits 3/12
+    // s << set_accleration(Axis::Reservoir, 200);
+    // s << set_deceleration(Axis::Reservoir, 200);
+    // s << set_limit_switch_deceleration(Axis::Reservoir, 400);
 
-    // Jog towards the physical limit switch.
-    s << set_jog(Axis::Reservoir, 5); // jog into upper limit
-    s << begin_motion(Axis::Reservoir); // Start Reservoir homing
-    s << motion_complete(Axis::Reservoir); // Wait for Reservoir to hit the physical limit
-    // Perform the Back-off (Negative = Down)
-    s << position_relative(Axis::Reservoir, -2);
-    s << begin_motion(Axis::Reservoir);
-    s << motion_complete(Axis::Reservoir);
+    // // Jog towards the physical limit switch.
+    // s << set_jog(Axis::Reservoir, 5); // jog into upper limit
+    // s << begin_motion(Axis::Reservoir); // Start Reservoir homing
+    // s << motion_complete(Axis::Reservoir); // Wait for Reservoir to hit the physical limit
+    // // Perform the Back-off (Negative = Down)
+    // s << position_relative(Axis::Reservoir, -2);
+    // s << begin_motion(Axis::Reservoir);
+    // s << motion_complete(Axis::Reservoir);
 
-    // Define final Reservoir position and software limits
-    s << define_position(Axis::Reservoir, R_STAGE_LEN_MM);
-    s << set_forward_software_limit(Axis::Reservoir, R_STAGE_LEN_MM); // Can't go past the back-off point
-    s << set_reverse_software_limit(Axis::Reservoir, 0);
+    // // Define final Reservoir position and software limits
+    // s << define_position(Axis::Reservoir, R_STAGE_LEN_MM);
+    // s << set_forward_software_limit(Axis::Reservoir, R_STAGE_LEN_MM); // Can't go past the back-off point
+    // s << set_reverse_software_limit(Axis::Reservoir, 0);
 
     return s.str();
+}
+
+std::vector<double> Printer::get_last_bed_temp_list() {
+    char buff[G_HUGE_BUFFER];
+    GArrayUpload(mcu->g, "BEDTEMPS", G_BOUNDS, G_BOUNDS, G_COMMA, buff, G_HUGE_BUFFER);
+    std::stringstream s;
+    s.str(buff);
+    std::string segment;
+    std::vector<double> bedTempList;
+
+    while(std::getline(s, segment, ',')) {
+        double temperature = stod(segment)/40.96;
+        if(temperature != 0) {
+            bedTempList.push_back(temperature);
+            qDebug(std::to_string(bedTempList.back()).c_str());
+        }
+    }
+    return bedTempList;
+}
+
+std::string Printer::cure_layer(const PrintParameters &settings)
+{
+    double yAxisTraverseSpeed_mm_s {30};
+    double heatLampStart_mm {-180};
+    double heatLampEnd_mm {-330};
+    double pyrometerPosition_mm {-249}; //start at -249, end at -339
+    
+    std::stringstream ss;
+
+    ss << CMD::display_message("curing layer");
+
+    //get last temperature
+    std::vector<double> bedTempList = get_last_bed_temp_list();
+    qDebug(std::to_string(bedTempList.size()).c_str());
+    double averageTemp{0};
+
+    if (bedTempList.size() != 0) {
+        double sum = std::accumulate(bedTempList.begin(), bedTempList.end(), 0.0);
+        averageTemp = (sum/bedTempList.size());
+        heatLamp -> set_last_temp(averageTemp);
+    }
+    ss << CMD::display_message("last temperature was: " + std::to_string(averageTemp));
+
+    double zAxisOffsetUnderRoller {0.5};
+
+    // move z-axis down when going back to get more powder
+    ss << CMD::set_accleration(Axis::Z, 10)
+       << CMD::set_deceleration(Axis::Z, 10)
+       << CMD::set_speed(Axis::Z, 2)
+       << CMD::position_relative(Axis::Z, -zAxisOffsetUnderRoller)
+       << CMD::begin_motion(Axis::Z)
+       << CMD::motion_complete(Axis::Z);
+
+    //move to edge of heat lamp
+    ss << CMD::set_deceleration(Axis::Y, 1000);
+    ss << CMD::set_accleration(Axis::Y, 1000);
+    ss << CMD::set_speed(Axis::Y, yAxisTraverseSpeed_mm_s);
+    ss << CMD::position_absolute(Axis::Y, heatLampStart_mm);
+    ss << CMD::begin_motion(Axis::Y);
+    ss << CMD::motion_complete(Axis::Y);
+
+    //turn on heat lamp
+    heatLamp -> target_temp = settings.target_temp;
+    heatLamp -> kp = settings.kp;
+    heatLamp -> ki = settings.ki;
+    heatLamp -> kd = settings.kd;
+    heatLamp -> starting_intensity = settings.starting_intensity;
+    heatLamp -> default_intensity = settings.default_intensity;
+    double next_intensity = heatLamp -> get_next_intensity();
+    int int_intensity = (int) next_intensity;
+    double duty_cycle {next_intensity - int_intensity};
+    int period_ms {1000};
+    ss << CMD::display_message("set intensity to: " + std::to_string(next_intensity));
+    std::string program = "i = 0\n#Loop\n";
+    program += CMD::cmd_buf_to_dmc(std::stringstream(heatLamp -> set_intensity(int_intensity + 1)));
+    program += "\nWT " + std::to_string((int) ((duty_cycle)*period_ms)) + "\n";
+    program += CMD::cmd_buf_to_dmc(std::stringstream(heatLamp -> set_intensity(int_intensity)));
+    program += "\nWT " + std::to_string((int) ((1 - duty_cycle)*period_ms)) + "\n";
+    program += "i = i + 1\n";
+    program += "JP #Loop, i < " + std::to_string((int) ceil((settings.cureTime_s*1000 + settings.waitAfterHeatLampOn_millisecs)/period_ms)) + "\n";
+    program += CMD::cmd_buf_to_dmc(std::stringstream(heatLamp -> set_intensity(0)));
+    program += "\nEN";
+    qDebug(program.c_str());
+    int rc = GProgramDownload(mcu->g, program.c_str(), "");
+    if (rc != G_NO_ERROR) {
+        qDebug(("Program not downloaded, error:" + std::to_string(rc)).c_str());
+    }
+    ss << "GCmd," << "XQ" << "\n";
+    ss << CMD::sleep(settings.waitAfterHeatLampOn_millisecs);
+
+    //move to pyrometer position
+    double cureSpeed_mm_s = abs(heatLampStart_mm - heatLampEnd_mm)/settings.cureTime_s;
+    ss << CMD::set_speed(Axis::Y, cureSpeed_mm_s);
+    ss << CMD::position_absolute(Axis::Y, pyrometerPosition_mm);
+    ss << CMD::begin_motion(Axis::Y);
+    ss << CMD::motion_complete(Axis::Y);
+
+    //start recording temperature
+    std::string emptyarray = "0";
+    for(int i = 1; i < 1000; i++) {
+        emptyarray += ",0";
+    }
+    GArrayDownload(mcu->g, "BEDTEMPS", 0, 999, emptyarray.c_str());
+    ss << CMD::record_array_mode("BEDTEMPS");
+    ss << CMD::record_analog_data(1);
+    ss << CMD::start_recording(100);
+
+    ss << CMD::detail::GCmd() + "BEDTEMP[0] = @AN[1] \n";
+
+    //move to other end of heat lamp
+    ss << CMD::set_speed(Axis::Y, cureSpeed_mm_s);
+    ss << CMD::position_absolute(Axis::Y, heatLampEnd_mm);
+    ss << CMD::begin_motion(Axis::Y);
+    ss << CMD::motion_complete(Axis::Y);
+
+    //move to end of pyrometer
+    ss << CMD::set_speed(Axis::Y, cureSpeed_mm_s);
+    ss << CMD::position_absolute(Axis::Y, pyrometerPosition_mm - 90);
+    ss << CMD::begin_motion(Axis::Y);
+    ss << CMD::motion_complete(Axis::Y);
+    ss << CMD::stop_recording();
+
+    //turn off heat lamp (it should already be off by this point, just to make sure
+    ss << heatLamp -> set_intensity(0);
+
+    //move up to original z position
+    ss << CMD::position_relative(Axis::Z, zAxisOffsetUnderRoller)
+       << CMD::begin_motion(Axis::Z)
+       << CMD::motion_complete(Axis::Z);
+
+    ss << CMD::display_message("done curing layer");
+
+    return ss.str();
 }
 
 std::string CMD::spread_layer(const RecoatSettings &settings)

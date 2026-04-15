@@ -33,8 +33,8 @@
  * Pin 31 - I/O Bit 19
  * Pin 32 - I/O Bit 22
  * Pin 33 - Digital Ground
- * Pin 34 - I/O Bit 34
- * Pin 35 - No Connect
+ * Pin 34 - I/O Bit 27
+ * Pin 35 - I/0 Bit 30
  * Pin 36 - Digital Ground
  * Pin 37 - I/O Bit 34
  * Pin 38 - No Connect
@@ -63,15 +63,9 @@
  */
 
 #pragma once
-#include "gclib.h"
-#include "gclibo.h"
-#include "gclib_errors.h"
-#include "gclib_record.h"
 #include <string>
 #include <sstream>
 #include <string_view>
-#include <functional>
-#include <map>
 #include <QObject>
 
 class PrintThread;
@@ -82,6 +76,7 @@ namespace Mister { class Controller; }
 namespace Added_Scientific { class Controller; }
 class DMC4080;
 class BedMicroscope;
+class HeatLamp;
 
 // TODO: get rid of these #defines and convert to
 // constants in a namespace or static members
@@ -115,6 +110,56 @@ class BedMicroscope;
 
 #define MJ_START_BIT 23 // pin 18
 #define MJ_DIR_BIT 22 // pin 32
+
+#define HEATLAMP_D0 25
+#define HEATLAMP_D1 26
+#define HEATLAMP_D2 27
+#define HEATLAMP_D3 28
+
+struct PrintParameters {
+    QString fileName = "";
+    double printFrequency = 0.0;
+    double printSpeed = 0.0;
+    double dropletSpacingX = 0.0;
+    double lineSpacingY = 0.0;
+    double layerHeight = 0.0;
+    double startX = 0.0;
+    double startY = 0.0;
+    int nozzleCount = 128;
+    bool yShiftEnabled = false;
+
+    double cureTime_s {20};
+    int waitAfterHeatLampOn_millisecs {500};
+    double target_temp {40};
+    double kp {0.1};
+    double ki {0.05};
+    double kd {0.05};
+    double starting_intensity {1};
+    double default_intensity {0.5};
+
+    std::string to_string() {
+        std::stringstream ss;
+        ss << "fileName = " << fileName.toStdString() << "\n";
+        ss << "printFrequency = " << std::to_string(printFrequency) << "\n";
+        ss << "printSpeed = " << std::to_string(printSpeed) << "\n";
+        ss << "dropletSpacingX = " << std::to_string(dropletSpacingX) << "\n";
+        ss << "lineSpacingY = " << std::to_string(lineSpacingY) << "\n";
+        ss << "layerHeight = " << std::to_string(layerHeight) << "\n";
+        ss << "startX = " << std::to_string(startX) << "\n";
+        ss << "startY = " << std::to_string(startY) << "\n";
+        ss << "nozzleCount = " << std::to_string(nozzleCount) << "\n";
+        ss << "yShiftEnabled = " << (yShiftEnabled ? "True" : "False") << "\n";
+        ss << "cureTime_s = " << std::to_string(cureTime_s) << "\n";
+        ss << "waitAfterHeatLampOn_millisecs = " << std::to_string(waitAfterHeatLampOn_millisecs) << "\n";
+        ss << "target_temp = " << std::to_string(target_temp) << "\n";
+        ss << "kp = " << std::to_string(kp) << "\n";
+        ss << "ki = " << std::to_string(ki) << "\n";
+        ss << "kd = " << std::to_string(kd) << "\n";
+        ss << "starting_intensity = " << std::to_string(starting_intensity) << "\n";
+        ss << "default_intensity = " << std::to_string(default_intensity) << "\n";
+        return ss.str();
+    }
+};
 
 enum class Axis
 {
@@ -190,7 +235,10 @@ public:
     Mister::Controller *mister {nullptr};
     BedMicroscope *bedMicroscope {nullptr};
     Added_Scientific::Controller *mjController {nullptr};
+    HeatLamp *heatLamp {nullptr};
 
+    std::string cure_layer(const PrintParameters &settings);
+    std::vector<double> get_last_bed_temp_list();
 
     // TODO:
     // printer should own handles to the USB Camera
@@ -232,6 +280,7 @@ using std::string;
 namespace detail
 {
 string axis_string(Axis axis);
+string int_to_axis_string(int analoginput);
 constexpr int mm2cnts(double mm, Axis axis);
 string create_gcmd(std::string_view command, Axis axis, int quantity);
 
@@ -252,7 +301,7 @@ inline string GOpen() { return "GOpen"; }
 }
 
 string set_default_controller_settings();
-// string axis_calibration();
+string axis_calibration();
 string cmd_buf_to_dmc(const std::stringstream &s);
 string homing_sequence(bool homeZAxis);
 string move_xy_axes_to_default_position();
@@ -349,10 +398,38 @@ inline string sleep(int milliseconds)
 inline string find_index(Axis axis)
 { return detail::GCmd() + "FI" + detail::axis_string(axis) + "\n"; }
 
+// The FE command moves a motor until a transition is seen on the homing input for that axis.
+inline string find_edge(Axis axis)
+{ return detail::GCmd() + "FE" + detail::axis_string(axis) + "\n"; }
+
 // The SH commands tells the controller to use the current motor position
 // as the command position and to enable servo control at the current position.
 inline string servo_here(Axis axis)
 { return detail::GCmd() + "SH" + detail::axis_string(axis) + "\n"; }
+
+// The RA command selects one through eight arrays for automatic data capture. 
+// The selected arrays must be dimensioned by the DM command. The data
+// to be captured is specified by the RD command and time interval by the RC command.
+inline string record_array_mode(string arrayname)
+{ return detail::GCmd() + "RA " + arrayname + "[]\n"; }
+
+inline string record_analog_data(int analoginput)
+{ return detail::GCmd() + "RD _AF" + detail::int_to_axis_string(analoginput) + "\n"; }
+
+// The RC command begins recording for the Automatic Record Array Mode (RA).
+// msbetweensamples must be a power of 2
+inline string start_recording(int msbetweensamples)
+{ return detail::GCmd() + "RC " + std::to_string((int) round(log2(msbetweensamples))) + "\n"; }
+
+inline string stop_recording()
+{ return detail::GCmd() + "RC 0\n"; }
+
+// The OF command sets a bias voltage in the motor command output or returns a previously
+// set value. This can be used to counteract gravity or an offset in an amplifier.
+// offset is a signed number in the range -9.998 to 9.998 volts with resolution of 0.0003. 
+inline string offset(Axis axis, double offset)
+{ return detail::GCmd() + "OF" + detail::axis_string(axis) + "=" + std::to_string(offset) + "\n"; }
+
 
 // The ST command stops motion on the specified axis. Motors will come to a decelerated stop.
 inline string stop_motion(Axis axis)
@@ -367,6 +444,14 @@ inline string set_bit(int bit)
 // The SB and CB (Clear Bit) instructions can be used to control the state of output lines.
 inline string clear_bit(int bit)
 { return detail::GCmd() + "CB " + std::to_string(bit) + "\n"; }
+
+// The DM command defines an array.
+inline string define_array(string array_name, int array_size)
+{ return detail::GCmd() + "DM " + array_name + "[" + std::to_string(array_size) + "]" + "\n"; }
+
+// The DA command deallocates an array.
+inline string deallocate_array(string array_name)
+{ return detail::GCmd() + "DA " + array_name + "[0]" + "\n"; }
 
 inline string enable_roller1() { return set_bit(ROLLER_1_BIT); }
 inline string disable_roller1() { return clear_bit(ROLLER_1_BIT); }
@@ -398,6 +483,10 @@ inline string message(const std::string& text)
 {
     return detail::GCmd() + "MG " + "\"" + text + "\"" + "\n";
 }
+
+// The read_analog_input command sends a message containing the value of the analog pin.
+inline string read_analog_input(int analog_num)
+{ return message("@AN[" + std::to_string(analog_num) + "]");}
 
 // this command does not support newlines or commas right now...
 // either will cause the print to fail...

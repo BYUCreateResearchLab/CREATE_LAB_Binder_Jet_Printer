@@ -17,8 +17,8 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 set(GCLIB_INSTALL_DIR "C:/Program Files (x86)/Galil/gclib")
 
 find_package(OpenCV REQUIRED)
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Svg PrintSupport SerialPort REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Svg PrintSupport SerialPort REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Svg PrintSupport SerialPort REQUIRED Charts)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Svg PrintSupport SerialPort REQUIRED Charts)
 find_package(ueyeapi REQUIRED)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -43,6 +43,7 @@ set(HEADERS
     include/mister.h
     include/bedmicroscope.h
     include/mjdriver.h
+    include/heatlamp.h
 
 
 )
@@ -66,6 +67,7 @@ set(SOURCES
     src/mister.cpp
     src/bedmicroscope.cpp
     src/mjdriver.cpp
+    src/heatlamp.cpp
 
 )
 
@@ -79,6 +81,7 @@ set(WIDGET_HEADERS
     include/widgets/pressurecontrollerwidget.h
     include/widgets/bedmicroscopewidget.h
     include/widgets/mjprintheadwidget.h
+    include/widgets/heatlampwidget.h
 
 )
 
@@ -92,6 +95,7 @@ set(WIDGET_SOURCES
     src/widgets/pressurecontrollerwidget.cpp
     src/widgets/bedmicroscopewidget.cpp
     src/widgets/mjprintheadwidget.cpp
+    src/widgets/heatlampwidget.cpp
 
 )
 
@@ -107,6 +111,7 @@ set(FORMS
     src/ui/pressurecontrollerwidget.ui
     src/ui/bedmicroscopewidget.ui
     src/ui/mjprintheadwidget.ui
+    src/ui/heatlampwidget.ui
 
 )
 
@@ -213,7 +218,6 @@ else()
         ${CAMERA_SOURCES}
         ${DA_HEADERS}
         ${DA_SOURCES}
-
     )
 endif()
 
@@ -238,6 +242,7 @@ target_link_libraries(${EXE_NAME} PUBLIC
     Qt${QT_VERSION_MAJOR}::Svg
     Qt${QT_VERSION_MAJOR}::PrintSupport
     Qt${QT_VERSION_MAJOR}::SerialPort
+    Qt${QT_VERSION_MAJOR}::Charts
     gclib
     gclibo
     ueye_api${PLATFORM_SUFFIX}
@@ -245,7 +250,6 @@ target_link_libraries(${EXE_NAME} PUBLIC
     ${OpenCV_LIBS}
 
 )
-
 target_include_directories(${EXE_NAME} PUBLIC
 
     ${GCLIB_INSTALL_DIR}/include

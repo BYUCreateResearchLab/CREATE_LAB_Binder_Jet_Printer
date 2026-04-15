@@ -1271,6 +1271,14 @@ bool MJPrintheadWidget::parsePrintParameters(const QString& filePath, PrintParam
             else if (key == "Droplet Spacing (X-axis resolution)") params.dropletSpacingX = valuePart.split(' ')[0].toDouble();
             else if (key == "Line Spacing (Y-axis resolution)") params.lineSpacingY = valuePart.split(' ')[0].toDouble();
             else if (key == "Nozzle Count") params.nozzleCount = valuePart.split(' ')[0].toInt();
+            else if (key == "Cure Time") params.cureTime_s = valuePart.split(' ')[0].toDouble();
+            else if (key == "Target Temperature") params.target_temp = valuePart.split(' ')[0].toDouble();
+            else if (key == "Kp") params.kp = valuePart.split(' ')[0].toDouble();
+            else if (key == "Ki") params.ki = valuePart.split(' ')[0].toDouble();
+            else if (key == "Kd") params.kd = valuePart.split(' ')[0].toDouble();
+            else if (key == "HeatLamp Starting Intensity") params.starting_intensity = valuePart.split(' ')[0].toDouble();
+            else if (key == "HeatLamp Default Intensity") params.default_intensity = valuePart.split(' ')[0].toDouble();
+            else if (key == "Delay After HeatLamp On") params.waitAfterHeatLampOn_millisecs = (int) (valuePart.split(' ')[0].toDouble());
             else if (key == "Part Position (Start X, Y)") {
                 QStringList coords = valuePart.split(',');
                 if (coords.size() == 2) {
@@ -1284,9 +1292,7 @@ bool MJPrintheadWidget::parsePrintParameters(const QString& filePath, PrintParam
 
     // --- Log parsed values for verification ---
     mPrinter->mjController->outputMessage("--- Parsed Print Parameters ---");
-    mPrinter->mjController->outputMessage(QString("Layer Height: %1 mm, Y-Shift: %2").arg(params.layerHeight).arg(params.yShiftEnabled ? "True" : "False"));
-    mPrinter->mjController->outputMessage(QString("Freq: %1 Hz, Speed: %2 mm/s").arg(params.printFrequency).arg(params.printSpeed));
-    mPrinter->mjController->outputMessage(QString("Start X: %1 mm, Start Y: %2 mm").arg(params.startX).arg(params.startY));
+    mPrinter->mjController->outputMessage(QString(params.to_string().c_str()));
     mPrinter->mjController->outputMessage("-----------------------------");
 
     if (params.printFrequency == 0.0 || params.printSpeed == 0.0 || params.layerHeight == 0.0) {
@@ -1362,6 +1368,35 @@ bool MJPrintheadWidget::parseLayerShifts(const QString& filePath, std::map<int, 
     return true;
 }
 
+void MJPrintheadWidget::cure_and_roll(PrintParameters params) {
+    // 1. Move nozzle to park position FIRST.
+    mPrinter->mjController->outputMessage("Moving nozzle to park position for recoat.");
+
+    moveNozzleOffPlate();
+
+    //2. cure layer
+    mPrinter->mjController->outputMessage("Performing curing operation...");
+    curingComplete = false;
+    std::stringstream s;
+    s << CMD::display_message("Curing layer...");
+    s << mPrinter -> cure_layer(params);
+    s << CMD::display_message("Curing Complete");
+
+    emit execute_command(s);
+
+    while (!curingComplete) {
+        QCoreApplication::processEvents();
+    }
+
+    // 3. Now that the head is parked, perform the recoat operation.
+    mPrinter->mjController->outputMessage("Performing recoat operation...");
+    recoatComplete = false;
+    performRecoat(&params, true);
+    while (!recoatComplete) {
+        QCoreApplication::processEvents();
+    }
+}
+
 // Main function for executing a multi-layer print from a sliced STL job folder.
 void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
     mPrinter->mjController->outputMessage(QString("--- Starting Full Print Job from folder: %1 ---").arg(jobFolderPath));
@@ -1373,6 +1408,9 @@ void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
         mPrinter->mjController->outputMessage("FATAL: Failed to parse parameters. Aborting print.");
         return;
     }
+
+    qDebug(params.to_string().c_str());
+
     std::map<int, int> layerShifts;
     if (params.yShiftEnabled && !parseLayerShifts(jobFolderPath + "\\layer_y_shifts.txt", layerShifts)) {
         mPrinter->mjController->outputMessage("FATAL: Failed to parse layer shifts. Aborting print.");
@@ -1449,8 +1487,22 @@ void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
                 mPrinter->mjController->outputMessage("Moving nozzle to park position for recoat.");
 
                 moveNozzleOffPlate();
+                
+                //2. cure layer
+                mPrinter->mjController->outputMessage("Performing curing operation...");
+                curingComplete = false;
+                std::stringstream s;
+                s << CMD::display_message("Curing layer...");
+                s << mPrinter -> cure_layer(params);
+                s << CMD::display_message("Curing Complete");
 
-                // 2. Now that the head is parked, perform the recoat operation.
+                emit execute_command(s);
+
+                while (!curingComplete) {
+                    QCoreApplication::processEvents();
+                }
+
+                // 3. Now that the head is parked, perform the recoat operation.
                 mPrinter->mjController->outputMessage("Performing recoat operation...");
                 recoatComplete = false;
                 performRecoat(&params, true);

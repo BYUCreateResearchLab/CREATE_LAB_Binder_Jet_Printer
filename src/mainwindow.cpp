@@ -53,6 +53,7 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     dropletObservationWidget = new DropletObservationWidget(printer);
     bedMicroscopeWidget      = new BedMicroscopeWidget(printer);
     mjPrintheadWidget        = new MJPrintheadWidget(printer);
+    heatLampWidget           = new HeatLampWidget(printer);
 
     // add widgets to tabs on the top bar (tab widget now owns)
     ui->tabWidget->addTab(powderSetupWidget, "Powder Setup");
@@ -61,6 +62,7 @@ MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     ui->tabWidget->addTab(dropletObservationWidget, "Jetting");
     ui->tabWidget->addTab(bedMicroscopeWidget, "Bed Imaging");
     ui->tabWidget->addTab(mjPrintheadWidget, "MJ Printhead");
+    ui->tabWidget->addTab(heatLampWidget, "Heat Lamp");
 
     // set fill background for all tab widgets
     for (int i{0}; i < ui->tabWidget->count(); ++i)
@@ -755,6 +757,10 @@ void MainWindow::stop_print_and_thread()
         GCmd(printer->mcu->g, "ST");    // stop motion on all axes
         GCmd(printer->mcu->g, "CB 18"); // stop roller 1
         GCmd(printer->mcu->g, "CB 21"); // stop roller 2
+        GCmd(printer->mcu->g, ("SB " + std::to_string(HEATLAMP_D0)).c_str()); // turn off heat lamp bit 0
+        GCmd(printer->mcu->g, ("SB " + std::to_string(HEATLAMP_D1)).c_str()); // turn off heat lamp bit 1
+        GCmd(printer->mcu->g, ("SB " + std::to_string(HEATLAMP_D2)).c_str()); // turn off heat lamp bit 2
+        GCmd(printer->mcu->g, ("SB " + std::to_string(HEATLAMP_D3)).c_str()); // turn off heat lamp bit 3
         GCmd(printer->mcu->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
     }
 }

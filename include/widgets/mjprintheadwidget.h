@@ -16,19 +16,6 @@ namespace Ui {
 class MJPrintheadWidget;
 }
 
-struct PrintParameters {
-    QString fileName = "";
-    double printFrequency = 0.0;
-    double printSpeed = 0.0;
-    double dropletSpacingX = 0.0;
-    double lineSpacingY = 0.0;
-    double layerHeight = 0.0;
-    double startX = 0.0;
-    double startY = 0.0;
-    int nozzleCount = 128;
-    bool yShiftEnabled = false;
-};
-
 class MJPrintheadWidget : public PrinterWidget
 {
     Q_OBJECT
@@ -37,6 +24,7 @@ public:
     explicit MJPrintheadWidget(Printer *printer, QWidget *parent = nullptr);
     ~MJPrintheadWidget();
     void allow_widget_input(bool allowed) override;
+    void cure_and_roll(PrintParameters params);
 
 
 protected:
