@@ -22,7 +22,7 @@ Printer::Printer(QObject *parent) :
     mister ( new Mister::Controller("COM6", this) ),
     bedMicroscope ( new BedMicroscope(this) ),
     mjController ( new Added_Scientific::Controller("COM5", this) ),
-    heatLamp ( new HeatLamp(50, this) )
+    heatLamp ( new HeatLamp(40, this) )
 {
 //    using Added_Scientific::Controller::HeadIndex;------------------------------------------------
 //    mjController->set_head_voltage(HeadIndex::HEAD1, 25);
@@ -117,34 +117,6 @@ float Printer::motor_type_value(MotorType motorType)
     case MotorType::Servo2PB_R: return -4;
     default: throw std::invalid_argument("invalid motor type");
     }
-}
-
-std::string CMD::axis_calibration(){
-    using CMD::detail::GCmd;
-
-    std::stringstream s;
-
-    // Controller Configuration
-
-    s << GCmd("BAY")                // Set the update time of the motion controller
-
-      // Y Axis Calibration
-      << GCmd("BMY=2000")           // Set magnetic pitch of rotary motor
-      << GCmd("BIY=-1")             // Set estimated commutation based on current hall state
-      << GCmd("BCY")                // Commutation Calibration
-      << GCmd("hall=_QHY")          // Store initial hall sensor state
-      << GCmd("SHY")                // Enable amplifier
-      << GCmd("JGY=-1600")          // Slow jog so commutation angle is set precisely at next hall transition
-      << GCmd("BGY")                // Begin jogging motion
-      << GCmd("#hall")              // Wait for hall sensor transition
-      << GCmd("WT2")                // Wait for 2 ms
-      << GCmd("JP#hall,_QHY=hall")  // Store hall state
-      << GCmd("STY")                // Stop motion
-      << GCmd("AMY")                // Acknowledge motion complete
-      << GCmd("EN")                 // End command sequence
-        ;
-
-    return s.str();
 }
 
 std::string CMD::set_default_controller_settings()
@@ -452,7 +424,6 @@ std::string CMD::homing_sequence(bool homeZAxis)
     // home to center index on x axis
     s << set_jog(Axis::X, -30);
     s << set_homing_velocity(Axis::X, 0.5);
-    s << set_homing_velocity(Axis::X, 1);
     s << find_index(Axis::X);
 
     // home y axis to nearest index

@@ -1293,9 +1293,6 @@ bool MJPrintheadWidget::parsePrintParameters(const QString& filePath, PrintParam
     // --- Log parsed values for verification ---
     mPrinter->mjController->outputMessage("--- Parsed Print Parameters ---");
     mPrinter->mjController->outputMessage(QString(params.to_string().c_str()));
-    // mPrinter->mjController->outputMessage(QString("Layer Height: %1 mm, Y-Shift: %2").arg(params.layerHeight).arg(params.yShiftEnabled ? "True" : "False"));
-    // mPrinter->mjController->outputMessage(QString("Freq: %1 Hz, Speed: %2 mm/s").arg(params.printFrequency).arg(params.printSpeed));
-    // mPrinter->mjController->outputMessage(QString("Start X: %1 mm, Start Y: %2 mm").arg(params.startX).arg(params.startY));
     mPrinter->mjController->outputMessage("-----------------------------");
 
     if (params.printFrequency == 0.0 || params.printSpeed == 0.0 || params.layerHeight == 0.0) {

@@ -757,8 +757,10 @@ void MainWindow::stop_print_and_thread()
         GCmd(printer->mcu->g, "ST");    // stop motion on all axes
         GCmd(printer->mcu->g, "CB 18"); // stop roller 1
         GCmd(printer->mcu->g, "CB 21"); // stop roller 2
-        GCmd(printer->mcu->g, "OFG=0"); //turn off heat lamp
-        GCmd(printer->mcu->g, "CB 9");  //turn off heat lamp
+        GCmd(printer->mcu->g, ("SB " + std::to_string(HEATLAMP_D0)).c_str()); // turn off heat lamp bit 0
+        GCmd(printer->mcu->g, ("SB " + std::to_string(HEATLAMP_D1)).c_str()); // turn off heat lamp bit 1
+        GCmd(printer->mcu->g, ("SB " + std::to_string(HEATLAMP_D2)).c_str()); // turn off heat lamp bit 2
+        GCmd(printer->mcu->g, ("SB " + std::to_string(HEATLAMP_D3)).c_str()); // turn off heat lamp bit 3
         GCmd(printer->mcu->g, "MG{P2} {^85}, {^48}, {^13}{N}"); // stop hopper
     }
 }
