@@ -511,7 +511,6 @@ std::string Printer::cure_layer(const PrintParameters &settings)
 
     //get last temperature
     std::vector<double> bedTempList = get_last_bed_temp_list();
-    qDebug(std::to_string(bedTempList.size()).c_str());
     double averageTemp{0};
 
     if (bedTempList.size() != 0) {
@@ -560,7 +559,6 @@ std::string Printer::cure_layer(const PrintParameters &settings)
     program += "JP #Loop, i < " + std::to_string((int) ceil((settings.cureTime_s*1000 + settings.waitAfterHeatLampOn_millisecs)/period_ms)) + "\n";
     program += CMD::cmd_buf_to_dmc(std::stringstream(heatLamp -> set_intensity(0)));
     program += "\nEN";
-    qDebug(program.c_str());
     int rc = GProgramDownload(mcu->g, program.c_str(), "");
     if (rc != G_NO_ERROR) {
         qDebug(("Program not downloaded, error:" + std::to_string(rc)).c_str());
