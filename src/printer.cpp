@@ -133,6 +133,7 @@ std::string CMD::set_default_controller_settings()
 
          // X Axis
       << GCmd("MTX=-1")      // Set motor type to reversed brushless
+      << GCmd("BAX")         // Set motor to brushless
       << GCmd("CEX=10")      // Set main and aux encoder to reversed quadrature
       << GCmd("BMX=40000")   // Set magnetic pitch of linear motor
       << GCmd("AGX=1")       // Set amplifier gain
