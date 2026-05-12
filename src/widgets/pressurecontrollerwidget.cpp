@@ -73,53 +73,17 @@ void PressureControllerWidget::send_command(const QString &command)
 // MAX 03/04 !!! New thing idk
 void PressureControllerWidget::move_reservoir()
 {
-
     std::stringstream s;
-
-    // Get the actual value from the UI (removing the hardcoded '3')
     double distance_mm = ui->distanceValue->value();
-    double speed_mm_s = 5;
 
-    // Build the command string using the same pattern as MJPrintheadWidget::on_xHome_clicked_MJ
-    s << CMD::set_accleration(Axis::Reservoir, 200);
-    s << CMD::set_deceleration(Axis::Reservoir, 200);
-    s << CMD::set_speed(Axis::Reservoir, speed_mm_s);
+    // Instead of PR (Relative), use PA (Absolute)
+    // You need to track the internal position or query it with _TPE
+    // If you must use relative, ensure the limit is definitely set:
+
+    s << CMD::set_speed(Axis::Reservoir, 10);
     s << CMD::position_relative(Axis::Reservoir, distance_mm);
     s << CMD::begin_motion(Axis::Reservoir);
 
-    // This sends the commands line-by-line via the established signal
     emit execute_command(s);
-
-    // std::stringstream s;
-
-    // double distance_mm = ui->distanceValue->value();
-    // distance_mm = 3;
-    // double speed_mm_s = 5;
-
-    // // Set the movement params
-    // s << CMD::set_accleration(Axis::Reservoir, 200);     // mm/s^2
-    // s << CMD::set_deceleration(Axis::Reservoir, 200);    // mm/s^2
-    // s << CMD::set_speed(Axis::Reservoir, speed_mm_s);   // mm/s
-
-    // // Command the movement
-    // s << CMD::position_relative(Axis::Reservoir, distance_mm);
-    // s << CMD::begin_motion(Axis::Reservoir);
-    // s << CMD::after_motion(Axis::Reservoir);
-
-    // // Convert stringstream to CMD formatted string
-    // std::string dmc_commands = CMD::cmd_buf_to_dmc(s);
-    // const char *cmds = dmc_commands.c_str();
-
-    // if (mPrinter->mcu->g) {
-    //     GProgramDownload(mPrinter->mcu->g, cmds, "");
-    // }
-
-    // std::stringstream c_cmdMove;
-    // c_cmdMove << "GCmd," << "XQ" << "\n";
-    // c_cmdMove << "GProgramComplete," << "\n";
-
-    // emit execute_command(c_cmdMove);
-
 }
 
-#include "moc_pressurecontrollerwidget.cpp"

@@ -83,12 +83,11 @@ class HeatLamp;
 #define X_CNTS_PER_MM 1000
 #define Y_CNTS_PER_MM 800
 #define Z_CNTS_PER_MM 75745.7108f
-#define R_CNTS_PER_MM 40
 
 #define X_STAGE_LEN_MM 150
 #define Y_STAGE_LEN_MM 500
 #define Z_STAGE_LEN_MM 15
-#define R_STAGE_LEN_MM 150
+
 
 #define PRINT_X_SIZE_MM 100
 #define PRINT_Y_SIZE_MM 100
@@ -97,13 +96,18 @@ class HeatLamp;
 #define HEAD_GAP_MM 21.1 // print head gap in mm
 #define Y_HEAD_OFFSET 17.4 // was 37, test "swath width" from XAAR specs
 
+#define STEPS_PER_REV 200   //steps
+#define SCREW_PITCH 5   // mm
+#define MICROSTEPPING 16 // 16:1
+#define R_CNTS_PER_MM ((static_cast<double>(STEPS_PER_REV) * MICROSTEPPING) / SCREW_PITCH)
+
 // NOTE: these are not the same as the pin number on the DSUB HD44 cable
 #define ROLLER_1_BIT 18 // pin 1
 #define ROLLER_2_BIT 20 // pin 17
 
 #define HEAT_LAMP_BIT 24 // pin 3
 
-#define PURGE_VALVE_BIT 11 // pin 11 for valve from wall pressure (added 3/13)
+#define PURGE_VALVE_BIT 30 // DO 30 for valve from wall pressure (added as pin 11 on 3/13) (modified to Digital Output 30 on the Extended I/O by Madsen on 5/5/26)
 
 #define HS_TTL_BIT 17 // pin 16
 //#define MISTER_BIT 21 // pin 2

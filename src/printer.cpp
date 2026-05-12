@@ -171,7 +171,7 @@ std::string CMD::set_default_controller_settings()
 
          // H Axis (Jetting Axis)
       << GCmd("MTH=-2")      // Set jetting axis to be stepper motor with defualt low
-      << GCmd("AGH=0")       // Set gain to lowest value
+      << GCmd("AGH=0")       // Set gain to lowest value (to disable amplifier on external drivers)
       << GCmd("LDH=3")       // Disable limit sensors for H axis
       << GCmd("KSH=0.5")     // Minimize filters on step signals (0.25 when TM=1000)
       << GCmd("ITH=1" )      // Minimize filters on step signals
@@ -179,13 +179,16 @@ std::string CMD::set_default_controller_settings()
 
       // MAX 03/04 !!!
        // Reservoir Axis (E)
-      << GCmd("MTE=-2")    // Stepper motor with active high step pulses, reversed direction
-      //<< GCmd("YAE=1")       // Test step resolution (set to 1 here)
-      << GCmd("AGE=0")       // Set amplifier gain
-      << GCmd("AUE=9")       // Set current loop (based on inductance of motor)
-      << GCmd("ALE=0")       // 1 = Active High, 0 = Active Low, doesn't seem to fix issue where the stepper is always disabled
+      << GCmd("MTE=-2")      // Stepper motor with active high step pulses, reversed direction
+      << GCmd("YAE=" + std::to_string(MICROSTEPPING)) // Step Resoluton
+      << GCmd("AGE=1")       // Set amplifier gain
+      << GCmd("AUE=2")       // Set current loop (based on inductance of motor)
+      << GCmd("ALE=0")       // 1 = Active High, 0 = Active Low
       << GCmd("LDE=2")       // 2 = forward limit only, 3 = diable both limits
-      << GCmd("CNE=-1")     // Set polarity (use -1 for Normally Closed, 1 for Normally Open)
+      << GCmd("FLE=2147483647")   // Disable Forward Software Limit (PREVENTS CRASHES)
+      << GCmd("BLE=-2147483648")  // Disable Reverse Software Limit (PREVENTS CRASHES)
+      << GCmd("DPE=0")            //Define current position as 0
+      //<< GCmd("CNE=-1")         // Set polarity (use -1 for Normally Closed, 1 for Normally Open)
 
       // Pyrometer data array
       << GCmd("DM BEDTEMP[1]")
@@ -398,10 +401,20 @@ std::string CMD::homing_sequence(bool homeZAxis)
         s << disable_forward_software_limit(Axis::Z);
     }
 
+    // --- E-Axis Homing Additions ---
+    // Assuming a moderate speed for the reservoir stepper
+    s << set_accleration(Axis::Reservoir, 100);
+    s << set_deceleration(Axis::Reservoir, 100);
+    s << set_limit_switch_deceleration(Axis::Reservoir, 400);
+    s << set_jog(Axis::Reservoir, 10); // Jog forward until limit switch hit
+    s << disable_reverse_software_limit(Axis::Reservoir);
+    // -------------------------------
+
     s << begin_motion(Axis::X);
     s << begin_motion(Axis::Y);
     if (homeZAxis)
         s << begin_motion(Axis::Z);
+    s << begin_motion(Axis::Reservoir); //
 
     s << motion_complete(Axis::X);
     s << motion_complete(Axis::Y);
@@ -419,6 +432,9 @@ std::string CMD::homing_sequence(bool homeZAxis)
     // this is put after the short y move because the z axis is slow
     if (homeZAxis)
         s << motion_complete(Axis::Z);
+
+    // Wait for E-Axis to hit the forward limit
+    s << motion_complete(Axis::Reservoir);
 
     s << sleep(1000);
 
@@ -454,29 +470,37 @@ std::string CMD::homing_sequence(bool homeZAxis)
     s << define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
     s << define_position(Axis::Y, 0);
     s << define_position(Axis::Z, 0);
+    s << define_position(Axis::Reservoir, 0); // Set E forward limit position as 0
 
     // set software limit to current position
-    s << set_forward_software_limit(Axis::Z, 0);
+    //s << set_forward_software_limit(Axis::Z, 500);
 
-    // // === Home Reservoir Axis to Single Limit Switch === (added 3/11)
-    // s << disable_forward_software_limit(Axis::Reservoir); // try to fix phantom limits 3/12
-    // s << set_accleration(Axis::Reservoir, 200);
-    // s << set_deceleration(Axis::Reservoir, 200);
-    // s << set_limit_switch_deceleration(Axis::Reservoir, 400);
+    // Set reverse software limit for E (prevents it from crashing backward)
+    // Replace REVOIR_TRAVEL_LIMIT with your actual travel distance (e.g., -50)
+    s << set_reverse_software_limit(Axis::Reservoir, -100.0);
 
-    // // Jog towards the physical limit switch.
-    // s << set_jog(Axis::Reservoir, 5); // jog into upper limit
-    // s << begin_motion(Axis::Reservoir); // Start Reservoir homing
-    // s << motion_complete(Axis::Reservoir); // Wait for Reservoir to hit the physical limit
-    // // Perform the Back-off (Negative = Down)
-    // s << position_relative(Axis::Reservoir, -2);
-    // s << begin_motion(Axis::Reservoir);
-    // s << motion_complete(Axis::Reservoir);
+/*
+    // === Home Reservoir Axis to Single Limit Switch === (added 3/11)
+    s << set_accleration(Axis::Reservoir, 200);
+    s << set_deceleration(Axis::Reservoir, 200);
+   // s << set_limit_switch_deceleration(Axis::Reservoir, 400);
 
-    // // Define final Reservoir position and software limits
-    // s << define_position(Axis::Reservoir, R_STAGE_LEN_MM);
-    // s << set_forward_software_limit(Axis::Reservoir, R_STAGE_LEN_MM); // Can't go past the back-off point
-    // s << set_reverse_software_limit(Axis::Reservoir, 0);
+    // Jog towards the physical limit switch.
+    s << set_jog(Axis::Reservoir, 5*R_STEP_RESOLUTION); // jog into upper limit
+    s << begin_motion(Axis::Reservoir); // Start Reservoir homing
+    s << motion_complete(Axis::Reservoir); // Wait for Reservoir to hit the physical limit
+    // Perform the Back-off (Negative = Down)
+    s << position_relative(Axis::Reservoir, -3);
+    s << set_speed(Axis::Reservoir, 10); //Sets the speed for the relative back-off move
+    s << begin_motion(Axis::Reservoir);
+    s << motion_complete(Axis::Reservoir);
+
+    // Define final Reservoir position and software limits
+    s << define_position(Axis::Reservoir, R_STAGE_LEN_MM);
+    s << set_forward_software_limit(Axis::Reservoir, R_STAGE_LEN_MM); // Can't go past the back-off point
+    s << set_reverse_software_limit(Axis::Reservoir, 0);
+*/
+
 
     return s.str();
 }
@@ -797,13 +821,14 @@ std::stringstream& CommandGenerator::jog_axis(Axis axis, double speed_mm_s)
 std::string CMD::quick_purge(int pulseTime_ms)
 {
     std::stringstream s;
-    s << CMD::display_message("Quick purging valve.");
+    s << CMD::display_message("Started quick purging valve.");
     // Turn valve ON
     s << CMD::set_bit(PURGE_VALVE_BIT);
     // Wait
     s << CMD::sleep(pulseTime_ms);
     // Turn valve OFF
     s << CMD::clear_bit(PURGE_VALVE_BIT);
+    s << CMD::display_message("Finished quick purging valve.");
 
     return s.str();
 }

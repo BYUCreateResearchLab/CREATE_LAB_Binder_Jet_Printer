@@ -19,7 +19,6 @@ public:
 
     void allow_widget_input(bool allowed) override;
 
-
 private:
     void connect_to_pressure_controller();
     void set_pressure();

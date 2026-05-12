@@ -1733,7 +1733,8 @@ bool MJPrintheadWidget::readyHeads()
         QMetaObject::Connection conn = connect(mPrinter->mjController, &AsyncSerialDevice::response,
                                                [&](const QString &response) {
                                                    // // Filter response
-                                                   if (response.contains(STATUS_READY) || response.contains("-") || response.toInt() != 0) {
+                                                   if (response.contains(STATUS_READY) || response.contains("-") || response.toInt() != 0)
+                                                   {
                                                        lastStatus = response.trimmed(); // Remove whitespace
                                                        statusReceived = true;
                                                        loop.quit();
