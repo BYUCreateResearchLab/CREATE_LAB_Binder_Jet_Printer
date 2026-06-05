@@ -40,38 +40,47 @@ Controller::~Controller()
 
 void Controller::handle_ready_read()
 {
-    // look at DataRecievedHandler in "MJ Driver Board/Software/DriverBoardDropwatcher/Form1.cs"
-    while (serialPort->bytesAvailable())
-    {
-        auto inData = serialPort->readAll();
-        readData.append(inData);
-    }
+    // Accumulate all currently available data into the buffer
+    readData.append(serialPort->readAll());
 
-    if (readData[0] == '{')
-    {
-        json j;
-        try
-        {
-            j = json::parse(readData.toStdString());
-            // handle the json here
-            emit response( QString::fromStdString(j.dump(4)) ); // this probably doesn't need to be here and clogs the output window
+    // Check if we have a potential JSON start
+    if (readData.contains('{')) {
+        // Look for the start and the end of the JSON block
+        int startIndex = readData.indexOf('{');
+        int endIndex = readData.lastIndexOf('}');
 
+        // Only parse if we have a matching set of braces
+        if (endIndex > startIndex) {
+            QByteArray jsonChunk = readData.mid(startIndex, (endIndex - startIndex) + 1);
+
+            try {
+                auto j = nlohmann::json::parse(jsonChunk.constData());
+
+                // If it contains "heads", it's our status update [cite: 2]
+                if (j.contains("heads")) {
+                    emit statusReceived(j); // Create this signal to update your table
+                }
+
+                // Clear the processed JSON from the buffer
+                readData.remove(0, endIndex + 1);
+            } catch (const nlohmann::json::parse_error &e) {
+                // If parsing fails, we might still be waiting for more data
+                // or there was a real error. Don't clear readData yet.
+            }
         }
-        catch (const nlohmann::json::parse_error &e)
-        {
-            QString errorMessage = "Failed to parse JSON: ";
-            errorMessage += e.what();
-            emit error(errorMessage);
+    }
+
+    // Process any non-JSON text left in the buffer (like "Heads on") [cite: 12]
+    if (readData.contains('\n')) {
+        int lineEnd = readData.indexOf('\n');
+        QByteArray line = readData.left(lineEnd).trimmed();
+        if (!line.isEmpty()) {
+            emit response(QString(line));
         }
-
+        readData.remove(0, lineEnd + 1);
     }
 
-    else
-    {
-        emit response(QString(readData));
-    }
-
-    readData.clear();
+    // Only call write_next if you are using a command queue system
     write_next();
 }
 
@@ -486,6 +495,25 @@ void Controller::handle_serial_error(
     }
 }
 
+// --- Maintenance Commands (Lowercase) ---
+
+void Controller::fill_head(int headIdx) {
+    // lowercase 'f' for fill + index + newline
+    QString cmd = QString("I %1").arg(headIdx);
+    write_line(cmd.toUtf8());
+}
+
+void Controller::clear_heads() {
+    // lowercase 'c' for clear + index + newline
+    QString cmd = QString("C");
+    write_line(cmd.toUtf8());
+}
+
+void Controller::fill_nozzle_range(int headIdx, int start, int span) {
+    // Command 'N' + Head + Start + Span
+    QString cmd = QString("N %1 %2 %3").arg(headIdx).arg(start).arg(span);
+    write_line(cmd.toUtf8());
+}
 
 
 } // namespace Added_Scientific

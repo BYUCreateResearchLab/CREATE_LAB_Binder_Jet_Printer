@@ -3,6 +3,7 @@
 
 #include <QMutex>
 #include "asyncserialdevice.h"
+#include <nlohmann/json.hpp>
 
 namespace Added_Scientific
 {
@@ -43,6 +44,11 @@ public:
     void power_on();
     void power_off();
 
+    // Maintenance Commands
+    void fill_head(int headIdx);
+    void clear_heads();
+    void fill_nozzle_range(int headIdx, int start, int span);
+
     void report_status();
     void set_absolute_start(int steps);
     void set_printing_frequency(int frequency);
@@ -69,6 +75,11 @@ public:
 
 
     void write_line(const QByteArray &data); // this should really be protected, but is public for testing
+
+signals:
+    void statusReceived(const nlohmann::json &j);
+    void response(QString data);
+    void error(QString message);
 
 protected:
 

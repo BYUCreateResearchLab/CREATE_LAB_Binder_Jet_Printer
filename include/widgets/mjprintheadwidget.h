@@ -4,13 +4,13 @@
 #include <QWidget>
 #include "printerwidget.h"
 
-// Includes for STL slicing 06/24
+// Includes for STL slicing & processes
 #include <QProcess>
 #include <map>
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 class QProgressDialog;
-
-
 
 namespace Ui {
 class MJPrintheadWidget;
@@ -23,11 +23,13 @@ class MJPrintheadWidget : public PrinterWidget
 public:
     explicit MJPrintheadWidget(Printer *printer, QWidget *parent = nullptr);
     ~MJPrintheadWidget();
+
+    // Core logic override
     void allow_widget_input(bool allowed) override;
     void cure_and_roll(PrintParameters params);
 
-
 protected:
+    // --- Connectivity and Main Status ---
     void connect_to_printhead();
     void clear_response_text();
     void command_entered();
@@ -35,38 +37,26 @@ protected:
     void getPositionPressed();
     void getHeadTempsPressed();
     void file_name_entered();
-    void read_in_file(const QString &filename, int headIdx = 1); // 11/24 added arguments to reduce copy/pasted code. If this doesn't work delete headIdx and WhiteSpace
-    //void send_image_data(const QString &file);
-
+    void read_in_file(const QString &filename, int headIdx = 1);
     void send_command(const QString &command);
+    void write_to_response_window(const QString &text);
+
+    // --- Settings SpinBoxes ---
     void frequencyChanged();
     void voltageChanged();
     void absoluteStartChanged();
-    void write_to_response_window(const QString &text);
+
+    // --- Maintenance (The Survivors) ---
+    void purgeNozzles();
     void moveNozzleOffPlate();
 
-    void stopPrintingPressed();
-    void testPrintPressed();
-    void testJetPressed();
-    void createBitmapPressed();
-    void singleNozzlePressed();
-
-    void createTestBitmapsPressed();
-    void variableTestPrintPressed();
-    void printBMPatLocation(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileLocation);
-    void printBMPatLocationEncoder(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName);
+    // --- Core Movement & Printing Logic ---
     void moveToLocation(double xLocation, double yLocation, QString endMessage);
     void print(double acceleration, double speed, double endTargetMM, QString endMessage);
     void printEnc(double acceleration, double speed, double endTargetMM, QString endMessage);
-    void verifyPrintStartAlignment(double xStart, double yStart);
-    void zeroEncoder();
-    void checkMapsPressed();
+    void printBMPatLocationEncoder(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName);
 
-    void purgeNozzles();
-    void testNozzles();
-    QString verifyPrintStartStop(int xStart, int xStop);
-
-    // Motion Addition:
+    // --- Motion Controls (X/Y/Z) ---
     void x_right_button_pressed_MJ();
     void x_left_button_pressed_MJ();
     void y_up_button_pressed_MJ();
@@ -83,56 +73,57 @@ protected:
     void get_current_z_axis_position_MJ();
     void move_z_to_absolute_position_MJ();
 
-    // Input allowance
-    void allow_widget_input_MJ(bool allowed);
-
-    // Powder Rolling Addition
+    // --- Recoater Logic ---
     void levelRecoat_MJ();
     void normalRecoat_MJ();
     void performRecoat(const PrintParameters* params, bool usePrintParameters);
     void reRollLayer();
 
-
-
+    // --- Input allowance ---
+    void allow_widget_input_MJ(bool allowed);
 
 public slots:
     void on_startFullPrintButton_clicked();
     void cancelPrintJob();
 
 private slots:
-    void onStartStopDisplayClicked();
-    void requestEncoderPosition();
+    // --- Head Management (Transplanted from image_9dcf1f.png) ---
+    void on_fillHeadButton_clicked();        // New "Fill Head" button
+    void on_headSelector_currentIndexChanged(int index); // "Head Index" dropdown
+    void on_clearHeadButton_clicked();       // "Clear Head" button
+    void on_fillGapButton_clicked();
+    void on_fillNozzleButton_clicked();
+    void on_comboMode_currentIndexChanged(int index);
+    void updateStatusTable(const json &j);
 
-    // STL Slicing Slots
+    // --- Slicing & Printing Slots ---
     void sliceStlButton_clicked();
+    void checkMapsPressed();
+    void stopPrintingPressed();
     void readPythonOutput();
     void handlePythonError();
     void onPythonScriptFinished(int exitCode, QProcess::ExitStatus exitStatus);
-
     void onRollerButtonClicked();
-
+    void requestEncoderPosition();
 
 private:
-    // Helper methods for full print job
+    // Helper methods for full print jobs
     bool parsePrintParameters(const QString& filePath, PrintParameters& params);
     bool parseLayerShifts(const QString& filePath, std::map<int, int>& shifts);
     void startFullPrintJob(const QString& jobFolderPath);
-    int calculate_gap(const QString& associatedBitmap); // Calculate pixel gap between heads from print parameters
-    bool readyHeads(); // checks if the print heads are on
+    int calculate_gap(const QString& associatedBitmap);
+    bool readyHeads();
+    int m_selectedHead = 1;
 
-    // Helpers for cancelling print job
+    // Internal state
     volatile bool m_printJobCancelled = false;
     QProgressDialog* m_printStatusDialog = nullptr;
-
     Ui::MJPrintheadWidget *ui;
-    bool encFlag;
+
     QTimer *m_positionTimer;
-    QStringList m_encoderHistory;
-    QProcess *m_pythonProcess;          // 06/24 TODO
+    QProcess *m_pythonProcess;
 
-    bool m_isRollerOn; // State variable to track the roller's status
-
-
+    bool m_isRollerOn;
 };
 
 #endif // MJPRINTHEADWIDGET_H

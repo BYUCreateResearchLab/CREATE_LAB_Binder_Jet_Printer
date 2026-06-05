@@ -164,6 +164,7 @@ std::string CMD::set_default_controller_settings()
 
          // Z Axis
       << GCmd("MTZ=-2.5")    // Stepper motor with active high step pulses, reversed direction
+      << GCmd("LDZ=1")       // Set only the reverse limit switch to work
       << GCmd("CEZ=14")      // Set encoder to reversed quadrature
       << GCmd("AGZ=0")       // Set amplifier gain
       << GCmd("AUZ=9")       // Set current loop (based on inductance of motor)
@@ -398,7 +399,7 @@ std::string CMD::homing_sequence(bool homeZAxis)
         // jog to bottom (MAX SPEED of 5mm/s!)
         s << set_jog(Axis::Z, -2);
         // turn off top software limit
-        s << disable_forward_software_limit(Axis::Z);
+        //s << disable_forward_software_limit(Axis::Z);
     }
 
     // --- E-Axis Homing Additions ---
@@ -474,6 +475,10 @@ std::string CMD::homing_sequence(bool homeZAxis)
 
     // set software limit to current position
     //s << set_forward_software_limit(Axis::Z, 500);
+    if (homeZAxis){
+        double zSoftwareLimit_mm = 15.0 - 13.5322;
+        s << set_forward_software_limit(Axis::Z, zSoftwareLimit_mm);
+    }
 
     // Set reverse software limit for E (prevents it from crashing backward)
     // Replace REVOIR_TRAVEL_LIMIT with your actual travel distance (e.g., -50)
