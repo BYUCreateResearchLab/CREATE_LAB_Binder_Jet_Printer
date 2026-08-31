@@ -40,48 +40,31 @@ Controller::~Controller()
 
 void Controller::handle_ready_read()
 {
-    // Accumulate all currently available data into the buffer
     readData.append(serialPort->readAll());
 
-    // Check if we have a potential JSON start
-    if (readData.contains('{')) {
-        // Look for the start and the end of the JSON block
-        int startIndex = readData.indexOf('{');
-        int endIndex = readData.lastIndexOf('}');
+    // ONLY parse if we have a full JSON structure
+    int startIndex = readData.indexOf('{');
+    int endIndex = readData.lastIndexOf('}');
 
-        // Only parse if we have a matching set of braces
-        if (endIndex > startIndex) {
-            QByteArray jsonChunk = readData.mid(startIndex, (endIndex - startIndex) + 1);
-
-            try {
-                auto j = nlohmann::json::parse(jsonChunk.constData());
-
-                // If it contains "heads", it's our status update [cite: 2]
-                if (j.contains("heads")) {
-                    emit statusReceived(j); // Create this signal to update your table
-                }
-
-                // Clear the processed JSON from the buffer
-                readData.remove(0, endIndex + 1);
-            } catch (const nlohmann::json::parse_error &e) {
-                // If parsing fails, we might still be waiting for more data
-                // or there was a real error. Don't clear readData yet.
+    if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+        QByteArray jsonChunk = readData.mid(startIndex, (endIndex - startIndex) + 1);
+        try {
+            auto j = nlohmann::json::parse(jsonChunk.constData());
+            if (j.contains("heads")) {
+                emit statusReceived(j);
             }
+
+            // --- FIX IS HERE ---
+            timer->stop(); // Stop the timeout timer since we got our response!
+            // -------------------
+
+            // Instead of .clear(), just remove the processed chunk
+            readData.remove(0, endIndex + 1);
+        } catch (...) {
+            // Optional: if it fails to parse but is a complete chunk,
+            // you might still want to clear or handle it so it doesn't get stuck.
         }
     }
-
-    // Process any non-JSON text left in the buffer (like "Heads on") [cite: 12]
-    if (readData.contains('\n')) {
-        int lineEnd = readData.indexOf('\n');
-        QByteArray line = readData.left(lineEnd).trimmed();
-        if (!line.isEmpty()) {
-            emit response(QString(line));
-        }
-        readData.remove(0, lineEnd + 1);
-    }
-
-    // Only call write_next if you are using a command queue system
-    write_next();
 }
 
 void Controller::handle_timeout()
@@ -315,9 +298,7 @@ void Controller::send_image_data(int headIdx, const QImage &image, int whiteSpac
 {
     QByteArray imageData = convert_image(headIdx, image, whiteSpace);
 
-
-
-    write(imageData);
+    this->directWrite(imageData);
 }
 
 void Controller::create_bitmap_lines(int numLines, int width)

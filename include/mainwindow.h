@@ -88,6 +88,9 @@ private slots:
 
     void initialize_y_axis_commutation();
 
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
 private:
     Ui::MainWindow *ui;
     void resizeEvent(QResizeEvent* event) override;

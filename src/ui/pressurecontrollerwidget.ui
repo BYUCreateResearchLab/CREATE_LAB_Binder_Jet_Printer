@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>359</width>
-    <height>265</height>
+    <height>304</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -43,6 +43,12 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="minimumSize">
+      <size>
+       <width>100</width>
+       <height>300</height>
+      </size>
+     </property>
      <property name="frameShape">
       <enum>QFrame::Shape::StyledPanel</enum>
      </property>
@@ -60,13 +66,6 @@
         </property>
         <property name="text">
          <string>Pressure Controller</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <widget class="QPushButton" name="setPressureButton">
-        <property name="text">
-         <string>Set</string>
         </property>
        </widget>
       </item>
@@ -92,6 +91,26 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="PSIGLabel">
+        <property name="text">
+         <string>PSIG</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="4">
+       <widget class="QPushButton" name="purgeButton">
+        <property name="text">
+         <string>Purge</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
       <item row="1" column="0">
        <widget class="QLabel" name="backPressureLabel">
         <property name="text">
@@ -99,10 +118,10 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="PSIGLabel">
+      <item row="1" column="3">
+       <widget class="QPushButton" name="setPressureButton">
         <property name="text">
-         <string>PSIG</string>
+         <string>Set</string>
         </property>
        </widget>
       </item>
@@ -211,19 +230,44 @@
           <string>-</string>
          </property>
         </widget>
-       </widget>
-      </item>
-      <item row="2" column="0" colspan="4">
-       <widget class="QPushButton" name="purgeButton">
-        <property name="text">
-         <string>Purge</string>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
+        <widget class="QDoubleSpinBox" name="quickPurgeDuration">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>150</y>
+           <width>71</width>
+           <height>25</height>
+          </rect>
+         </property>
+         <property name="decimals">
+          <number>0</number>
+         </property>
+         <property name="minimum">
+          <double>0.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>5000.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>50.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>100.000000000000000</double>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_3">
+         <property name="geometry">
+          <rect>
+           <x>160</x>
+           <y>150</y>
+           <width>151</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Quick Purge Duration (ms)</string>
+         </property>
+        </widget>
        </widget>
       </item>
      </layout>

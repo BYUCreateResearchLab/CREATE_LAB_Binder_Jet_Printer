@@ -56,7 +56,7 @@ void PressureControllerWidget::toggle_purge()
 void PressureControllerWidget::quick_purge_clicked()
 {
     std::stringstream s;
-    const int pulseTime_ms = 100; // 0.1 seconds
+    int pulseTime_ms = (ui->quickPurgeDuration->value());
     s << CMD::quick_purge(pulseTime_ms); // function in printer.cpp
     emit execute_command(s);
 

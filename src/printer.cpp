@@ -21,7 +21,7 @@ Printer::Printer(QObject *parent) :
     pressureController ( new PCD::Controller("COM3", this) ),
     mister ( new Mister::Controller("COM6", this) ),
     bedMicroscope ( new BedMicroscope(this) ),
-    mjController ( new Added_Scientific::Controller("COM5", this) ),
+    mjController ( new Added_Scientific::Controller("COM9", this) ),
     heatLamp ( new HeatLamp(40, this) )
 {
 //    using Added_Scientific::Controller::HeadIndex;------------------------------------------------
@@ -134,6 +134,8 @@ std::string CMD::set_default_controller_settings()
          // X Axis
       << GCmd("MTX=-1")      // Set motor type to reversed brushless
       << GCmd("BAX")         // Set motor to brushless
+      << GCmd("ERX=64000")   // Increases error limit to tolerate linear motor breaking
+      << GCmd("SDX=500000")  // Sets a gentler default limit decel for jogging stops
       << GCmd("CEX=10")      // Set main and aux encoder to reversed quadrature
       << GCmd("BMX=40000")   // Set magnetic pitch of linear motor
       << GCmd("AGX=1")       // Set amplifier gain
@@ -151,6 +153,7 @@ std::string CMD::set_default_controller_settings()
          // Y Axis
       << GCmd("MTY=1")       // Set motor type to standard brushless
       << GCmd("CEY=0")       // Set encoder to normal quadrature
+      << GCmd("LDY=0")      // Explicitely tells the Galil to enable the limit switches (added because it would ignore the Y-Axis forward limit)
       << GCmd("BMY=2000")    // Set magnetic pitch of rotary motor
       << GCmd("AGY=1")       // Set amplifier gain
       << GCmd("AUY=11")      // Set current loop (based on inductance of motor)
@@ -208,9 +211,11 @@ std::string CMD::set_default_controller_settings()
       << GCmd("SB " + std::to_string(HEATLAMP_D3))
 
       << GCmd("CC 19200,0,1,0")  // AUX PORT FOR THE ULTRASONIC GENERATOR
-      << GCmd("CN=-1, -1")           // Set correct polarity for all limit switches
+      << GCmd("CN 1,1")           // Set correct polarity for all limit switches (changed Tyler Jarvis 7/6/2026)
       << GCmd("BN")              // Save (burn) these settings to the controller just to be safe
-      << GCmd("SH XYZ")          // Enable X,Y, and Z motors
+      << GCmd("BZX=-2")
+      << GCmd("SH YZ")          // Enable Y and Z motors
+      << GCmd("WT 500")          // Wait 200 ms for motors to stabilize (Tyler Jarvis 7/6/2026)
       << GCmd("SH H")            // Servo the jetting axis
       << GCmd("SH E");           // Servo the Reservior Axis !!!
     return s.str();
@@ -379,7 +384,7 @@ std::string CMD::homing_sequence(bool homeZAxis)
 {
     std::stringstream s;
 
-    // === Home the X-Axis using the central home sensor index pulse ===
+    // === 1. Setup Motion Parameters & Start Initial Jogging ===
 
     s << set_accleration(Axis::X, 800);
     s << set_deceleration(Axis::X, 800);
@@ -396,116 +401,102 @@ std::string CMD::homing_sequence(bool homeZAxis)
         s << set_accleration(Axis::Z, 20);
         s << set_deceleration(Axis::Z, 20);
         s << set_limit_switch_deceleration(Axis::Z, 40);
-        // jog to bottom (MAX SPEED of 5mm/s!)
-        s << set_jog(Axis::Z, -2);
-        // turn off top software limit
-        //s << disable_forward_software_limit(Axis::Z);
+        s << set_jog(Axis::Z, -2); // jog to bottom
     }
 
-    // --- E-Axis Homing Additions ---
-    // Assuming a moderate speed for the reservoir stepper
+    // --- Reservoir Homing Setup ---
     s << set_accleration(Axis::Reservoir, 100);
     s << set_deceleration(Axis::Reservoir, 100);
     s << set_limit_switch_deceleration(Axis::Reservoir, 400);
     s << set_jog(Axis::Reservoir, 10); // Jog forward until limit switch hit
     s << disable_reverse_software_limit(Axis::Reservoir);
-    // -------------------------------
 
+    // --- Fire all initial homing/jogging motions ---
     s << begin_motion(Axis::X);
     s << begin_motion(Axis::Y);
     if (homeZAxis)
         s << begin_motion(Axis::Z);
-    s << begin_motion(Axis::Reservoir); //
+    s << begin_motion(Axis::Reservoir);
+
+    // === 2. Wait for Initial Positions & Perform In-Sequence Adjustments ===
 
     s << motion_complete(Axis::X);
+    s << servo_here(Axis::X);
     s << motion_complete(Axis::Y);
 
-    // TODO: This is a temporary solution that depends on alignment
-    // of ballscrew and motor index pulse
-    // find a better way to do this
-    // move y-axis forward a bit to avoid being right on top of the index pulse
+    // Back off Y-axis slightly to clear index pulse alignment issues
     s << position_relative(Axis::Y, -5);
     s << set_speed(Axis::Y, 10);
     s << begin_motion(Axis::Y);
     s << motion_complete(Axis::Y);
-    // =================================
 
-    // this is put after the short y move because the z axis is slow
     if (homeZAxis)
         s << motion_complete(Axis::Z);
 
-    // Wait for E-Axis to hit the forward limit
+    // Wait for Reservoir Axis to fully hit its physical forward limit switch
     s << motion_complete(Axis::Reservoir);
 
     s << sleep(1000);
 
-    // home to center index on x axis
+    // === 3. Fine-Home X and Y via Index Pulses & Back Off Reservoir ===
+
+    // Home to center index on x axis
     s << set_jog(Axis::X, -30);
     s << set_homing_velocity(Axis::X, 0.5);
     s << find_index(Axis::X);
 
-    // home y axis to nearest index
+    // Home y axis to nearest index
     s << set_jog(Axis::Y, -0.5);
     s << set_homing_velocity(Axis::Y, 0.25);
     s << find_index(Axis::Y);
 
     if (homeZAxis)
     {
-        // slower acceleration for going back up
         s << set_accleration(Axis::Z, 10);
         s << set_speed(Axis::Z, 2);
-        // TUNE THIS BACKING OFF Z LIMIT TO FUTURE PRINT BED HEIGHT!
-        s << position_relative(Axis::Z, 13.5322);
+        s << position_relative(Axis::Z, 13.5322); // Move print bed to height
     }
 
+    // --- Reservoir Back-Off Move ---
+    // Move backward (negative direction) away from the forward limit switch
+    s << position_relative(Axis::Reservoir, -5.0); // Back off 5mm
+    s << set_speed(Axis::Reservoir, 10);
+    s << begin_motion(Axis::Reservoir);
 
+    // --- Fire fine homing and back-off motions ---
     s << begin_motion(Axis::X);
     s << begin_motion(Axis::Y);
     if (homeZAxis)
         s << begin_motion(Axis::Z);
 
+    // Wait for all final movements to stabilize
     s << motion_complete(Axis::X);
     s << motion_complete(Axis::Y);
     if (homeZAxis)
         s << motion_complete(Axis::Z);
+    s << motion_complete(Axis::Reservoir); // Ensure reservoir is off the switch!
+
+    // === 4. Coordinate Definitions & Software Bound Enforcement ===
+
     s << define_position(Axis::X, X_STAGE_LEN_MM / 2.0);
     s << define_position(Axis::Y, 0);
     s << define_position(Axis::Z, 0);
-    s << define_position(Axis::Reservoir, 0); // Set E forward limit position as 0
 
-    // set software limit to current position
-    //s << set_forward_software_limit(Axis::Z, 500);
+    // Define the newly backed-off resting point as your zero position
+    s << define_position(Axis::Reservoir, 0);
+
     if (homeZAxis){
-        double zSoftwareLimit_mm = 15.0 - 13.5322;
+        double zSoftwareLimit_mm = 2.0; //changed to 15 Tyler Jarvis 7/15/26
         s << set_forward_software_limit(Axis::Z, zSoftwareLimit_mm);
     }
 
-    // Set reverse software limit for E (prevents it from crashing backward)
-    // Replace REVOIR_TRAVEL_LIMIT with your actual travel distance (e.g., -50)
+    // --- Safe Software Boundaries for Reservoir ---
+    // 1. Forward Switch Protection: Set a small negative forward software limit
+    // (e.g., -0.5mm) so normal application commands can never reach the physical 0.0mm switch strip.
+    s << set_forward_software_limit(Axis::Reservoir, -0.5);
+
+    // 2. Reverse Travel Protection: Keep it from traveling out past physical stage length limits
     s << set_reverse_software_limit(Axis::Reservoir, -100.0);
-
-/*
-    // === Home Reservoir Axis to Single Limit Switch === (added 3/11)
-    s << set_accleration(Axis::Reservoir, 200);
-    s << set_deceleration(Axis::Reservoir, 200);
-   // s << set_limit_switch_deceleration(Axis::Reservoir, 400);
-
-    // Jog towards the physical limit switch.
-    s << set_jog(Axis::Reservoir, 5*R_STEP_RESOLUTION); // jog into upper limit
-    s << begin_motion(Axis::Reservoir); // Start Reservoir homing
-    s << motion_complete(Axis::Reservoir); // Wait for Reservoir to hit the physical limit
-    // Perform the Back-off (Negative = Down)
-    s << position_relative(Axis::Reservoir, -3);
-    s << set_speed(Axis::Reservoir, 10); //Sets the speed for the relative back-off move
-    s << begin_motion(Axis::Reservoir);
-    s << motion_complete(Axis::Reservoir);
-
-    // Define final Reservoir position and software limits
-    s << define_position(Axis::Reservoir, R_STAGE_LEN_MM);
-    s << set_forward_software_limit(Axis::Reservoir, R_STAGE_LEN_MM); // Can't go past the back-off point
-    s << set_reverse_software_limit(Axis::Reservoir, 0);
-*/
-
 
     return s.str();
 }
@@ -826,14 +817,14 @@ std::stringstream& CommandGenerator::jog_axis(Axis axis, double speed_mm_s)
 std::string CMD::quick_purge(int pulseTime_ms)
 {
     std::stringstream s;
-    s << CMD::display_message("Started quick purging valve.");
+    s << CMD::display_message("Started quick purge of " + std::to_string(pulseTime_ms) + "ms.");
     // Turn valve ON
     s << CMD::set_bit(PURGE_VALVE_BIT);
     // Wait
     s << CMD::sleep(pulseTime_ms);
     // Turn valve OFF
     s << CMD::clear_bit(PURGE_VALVE_BIT);
-    s << CMD::display_message("Finished quick purging valve.");
+    s << CMD::display_message("Finished quick purge.");
 
     return s.str();
 }

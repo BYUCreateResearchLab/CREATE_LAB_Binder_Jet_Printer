@@ -62,12 +62,12 @@ protected:
     void y_up_button_pressed_MJ();
     void y_down_button_pressed_MJ();
     void jog_released_MJ();
-    void on_xHome_clicked_MJ();
-    void on_yHome_clicked_MJ();
-    void on_zUp_clicked_MJ();
-    void on_zDown_clicked_MJ();
-    void on_zMax_clicked_MJ();
-    void on_zMin_clicked_MJ();
+    void xHome_clicked_MJ();
+    void yHome_clicked_MJ();
+    void zUp_clicked_MJ();
+    void zDown_clicked_MJ();
+    void zMax_clicked_MJ();
+    void zMin_clicked_MJ();
     void get_current_x_axis_position_MJ();
     void get_current_y_axis_position_MJ();
     void get_current_z_axis_position_MJ();
@@ -88,12 +88,12 @@ public slots:
 
 private slots:
     // --- Head Management (Transplanted from image_9dcf1f.png) ---
-    void on_fillHeadButton_clicked();        // New "Fill Head" button
-    void on_headSelector_currentIndexChanged(int index); // "Head Index" dropdown
-    void on_clearHeadButton_clicked();       // "Clear Head" button
-    void on_fillGapButton_clicked();
-    void on_fillNozzleButton_clicked();
-    void on_comboMode_currentIndexChanged(int index);
+    void fillHeadButtonClicked();        // New "Fill Head" button
+    void headSelectorCurrentIndexChanged(int index); // "Head Index" dropdown
+    void clearHeadButtonClicked();       // "Clear Head" button
+    void fillGapButtonClicked();
+    void fillNozzleButtonClicked();
+    void comboModeCurrentIndexChanged(int index);
     void updateStatusTable(const json &j);
 
     // --- Slicing & Printing Slots ---
@@ -106,6 +106,11 @@ private slots:
     void onRollerButtonClicked();
     void requestEncoderPosition();
 
+    // --- Set head temp ---
+    void setHeadVoltage(int headIdx, int voltage);
+    void setHeadTemperature(int headIdx, double temperature);
+
+
 private:
     // Helper methods for full print jobs
     bool parsePrintParameters(const QString& filePath, PrintParameters& params);
@@ -114,11 +119,17 @@ private:
     int calculate_gap(const QString& associatedBitmap);
     bool readyHeads();
     int m_selectedHead = 1;
+    bool m_isManualCommandPending = false;
+
 
     // Internal state
     volatile bool m_printJobCancelled = false;
     QProgressDialog* m_printStatusDialog = nullptr;
     Ui::MJPrintheadWidget *ui;
+
+    // ADD THIS LINE to set a default starting temperature:
+    int m_currentlySelectedHead = 1;
+    double m_targetTemps[4] = {25.0, 25.0, 25.0, 25.0};
 
     QTimer *m_positionTimer;
     QProcess *m_pythonProcess;

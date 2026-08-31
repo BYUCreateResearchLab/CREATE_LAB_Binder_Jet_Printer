@@ -85,12 +85,12 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->xLeftButtonMJ, &QAbstractButton::released, this, &MJPrintheadWidget::jog_released_MJ);
     connect(ui->yUpButtonMJ, &QAbstractButton::released, this, &MJPrintheadWidget::jog_released_MJ);
     connect(ui->yDownButtonMJ, &QAbstractButton::released, this, &MJPrintheadWidget::jog_released_MJ);
-    connect(ui->xHomeMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::on_xHome_clicked_MJ);
-    connect(ui->yHomeMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::on_yHome_clicked_MJ);
-    connect(ui->zUpMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::on_zUp_clicked_MJ);
-    connect(ui->zDownMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::on_zDown_clicked_MJ);
-    connect(ui->zMaxMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::on_zMax_clicked_MJ);
-    connect(ui->zMinMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::on_zMin_clicked_MJ);
+    connect(ui->xHomeMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::xHome_clicked_MJ);
+    connect(ui->yHomeMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::yHome_clicked_MJ);
+    connect(ui->zUpMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::zUp_clicked_MJ);
+    connect(ui->zDownMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::zDown_clicked_MJ);
+    connect(ui->zMaxMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::zMax_clicked_MJ);
+    connect(ui->zMinMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::zMin_clicked_MJ);
     connect(ui->zAbsoluteMoveButtonMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::move_z_to_absolute_position_MJ);
     connect(ui->getXAxisPositionMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::get_current_x_axis_position_MJ);
     connect(ui->getYAxisPositionMJ, &QAbstractButton::clicked, this, &MJPrintheadWidget::get_current_y_axis_position_MJ);
@@ -105,10 +105,10 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->rollerButton, &QPushButton::clicked, this, &MJPrintheadWidget::onRollerButtonClicked);
 
     // --- 8. **Fill Heads Stuff** ---
-    connect(ui->clearHead, &QPushButton::clicked, this, &MJPrintheadWidget::on_clearHeadButton_clicked);
-    connect(ui->fillHead, &QPushButton::clicked, this, &MJPrintheadWidget::on_fillHeadButton_clicked);
-    connect(ui->fillGap, &QPushButton::clicked, this, &MJPrintheadWidget::on_fillGapButton_clicked);
-    connect(ui->fillNozzle, &QPushButton::clicked, this, &MJPrintheadWidget::on_fillNozzleButton_clicked);
+    connect(ui->clearHead, &QPushButton::clicked, this, &MJPrintheadWidget::clearHeadButtonClicked);
+    connect(ui->fillHead, &QPushButton::clicked, this, &MJPrintheadWidget::fillHeadButtonClicked);
+    connect(ui->fillGap, &QPushButton::clicked, this, &MJPrintheadWidget::fillGapButtonClicked);
+    connect(ui->fillNozzle, &QPushButton::clicked, this, &MJPrintheadWidget::fillNozzleButtonClicked);
 
     connect(ui->spinNozzle, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int nozzleVal) {
         // If you start at nozzle 100, span can't be more than 29 (100 to 128)
@@ -119,16 +119,18 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
 
     QTimer *statusTimer = new QTimer(this);
     connect(statusTimer, &QTimer::timeout, this, [this]() {
-        mPrinter->mjController->write_line("b\n"); // Request JSON status
+        if(mPrinter->mjController->is_connected()){
+            mPrinter->mjController->write_line("b"); // Request JSON status
+        }
     });
-    statusTimer->start(1000); // Update every 1 second
+    statusTimer->start(2000); // Update every 1 second
 
     ui->comboMode->clear();
     ui->comboMode->addItem("Internal", 1); // Store the command value (1) as userData
     ui->comboMode->addItem("External", 2); // Store the command value (2) as userData
 
     connect(ui->comboMode, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &MJPrintheadWidget::on_comboMode_currentIndexChanged);
+            this, &MJPrintheadWidget::comboModeCurrentIndexChanged);
 
     connect(mPrinter->mjController, &Added_Scientific::Controller::statusReceived,
             this, &MJPrintheadWidget::updateStatusTable);
@@ -448,6 +450,12 @@ void MJPrintheadWidget::absoluteStartChanged()
 // Writes text from the controller to the appropriate response window.
 void MJPrintheadWidget::write_to_response_window(const QString &text)
 {
+    // Filter out unwanted status noise from the controller
+    if (text.contains("Pattern repeat", Qt::CaseInsensitive) ||
+        text.contains("Head heating", Qt::CaseInsensitive) ||
+        text.contains("voltage received", Qt::CaseInsensitive))        {
+        return;
+    }
     ui->responseTextEdit->appendPlainText(text);
 }
 
@@ -474,15 +482,17 @@ void MJPrintheadWidget::moveNozzleOffPlate()
 
 // Prints a bitmap at a specified location using precise encoder-based triggering.
 void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLocation, double frequency, double printSpeed, int imageWidth, QString fileName)
-{
+{ //Added in by Tyler Jarvis 7/15/26
     mPrinter->mjController->outputMessage("--- Encoder-Based Print Initiated ---");
 
     // Motion parameters
     double accelerationSpeed = 3000.0;
     double safetyFactor = 2.0;
 
+    // --- NEW: Add extra overtravel so the printhead clears the part before stopping ---
+    double overtravelDistance = 10.0;
+
     // Calculate runway required for acceleration
-    // Physics: d = v^2 / 2a
     double backUpDistance = (pow(printSpeed, 2.0) / (2.0 * accelerationSpeed)) * safetyFactor;
     double printDistance = (static_cast<double>(imageWidth) / frequency) * printSpeed;
 
@@ -494,7 +504,9 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
 
     // Determine physical start and stop coordinates
     double backedUpStartX = xLocation - backUpDistance;
-    double endTargetMM = xLocation + printDistance + backUpDistance; // Start + Print + Decel
+
+    // --- UPDATED: Add overtravel to the end target ---
+    double endTargetMM = xLocation + printDistance + backUpDistance + overtravelDistance;
 
     // Convert runway distance to encoder counts for the trigger
     int backUpDistanceEnc = backUpDistance * X_CNTS_PER_MM;
@@ -505,20 +517,12 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     mPrinter->mjController->outputMessage(QString("Runway: %1 mm, Start: %2 mm, End: %3 mm")
                                               .arg(backUpDistance).arg(backedUpStartX).arg(endTargetMM));
 
-    // Configure printhead
-    mPrinter->mjController->write_line("M 4");
-    mPrinter->mjController->set_printing_frequency(frequency);
-
-    // Load image data for both heads
-    read_in_file(fileName); // Head 1
-    if (!readyHeads()) return;
-
-    read_in_file(fileName, 2); // Head 2
-    if (!readyHeads()) return;
-
+    // --- 1. SLEEP THE PRINTHEAD FIRST ---
+    mPrinter->mjController->clear_nozzles();
+    mPrinter->mjController->write_line("M 0");
     GSleep(50);
 
-    // Move to the backed-up start position
+    // --- 2. REWIND TO START LOCATION (While asleep) ---
     moveToLocation(backedUpStartX, yLocation, "Move to Encoder Start Complete");
     while (!atLocation) {
         QCoreApplication::processEvents();
@@ -526,20 +530,112 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     atLocation = false;
     GSleep(100);
 
-    // Arm the encoder trigger and execute the print pass
-    mPrinter->mjController->set_absolute_start(backUpDistanceEnc);
-    printComplete = false;
+    // --- 3. WAKE UP & CONFIGURE ---
+    mPrinter->mjController->write_line("M 4");
+    mPrinter->mjController->set_printing_frequency(frequency);
 
+    // --- 4. LOAD IMAGES ---
+    read_in_file(fileName); // Head 1
+    if (!readyHeads()) return;
+
+    read_in_file(fileName, 2); // Head 2
+    if (!readyHeads()) return;
+
+    GSleep(200); // Give the buffer extra time to digest the images
+
+    // --- 5. ARM TRIGGERS AND PRINT ---
+    // CRITICAL: set_absolute_start MUST happen after read_in_file / readyHeads()
+    mPrinter->mjController->set_absolute_start(backUpDistanceEnc);
+
+    printComplete = false;
     printEnc(accelerationSpeed, printSpeed, endTargetMM, "Encoder Print Motion Complete");
 
     while (!printComplete) {
         QCoreApplication::processEvents();
     }
     printComplete = false;
+
+    // --- NEW: Immediately put the printhead to sleep and clear nozzles ---
+    // This stops any residual jetting or leaking while sitting at the end of the pass
+    mPrinter->mjController->clear_nozzles();
+    mPrinter->mjController->write_line("M 0");
+
     GSleep(100);
 
     mPrinter->mjController->outputMessage("--- Encoder Print Finished ---");
 }
+
+//Commented out to try an updated function Tyler Jarvis 7/15/26
+// {
+//     mPrinter->mjController->outputMessage("--- Encoder-Based Print Initiated ---");
+
+//     // Motion parameters
+//     double accelerationSpeed = 3000.0;
+//     double safetyFactor = 2.0;
+
+//     // Calculate runway required for acceleration
+//     // Physics: d = v^2 / 2a
+//     double backUpDistance = (pow(printSpeed, 2.0) / (2.0 * accelerationSpeed)) * safetyFactor;
+//     double printDistance = (static_cast<double>(imageWidth) / frequency) * printSpeed;
+
+//     // Safety clamp: if xLocation is too close to 0, force it to 0
+//     if ((xLocation - backUpDistance) < 0.0) {
+//         mPrinter->mjController->outputMessage("WARNING: Start X too low. Shifting to 0.0mm");
+//         xLocation = 0.0;
+//     }
+
+
+
+//     // Determine physical start and stop coordinates
+//     double backedUpStartX = xLocation - backUpDistance;
+//     double endTargetMM = xLocation + printDistance + backUpDistance; // Start + Print + Decel
+
+//     // Convert runway distance to encoder counts for the trigger
+//     int backUpDistanceEnc = backUpDistance * X_CNTS_PER_MM;
+
+//     // Log job details
+//     mPrinter->mjController->outputMessage(QString("File: %1\n X: %2, Y: %3, Freq: %4, Speed: %5")
+//                                               .arg(fileName).arg(xLocation).arg(yLocation).arg(frequency).arg(printSpeed));
+//     mPrinter->mjController->outputMessage(QString("Runway: %1 mm, Start: %2 mm, End: %3 mm")
+//                                               .arg(backUpDistance).arg(backedUpStartX).arg(endTargetMM));
+
+//     // Configure printhead
+//     mPrinter->mjController->write_line("M 0"); // Add this line to force a state reset - Tyler Jarvis 7/15/26
+//     GSleep(50);                                // Give the controller a moment to clear - Tyler Jarvis 7/15/26
+//     mPrinter->mjController->write_line("M 4");
+//     mPrinter->mjController->set_printing_frequency(frequency);
+
+//     // Load image data for both heads
+//     read_in_file(fileName); // Head 1
+//     if (!readyHeads()) return;
+
+//     read_in_file(fileName, 2); // Head 2
+//     if (!readyHeads()) return;
+
+//     GSleep(50);
+
+//     // Move to the backed-up start position
+//     moveToLocation(backedUpStartX, yLocation, "Move to Encoder Start Complete");
+//     while (!atLocation) {
+//         QCoreApplication::processEvents();
+//     }
+//     atLocation = false;
+//     GSleep(100);
+
+//     // Arm the encoder trigger and execute the print pass
+//     mPrinter->mjController->set_absolute_start(backUpDistanceEnc);
+//     printComplete = false;
+
+//     printEnc(accelerationSpeed, printSpeed, endTargetMM, "Encoder Print Motion Complete");
+
+//     while (!printComplete) {
+//         QCoreApplication::processEvents();
+//     }
+//     printComplete = false;
+//     GSleep(100);
+
+//     mPrinter->mjController->outputMessage("--- Encoder Print Finished ---");
+// }
 
 // Generates and executes commands to move the printhead to a specified X, Y location.
 void MJPrintheadWidget::moveToLocation(double xLocation, double yLocation, QString endMessage){
@@ -624,7 +720,8 @@ void MJPrintheadWidget::print(double acceleration, double speed, double endTarge
 }
 
 // Generates and executes commands for an encoder-based print motion.
-void MJPrintheadWidget::printEnc(double acceleration, double speed, double endTargetMM, QString endMessage){
+void MJPrintheadWidget::printEnc(double acceleration, double speed, double endTargetMM, QString endMessage)
+{ //Added by Tyler Jarvis 7/15/26
     printComplete = false;
     mPrinter->mjController->outputMessage(QString("Executing encoder print to %1mm at %2mm/s").arg(endTargetMM).arg(speed));
     std::stringstream s_cmd;
@@ -655,6 +752,51 @@ void MJPrintheadWidget::printEnc(double acceleration, double speed, double endTa
     c_cmd << "GProgramComplete," << "\n";
     emit execute_command(c_cmd);
 }
+
+
+//commented out Tyler Jarvis 7/15/26
+// {
+//     printComplete = false;
+//     mPrinter->mjController->outputMessage(QString("Executing encoder print to %1mm at %2mm/s").arg(endTargetMM).arg(speed));
+//     std::stringstream s_cmd;
+
+//     // --- 1. **Set motion parameters for the print pass** ---
+//     s_cmd << CMD::set_accleration(Axis::X, acceleration);
+//     s_cmd << CMD::set_deceleration(Axis::X, acceleration);
+//     s_cmd << CMD::set_speed(Axis::X, speed);
+//     s_cmd << CMD::position_absolute(Axis::X, endTargetMM);
+//     s_cmd << CMD::begin_motion(Axis::X);
+//     s_cmd << CMD::after_motion(Axis::X);
+
+//     // --- NEW ADDITION: Arm the printhead hardware triggers --- added by Tyler Jarvis 7/15/26
+//     s_cmd << CMD::start_MJ_print();
+//     s_cmd << CMD::start_MJ_dir();
+
+//     s_cmd << CMD::begin_motion(Axis::X);
+//     s_cmd << CMD::after_motion(Axis::X);
+
+//     // --- NEW ADDITION: Disable triggers after motion --- added by Tyler Jarvis 7/15/26
+//     s_cmd << CMD::disable_MJ_dir();
+//     s_cmd << CMD::disable_MJ_start();
+
+//     // --- 2. **Add completion message and compile program** ---
+//     s_cmd << CMD::display_message("Print Complete");
+//     mPrinter->mjController->outputMessage(QString("End Message: %1").arg(endMessage));
+
+//     std::string returnStr = CMD::cmd_buf_to_dmc(s_cmd);
+//     const char *cmds = returnStr.c_str();
+//     qDebug().noquote() << cmds;
+
+//     if (mPrinter->mcu->g) {
+//         GProgramDownload(mPrinter->mcu->g, cmds, "");
+//     }
+
+//     // --- 3. **Execute the compiled program** ---
+//     std::stringstream c_cmd;
+//     c_cmd << "GCmd," << "XQ" << "\n";
+//     c_cmd << "GProgramComplete," << "\n";
+//     emit execute_command(c_cmd);
+// }
 
 // Executes an encoder-based purge sequence to clear nozzles.
 void MJPrintheadWidget::purgeNozzles()
@@ -815,7 +957,7 @@ void MJPrintheadWidget::jog_released_MJ()
     emit execute_command(s);
 }
 
-void MJPrintheadWidget::on_xHome_clicked_MJ()
+void MJPrintheadWidget::xHome_clicked_MJ()
 {
     std::stringstream s;
     Axis x{Axis::X};
@@ -828,7 +970,7 @@ void MJPrintheadWidget::on_xHome_clicked_MJ()
     emit execute_command(s);
 }
 
-void MJPrintheadWidget::on_yHome_clicked_MJ()
+void MJPrintheadWidget::yHome_clicked_MJ()
 {
     std::stringstream s;
     Axis y{Axis::Y};
@@ -841,7 +983,7 @@ void MJPrintheadWidget::on_yHome_clicked_MJ()
     emit execute_command(s);
 }
 
-void MJPrintheadWidget::on_zUp_clicked_MJ()
+void MJPrintheadWidget::zUp_clicked_MJ()
 {
     std::stringstream s;
     Axis z{Axis::Z};
@@ -856,7 +998,7 @@ void MJPrintheadWidget::on_zUp_clicked_MJ()
     emit execute_command(s);
 }
 
-void MJPrintheadWidget::on_zDown_clicked_MJ()
+void MJPrintheadWidget::zDown_clicked_MJ()
 {
     std::stringstream s;
     Axis z{Axis::Z};
@@ -871,7 +1013,7 @@ void MJPrintheadWidget::on_zDown_clicked_MJ()
     emit execute_command(s);
 }
 
-void MJPrintheadWidget::on_zMax_clicked_MJ()
+void MJPrintheadWidget::zMax_clicked_MJ()
 {
     std::stringstream s;
     Axis z{Axis::Z};
@@ -883,7 +1025,7 @@ void MJPrintheadWidget::on_zMax_clicked_MJ()
     emit execute_command(s);
 }
 
-void MJPrintheadWidget::on_zMin_clicked_MJ()
+void MJPrintheadWidget::zMin_clicked_MJ()
 {
     std::stringstream s;
     Axis z{Axis::Z};
@@ -1121,6 +1263,9 @@ void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
         mPrinter->mjController->outputMessage("FATAL: Failed to parse parameters. Aborting print.");
         return;
     }
+
+    params.startX = 20.0; //Reset starting print coordinates Tyler Jarvis 7/13/26
+    params.startY = 13.0; //Reset starting print coordinates Tyler Jarvis 7/13/26
 
     qDebug(params.to_string().c_str());
 
@@ -1450,7 +1595,7 @@ bool MJPrintheadWidget::readyHeads()
 }
 
 // "Head Index" dropdown
-void MJPrintheadWidget::on_headSelector_currentIndexChanged(int index){
+void MJPrintheadWidget::headSelectorCurrentIndexChanged(int index){
     // index 0 = "none"
     // index 1 = "head 1"
     // index 2 = "head 2", etc.
@@ -1473,7 +1618,7 @@ void MJPrintheadWidget::on_headSelector_currentIndexChanged(int index){
     ui->fillNozzle->setEnabled(hasSelection);
 }
 
-void MJPrintheadWidget::on_fillHeadButton_clicked() {
+void MJPrintheadWidget::fillHeadButtonClicked() {
     if (m_selectedHead == -1) return;
 
     // 1. Switch to Internal Dropwatch Mode (Mode 1)
@@ -1485,12 +1630,13 @@ void MJPrintheadWidget::on_fillHeadButton_clicked() {
     mPrinter->mjController->fill_head(m_selectedHead);
 }
 
-void MJPrintheadWidget::on_clearHeadButton_clicked() {
+void MJPrintheadWidget::clearHeadButtonClicked() {
     // Clear is global for all heads
     mPrinter->mjController->clear_nozzles();
 }
 
-void MJPrintheadWidget::on_fillGapButton_clicked() {
+
+void MJPrintheadWidget::fillGapButtonClicked() {
     if (m_selectedHead == -1) return;
     mPrinter->mjController->write_line("M 1");
     QThread::msleep(50);
@@ -1499,7 +1645,7 @@ void MJPrintheadWidget::on_fillGapButton_clicked() {
     mPrinter->mjController->fill_nozzle_range(m_selectedHead, 50, 30);
 }
 
-void MJPrintheadWidget::on_fillNozzleButton_clicked() {
+void MJPrintheadWidget::fillNozzleButtonClicked() {
     if (m_selectedHead == -1) return;
     mPrinter->mjController->write_line("M 1");
     QThread::msleep(50);
@@ -1508,7 +1654,7 @@ void MJPrintheadWidget::on_fillNozzleButton_clicked() {
     mPrinter->mjController->fill_nozzle_range(m_selectedHead, 1, 10);
 }
 
-void MJPrintheadWidget::on_comboMode_currentIndexChanged(int index) {
+void MJPrintheadWidget::comboModeCurrentIndexChanged(int index) {
     QString modeText = ui->comboMode->currentText();
     QString cmd;
 
@@ -1530,38 +1676,107 @@ void MJPrintheadWidget::on_comboMode_currentIndexChanged(int index) {
 }
 
 void MJPrintheadWidget::updateStatusTable(const json &j) {
+    if (!j.contains("heads")) return; // Safety check for malformed JSON
     auto heads = j["heads"];
 
-    // Disable sorting while updating to prevent rows from jumping around
     ui->statusWidget->setSortingEnabled(false);
 
     for (int i = 0; i < heads.size() && i < ui->statusWidget->rowCount(); ++i) {
         auto h = heads[i];
-
-        // Temperature
-        double temp = h.value("curTemperature", -273.15);
-        QString tempStr = (temp < -200) ? "N/A" : QString::number(temp, 'f', 1) + "°C";
-
-        // Status [cite: 2, 19]
         int statusCode = h.value("status", -2);
+
+        // Logical states based on your controller documentation
+        bool isReady = (statusCode == 10);
+        bool isOff = (statusCode == 4);
+        bool isNotConnected = (statusCode == -2);
+        bool isReadyError = (statusCode == -3);
+
+        // --- 1. Status Column ---
         QString statusDesc;
-        if (statusCode == 10) statusDesc = "Ready";
-        else if (statusCode == 4) statusDesc = "Powered Off";
-        else if (statusCode == -2) statusDesc = "Not Connected";
-        else statusDesc = "Error (" + QString::number(statusCode) + ")";
+        if (isReady) statusDesc = "Ready";
+        else if (isOff) statusDesc = "Off";
+        else if (isNotConnected) statusDesc = "N/A";
+        else if (isReadyError) statusDesc = "Ready Error (-3)";
+        else statusDesc = "Status: " + QString::number(statusCode); // Show code for debugging
 
-        // Voltage [cite: 2, 17]
-        double voltage = h.value("voltage", 0.0);
+        QTableWidgetItem *statusItem = new QTableWidgetItem(statusDesc);
+        ui->statusWidget->setItem(i, 1, statusItem);
 
-        // Update the items (Column indices depend on your .ui design)
-        ui->statusWidget->setItem(i, 0, new QTableWidgetItem(tempStr));
-        ui->statusWidget->setItem(i, 1, new QTableWidgetItem(QString::number(voltage, 'f', 1) + "V"));
-        ui->statusWidget->setItem(i, 2, new QTableWidgetItem(statusDesc));
+        // --- 2. Voltage (Interactive SpinBox) ---
+        QSpinBox *voltSpin = qobject_cast<QSpinBox*>(ui->statusWidget->cellWidget(i, 2));
+        if (!voltSpin) {
+            voltSpin = new QSpinBox();
+            voltSpin->setSuffix(" V");
+            voltSpin->setRange(15, 36);
+            ui->statusWidget->setCellWidget(i, 2, voltSpin);
 
-        // Heater state [cite: 2, 40]
-        bool isHeating = h.value("isHeating", 0) == 1;
-        ui->statusWidget->setItem(i, 3, new QTableWidgetItem(isHeating ? "ON" : "OFF"));
+            // Block signals during programmatic update to prevent feedback loops
+            connect(voltSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this, i](int val){
+                // Only send if the spinbox was triggered by user interaction
+                if (QObject::sender()->signalsBlocked()) return;
+                this->setHeadVoltage(i + 1, val);
+            });
+        }
+
+        voltSpin->setEnabled(isReady);
+        if (!voltSpin->hasFocus()) {
+            voltSpin->blockSignals(true); // Stop signal during update
+            voltSpin->setValue(isReady ? static_cast<int>(h.value("voltage", 35.0)) : 0);
+            voltSpin->blockSignals(false);
+        }
+
+        // --- 3. Set Temp (Interactive SpinBox) ---
+        QDoubleSpinBox *tempSpin = qobject_cast<QDoubleSpinBox*>(ui->statusWidget->cellWidget(i, 3));
+        if (!tempSpin) {
+            tempSpin = new QDoubleSpinBox();
+            tempSpin->setSuffix("°C");
+            tempSpin->setDecimals(1);
+            tempSpin->setRange(21.0, 99.0); // Strict range from documentation
+            ui->statusWidget->setCellWidget(i, 3, tempSpin);
+
+            connect(tempSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this, i](double val){
+                if (QObject::sender()->signalsBlocked()) return;
+                this->setHeadTemperature(i + 1, val);
+            });
+        }
+
+        tempSpin->setEnabled(isReady);
+        if (!tempSpin->hasFocus()) {
+            tempSpin->blockSignals(true);
+            tempSpin->setValue(h.value("setTemperature", 20.0));
+            tempSpin->blockSignals(false);
+        }
+
+        // --- 4. Curr Temp ---
+        QString currTempStr = (isOff || isNotConnected) ? "N/A" : QString::number(h.value("curTemperature", -273.15), 'f', 1) + "°C";
+        ui->statusWidget->setItem(i, 4, new QTableWidgetItem(currTempStr));
+
+        // --- 5. Print Count ---
+        ui->statusWidget->setItem(i, 5, new QTableWidgetItem(QString::number(h.value("printCounts", 0))));
     }
-
     ui->statusWidget->setSortingEnabled(true);
+}
+
+// 1. Updated Function to set Voltage
+void MJPrintheadWidget::setHeadVoltage(int headIdx, int voltage) {
+    if (!mPrinter->mjController->is_connected()) return;
+
+    QString cmd = QString("v %1 %2\n").arg(headIdx).arg(voltage);
+    mPrinter->mjController->write_line(cmd.toUtf8());
+
+    // Print the action to your output window
+    mPrinter->mjController->outputMessage(QString("Head %1 Voltage: %2 V").arg(headIdx).arg(voltage));
+}
+
+// 2. Updated Function to set Temperature
+void MJPrintheadWidget::setHeadTemperature(int headIdx, double temperature) {
+    if (!mPrinter->mjController->is_connected()) return;
+
+    QString cmd = QString("T %1 %2\n").arg(headIdx).arg(temperature, 0, 'f', 1);
+    mPrinter->mjController->write_line(cmd.toUtf8());
+
+    // Print the action to your output window
+    mPrinter->mjController->outputMessage(QString("Head %1 Set Temp: %2 °C")
+                                              .arg(headIdx)
+                                              .arg(temperature, 0, 'f', 1));
 }
