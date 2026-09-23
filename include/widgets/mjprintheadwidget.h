@@ -132,6 +132,10 @@ private:
 
     bool m_isRollerOn; // State variable to track the roller's status
 
+    // Tracks the last auto-computed interlace offset (half the job's line spacing) so we
+    // can tell whether the user has since edited the spin box by hand. -1 = not set yet.
+    double m_lastAutoInterlaceOffset_mm = -1.0;
+
 
 };
 

@@ -834,6 +834,66 @@ Home</string>
        <string>Check BitMaps</string>
       </property>
      </widget>
+     <widget class="QCheckBox" name="interlacePassCheckBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>135</y>
+        <width>200</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>Reprint each pass bitmap a second time, shifted in Y, to halve the effective line spacing.</string>
+      </property>
+      <property name="text">
+       <string>Interlace 2nd Pass</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="interlaceOffsetLabelMJ">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>161</y>
+        <width>115</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Interlace Y Offset:</string>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="interlaceOffsetSpinBoxMJ">
+      <property name="geometry">
+       <rect>
+        <x>128</x>
+        <y>159</y>
+        <width>100</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>Y shift applied to the second pass. Positive moves toward +Y. Typically half the line spacing.</string>
+      </property>
+      <property name="suffix">
+       <string> mm</string>
+      </property>
+      <property name="decimals">
+       <number>4</number>
+      </property>
+      <property name="minimum">
+       <double>-1.000000000000000</double>
+      </property>
+      <property name="maximum">
+       <double>1.000000000000000</double>
+      </property>
+      <property name="singleStep">
+       <double>0.010000000000000</double>
+      </property>
+      <property name="value">
+       <double>0.068580000000000</double>
+      </property>
+     </widget>
     </widget>
    </item>
    <item row="7" column="2" rowspan="3">

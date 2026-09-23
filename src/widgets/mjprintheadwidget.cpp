@@ -1411,6 +1411,17 @@ void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
 
     qDebug(params.to_string().c_str());
 
+    // Keep the interlace offset in sync with this job's actual line spacing (half-pitch
+    // fills the gap between existing lines). Don't clobber it if the user manually
+    // changed it away from the last auto-computed value.
+    double autoInterlaceOffset_mm = params.lineSpacingY / 2.0;
+    bool interlaceOffsetIsUnedited = (m_lastAutoInterlaceOffset_mm < 0.0) ||
+        (std::abs(ui->interlaceOffsetSpinBoxMJ->value() - m_lastAutoInterlaceOffset_mm) < 0.0001);
+    if (interlaceOffsetIsUnedited) {
+        ui->interlaceOffsetSpinBoxMJ->setValue(autoInterlaceOffset_mm);
+    }
+    m_lastAutoInterlaceOffset_mm = autoInterlaceOffset_mm;
+
     std::map<int, int> layerShifts;
     if (params.yShiftEnabled && !parseLayerShifts(jobFolderPath + "\\layer_y_shifts.txt", layerShifts)) {
         mPrinter->mjController->outputMessage("FATAL: Failed to parse layer shifts. Aborting print.");
@@ -1542,6 +1553,25 @@ void MJPrintheadWidget::startFullPrintJob(const QString& jobFolderPath) {
             passFilePath
             );
         GSleep(100);
+
+        // --- 4d. Optional Interlace Pass: reprint the same bitmap shifted in Y ---
+        if (!m_printJobCancelled && ui->interlacePassCheckBox->isChecked()) {
+            double interlaceOffset_mm = ui->interlaceOffsetSpinBoxMJ->value();
+            double interlaceYLocation = currentYLocation + interlaceOffset_mm;
+
+            mPrinter->mjController->outputMessage(QString("Interlace pass %1 at Y=%2mm (offset %3mm)")
+                                                      .arg(currentPass).arg(interlaceYLocation).arg(interlaceOffset_mm));
+
+            printBMPatLocationEncoder(
+                params.startX,
+                (interlaceYLocation - Y_HEAD_OFFSET),
+                params.printFrequency,
+                params.printSpeed,
+                imageWidthPixels,
+                passFilePath
+                );
+            GSleep(100);
+        }
     }
 
     // --- 5. **Post-Print Cleanup** ---
