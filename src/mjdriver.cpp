@@ -40,39 +40,31 @@ Controller::~Controller()
 
 void Controller::handle_ready_read()
 {
-    // look at DataRecievedHandler in "MJ Driver Board/Software/DriverBoardDropwatcher/Form1.cs"
-    while (serialPort->bytesAvailable())
-    {
-        auto inData = serialPort->readAll();
-        readData.append(inData);
-    }
+    readData.append(serialPort->readAll());
 
-    if (readData[0] == '{')
-    {
-        json j;
-        try
-        {
-            j = json::parse(readData.toStdString());
-            // handle the json here
-            emit response( QString::fromStdString(j.dump(4)) ); // this probably doesn't need to be here and clogs the output window
+    // ONLY parse if we have a full JSON structure
+    int startIndex = readData.indexOf('{');
+    int endIndex = readData.lastIndexOf('}');
 
+    if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+        QByteArray jsonChunk = readData.mid(startIndex, (endIndex - startIndex) + 1);
+        try {
+            auto j = nlohmann::json::parse(jsonChunk.constData());
+            if (j.contains("heads")) {
+                emit statusReceived(j);
+            }
+
+            // --- FIX IS HERE ---
+            timer->stop(); // Stop the timeout timer since we got our response!
+            // -------------------
+
+            // Instead of .clear(), just remove the processed chunk
+            readData.remove(0, endIndex + 1);
+        } catch (...) {
+            // Optional: if it fails to parse but is a complete chunk,
+            // you might still want to clear or handle it so it doesn't get stuck.
         }
-        catch (const nlohmann::json::parse_error &e)
-        {
-            QString errorMessage = "Failed to parse JSON: ";
-            errorMessage += e.what();
-            emit error(errorMessage);
-        }
-
     }
-
-    else
-    {
-        emit response(QString(readData));
-    }
-
-    readData.clear();
-    write_next();
 }
 
 void Controller::handle_timeout()
@@ -306,9 +298,7 @@ void Controller::send_image_data(int headIdx, const QImage &image, int whiteSpac
 {
     QByteArray imageData = convert_image(headIdx, image, whiteSpace);
 
-
-
-    write(imageData);
+    this->directWrite(imageData);
 }
 
 void Controller::create_bitmap_lines(int numLines, int width)
@@ -486,6 +476,25 @@ void Controller::handle_serial_error(
     }
 }
 
+// --- Maintenance Commands (Lowercase) ---
+
+void Controller::fill_head(int headIdx) {
+    // lowercase 'f' for fill + index + newline
+    QString cmd = QString("I %1").arg(headIdx);
+    write_line(cmd.toUtf8());
+}
+
+void Controller::clear_heads() {
+    // lowercase 'c' for clear + index + newline
+    QString cmd = QString("C");
+    write_line(cmd.toUtf8());
+}
+
+void Controller::fill_nozzle_range(int headIdx, int start, int span) {
+    // Command 'N' + Head + Start + Span
+    QString cmd = QString("N %1 %2 %3").arg(headIdx).arg(start).arg(span);
+    write_line(cmd.toUtf8());
+}
 
 
 } // namespace Added_Scientific

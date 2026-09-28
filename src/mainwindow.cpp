@@ -14,6 +14,9 @@
 #include <QMessageBox>
 #include <QProgressDialog>
 #include <QDebug>
+#include <QCloseEvent>
+#include <QTime>
+#include <QCoreApplication>
 
 #include "gclib.h"
 #include "gclibo.h"
@@ -37,6 +40,7 @@
 #include "pcd.h"
 #include "dmc4080.h"
 #include "mister.h"
+
 
 MainWindow::MainWindow(Printer *printer_, QMainWindow *parent) :
     QMainWindow(parent),
@@ -935,6 +939,47 @@ void MainWindow::initialize_y_axis_commutation()
     {
         outputWindow->print_string("Error: Controller not connected.");
     }
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    // A helper lambda function to pause for X milliseconds without freezing the UI layout
+    auto nonBlockingPause = [](int ms) {
+        QTime dieTime = QTime::currentTime().addMSecs(ms);
+        while (QTime::currentTime() < dieTime) {
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        }
+    };
+
+    // 1. Log that the shutdown sequence has initiated
+    outputWindow->print_string("Main Window close clicked. Initiating safety shutdown sequence...");
+        nonBlockingPause(500); // Wait
+
+    // 2. Turn off the Multi-Jet Printheads immediately (Safety First)
+    if (printer && printer->mjController && printer->mjController->is_connected()) {
+            outputWindow->print_string("Powering off printheads and clearing pipelines...");
+            printer->mjController->power_off();
+            printer->mjController->clear_all_heads_of_data();
+
+            nonBlockingPause(500); // Wait
+    }
+
+    // 3. Stop any ongoing physical motion, rollers, heat lamps, or hoppers
+    outputWindow->print_string("Halting all physical motion and hardware components...");
+
+        nonBlockingPause(500); // Wait
+
+    // 4. Safely close all hardware device connections
+    outputWindow->print_string("Disconnecting all serial devices and controllers...");
+        printer->disconnect_printer();
+
+        nonBlockingPause(500); // Wait
+
+    // 5. Allow the window to finish closing normally
+    outputWindow->print_string("Shutdown sequence complete. Goodbye.");
+        event->accept();
+
+    nonBlockingPause(2000);
 }
 
 

@@ -87,7 +87,7 @@ int Controller::connect_to_pressure_controller()
 
     // wait after connection to initialize
     emit response(QString("Connecting to %1").arg(name));
-    QTimer::singleShot(1500, this, &Controller::initialize_pressure_controller);
+    //QTimer::singleShot(1500, this, &Controller::initialize_pressure_controller); //commented out on 5/13/26 by Tyler Jarvis to stop the automatic startup command that purges the pressure controller
     return 0;
 }
 
