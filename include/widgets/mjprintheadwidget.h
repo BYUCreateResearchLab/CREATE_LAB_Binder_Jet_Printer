@@ -93,6 +93,8 @@ private slots:
     void clearHeadButtonClicked();       // "Clear Head" button
     void fillGapButtonClicked();
     void fillNozzleButtonClicked();
+    void dropCountTestClicked();         // Fire N drops from every nozzle (droplet volume test)
+    void finishDropCountTest();
     void comboModeCurrentIndexChanged(int index);
     void updateStatusTable(const json &j);
 
@@ -136,6 +138,10 @@ private:
     QProcess *m_pythonProcess;          // 06/24 TODO
 
     bool m_isRollerOn; // State variable to track the roller's status
+
+    // Drop-count (droplet volume) test state
+    QTimer *m_dropCountTimer = nullptr;
+    bool m_dropCountRunning = false;
 
     // Tracks the last auto-computed interlace offset (half the job's line spacing) so we
     // can tell whether the user has since edited the spin box by hand. -1 = not set yet.

@@ -110,6 +110,13 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
     connect(ui->fillGap, &QPushButton::clicked, this, &MJPrintheadWidget::fillGapButtonClicked);
     connect(ui->fillNozzle, &QPushButton::clicked, this, &MJPrintheadWidget::fillNozzleButtonClicked);
 
+    // Drop-count test (droplet volume measurement)
+    m_dropCountTimer = new QTimer(this);
+    m_dropCountTimer->setSingleShot(true);
+    m_dropCountTimer->setTimerType(Qt::PreciseTimer);
+    connect(m_dropCountTimer, &QTimer::timeout, this, &MJPrintheadWidget::finishDropCountTest);
+    connect(ui->dropCountTestButton, &QPushButton::clicked, this, &MJPrintheadWidget::dropCountTestClicked);
+
     connect(ui->spinNozzle, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int nozzleVal) {
         // If you start at nozzle 100, span can't be more than 29 (100 to 128)
         // Assuming inclusive 1-based indexing:
@@ -1682,6 +1689,64 @@ void MJPrintheadWidget::fillNozzleButtonClicked() {
 
     // Example: Fire first 10 nozzles for health check
     mPrinter->mjController->fill_nozzle_range(m_selectedHead, 1, 10);
+}
+
+// Fires every nozzle on the selected head for (drops / frequency) seconds using the
+// internal dropwatch trigger, then clears the nozzles. Used to collect a known number of
+// drops for droplet volume measurement:
+//   volume per drop = (collected mass / density) / (drops per nozzle * active nozzles)
+// Clicking again while running cancels the test.
+void MJPrintheadWidget::dropCountTestClicked()
+{
+    if (m_dropCountRunning) {
+        mPrinter->mjController->outputMessage("Drop-count test cancelled.");
+        m_dropCountRunning = false;
+        finishDropCountTest();
+        return;
+    }
+
+    if (m_selectedHead == -1) {
+        mPrinter->mjController->outputMessage("Select a head before running the drop-count test.");
+        return;
+    }
+    if (!mPrinter->mjController->is_connected()) {
+        mPrinter->mjController->outputMessage("CRITICAL: Controller not connected!");
+        return;
+    }
+
+    const int freq  = ui->dropCountFreqSpinBox->value();   // Hz
+    const int drops = ui->dropCountDropsSpinBox->value();  // drops per nozzle
+    const int durationMs = qRound(1000.0 * drops / freq);
+
+    auto *mj = mPrinter->mjController;
+    if (!ui->powerToggleButton->isChecked()) {
+        mj->power_on();
+        GSleep(100);
+    }
+
+    mj->clear_nozzles();
+    mj->set_printing_frequency(freq);
+    mj->write_line("M 1");          // internal dropwatch trigger (fires at 'p' frequency)
+    QThread::msleep(50);
+
+    mj->outputMessage(QString("Drop-count test: head %1, %2 drops/nozzle @ %3 Hz (%4 ms)")
+                          .arg(m_selectedHead).arg(drops).arg(freq).arg(durationMs));
+
+    m_dropCountRunning = true;
+    ui->dropCountTestButton->setText("Cancel");
+
+    mj->fill_head(m_selectedHead);  // "I <head>" -> enable all nozzles, jetting starts
+    m_dropCountTimer->start(durationMs);
+}
+
+void MJPrintheadWidget::finishDropCountTest()
+{
+    m_dropCountTimer->stop();
+    mPrinter->mjController->clear_nozzles();  // "C" -> stop jetting
+    if (m_dropCountRunning)
+        mPrinter->mjController->outputMessage("Drop-count test complete.");
+    m_dropCountRunning = false;
+    ui->dropCountTestButton->setText("Jet N Drops");
 }
 
 void MJPrintheadWidget::comboModeCurrentIndexChanged(int index) {

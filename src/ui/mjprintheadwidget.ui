@@ -1873,6 +1873,71 @@ Home</string>
        </item>
       </layout>
      </widget>
+     <widget class="QGroupBox" name="dropCountGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>370</y>
+        <width>300</width>
+        <height>90</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Drop-Count Test (selected head, all nozzles)</string>
+      </property>
+      <layout class="QGridLayout" name="dropCountGridLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="dropCountFreqLabel">
+         <property name="text">
+          <string>Freq (Hz):</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QSpinBox" name="dropCountFreqSpinBox">
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>20000</number>
+         </property>
+         <property name="value">
+          <number>1000</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="dropCountDropsLabel">
+         <property name="text">
+          <string>Drops/nozzle:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QSpinBox" name="dropCountDropsSpinBox">
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>10000000</number>
+         </property>
+         <property name="singleStep">
+          <number>1000</number>
+         </property>
+         <property name="value">
+          <number>10000</number>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2" rowspan="2">
+        <widget class="QPushButton" name="dropCountTestButton">
+         <property name="text">
+          <string>Jet N Drops</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>
