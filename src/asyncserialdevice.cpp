@@ -14,6 +14,11 @@ AsyncSerialDevice::AsyncSerialDevice(const QString& portName, QObject *parent) :
 
     // --- PLACE THE CONNECT HERE ---
     connect(delayTimer, &QTimer::timeout, this, [this]() {
+        if (holdWrites) {
+            // a binary upload is in progress: try again later
+            delayTimer->start(50);
+            return;
+        }
         if (serialPort && serialPort->isOpen()) {
             serialPort->write(prevWrite);
             timer->start(readTimeout_ms);
@@ -40,7 +45,7 @@ void AsyncSerialDevice::write(const QByteArray &data)
         return;
     }
     writeQueue.enqueue(data);
-    if (isWriteReady) write_next();
+    if (isWriteReady && !holdWrites) write_next();
 }
 
 void AsyncSerialDevice::write_next()
@@ -68,7 +73,23 @@ void AsyncSerialDevice::directWrite(const QByteArray &data){
 void AsyncSerialDevice::clear_command_queue()
 {
     writeQueue.clear();
+    delayTimer->stop();
     isWriteReady = true;
+    holdWrites = false;
+}
+
+bool AsyncSerialDevice::is_write_idle() const
+{
+    return writeQueue.isEmpty()
+           && isWriteReady
+           && serialPort->bytesToWrite() == 0;
+}
+
+void AsyncSerialDevice::set_write_hold(bool hold)
+{
+    holdWrites = hold;
+    // send anything that was queued while the hold was active
+    if (!holdWrites && isWriteReady) write_next();
 }
 
 

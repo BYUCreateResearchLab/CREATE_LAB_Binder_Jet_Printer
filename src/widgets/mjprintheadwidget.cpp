@@ -124,13 +124,13 @@ MJPrintheadWidget::MJPrintheadWidget(Printer *printer, QWidget *parent) :
         ui->spinSpan->setMaximum(maxSpan);
     });
 
-    QTimer *statusTimer = new QTimer(this);
-    connect(statusTimer, &QTimer::timeout, this, [this]() {
+    m_statusTimer = new QTimer(this);
+    connect(m_statusTimer, &QTimer::timeout, this, [this]() {
         if(mPrinter->mjController->is_connected()){
             mPrinter->mjController->write_line("b"); // Request JSON status
         }
     });
-    statusTimer->start(2000); // Update every 1 second
+    m_statusTimer->start(2000); // Update every 2 seconds
 
     ui->comboMode->clear();
     ui->comboMode->addItem("Internal", 1); // Store the command value (1) as userData
@@ -335,7 +335,7 @@ void MJPrintheadWidget::file_name_entered()
 }
 
 // Reads an image file and sends its data to the printhead controller.
-void MJPrintheadWidget::read_in_file(const QString &fileNameOrPath, int headIdx)
+bool MJPrintheadWidget::read_in_file(const QString &fileNameOrPath, int headIdx)
 {
     QString filePath = fileNameOrPath;
     QFileInfo fileInfo(filePath);
@@ -352,7 +352,7 @@ void MJPrintheadWidget::read_in_file(const QString &fileNameOrPath, int headIdx)
     if (image.isNull())
     {
         mPrinter->mjController->emit response(QString("Failed to load image from " + filePath));
-        return;
+        return false;
     }
 
     // --- 3. Calculate print head gap
@@ -364,10 +364,11 @@ void MJPrintheadWidget::read_in_file(const QString &fileNameOrPath, int headIdx)
     } else if (headIdx == 1) {
         whitespace = calculate_gap(fileNameOrPath);
         // check for failed calculation
-        if (whitespace == -1) return;
+        if (whitespace == -1) return false;
     }
 
-    mPrinter->mjController->send_image_data(headIdx, image, whitespace);
+    // Sends the image and waits for the board to acknowledge it
+    return mPrinter->mjController->send_image_data(headIdx, image, whitespace);
 }
 
 void MJPrintheadWidget::checkMapsPressed() {
@@ -496,12 +497,20 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     double accelerationSpeed = 3000.0;
     double safetyFactor = 2.0;
 
-    // --- NEW: Add extra overtravel so the printhead clears the part before stopping ---
-    double overtravelDistance = 10.0;
+    // Small margin past the end of the image before the printhead slows down
+    double overtravelDistance = 2.0;
+
+    // Head 1's image has the head gap added in front of it as blank columns,
+    // so it takes that much longer to finish than head 2's image.
+    int gapColumns = calculate_gap(fileName);
+    if (gapColumns == -1) {
+        mPrinter->mjController->outputMessage("ERROR: Could not calculate the head gap. Pass skipped.");
+        return;
+    }
 
     // Calculate runway required for acceleration
     double backUpDistance = (pow(printSpeed, 2.0) / (2.0 * accelerationSpeed)) * safetyFactor;
-    double printDistance = (static_cast<double>(imageWidth) / frequency) * printSpeed;
+    double printDistance = (static_cast<double>(imageWidth + gapColumns) / frequency) * printSpeed;
 
     // Safety clamp: if xLocation is too close to 0, force it to 0
     if ((xLocation - backUpDistance) < 0.0) {
@@ -512,8 +521,14 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     // Determine physical start and stop coordinates
     double backedUpStartX = xLocation - backUpDistance;
 
-    // --- UPDATED: Add overtravel to the end target ---
+    // End of the move: image length (including the head gap) + room to slow down + margin
     double endTargetMM = xLocation + printDistance + backUpDistance + overtravelDistance;
+    if (endTargetMM > X_STAGE_LEN_MM) {
+        mPrinter->mjController->outputMessage(
+            QString("WARNING: Print move would end at %1 mm, past the %2 mm X stage. Shortening it; the end of the image may be cut off.")
+                .arg(endTargetMM).arg(X_STAGE_LEN_MM));
+        endTargetMM = X_STAGE_LEN_MM;
+    }
 
     // Convert runway distance to encoder counts for the trigger
     int backUpDistanceEnc = backUpDistance * X_CNTS_PER_MM;
@@ -523,6 +538,14 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
                                               .arg(fileName).arg(xLocation).arg(yLocation).arg(frequency).arg(printSpeed));
     mPrinter->mjController->outputMessage(QString("Runway: %1 mm, Start: %2 mm, End: %3 mm")
                                               .arg(backUpDistance).arg(backedUpStartX).arg(endTargetMM));
+
+    // The board's timing is affected by serial traffic while it prints, so the
+    // status poll is paused for the whole pass and restarted when we leave.
+    m_statusTimer->stop();
+    struct StatusPollRestarter {
+        QTimer *timer;
+        ~StatusPollRestarter() { timer->start(); }
+    } statusPollRestarter{m_statusTimer};
 
     // --- 1. SLEEP THE PRINTHEAD FIRST ---
     mPrinter->mjController->clear_nozzles();
@@ -537,22 +560,44 @@ void MJPrintheadWidget::printBMPatLocationEncoder(double xLocation, double yLoca
     atLocation = false;
     GSleep(100);
 
+    // Everything from here to printEnc() happens with the printhead stopped at
+    // the start position. Each step waits for the board to answer before the
+    // next one, so the board is fully set up before the move begins.
+    auto *mj = mPrinter->mjController;
+    const int replyTimeout_ms = 1500;
+    if (!readyHeads()) return;
+
     // --- 3. WAKE UP & CONFIGURE ---
-    mPrinter->mjController->write_line("M 4");
-    mPrinter->mjController->set_printing_frequency(frequency);
+    mj->write_line("M 4");
+    mj->expect_reply("Period set");
+    mj->set_printing_frequency(frequency);
+    if (!mj->wait_for_expected(replyTimeout_ms)) {
+        mj->outputMessage("WARNING: No reply from the board to the frequency command. Continuing.");
+    }
 
-    // --- 4. LOAD IMAGES ---
-    read_in_file(fileName); // Head 1
-    if (!readyHeads()) return;
-
-    read_in_file(fileName, 2); // Head 2
-    if (!readyHeads()) return;
-
-    GSleep(200); // Give the buffer extra time to digest the images
+    // --- 4. LOAD IMAGES (each call waits for the board's upload report) ---
+    if (!read_in_file(fileName)) { // Head 1
+        mj->outputMessage("ERROR: Head 1 image was not loaded. Pass skipped.");
+        return;
+    }
+    if (!read_in_file(fileName, 2)) { // Head 2
+        mj->outputMessage("ERROR: Head 2 image was not loaded. Pass skipped.");
+        return;
+    }
 
     // --- 5. ARM TRIGGERS AND PRINT ---
-    // CRITICAL: set_absolute_start MUST happen after read_in_file / readyHeads()
-    mPrinter->mjController->set_absolute_start(backUpDistanceEnc);
+    // CRITICAL: this command zeroes the board's position at the moment it
+    // arrives, so it must arrive while the printhead is still stopped here.
+    // The move must not start until the command has been sent.
+    mj->expect_reply("Start location set to");
+    mj->set_absolute_start(backUpDistanceEnc);
+    if (!mj->wait_for_expected(replyTimeout_ms)) {
+        mj->outputMessage("WARNING: No reply from the board to the start position command. Continuing.");
+    }
+    if (!mj->wait_until_idle(replyTimeout_ms)) {
+        mj->outputMessage("ERROR: Commands to the board were not sent in time. Pass skipped.");
+        return;
+    }
 
     printComplete = false;
     printEnc(accelerationSpeed, printSpeed, endTargetMM, "Encoder Print Motion Complete");
@@ -843,7 +888,14 @@ void MJPrintheadWidget::purgeNozzles()
     atLocation = false;
 
     // --- 5. **Set the encoder trigger and execute the purge** ---
+    // The board zeroes its position when this command arrives, so wait for it
+    // to be sent and answered before the move starts.
+    mPrinter->mjController->expect_reply("Start location set to");
     mPrinter->mjController->set_absolute_start(1); // Trigger immediately after starting motion
+    if (!mPrinter->mjController->wait_for_expected(1500)) {
+        mPrinter->mjController->outputMessage("WARNING: No reply from the board to the start position command. Continuing.");
+    }
+    mPrinter->mjController->wait_until_idle(1500);
     mPrinter->mjController->outputMessage(QString("Executing encoder-based purge..."));
 
     printComplete = false;
@@ -1625,9 +1677,8 @@ bool MJPrintheadWidget::readyHeads()
         return false;
     }
 
-    // 3. Set the mode to Encoder Mode (M 4) as per working software requirements
-    mPrinter->mjController->write_line("M 4");
-
+    // The mode (M 4) is set once by the caller. It used to be sent again here,
+    // which put extra commands on the line during the print move.
     return true;
 }
 

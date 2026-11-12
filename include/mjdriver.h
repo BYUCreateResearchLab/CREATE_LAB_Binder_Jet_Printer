@@ -2,6 +2,7 @@
 #define MJDRIVER_H
 
 #include <QMutex>
+#include <functional>
 #include "asyncserialdevice.h"
 #include <nlohmann/json.hpp>
 
@@ -58,7 +59,17 @@ public:
     void report_current_position();
     void report_head_temps();
     QByteArray convert_image(int headIdx, const QImage &image, int whiteSpace);
-    void send_image_data(int headIdx, const QImage &image, int whiteSpace);
+    // Uploads the image for one head and waits for the board to acknowledge it.
+    // Returns false if the data could not be sent.
+    bool send_image_data(int headIdx, const QImage &image, int whiteSpace);
+
+    // --- Waiting on the board (these run the event loop while they wait) ---
+    // Call expect_reply() BEFORE sending a command, then wait_for_expected()
+    // after it. Returns true once a reply line containing the text arrives.
+    void expect_reply(const QString &text);
+    bool wait_for_expected(int timeout_ms);
+    // Waits until every queued command has actually been sent.
+    bool wait_until_idle(int timeout_ms);
     void reconstructed_bitmap(int headIdx, const QByteArray &imageData, int width, int height); // 12/1 added headIdx
 
     void create_bitmap_lines(int numLines, int width);
@@ -89,6 +100,19 @@ protected:
 
     void clear_members();
     void handle_serial_error(QSerialPort::SerialPortError serialPortError);
+
+private:
+    void handle_text_line(const QString &line);
+    void handle_json(const QByteArray &jsonText);
+    bool wait_until(const std::function<bool()> &condition, int timeout_ms);
+
+    QByteArray jsonBuffer;      // a JSON status report that is still arriving
+    int jsonDepth {0};          // open '{' minus '}' seen so far in jsonBuffer
+    QString expectedReply;      // text set by expect_reply()
+    bool expectedReplySeen {false};
+
+    // how long to wait for the board to acknowledge an image upload
+    const int imageAckTimeout_ms {3000};
 };
 
 }
