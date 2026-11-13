@@ -12,6 +12,8 @@
 #include <QPainter>
 #include <format>
 #include <QTimer>
+#include <QElapsedTimer>
+#include <QThread>
 
 #include <opencv2/opencv.hpp>
 #include <nlohmann/json.hpp>
@@ -42,29 +44,110 @@ void Controller::handle_ready_read()
 {
     readData.append(serialPort->readAll());
 
-    // ONLY parse if we have a full JSON structure
-    int startIndex = readData.indexOf('{');
-    int endIndex = readData.lastIndexOf('}');
+    // The board sends plain text lines (replies to commands) and a JSON
+    // status report that spans several lines. Split the data into lines,
+    // collect the JSON lines until the braces balance, and emit the rest.
+    int newlineIndex;
+    while ((newlineIndex = static_cast<int>(readData.indexOf('\n'))) != -1)
+    {
+        const QByteArray rawLine = readData.left(newlineIndex);
+        readData.remove(0, newlineIndex + 1);
+        const QByteArray line = rawLine.trimmed();
 
-    if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
-        QByteArray jsonChunk = readData.mid(startIndex, (endIndex - startIndex) + 1);
-        try {
-            auto j = nlohmann::json::parse(jsonChunk.constData());
-            if (j.contains("heads")) {
-                emit statusReceived(j);
+        if (jsonDepth > 0 || line.startsWith('{'))
+        {
+            jsonBuffer.append(rawLine).append('\n');
+            jsonDepth += static_cast<int>(rawLine.count('{') - rawLine.count('}'));
+            if (jsonDepth <= 0)
+            {
+                handle_json(jsonBuffer);
+                jsonBuffer.clear();
+                jsonDepth = 0;
             }
+            else if (jsonBuffer.size() > 65536)
+            {
+                // never closed: drop it so it can't block later reports
+                emit error(QString("%1: discarded an incomplete status report").arg(name));
+                jsonBuffer.clear();
+                jsonDepth = 0;
+            }
+            continue;
+        }
 
-            // --- FIX IS HERE ---
-            timer->stop(); // Stop the timeout timer since we got our response!
-            // -------------------
+        if (!line.isEmpty()) handle_text_line(QString::fromUtf8(line));
+    }
 
-            // Instead of .clear(), just remove the processed chunk
-            readData.remove(0, endIndex + 1);
-        } catch (...) {
-            // Optional: if it fails to parse but is a complete chunk,
-            // you might still want to clear or handle it so it doesn't get stuck.
+    // The closing brace of a report may arrive without a newline after it
+    if (jsonDepth > 0 && !readData.isEmpty())
+    {
+        const int depthWithRest =
+            jsonDepth + static_cast<int>(readData.count('{') - readData.count('}'));
+        if (depthWithRest <= 0)
+        {
+            jsonBuffer.append(readData);
+            readData.clear();
+            handle_json(jsonBuffer);
+            jsonBuffer.clear();
+            jsonDepth = 0;
         }
     }
+}
+
+void Controller::handle_json(const QByteArray &jsonText)
+{
+    try {
+        auto j = nlohmann::json::parse(jsonText.constData());
+        if (j.contains("heads")) {
+            emit statusReceived(j);
+        }
+        timer->stop(); // got a response, stop the timeout timer
+    } catch (...) {
+        emit error(QString("%1: could not read a status report").arg(name));
+    }
+}
+
+void Controller::handle_text_line(const QString &line)
+{
+    if (!expectedReply.isEmpty() && line.contains(expectedReply, Qt::CaseInsensitive))
+    {
+        expectedReplySeen = true;
+    }
+    emit response(line);
+}
+
+void Controller::expect_reply(const QString &text)
+{
+    expectedReply = text;
+    expectedReplySeen = false;
+}
+
+bool Controller::wait_for_expected(int timeout_ms)
+{
+    const bool seen = wait_until([this]{ return expectedReplySeen; }, timeout_ms);
+    expectedReply.clear();
+    expectedReplySeen = false;
+    return seen;
+}
+
+bool Controller::wait_until_idle(int timeout_ms)
+{
+    return wait_until([this]{ return is_write_idle(); }, timeout_ms);
+}
+
+// Runs the event loop until the condition is true, the time runs out,
+// or the board is disconnected. Serial data is only sent and received
+// while the event loop runs, so this must not be replaced with a sleep.
+bool Controller::wait_until(const std::function<bool()> &condition, int timeout_ms)
+{
+    QElapsedTimer elapsed;
+    elapsed.start();
+    while (!condition())
+    {
+        if (!is_connected() || elapsed.elapsed() > timeout_ms) return false;
+        QCoreApplication::processEvents();
+        QThread::msleep(1);
+    }
+    return true;
 }
 
 void Controller::handle_timeout()
@@ -294,11 +377,43 @@ void Controller::reconstructed_bitmap(int headIdx, const QByteArray &imageData, 
     emit response(QString("Bitmap reconstructed and saved: %1").arg(filePath));
 }
 
-void Controller::send_image_data(int headIdx, const QImage &image, int whiteSpace)
+bool Controller::send_image_data(int headIdx, const QImage &image, int whiteSpace)
 {
     QByteArray imageData = convert_image(headIdx, image, whiteSpace);
 
-    this->directWrite(imageData);
+    if (!is_connected())
+    {
+        emit error(QString("Can't send image. %1 is not connected").arg(name));
+        return false;
+    }
+
+    // Commands queued before this image must reach the board first
+    if (!wait_until_idle(2000))
+    {
+        emit response(QString("WARNING: earlier commands were still waiting when the head %1 image was sent").arg(headIdx));
+    }
+
+    // The board ends an upload when the data stops arriving, so nothing
+    // else may be written until it has acknowledged this image.
+    set_write_hold(true);
+    expect_reply("DL:"); // last line of the board's upload report
+    serialPort->write(imageData);
+
+    const bool sent = wait_until([this]{ return serialPort->bytesToWrite() == 0; }, 10000);
+    const bool acknowledged = wait_for_expected(sent ? imageAckTimeout_ms : 0);
+    set_write_hold(false);
+
+    if (!sent)
+    {
+        emit error(QString("Image for head %1 was not fully sent").arg(headIdx));
+        return false;
+    }
+    if (!acknowledged)
+    {
+        emit response(QString("WARNING: no upload report from the board for head %1 after %2 ms. Continuing.")
+                          .arg(headIdx).arg(imageAckTimeout_ms));
+    }
+    return true;
 }
 
 void Controller::create_bitmap_lines(int numLines, int width)

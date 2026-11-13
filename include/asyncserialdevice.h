@@ -15,6 +15,10 @@ public:
     void set_port_name(const QString &portName); // sets the port number for the device
     void directWrite(const QByteArray &data);
 
+    // true when every queued command has been handed to the serial port
+    // and the port has finished sending it
+    bool is_write_idle() const;
+
 
 signals:
     void response(const QString &s); // emit info to be printed to console window
@@ -25,6 +29,9 @@ protected:
     void write(const QByteArray &data); // add command to queue for writing
     void write_next(); // send next command in queue
     void clear_command_queue(); // clear the queue
+    // While held, queued commands stay in the queue and nothing is written.
+    // Used to keep commands from being mixed into a binary upload.
+    void set_write_hold(bool hold);
 
 protected:
     QByteArray prevWrite; // stores the last command sent
@@ -36,6 +43,7 @@ protected:
 private:
     QQueue<QByteArray> writeQueue; // queue of commands to write to the serial device
     bool isWriteReady {true}; // keeps track of if the device is ready to receive another command
+    bool holdWrites {false}; // true while queued writes are being held back
     const int readTimeout_ms {3000}; // timeout time in milliseconds
     QTimer *delayTimer;
 };

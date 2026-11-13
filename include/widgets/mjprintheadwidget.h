@@ -37,7 +37,8 @@ protected:
     void getPositionPressed();
     void getHeadTempsPressed();
     void file_name_entered();
-    void read_in_file(const QString &filename, int headIdx = 1);
+    // returns false if the image could not be loaded or sent
+    bool read_in_file(const QString &filename, int headIdx = 1);
     void send_command(const QString &command);
     void write_to_response_window(const QString &text);
 
@@ -134,6 +135,7 @@ private:
     double m_targetTemps[4] = {25.0, 25.0, 25.0, 25.0};
 
     QTimer *m_positionTimer;
+    QTimer *m_statusTimer = nullptr; // polls the board status; paused during a print pass
     QStringList m_encoderHistory;
     QProcess *m_pythonProcess;          // 06/24 TODO
 
